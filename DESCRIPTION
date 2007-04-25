@@ -1,0 +1,10 @@
+Package: hadron
+Version: 0.1
+Date: 2007-04-25
+Title: package to extract hadronic quantities
+Author: Carsten Urbach <carsten.urbach@liverpool.ac.uk>
+Maintainer: Carsten Urbach <carsten.urbach@liverpool.ac.uk>
+Description: package to extract hadronic quantities
+Depends: boot
+License: GPL
+URL: http://www.liv.ac.uk/~urbach
