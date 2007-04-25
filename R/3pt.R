@@ -1,5 +1,5 @@
 
-averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1, t2, mps, par=c(0.6, 0.15)) {
+averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5) {
 
   Time <- max(data3pt[,ind.vec[1]])+1
   Thalf <- Time/2
@@ -42,8 +42,10 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t
   
   averx.fit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii], Err=Err[ii])
   blub <-  get.averx(Cor=c(Cor[ii],Cor2pt[ii]), Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
-
-  averx.uwerr <- uwerrderived(f=get.averx, data=Zall, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+  if(missing(mps)) {
+    mps = averx.fit$minimum/blub
+  }
+  averx.uwerr <- uwerrderived(f=get.averx, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
   res <- list(averx=averx.fit$minimum/mps, daverx=averx.uwerr$dvalue,
               data=data.frame(Cor=Cor, Err=Err), fit.uwerr=averx.uwerr,
               mps=mps, t1=t1, t2=t2, N=averx.uwerr$N)

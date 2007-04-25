@@ -22,9 +22,9 @@
 %}
 %\seealso{
 %}
-%\examples{
-%## no run
-%\dontrun{cmicor <- readcmicor("pion.dat")}
-%}
+\examples{
+library(hadron)
+\dontrun{cmicor <- readcmicor("pion.dat")}
+}
 \author{Carsten Urbach \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{file}

@@ -51,7 +51,7 @@ rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
 }
 \value{
-  returns a list with the following items
+  returns an object of type cfit with the following items
 
   \item{fitresult}{
     result from the fit as returned by \code{\link{optim}}
@@ -110,15 +110,13 @@ rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
 %\references{
 %}
 \seealso{
-  \code{\link{pion}}, \code{\link{readcmicor}}, \code{\link{uwerr}}
+  \code{\link{pion}}, \code{\link{readcmicor}}, \code{\link{uwerr}}, \code{\link{plot.cfit}}
 }
-%\examples{
-%## get data from file
-%\dontrun{cmicor <- readcmicor("pion.dat")}
-%
-%## 
-%\dontrun{rhofit <- rho(cmicor, kappa=0.160856, mu=0.004, t1=8, t2=18, no.masses=1, matrix.size=4)}
-%}
+\examples{
+library(hadron)
+\dontrun{cmicor <- readcmicor("pion.dat")}
+\dontrun{rhofit <- rho(cmicor, kappa=0.160856, mu=0.004, t1=8, t2=18, no.masses=1, matrix.size=4)}
+}
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{optimize}
 \keyword{ts}

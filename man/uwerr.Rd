@@ -1,4 +1,5 @@
 \name{uwerr}
+\alias{uwerr}
 \alias{uwerrprimary}
 \alias{uwerrderived}
 \title{Time Series Analysis With Gamma Method}
@@ -32,11 +33,14 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     initial guess for tau/tauint
   }
   \item{pl}{
-    boolean indicating whether to produce some plots
+    logical: if TRUE, the autocorrelation function, the integrated
+    autocorrelation time as function of the integration cut-off and (for
+    primary quantities) the time history of the observable are plotted
+    with plot.uwerr
   }
 }
 \value{
-  returns a list containing
+  returns an object of type uwerr containing
   \item{value}{
     the expectation value of the obsevable
   }
@@ -61,11 +65,13 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
 \references{
   ``Monte Carlo errors with less errors'', Ulli Wolff, hep-lat/0306017
 }
-%\seealso{
-%}
-%\examples{
-%\dontrun{uwerr(plaqhist)}
-%}
+\seealso{
+  \code{\link{plot.uwerr}}
+}
+\examples{
+library(hadron)
+\dontrun{uwerr(plaqhist)}
+}
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{optimize}
 \keyword{ts}
