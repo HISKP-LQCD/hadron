@@ -103,6 +103,10 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     rhofit <- optim(par, ChiSqr.2mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
   }
+  else if(no.masses > 2) {
+    rhofit <- optim(par, ChiSqr.3mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
+                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+  }
   if(rhofit$convergence != 0) {
     warning("optim did not converge for rhofit!", call.=F)
   }
@@ -116,12 +120,17 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     plot.effmass(m=fit.mass, ll=rho.eff.ll, lf=rho.eff.lf, ff=rho.eff.ff)
   }
 
-  fit.uwerrm <- uwerr(f=fit2by2mass2, data=W[ii,], S=S, pl=pl,
+  fit.uwerrm <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
                       Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
   fit.uwerrm2 <- NULL
-  if(no.masses == 2) {
-    fit.uwerrm2 <- uwerr(f=fit2by2mass2, data=W[ii,], S=S, pl=pl,
+  fit.uwerrm3 <- NULL
+  if(no.masses == 22) {
+    fit.uwerrm2 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=2)
+  }
+  if(no.masses > 22) {
+    fit.uwerrm3 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
+                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
   }
   Chi <- rep(0., times=9*4*T1)
   Fit <- rep(0., times=9*4*T1)
@@ -142,11 +151,28 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     Fit[jj+18*T1] <- rhofit$par[3]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
     Fit[jj+19*T1] <- rhofit$par[4]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
   }
+  if(matrix.size > 4) {
+    Fit[jj+12*T1] <- rhofit$par[5]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+13*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+14*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+15*T1] <- rhofit$par[6]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+
+    Fit[jj+4*T1] <- rhofit$par[1]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+5*T1] <- rhofit$par[1]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+6*T1] <- rhofit$par[2]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+7*T1] <- rhofit$par[2]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    
+    Fit[jj+28*T1] <- rhofit$par[3]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+29*T1] <- rhofit$par[3]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+30*T1] <- rhofit$par[4]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+31*T1] <- rhofit$par[4]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+  }
+  
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
   
   res <- list(fitresult=rhofit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
-              uwerrresultmv=fit.uwerrm, uwerrresultmv2=fit.uwerrm2,
+              uwerrresultmv=fit.uwerrm, uwerrresultmv2=fit.uwerrm2, uwerrresultmv3=fit.uwerrm3,
               effmass=rho.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size)
@@ -266,7 +292,8 @@ getNxNmatrix <- function(Cor, T1, t, N=2) {
   return(invisible(C1))
 }
 
-fit2by2mass2 <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12), N=2, no.masses=1, no=1) {
+fitmasses.vector <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
+                         N=2, no.masses=1, no=1, kludge=TRUE) {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -279,18 +306,18 @@ fit2by2mass2 <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12), N=2, no.mas
   }
   else if (no.masses == 2) {
     fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N)
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N, kludge=kludge)
     return(sort(abs(fit$par[c((N+1),(2*N+2))]))[no])
   }
   else if (no.masses == 3) {
     fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N)
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N, kludge=kludge)
     return(sort(abs(fit$par[c((N+1),(2*N+2),(3*N+3))]))[no])
   }
 }
 
 CExp <- function(m, Time, x, sign=1.) {
-  return(0.5*(exp(-abs(m)*x) + sign*exp(-abs(m)*(Time-x))))
+  return(0.5*(exp(-m*x) + sign*exp(-m*(Time-x))))
 }
 
 ChiSqr.1mass <- function(par, Thalf, x, y, err, tr, N=2) {
@@ -298,158 +325,291 @@ ChiSqr.1mass <- function(par, Thalf, x, y, err, tr, N=2) {
   # l <- length(par)/no.masses
   ii <- c(1:tr)
   Sumall <- 0.
+  m1 <- abs(par[N+1])
+  cv1 <- CExp(m=m1, Time=2*Thalf, x=x)
+  sv1 <- CExp(m=m1, Time=2*Thalf, x=x, sign=-1.)
   if(N > 1) {
     # 44
-    Sumall = Sumall + sum(((y[ii]
-      - par[1]*par[1]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii])^2)
-    
-    Sumall = Sumall + sum(((y[ii+tr]
-      - par[1]*par[2]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+tr])^2)
-
-    Sumall = Sumall + sum(((y[ii+2*tr]
-      - par[2]*par[2]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+2*tr])^2)
+                                        #    Sumall = Sumall + (sumitinC(y[ii], par[1], par[1], cv1, err[ii]) 
+    Sumall = Sumall + (sum(((y[ii]
+      - par[1]*par[1]*(cv1))/err[ii])^2)
+    + sum(((y[ii+tr]
+            - par[1]*par[2]*(cv1))/err[ii+tr])^2)
+    + sum(((y[ii+2*tr]
+            - par[2]*par[2]*(cv1))/err[ii+2*tr])^2))
     
   }
   if(N > 2) {
     # 4A (sinh!)
-    Sumall = Sumall + sum(((y[ii+3*tr]
-      - par[1]*par[3]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+3*tr])^2)
-    Sumall = Sumall + sum(((y[ii+4*tr]
-      - par[1]*par[4]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+4*tr])^2)
-    Sumall = Sumall + sum(((y[ii+5*tr]
-      - par[2]*par[3]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+5*tr])^2)
-    Sumall = Sumall + sum(((y[ii+6*tr]
-      - par[2]*par[4]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+6*tr])^2)
+    Sumall = Sumall + (sum(((y[ii+3*tr]
+      - par[1]*par[3]*(sv1))/err[ii+3*tr])^2)
+    + sum(((y[ii+4*tr]
+            - par[1]*par[4]*(sv1))/err[ii+4*tr])^2)
+    + sum(((y[ii+5*tr]
+            - par[2]*par[3]*(sv1))/err[ii+5*tr])^2)
+    + sum(((y[ii+6*tr]
+            - par[2]*par[4]*(sv1))/err[ii+6*tr])^2))
     
     # AA
-    Sumall = Sumall + sum(((y[ii+7*tr]
-      - par[3]*par[3]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+7*tr])^2)
-    Sumall = Sumall + sum(((y[ii+8*tr]
-      - par[3]*par[4]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+8*tr])^2)
-    Sumall = Sumall + sum(((y[ii+9*tr]
-      - par[4]*par[4]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+9*tr])^2)
+    Sumall = Sumall + (sum(((y[ii+7*tr]
+      - par[3]*par[3]*(cv1))/err[ii+7*tr])^2)
+    + sum(((y[ii+8*tr]
+            - par[3]*par[4]*(cv1))/err[ii+8*tr])^2)
+    + sum(((y[ii+9*tr]
+            - par[4]*par[4]*(cv1))/err[ii+9*tr])^2))
 
   }
   if(N > 4) {
     # VV
-    Sumall = Sumall + sum(((y[ii+10*tr]
-      - par[5]*par[5]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+10*tr])^2)
-    Sumall = Sumall + sum(((y[ii+11*tr]
-      - par[5]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+11*tr])^2)
-    Sumall = Sumall + sum(((y[ii+12*tr]
-      - par[6]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+12*tr])^2)    
+    Sumall = Sumall + (sum(((y[ii+10*tr]
+      - par[5]*par[5]*(cv1))/err[ii+10*tr])^2)
+    + sum(((y[ii+11*tr]
+            - par[5]*par[6]*(cv1))/err[ii+11*tr])^2)
+    + sum(((y[ii+12*tr]
+            - par[6]*par[6]*(cv1))/err[ii+12*tr])^2))
 
     # 4V (sinh!)
-    Sumall = Sumall + sum(((y[ii+13*tr]
-      - par[1]*par[5]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+13*tr])^2)
-    Sumall = Sumall + sum(((y[ii+14*tr]
-      - par[1]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+14*tr])^2)
-    Sumall = Sumall + sum(((y[ii+15*tr]
-      - par[2]*par[5]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+15*tr])^2)
-    Sumall = Sumall + sum(((y[ii+16*tr]
-      - par[2]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+16*tr])^2)
+    Sumall = Sumall + (sum(((y[ii+13*tr]
+      - par[1]*par[5]*(sv1))/err[ii+13*tr])^2)
+    + sum(((y[ii+14*tr]
+            - par[1]*par[6]*(sv1))/err[ii+14*tr])^2)
+    + sum(((y[ii+15*tr]
+            - par[2]*par[5]*(sv1))/err[ii+15*tr])^2)
+    + sum(((y[ii+16*tr]
+            - par[2]*par[6]*(sv1))/err[ii+16*tr])^2))
 
     # AV cosh
-    Sumall = Sumall + sum(((y[ii+17*tr]
-      - par[3]*par[5]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+17*tr])^2)
-    Sumall = Sumall + sum(((y[ii+18*tr]
-      - par[3]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+18*tr])^2)
-    Sumall = Sumall + sum(((y[ii+19*tr]
-      - par[4]*par[5]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+19*tr])^2)
-    Sumall = Sumall + sum(((y[ii+20*tr]
-      - par[4]*par[6]*(CExp(m=abs(par[N+1]), Time=2*Thalf, x=x)))/err[ii+20*tr])^2)
+    Sumall = Sumall + (sum(((y[ii+17*tr]
+      - par[3]*par[5]*(cv1))/err[ii+17*tr])^2)
+    + sum(((y[ii+18*tr]
+            - par[3]*par[6]*(cv1))/err[ii+18*tr])^2)
+    + sum(((y[ii+19*tr]
+            - par[4]*par[5]*(cv1))/err[ii+19*tr])^2)
+    + sum(((y[ii+20*tr]
+            - par[4]*par[6]*(cv1))/err[ii+20*tr])^2))
   }
   return(Sumall)
 }
 
 
-ChiSqr.2mass <- function(par, Thalf, x, y, err, tr, N=2) {
+ChiSqr.2mass <- function(par, Thalf, x, y, err, tr, N=2, kludge=TRUE) {
   # index of mass
   l <- length(par)/2
   ii <- c(1:tr)
-  m1 <- N+1
-  m2 <- 2*N+2
+  m1 <- abs(par[N+1])
+  m2 <- abs(par[2*N+2])
+  Sumall <- 0.
+  cv1 <- CExp(m=m1, Time=2*Thalf, x=x)
+  cv2 <- CExp(m=m2, Time=2*Thalf, x=x)
+  sv1 <- CExp(m=m1, Time=2*Thalf, x=x, sign=-1.)
+  sv2 <- CExp(m=m2, Time=2*Thalf, x=x, sign=-1.)
+  if(N > 1) {
+    # 44
+    # there is never any a1 in gamma_i gamma_4
+    Sumall = Sumall + (sum(((y[ii]
+      - par[1]^2 *(cv1)
+      - par[N+2]^2 *(cv2))/err[ii])^2)
+    + sum(((y[ii+tr]
+            - par[1]*par[2]*(cv1)
+            - par[N+2]*par[N+3]*(cv2))/err[ii+tr])^2)
+    + sum(((y[ii+2*tr]
+            - par[2]^2 *(cv1)
+            - par[N+3]^2 *(cv2))/err[ii+2*tr])^2))
+    
+  }
+  if(N > 2) {
+    # 4A (sinh!)
+    Sumall = Sumall + (sum(((y[ii+3*tr]
+      - par[1]*par[3]*(sv1)
+      - par[N+2]*par[N+4]*(sv2))/err[ii+3*tr])^2)
+      + sum(((y[ii+4*tr]
+              - par[1]*par[4]*(sv1)
+              - par[N+2]*par[N+5]*(sv2))/err[ii+4*tr])^2)
+      + sum(((y[ii+5*tr]
+              - par[2]*par[3]*(sv1)
+              - par[N+3]*par[N+4]*(sv2))/err[ii+5*tr])^2)
+      + sum(((y[ii+6*tr]
+              - par[2]*par[4]*(sv1)
+              - par[N+3]*par[N+5]*(sv2))/err[ii+6*tr])^2))
+      
+    # AA (no a1 in A at maximal twist)
+    Sumall = Sumall + (sum(((y[ii+7*tr]
+      - par[3]*par[3]*(cv1)
+      - par[N+4]*par[N+4]*(cv2))/err[ii+7*tr])^2)
+      + sum(((y[ii+8*tr]
+              - par[3]*par[4]*(cv1)
+              - par[N+4]*par[N+5]*(cv2))/err[ii+8*tr])^2)
+      + sum(((y[ii+9*tr]
+              - par[4]*par[4]*(cv1)
+              - par[N+5]*par[N+5]*(cv2))/err[ii+9*tr])^2))
+
+  }
+  if(N > 4) {
+    # VV
+    Sumall = Sumall + (sum(((y[ii+10*tr]
+      - par[5]*par[5]*(cv1)
+      - par[N+6]*par[N+6]*(cv2))/err[ii+10*tr])^2)
+      + sum(((y[ii+11*tr]
+              - par[5]*par[6]*(cv1)
+              - par[N+6]*par[N+7]*(cv2))/err[ii+11*tr])^2)
+      + sum(((y[ii+12*tr]
+              - par[6]*par[6]*(cv1)
+              - par[N+7]*par[N+7]*(cv2))/err[ii+12*tr])^2))
+
+    # 4V (sinh!)
+    Sumall = Sumall + (sum(((y[ii+13*tr]
+      - par[1]*par[5]*(sv1)
+      - par[N+2]*par[N+6]*(sv2))/err[ii+13*tr])^2)
+      + sum(((y[ii+14*tr]
+              - par[1]*par[6]*(sv1)
+              - par[N+2]*par[N+7]*(sv2))/err[ii+14*tr])^2)
+      + sum(((y[ii+15*tr]
+              - par[2]*par[5]*(sv1)
+              - par[N+3]*par[N+6]*(sv2))/err[ii+15*tr])^2)
+      + sum(((y[ii+16*tr]
+              - par[2]*par[6]*(sv1)
+              - par[N+3]*par[N+7]*(sv2))/err[ii+16*tr])^2))
+
+    # AV cosh
+    Sumall = Sumall + (sum(((y[ii+17*tr]
+      - par[3]*par[5]*(cv1)
+      - par[N+4]*par[N+6]*(cv2))/err[ii+17*tr])^2)
+      + sum(((y[ii+18*tr]
+              - par[3]*par[6]*(cv1)
+              - par[N+4]*par[N+7]*(cv2))/err[ii+18*tr])^2)
+      + sum(((y[ii+19*tr]
+              - par[4]*par[5]*(cv1)
+              - par[N+5]*par[N+6]*(cv2))/err[ii+19*tr])^2)
+      + sum(((y[ii+20*tr]
+              - par[4]*par[6]*(cv1)
+              - par[N+5]*par[N+7]*(cv2))/err[ii+20*tr])^2))
+  }
+  if(kludge) {
+    Sumall = Sumall + 100000*(par[N+2]^2 + par[N+3]^2)
+  }
+  return(Sumall)
+}
+
+
+ChiSqr.3mass <- function(par, Thalf, x, y, err, tr, N=3, kludge=TRUE) {
+  # index of mass
+  l <- length(par)/2
+  ii <- c(1:tr)
+  m1 <- abs(par[N+1])
+  m2 <- abs(par[2*N+2])
+  m3 <- abs(par[3*N+3])
+  cv1 <- CExp(m=m1, Time=2*Thalf, x=x)
+  cv2 <- CExp(m=m2, Time=2*Thalf, x=x)
+  cv3 <- CExp(m=m3, Time=2*Thalf, x=x)
+  sv1 <- CExp(m=m1, Time=2*Thalf, x=x, sign=-1.)
+  sv2 <- CExp(m=m2, Time=2*Thalf, x=x, sign=-1.)
+  sv3 <- CExp(m=m3, Time=2*Thalf, x=x, sign=-1.)
   Sumall <- 0.
   if(N > 1) {
+    # 44
     Sumall = Sumall + sum(((y[ii]
-      - par[1]*par[1]*(CExp(m=par[m1], Time=2*Thalf, x=x))
-      - par[N+2]*par[N+2]*(CExp(m=par[m2], Time=2*Thalf, x=x)))/err[ii])^2)
+      - par[1]^2 *(cv1)
+      - par[N+2]^2 *(cv2)
+      - par[2*N+3]^2 *(cv3))/err[ii])^2)
     
     Sumall = Sumall + sum(((y[ii+tr]
-      - par[1]*par[2]*(CExp(m=par[m1], Time=2*Thalf, x=x))
-      - par[N+2]*par[N+3]*(CExp(m=par[m2], Time=2*Thalf, x=x)))/err[ii+tr])^2)
+      - par[1]*par[2] *(cv1)
+      - par[N+2]*par[N+3] *(cv2)
+      - par[2*N+3]*par[2*N+4] *(cv3))/err[ii+tr])^2)
 
     Sumall = Sumall + sum(((y[ii+2*tr]
-      - par[2]*par[2]*(CExp(m=par[m1], Time=2*Thalf, x=x))
-      - par[N+3]*par[N+3]*(CExp(m=par[m2], Time=2*Thalf, x=x)))/err[ii+2*tr])^2)
+      - par[2]^2 *(cv1)
+      - par[N+3]^2 *(cv2)
+      - par[2*N+4]^2 *(cv3))/err[ii+2*tr])^2)
     
   }
   if(N > 2) {
     # 4A (sinh!)
     Sumall = Sumall + sum(((y[ii+3*tr]
-      - par[1]*par[3]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+2]*par[N+4]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+3*tr])^2)
+      - par[1]*par[3]*(sv1)
+      - par[N+2]*par[N+4]*(sv2)
+      - par[2*N+3]*par[2*N+5]*(sv3))/err[ii+3*tr])^2)
     Sumall = Sumall + sum(((y[ii+4*tr]
-      - par[1]*par[4]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+2]*par[N+5]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+4*tr])^2)
+      - par[1]*par[4]*(sv1)
+      - par[N+2]*par[N+5]*(sv2)
+      - par[2*N+3]*par[2*N+6]*(sv3))/err[ii+4*tr])^2)
     Sumall = Sumall + sum(((y[ii+5*tr]
-      - par[2]*par[3]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+3]*par[N+4]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+5*tr])^2)
+      - par[2]*par[3]*(sv1)
+      - par[N+3]*par[N+4]*(sv2)
+      - par[2*N+4]*par[2*N+5]*(sv3))/err[ii+5*tr])^2)
     Sumall = Sumall + sum(((y[ii+6*tr]
-      - par[2]*par[4]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+3]*par[N+5]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+6*tr])^2)
+      - par[2]*par[4]*(sv1)
+      - par[N+3]*par[N+5]*(sv2)
+      - par[2*N+4]*par[2*N+6]*(sv3))/err[ii+6*tr])^2)
     
     # AA (no a1 in A)
     Sumall = Sumall + sum(((y[ii+7*tr]
-      - par[3]*par[3]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+4]*par[N+4]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+7*tr])^2)
+      - par[3]^2*(cv1)
+      - par[N+4]^2*(cv2)
+      - par[2*N+5]^2*(cv3))/err[ii+7*tr])^2)
     Sumall = Sumall + sum(((y[ii+8*tr]
-      - par[3]*par[4]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+4]*par[N+5]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+8*tr])^2)
+      - par[3]*par[4]*(cv1)
+      - par[N+4]*par[N+5]*(cv2)
+      - par[2*N+5]*par[2*N+6]*(cv3))/err[ii+8*tr])^2)
     Sumall = Sumall + sum(((y[ii+9*tr]
-      - par[4]*par[4]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+5]*par[N+5]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+9*tr])^2)
+      - par[4]^2 *(cv1)
+      - par[N+5]^2 *(cv2)
+      - par[2*N+6]^2 *(cv3))/err[ii+9*tr])^2)
 
   }
   if(N > 4) {
     # VV
     Sumall = Sumall + sum(((y[ii+10*tr]
-      - par[5]*par[5]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+6]*par[N+6]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+10*tr])^2)
+      - par[5]^2 *(cv1)
+      - par[N+6]^2 *(cv2)
+      - par[2*N+7]^2 *(cv3))/err[ii+10*tr])^2)
     Sumall = Sumall + sum(((y[ii+11*tr]
-      - par[5]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+6]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+11*tr])^2)
+      - par[5]*par[6]*(cv1)
+      - par[N+6]*par[N+7]*(cv2)
+      - par[2*N+7]*par[2*N+8]*(cv3))/err[ii+11*tr])^2)
     Sumall = Sumall + sum(((y[ii+12*tr]
-      - par[6]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+7]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+12*tr])^2)    
+      - par[6]^2 *(cv1)
+      - par[N+7]^2 *(cv2)
+      - par[2*N+8]^2 *(cv3))/err[ii+12*tr])^2)    
 
     # 4V (sinh!)
     Sumall = Sumall + sum(((y[ii+13*tr]
-      - par[1]*par[5]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+2]*par[N+6]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+13*tr])^2)
+      - par[1]*par[5]*(sv1)
+      - par[N+2]*par[N+6]*(sv2)
+      - par[2*N+3]*par[2*N+7]*(sv3))/err[ii+13*tr])^2)
     Sumall = Sumall + sum(((y[ii+14*tr]
-      - par[1]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+2]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+14*tr])^2)
+      - par[1]*par[6]*(sv1)
+      - par[N+2]*par[N+7]*(sv2)
+      - par[2*N+3]*par[2*N+8]*(sv3))/err[ii+14*tr])^2)
     Sumall = Sumall + sum(((y[ii+15*tr]
-      - par[2]*par[5]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+3]*par[N+6]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+15*tr])^2)
+      - par[2]*par[5]*(sv1)
+      - par[N+3]*par[N+6]*(sv2)
+      - par[2*N+4]*par[2*N+7]*(sv3))/err[ii+15*tr])^2)
     Sumall = Sumall + sum(((y[ii+16*tr]
-      - par[2]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x, sign=-1.))
-      - par[N+3]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x, sign=-1.)))/err[ii+16*tr])^2)
+      - par[2]*par[6]*(sv1)
+      - par[N+3]*par[N+7]*(sv2)
+      - par[2*N+4]*par[2*N+8]*(sv3))/err[ii+16*tr])^2)
 
     # AV cosh
     Sumall = Sumall + sum(((y[ii+17*tr]
-      - par[3]*par[5]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+4]*par[N+6]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+17*tr])^2)
+      - par[3]*par[5]*(cv1)
+      - par[N+4]*par[N+6]*(cv2)
+      - par[2*N+5]*par[2*N+7]*(cv3))/err[ii+17*tr])^2)
     Sumall = Sumall + sum(((y[ii+18*tr]
-      - par[3]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+4]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+18*tr])^2)
+      - par[3]*par[6]*(cv1)
+      - par[N+4]*par[N+7]*(cv2)
+      - par[2*N+5]*par[2*N+8]*(cv3))/err[ii+18*tr])^2)
     Sumall = Sumall + sum(((y[ii+19*tr]
-      - par[4]*par[5]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+5]*par[N+6]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+19*tr])^2)
+      - par[4]*par[5]*(cv1)
+      - par[N+5]*par[N+6]*(cv2)
+      - par[2*N+6]*par[2*N+7]*(cv3))/err[ii+19*tr])^2)
     Sumall = Sumall + sum(((y[ii+20*tr]
-      - par[4]*par[6]*(CExp(m=abs(par[m1]), Time=2*Thalf, x=x))
-      - par[N+5]*par[N+7]*(CExp(m=abs(par[m2]), Time=2*Thalf, x=x)))/err[ii+20*tr])^2)
+      - par[4]*par[6]*(cv1)
+      - par[N+5]*par[N+7]*(cv2)
+      - par[2*N+6]*par[2*N+8]*(cv3))/err[ii+20*tr])^2)
+  }
+  if(kludge) {
+    Sumall = Sumall + (par[N+2]*100000)^2 + (par[N+3]*100000)^2
   }
   return(Sumall)
 }
