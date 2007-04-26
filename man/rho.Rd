@@ -3,7 +3,7 @@
 \title{Fit Vector Meson}
 \description{
   fits one or several cosh and sinh to data for extracting the vector
-  meson mass and excited states
+  meson mass and excited states in the vector channel.
 }
 \usage{
 rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
@@ -31,7 +31,7 @@ rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     passed to \code{uwerr}, see documentation of \code{\link{uwerr}}.
   }
   \item{pl}{
-    boolean. if set to TRUE the function produces plots
+    logical: if set to TRUE the function produces plots
   }
   \item{skip}{
     number of measurements to be discarded at the beginning of the time series.
@@ -105,12 +105,36 @@ rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   
 }
-%\details{
-%}
+\details{
+
+  The data must be ordered as in the output of
+  \code{\link{readcmicor}}, see \code{help(readcmicor)} for details.
+  
+  The expected order of gamma matrices and operators (local-local,
+  local-fuzzed, fuzzed-local and fuzzed-fuzzed) (fuzzed = non-local)
+  is as follows for all charged mesons:
+  
+  1) the 4 operators for each type must be sorted like local-local,
+  local-fuzzed, fuzzed-local and fuzzed-fuzzed. (fuzzed=non-local)
+  
+  2) The 20 available types must be in the following order:
+  order PP PA AP AA 44 P4 4P A4 4A   for pion like  \eqn{P=\gamma_5}{P=g5} \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}
+  order 44 VV AA 4V V4 4A A4 VA AV   for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4} \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}
+  order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}  \eqn{S=I}
+  (cases with space index "i" are summed over i=1,2,3)
+  (best choice is weaker coupling at sink - ie PA rather than AP
+  order of magnitudes \eqn{P > 4 > A}  (4 mixes A)
+  order of magnitudes \eqn{4\sim A > V}{4 ~ A > V}  (A mixes V))
+  
+  itype=21 is conserved vector current at sink,  \eqn{\gamma_5}{g5} at source 
+  ( iobs is LV  1,  FV  5 )
+  
+}
 %\references{
 %}
 \seealso{
-  \code{\link{pion}}, \code{\link{readcmicor}}, \code{\link{uwerr}}, \code{\link{plot.cfit}}
+  \code{\link{pion}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
+  \code{\link{plot.cfit}}, \code{\link{pp}}
 }
 \examples{
 library(hadron)
