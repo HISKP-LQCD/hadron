@@ -2,7 +2,8 @@
 
 rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                 variational=list(ta=4, tb=5, N=6), ind.vec=c(1,3,4,5),
-                no.masses=1, matrix.size = 2) {
+                no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
+                method="uwerr") {
   
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
@@ -98,20 +99,22 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   if(no.masses == 1) {
     rhofit <- optim(par, ChiSqr.1mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    fit.mass <- abs(rhofit$par[matrix.size+1])
   }
   else if(no.masses == 2) {
     rhofit <- optim(par, ChiSqr.2mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    fit.mass <- sort(abs(rhofit$par[c((matrix.size+1),(2*matrix.size+2))]))
   }
   else if(no.masses > 2) {
     rhofit <- optim(par, ChiSqr.3mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    fit.mass <- sort(abs(rhofit$par[c((matrix.size+1),(2*matrix.size+2),(3*matrix.size+3))]))
   }
   if(rhofit$convergence != 0) {
     warning("optim did not converge for rhofit!", call.=F)
   }
-  print(rhofit)
-  fit.mass <- abs(rhofit$par[matrix.size+1])
+                                        #  print(rhofit)
 
   fit.dof <- (t2-t1+1)*3-length(rhofit$par)
   fit.chisqr <- rhofit$value
@@ -120,18 +123,37 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     plot.effmass(m=fit.mass, ll=rho.eff.ll, lf=rho.eff.lf, ff=rho.eff.ff)
   }
 
-  fit.uwerrm <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
-                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
+  fit.uwerrm <- NULL
   fit.uwerrm2 <- NULL
   fit.uwerrm3 <- NULL
-  if(no.masses == 22) {
-    fit.uwerrm2 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
-                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=2)
+  fit.boot <- NULL
+  fit.boot.ci <- NULL
+  fit.tsboot <- NULL
+  fit.tsboot.ci <- NULL
+  if(method == "uwerr") {
+    fit.uwerrm <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
+                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
+
+    if(no.masses == 22) {
+      fit.uwerrm2 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
+                           Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=2)
+    }
+    if(no.masses > 22) {
+      fit.uwerrm3 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
+                           Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
+    }
   }
-  if(no.masses > 22) {
-    fit.uwerrm3 <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
-                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
+  if(method == "boot") {
+    fit.boot <- boot(data=t(W[ii,]), statistic=fitmasses.vector.boot, R=boot.R, stype="i",
+                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
+    fit.boot.ci <- boot.ci(fit.boot, type = c("norm", "basic", "perc", "stud"))
+
+    fit.tsboot <- tsboot(data=t(W[ii,]), statistic=fitmasses.vector.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
+    fit.tsboot.ci <- boot.ci(fit.tsboot, type = c("norm", "basic", "perc", "stud"))
   }
+
+  
   Chi <- rep(0., times=9*4*T1)
   Fit <- rep(0., times=9*4*T1)
 
@@ -173,6 +195,8 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   res <- list(fitresult=rhofit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmv=fit.uwerrm, uwerrresultmv2=fit.uwerrm2, uwerrresultmv3=fit.uwerrm3,
+              bootresult=fit.boot, bootciresult=fit.boot.ci,
+              tsbootresult=fit.tsboot, tsbootciresult=fit.tsboot.ci,
               effmass=rho.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size)
@@ -298,22 +322,67 @@ fitmasses.vector <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   T1 <- Thalf+1
   t1p1 <- (t1+1)
   t2p1 <- (t2+1)
+  tr <- (t2-t1+1)
 
   if(no.masses == 1) {
     fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N)
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
     return(abs(fit$par[N+1]))
   }
   else if (no.masses == 2) {
     fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N, kludge=kludge)
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     return(sort(abs(fit$par[c((N+1),(2*N+2))]))[no])
   }
   else if (no.masses == 3) {
     fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr = (t2-t1+1), N=N, kludge=kludge)
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     return(sort(abs(fit$par[c((N+1),(2*N+2),(3*N+3))]))[no])
   }
+}
+
+fitmasses.vector.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
+                                  N=2, no.masses=1, kludge=TRUE) {
+  Thalf <- Time/2
+  T1 <- Thalf+1
+  t1p1 <- (t1+1)
+  t2p1 <- (t2+1)
+  tr <- (t2-t1+1)
+  Cor <- rep(0., times=length(Z[1,]))
+  if(!missing(d)) {
+    for(i in 1:length(Z[1,])) {
+      Cor[i] = mean(Z[d,(i)])
+    }
+  }
+  else {
+    for(i in 1:length(Z[1,])) {
+      Cor[i] = mean(Z[,(i)])
+    }
+  }
+
+  if(no.masses == 1) {
+    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+    return(fit$par, fit$value)
+  }
+  else if (no.masses == 2) {
+    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    sort.ind <- order(fit$par[c((N+1),(2*N+2))])
+    return(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)))],
+           fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)))],
+           fit$value)
+  }
+  else if (no.masses == 3) {
+    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
+    return(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)))],
+           fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)))],
+           fit$par[c(((sort.ind[3]-1)*(N+1)+1):((sort.ind[3])*(N+1)))],
+           fit$value)
+  }
+
 }
 
 CExp <- function(m, Time, x, sign=1.) {
