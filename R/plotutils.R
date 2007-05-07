@@ -40,6 +40,14 @@ plot.cfit <- function(fit) {
     X11()
     plot(fit$tsboot)
   }
+  if(!is.null(fit$mv.boot)) {
+    X11()
+    plot(fit$mv.boot)
+  }
+  if(!is.null(fit$mv.tsboot)) {
+    X11()
+    plot(fit$mv.tsboot)
+  }
 }
 
 plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {

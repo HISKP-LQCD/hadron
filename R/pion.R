@@ -1106,5 +1106,34 @@ summary.cfit <- function(fit) {
 	mean(fit$tsboot$t[,5])-fit$tsboot$t0[5], "\n")
     
   }
+
+  if(!is.null(fit$mv.boot)) {
+    cat("--- Bootstrap analysis  ---\n")
+    cat("---", fit$mv.boot$R, "samples  ---\n")
+    cat("          mean        -err           +err            stderr        bias\n")
+    for(no in 1:fit$no.masses) {
+      index <- no*(fit$matrix.size+1)
+      b.ci <- boot.ci(fit$mv.boot, type = c("norm"), index=index)
+      cat("mv[",no,"] = ", abs(fit$mv.boot$t0[index]), "(", (b.ci$normal[1,2]-fit$mv.boot$t0[index])/1.96
+          , ",", -(fit$mv.boot$t0[index]-b.ci$normal[1,3])/1.96, ")", sd(fit$mv.boot$t[,index]),
+          mean(fit$mv.boot$t[,index])-fit$mv.boot$t0[index],"\n")
+    }
+  }
+  if(!is.null(fit$mv.tsboot)) {
+    cat("\n--- Bootstrap analysis  with blocking ---\n")
+    cat("---", fit$mv.tsboot$R, "samples  ---\n")
+    cat("--- block size", fit$mv.tsboot$l, "---\n")
+    for(no in 1:fit$no.masses) {
+      index <- no*(fit$matrix.size+1)
+      tsb.ci <- boot.ci(fit$mv.tsboot, type = c("norm"), index=index)
+      cat("mv[",no,"] = ", fit$mv.tsboot$t0[index], "(", (tsb.ci$normal[1,2]-fit$mv.tsboot$t0[index])/1.96
+          , ",", -(fit$mv.tsboot$t0[index]-tsb.ci$normal[1,3])/1.96, ")", sd(fit$mv.tsboot$t[,index]),
+          mean(fit$mv.tsboot$t[,index])-fit$mv.tsboot$t0[index], "\n")
+    }
+  }
+  if(!is.null(fit$variational.masses)) {
+    cat("\n--- Variational analysis ---\n")
+    cat("masses:", fit$variational.masses, "\n")
+  }
   
 }

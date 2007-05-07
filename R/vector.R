@@ -27,10 +27,12 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   W <- arrangeCor.vector(T1=T1, W=W, Z=Z)
   rm(Z)
 
+  options(show.error.messages = FALSE)
   rho.eff.ll <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5)
   rho.eff.lf <- effectivemass(from=(t1+1), to=(t2+1), Time, W[(T1+1):(2*T1),] , pl=FALSE, S=1.5)
   rho.eff.ff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[(3*T1+1):(4*T1),] , pl=FALSE, S=1.5) 
-
+  options(show.error.messages = TRUE)
+  
   rho.eff <- data.frame(t=rho.eff.ll$t, mll=rho.eff.ll$mass, dmll=rho.eff.ll$dmass,
                          mlf=rho.eff.lf$mass, dmlf=rho.eff.lf$dmass,
                          mff=rho.eff.ff$mass, dmff=rho.eff.ff$dmass)
@@ -74,7 +76,7 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                -log(abs(variational.solve$values[variational.sortindex[2]]))/(tb-ta)) 
     }
   }
-  print(par)
+                                        #  print(par)
   
   variational.masses <-  -log(abs(variational.solve$values[variational.sortindex]))/(tb-ta)
   rm(C1, C2, C3, ta, tb, X, left.vectors)
@@ -130,7 +132,7 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   fit.boot.ci <- NULL
   fit.tsboot <- NULL
   fit.tsboot.ci <- NULL
-  if(method == "uwerr") {
+  if(method == "uwerr" || method == "all") {
     fit.uwerrm <- uwerr(f=fitmasses.vector, data=W[ii,], S=S, pl=pl,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
 
@@ -143,14 +145,17 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
     }
   }
-  if(method == "boot") {
+  if(method == "boot" || method == "all") {
     fit.boot <- boot(data=t(W[ii,]), statistic=fitmasses.vector.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
-    fit.boot.ci <- boot.ci(fit.boot, type = c("norm", "basic", "perc", "stud"))
+                                        #    summary(fit.boot)
+    
+#    fit.boot.ci <- boot.ci(fit.boot, type = c("norm", "basic", "perc", "stud"))
 
-    fit.tsboot <- tsboot(data=t(W[ii,]), statistic=fitmasses.vector.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
-    fit.tsboot.ci <- boot.ci(fit.tsboot, type = c("norm", "basic", "perc", "stud"))
+    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fitmasses.vector.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
+#    summary(fit.tsboot)
+#    fit.tsboot.ci <- boot.ci(fit.tsboot, type = c("norm", "basic", "perc", "stud"))
   }
 
   
@@ -158,36 +163,36 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   Fit <- rep(0., times=9*4*T1)
 
   jj <-  c(t1p1:t2p1)
-  Fit[jj] <- rhofit$par[1]^2*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-  Fit[jj+T1] <- rhofit$par[1]*rhofit$par[2]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-  Fit[jj+2*T1] <- rhofit$par[1]*rhofit$par[2]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-  Fit[jj+3*T1] <- rhofit$par[2]*rhofit$par[2]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+  Fit[jj] <- rhofit$par[1]^2*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+  Fit[jj+T1] <- rhofit$par[1]*rhofit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+  Fit[jj+2*T1] <- rhofit$par[1]*rhofit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+  Fit[jj+3*T1] <- rhofit$par[2]*rhofit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   if(matrix.size > 2) {
-    Fit[jj+20*T1] <- rhofit$par[1]*rhofit$par[3]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+21*T1] <- rhofit$par[1]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+22*T1] <- rhofit$par[2]*rhofit$par[3]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+23*T1] <- rhofit$par[2]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+20*T1] <- rhofit$par[1]*rhofit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+21*T1] <- rhofit$par[1]*rhofit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+22*T1] <- rhofit$par[2]*rhofit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+23*T1] <- rhofit$par[2]*rhofit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
 
-    Fit[jj+16*T1] <- rhofit$par[3]*rhofit$par[3]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+17*T1] <- rhofit$par[3]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+18*T1] <- rhofit$par[3]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+19*T1] <- rhofit$par[4]*rhofit$par[4]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+16*T1] <- rhofit$par[3]*rhofit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+17*T1] <- rhofit$par[3]*rhofit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+18*T1] <- rhofit$par[3]*rhofit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+19*T1] <- rhofit$par[4]*rhofit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   }
   if(matrix.size > 4) {
-    Fit[jj+12*T1] <- rhofit$par[5]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+13*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+14*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+15*T1] <- rhofit$par[6]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+12*T1] <- rhofit$par[5]*rhofit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+13*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+14*T1] <- rhofit$par[5]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+15*T1] <- rhofit$par[6]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
 
-    Fit[jj+4*T1] <- rhofit$par[1]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+5*T1] <- rhofit$par[1]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+6*T1] <- rhofit$par[2]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+7*T1] <- rhofit$par[2]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+4*T1] <- rhofit$par[1]*rhofit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+5*T1] <- rhofit$par[1]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+6*T1] <- rhofit$par[2]*rhofit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+7*T1] <- rhofit$par[2]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
     
-    Fit[jj+28*T1] <- rhofit$par[3]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+29*T1] <- rhofit$par[3]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+30*T1] <- rhofit$par[4]*rhofit$par[5]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
-    Fit[jj+31*T1] <- rhofit$par[4]*rhofit$par[6]*CExp(m=fit.uwerrm$value, Time=2*Thalf, x=jj-1)
+    Fit[jj+28*T1] <- rhofit$par[3]*rhofit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+29*T1] <- rhofit$par[3]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+30*T1] <- rhofit$par[4]*rhofit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+31*T1] <- rhofit$par[4]*rhofit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   }
   
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
@@ -195,8 +200,7 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   res <- list(fitresult=rhofit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmv=fit.uwerrm, uwerrresultmv2=fit.uwerrm2, uwerrresultmv3=fit.uwerrm3,
-              bootresult=fit.boot, bootciresult=fit.boot.ci,
-              tsbootresult=fit.tsboot, tsbootciresult=fit.tsboot.ci,
+              mv.boot=fit.boot, mv.tsboot=fit.tsboot,
               effmass=rho.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size)
@@ -363,24 +367,29 @@ fitmasses.vector.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   if(no.masses == 1) {
     fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
-    return(fit$par, fit$value)
+    return(c(fit$par[c(1:N)], abs(fit$par[N+1]), fit$value))
   }
   else if (no.masses == 2) {
     fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
-    return(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)))],
-           fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)))],
-           fit$value)
+    return(c(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
+             abs(fit$par[sort.ind[1]*(N+1)]),
+             fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)-1))],
+             abs(fit$par[sort.ind[2]*(N+1)]),
+             fit$value))
   }
   else if (no.masses == 3) {
     fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
-    return(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)))],
-           fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)))],
-           fit$par[c(((sort.ind[3]-1)*(N+1)+1):((sort.ind[3])*(N+1)))],
-           fit$value)
+    return(c(fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
+             abs(fit$par[sort.ind[1]*(N+1)]),
+             fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)-1))],
+             abs(fit$par[sort.ind[2]*(N+1)]),
+             fit$par[c(((sort.ind[3]-1)*(N+1)+1):((sort.ind[3])*(N+1)-1))],
+             abs(fit$par[sort.ind[3]*(N+1)]),
+             fit$value))
   }
 
 }
