@@ -44,15 +44,33 @@ proton <- function(data, bc="antiperiodic", twistangle=0) {
   c <- cos(twistangle/2)
   Cor <- rep(0., times=Thalf)
   Cor2 <- rep(0., times=Thalf)
-  Cor[1] <- Re(sum(diag((One + Gamma4) %*% (c*One+1i*s*Gamma5) %*% datasum[(1:4),] %*% (c*One+1i*s*Gamma5) %*% (One + Gamma4))))/4
+  Cor[1] <- Re(sum(diag((One + Gamma4) %*% (c*One+1i*s*Gamma5)
+                        %*% datasum[(1:4),] %*% (c*One+1i*s*Gamma5)
+                        %*% (One + Gamma4))))/4
+  Cor2[1] <- Re(sum(diag((One - Gamma4) %*% (c*One+1i*s*Gamma5)
+                        %*% datasum[(1:4),] %*% (c*One+1i*s*Gamma5)
+                        %*% (One - Gamma4))))/4
   for(t in 2:(Thalf+1)) {
     Cor[t] <- Re(sum(diag(
-                          0.5* ((One + Gamma4) %*% (c*One+1i*s*Gamma5) %*% datasum[((4*t-3):(4*t)),] %*% (c*One+1i*s*Gamma5) %*% (One + Gamma4)
-                                + (One - Gamma4) %*% (c*One+1i*s*Gamma5) %*% datasum[((4*(Time-t+2)-3):(4*(Time-t+2))),] %*% (c*One+1i*s*Gamma5) %*% (One - Gamma4)
+                          0.5* (((One + Gamma4) %*% (c*One+1i*s*Gamma5)
+                                %*% datasum[((4*t-3):(4*t)),] %*% (c*One+1i*s*Gamma5)
+                                %*% (One + Gamma4))
+                                + ((One - Gamma4) %*% (c*One+1i*s*Gamma5)
+                                %*% datasum[((4*(Time-t+2)-3):(4*(Time-t+2))),]
+                                %*% (c*One+1i*s*Gamma5) %*% (One - Gamma4))
                                 )
                           )))/4
-    cat(t, 4*t-3, 4*t, (4*(Time-t+2)-3), (4*(Time-t+2)), "\n")
+
+    Cor2[t] <- Re(sum(diag(
+                          0.5* ((One - Gamma4) %*% (c*One+1i*s*Gamma5)
+                                %*% datasum[((4*t-3):(4*t)),] %*% (c*One+1i*s*Gamma5)
+                                %*% (One - Gamma4)
+                                + (One + Gamma4) %*% (c*One+1i*s*Gamma5)
+                                %*% datasum[((4*(Time-t+2)-3):(4*(Time-t+2))),]
+                                %*% (c*One+1i*s*Gamma5) %*% (One + Gamma4)
+                                )
+                          )))/4
     
   }
-  return(Cor)
+  return(data.frame(Cor, Cor2))
 }
