@@ -1,4 +1,4 @@
-Pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
+pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                 variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
                 no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
                 method="uwerr") {
