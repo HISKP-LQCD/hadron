@@ -1,13 +1,14 @@
-\name{rho}
-\alias{rho}
-\title{Fit Vector Channel}
+\name{pion}
+\alias{pion}
+\title{Fit Pseudo Scalar Sector}
 \description{
-  fits one or several cosh and sinh to data for extracting the vector
-  meson mass and excited states in the vector channel.
+  fits one or several cosh and sinh to data for extracting the
+  pseudo-scalar meson mass, excited states in the pseudo-scalar channel
+  and determines decays constant and \eqn{m_\mathrm{PCAC}}{m_paca}
 }
 \usage{
-rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
-                variational=list(ta=4, tb=5, N=6), ind.vec=c(1,3,4,5),
+pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
+                variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
                 no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
                 method="uwerr")
 }
@@ -88,17 +89,25 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     the averaged correlator and its error and the value of Chi for each
     time value
   }
-  \item{uwerrresultmv}{
+  \item{uwerrresultmps}{
     the result of the time series analysis for the lowest mass as
     carried out by \code{\link{uwerr}} 
   }
-  \item{uwerrresultmv2}{
+  \item{uwerrresultmps2}{
     the result of the time series analysis for the second lowest mass as
     carried out by \code{\link{uwerr}} if no.masses larger than 1.
   }
-  \item{uwerrresultmv3}{
+  \item{uwerrresultmps3}{
     the result of the time series analysis for the second lowest mass as
     carried out by \code{\link{uwerr}}, if no.masses larger than 2.
+  }
+  \item{uwerrresultfps}{
+    the result of the time series analysis for the pseudo-scalar decay
+    constant as  carried out by \code{\link{uwerr}}.
+  }
+  \item{uwerrresultmpcac}{
+    the result of the time series analysis for the PCAC mass as
+    carried out by \code{\link{uwerr}} if no.masses larger than 1.
   }
   \item{effmass}{
     effective masses
@@ -118,17 +127,16 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   \item{matrix.size}{
     size of the data matrix
   }
-  \item{mv.boot}{
+  \item{boot}{
     object returned by the call to \code{\link{boot}} if \code{method}
     was set correspodingly. Otherwise \code{NULL}.
   }
-  \item{mv.tsboot}{
+  \item{tsboot}{
     object returned by the call to \code{\link{tsboot}} if \code{method}
     was set correspodingly. Otherwise \code{NULL}.
   }
 }
 \details{
-
   The data must be ordered as in the output of
   \code{\link{readcmicor}}, see \code{help(readcmicor)} for details.
   
@@ -150,18 +158,18 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   
   itype=21 is conserved vector current at sink,  \eqn{\gamma_5}{g5} at source 
   ( iobs is LV  1,  FV  5 )
-  
+
 }
 %\references{
 %}
 \seealso{
-  \code{\link{pion}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
-  \code{\link{plot.cfit}}, \code{\link{pp}}
+  \code{\link{rho}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
+  \code{\link{plot.cfit}}, \code{\link{summary.cfit}}, \code{\link{pp}}
 }
 \examples{
 library(hadron)
 \dontrun{cmicor <- readcmicor("pion.dat")}
-\dontrun{rhofit <- rho(cmicor, kappa=0.160856, mu=0.004, t1=8, t2=18, no.masses=1, matrix.size=4)}
+\dontrun{rhofit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23, no.masses=1, matrix.size=4)}
 }
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{optimize}
