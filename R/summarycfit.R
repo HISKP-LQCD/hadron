@@ -130,6 +130,13 @@ summary.cfit <- function(fit) {
     cat("fpi    = ", fit$boot$t0[2], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[2])/1.96
 	, ",", -(fit$boot$t0[2]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,2]),
 	mean(fit$boot$t[,2])-fit$boot$t0[2], "\n")
+
+    if(fit$matrix.size > 2) {
+      fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=fit$matrix.size+3)
+      cat("mpcac  = ", fit$boot$t0[fit$matrix.size+3], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[fit$matrix.size+3])/1.96
+          , ",", -(fit$boot$t0[fit$matrix.size+3]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,(fit$matrix.size+3)]),
+          mean(fit$boot$t[,(fit$matrix.size+3)])-fit$boot$t0[fit$matrix.size+3], "\n")
+    }
     
     fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=4)
     cat("P_L    = ", fit$boot$t0[4], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[4])/1.96
@@ -154,6 +161,14 @@ summary.cfit <- function(fit) {
     cat("fpi    = ", fit$tsboot$t0[2], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[2])/1.96
 	, ",", -(fit$tsboot$t0[2]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,2]),
 	mean(fit$tsboot$t[,2])-fit$tsboot$t0[2], "\n")
+
+    if(fit$matrix.size > 2) {
+      fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=fit$matrix.size+3)
+      cat("mpcac  = ", fit$tsboot$t0[fit$matrix.size+3], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[fit$matrix.size+3])/1.96
+          , ",", -(fit$tsboot$t0[fit$matrix.size+3]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,(fit$matrix.size+3)]),
+          mean(fit$tsboot$t[,(fit$matrix.size+3)])-fit$tsboot$t0[fit$matrix.size+3], "\n")
+    }
+
     
     fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=4)
     cat("P_L    = ", fit$tsboot$t0[4], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[4])/1.96

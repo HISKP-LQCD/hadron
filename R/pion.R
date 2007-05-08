@@ -61,29 +61,28 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   variational.solve <- eigen(C3, symmetric=FALSE, only.values = FALSE, EISPACK=FALSE)
   # get the left eigenvectors, the eigenvectors have unit length
   variational.sortindex <- order(-log(abs(variational.solve$values)*(tb-ta)))
-  left.vectors <- array(0., dim=c(N,N))
-  left.vectors <- crossprod(C1, variational.solve$vectors)
-  X <- crossprod(left.vectors,variational.solve$vectors)
-  for(i in 1:N) {
-    left.vectors[,i] <- left.vectors[,i]/sqrt(X[i,i])
-    variational.solve$vectors[,i] <- variational.solve$vectors[,i]/sqrt(X[i,i])
-  }
+  # left.vectors <- array(0., dim=c(N,N))
+  # left.vectors <- crossprod(C1, variational.solve$vectors)
+  # X <- crossprod(left.vectors,variational.solve$vectors)
+  # for(i in 1:N) {
+  #  left.vectors[,i] <- left.vectors[,i]/sqrt(X[i,i])
+  #  variational.solve$vectors[,i] <- variational.solve$vectors[,i]/sqrt(X[i,i])
+  #}
 
-  par <- c(2*left.vectors[(1:matrix.size),1],
-           -log(abs(variational.solve$values[variational.sortindex[1]]))/(tb-ta))
-  if(no.masses > 1) {
-    for(i in 2:(no.masses)) {
-      par <- c(par,
-               left.vectors[(1:matrix.size),i],
-               -log(abs(variational.solve$values[variational.sortindex[2]]))/(tb-ta)) 
-    }
-  }
+  #par <- c(2*left.vectors[(1:matrix.size),1],
+  #         -log(abs(variational.solve$values[variational.sortindex[1]]))/(tb-ta))
+  #if(no.masses > 1) {
+  #  for(i in 2:(no.masses)) {
+  #    par <- c(par,
+  #    left.vectors[(1:matrix.size),i],
+  #             -log(abs(variational.solve$values[variational.sortindex[2]]))/(tb-ta)) 
+  #  }
+  #}
                                         #  print(par)
   
   variational.masses <-  -log(abs(variational.solve$values[variational.sortindex]))/(tb-ta)
-  print(variational.masses)
   par <- c(1.,0.1,0.12)
-  rm(C1, C2, C3, ta, tb, X, left.vectors)
+  rm(C1, C2, C3, ta, tb, N)
 
   # Index vector of data to be used in the analysis
   ii <- c((t1p1):(t2p1), (t1p1+T1):(t2p1+T1), (t1p1+3*T1):(t2p1+3*T1))
@@ -103,6 +102,10 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
             (t1p1+30*T1):(t2p1+30*T1), (t1p1+31*T1):(t2p1+31*T1))
     par <- c(1.,0.1,0.1,0.1,0.1,0.1,0.12)
   }
+  for(i in 2:no.masses) {
+    par <- c(par, 0.1, par[2:matrix.size], 1.)
+  }
+
   #BFGS
   if(no.masses == 1) {
     pionfit <- optim(par, ChiSqr.1mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
@@ -127,7 +130,6 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   if(pionfit$convergence != 0) {
     warning("optim did not converge for pionfit!", call.=F)
   }
-  print(pionfit)
 
   fit.dof <- (t2-t1+1)*3-length(pionfit$par)
   fit.chisqr <- pionfit$value
