@@ -1,5 +1,5 @@
 
-averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5) {
+averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr") {
 
   Time <- max(data3pt[,ind.vec[1]])+1
   Thalf <- Time/2

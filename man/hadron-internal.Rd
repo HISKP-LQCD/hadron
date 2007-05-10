@@ -10,6 +10,7 @@
 \alias{fitmasses.pion}
 \alias{fitmasses.pion.boot}
 \alias{fitf.pion}
+\alias{mean.index}
 \alias{fitmpcac.pion}
 \title{Internal Hadron Functions}
 \description{

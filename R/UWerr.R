@@ -391,46 +391,4 @@ tauintplot <- function(ti, dti, Wmax, Wopt) {
   abline(h=ti[Wopt],col="red")
 }
 
-mean.index <- function(data, indexvector) {
-  return(invisible(mean(data[indexvector])))
-}
 
-bootstrap.analysis <- function(data, skip=0, boot.R=100,
-  tsboot.sim="geom", pl=F) {
-  library(boot)
-  
-  data.mean = mean(data[skip:length(data)])
-  error.naive = sd(data[skip:length(data)])/sqrt(length(data)-skip)
-
-  cat("mean value = ", data.mean, "\n")
-  cat("naive error = ", error.naive, "\n")
-  
-  data.boot <- boot(data=data, statistic=mean.index, R=boot.R, stype="i")
-  data.boot.ci <- boot.ci(data.boot, type = c("norm", "basic", "perc"))
-
-  cat("                  mean        -err           +err            stderr        bias\n")
-  cat("bootstrap      = ", data.boot$t0[1], "(", (data.boot.ci$normal[1,2]-data.boot$t0[1])/1.96
-	, ",", -(data.boot$t0[1]-data.boot.ci$normal[1,3])/1.96, ")", sd(data.boot$t[,1]),
-	mean(data.boot$t[,1])-data.boot$t0[1],"\n")
-  cat("blocking analysis:\n")
-  boot.l <- 2
-  cat("\t\t\t mean   \t stderr \t dstderr\t tau_int\n")
-  while((length(data)-skip)/boot.l > 20) { 
-    data.tsboot <- tsboot(data, statistic=mean, R=boot.R, l=boot.l,
-	                  sim=tsboot.sim)
-    data.tsboot.ci <- boot.ci(data.tsboot, type = c("norm", "basic", "perc"))
-    cat("blocklength =", boot.l, "\t",
-        data.tsboot$t0[1], "\t", sd(data.tsboot$t[,1]), "\t",
-        sqrt(boot.l/(length(data)-skip))*sd(data.tsboot$t[,1]),
-        "\t", sd(data.tsboot$t[,1])^2/error.naive^2/2, "\n")
-    if(boot.l < 32) {
-      boot.l <- boot.l*2
-    }
-    else {
-      boot.l <- boot.l+20
-    }
-  }
-  if(pl) {
-    plot(data.boot)
-  }
-}

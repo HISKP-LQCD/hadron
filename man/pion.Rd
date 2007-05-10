@@ -46,7 +46,9 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   \item{no.masses}{
     number of masses to be extracted. This argument will set the number
-    of exponentials to be used in the fit
+    of exponentials to be used in the fit.
+
+    Note that this is not yet stable for \code{no.masses > 1}.
   }
   \item{matrix.size}{
     matrix size to be used in the fit. Can be currently set to 2,4 and 6.
