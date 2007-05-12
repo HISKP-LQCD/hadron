@@ -1,13 +1,35 @@
 pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                 variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
                 no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
-                method="uwerr") {
+                method="uwerr", mass.guess, par.guess) {
   
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
   }
   if(missing(t1) || missing(t2)) {
     stop("Error! t1 and t2 must be specified!")
+  }
+  if(missing(mass.guess)) {
+    mass.guess <- c(0.2, 1., 3.)
+  }
+  else {
+    if(length(mass.guess) < no.masses) {
+      stop("mass.guess has not the correct length!")
+    }
+  }
+  if(missing(par.guess)) {
+    par.guess <- c(1.,0.8,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,) 
+  }
+  else{
+    if(length(par.guess) < no.masses*matrix.size) {
+      stop("par.guess has not the correct length!")
+    }
+  }
+  par <- numeric()
+  length(par) <- no.masses*(matrix.size+1)
+  for(i in 1:no.masses) {
+    par[i*(matrix.size+1)] <- mass.guess[i]
+    par[(c(1:matrix.size)+(i-1)*(matrix.size+1))] = par.guess[(c(1:matrix.size)+(i-1)*(matrix.size))]
   }
   
   Time <-  2*max(cmicor[,ind.vec[2]])
@@ -60,28 +82,37 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   variational.solve <- eigen(C3, symmetric=FALSE, only.values = FALSE, EISPACK=FALSE)
   # get the left eigenvectors, the eigenvectors have unit length
-  variational.sortindex <- order(-log(abs(variational.solve$values)*(tb-ta)))
-  # left.vectors <- array(0., dim=c(N,N))
-  # left.vectors <- crossprod(C1, variational.solve$vectors)
-  # X <- crossprod(left.vectors,variational.solve$vectors)
-  # for(i in 1:N) {
-  #  left.vectors[,i] <- left.vectors[,i]/sqrt(X[i,i])
-  #  variational.solve$vectors[,i] <- variational.solve$vectors[,i]/sqrt(X[i,i])
-  #}
-
-  #par <- c(2*left.vectors[(1:matrix.size),1],
-  #         -log(abs(variational.solve$values[variational.sortindex[1]]))/(tb-ta))
-  #if(no.masses > 1) {
-  #  for(i in 2:(no.masses)) {
-  #    par <- c(par,
-  #    left.vectors[(1:matrix.size),i],
-  #             -log(abs(variational.solve$values[variational.sortindex[2]]))/(tb-ta)) 
-  #  }
-  #}
-                                        #  print(par)
+  for(i in 1:N) {
+    if(abs(variational.solve$values[i]) > 0.95/(tb-ta)) {
+      variational.solve$values[i] <- 0.0001
+    }
+  }
+  # this does not quite work for the pion ?
+  if(FALSE) {
+    variational.sortindex <- order(-log(abs(variational.solve$values)*(tb-ta)))
+    left.vectors <- array(0., dim=c(N,N))
+    left.vectors <- crossprod(C1, variational.solve$vectors)
+    X <- crossprod(left.vectors,variational.solve$vectors)
+    for(i in 1:no.masses) {
+      j <-  variational.sortindex[i]
+      left.vectors[,j] <- left.vectors[,i]/sqrt(X[j,j])
+      variational.solve$vectors[,j] <- variational.solve$vectors[,j]/sqrt(X[j,j])
+    }
+    
+    
+    par <- c(2*left.vectors[(1:matrix.size),1],
+             -log(abs(variational.solve$values[variational.sortindex[1]]))/(tb-ta))
+    if(no.masses > 1) {
+      for(i in 2:(no.masses)) {
+        par <- c(par,
+                 left.vectors[(1:matrix.size),i],
+                 -log(abs(variational.solve$values[variational.sortindex[i]]))/(tb-ta)) 
+      }
+    }
+    print(par)
+  }
   
   variational.masses <-  -log(abs(variational.solve$values[variational.sortindex]))/(tb-ta)
-  par <- c(1.,0.1,0.12)
   rm(C1, C2, C3, ta, tb, N)
 
   # Index vector of data to be used in the analysis
@@ -91,7 +122,6 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
             (t1p1+6*T1):(t2p1+6*T1), (t1p1+7*T1):(t2p1+7*T1),
             (t1p1+12*T1):(t2p1+12*T1), (t1p1+13*T1):(t2p1+13*T1),
             (t1p1+15*T1):(t2p1+15*T1))
-    par <- c(.35, 0.45, 0., 0.7,0.2)
   }
   if(matrix.size > 4) {
     ii <- c(ii, (t1p1+16*T1):(t2p1+16*T1), (t1p1+17*T1):(t2p1+17*T1),
@@ -100,10 +130,6 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
             (t1p1+22*T1):(t2p1+22*T1), (t1p1+23*T1):(t2p1+23*T1),
             (t1p1+28*T1):(t2p1+28*T1), (t1p1+29*T1):(t2p1+29*T1),
             (t1p1+30*T1):(t2p1+30*T1), (t1p1+31*T1):(t2p1+31*T1))
-    par <- c(1.,0.5,0.1,0.1,0.1,0.1,0.2)
-  }
-  for(i in 2:no.masses) {
-    par <- c(par, 0.1, par[2:matrix.size], 1.)
   }
 
   #BFGS
@@ -169,7 +195,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   if(method == "boot" || method == "all") {
     fit.boot <- boot(data=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, stype="i",
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par, N=matrix.size, no.masses=no.masses,
+                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                      kappa=kappa, mu=mu)
 
     fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
@@ -224,7 +250,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               effmass=pion.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size)
-  attr(res, "class") <- c("cfit", "list")  
+  attr(res, "class") <- c("pionfit", "list")  
   return(invisible(res))
 }
 

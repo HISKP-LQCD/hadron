@@ -201,7 +201,7 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               effmass=rho.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size)
-  attr(res, "class") <- c("cfit", "list")  
+  attr(res, "class") <- c("rhofit", "cfit", "list")  
   return(invisible(res))
 }
 

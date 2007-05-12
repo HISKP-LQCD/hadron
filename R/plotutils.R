@@ -13,6 +13,14 @@ plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
   plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
+plot.pionfit <- function(fit) {
+  plot.cfit(fit)
+}
+
+plot.rhofit <- function(fit) {
+  plot.cfit(fit)
+}
+
 plot.cfit <- function(fit) {
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   plot.effmass(m=fit.mass,

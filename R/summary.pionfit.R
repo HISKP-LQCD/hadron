@@ -1,0 +1,165 @@
+print.pionfit <- function(fit) {
+  summary(fit)
+}
+
+summary.pionfit <- function(fit) {
+  kappa <- fit$kappa
+  mu <- fit$mu
+  t1 <- fit$t1
+  t2 <- fit$t2
+  fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
+  fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$fitresult$par[1])/sqrt(fit.mass^3)
+  fit.chisqr <- fit$fitresult$value
+  fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
+  
+  cat("mu     = ", mu, "\n")
+  cat("kappa  = ", kappa, "\n")
+  cat("Nr of measurements = ", fit$N, "\n")
+  cat("fitrange = ", t1, "-", t2, "\n")
+  cat("chi^2    = ", fit.chisqr, "\n")
+  cat("dof    = ", fit.dof, "\n")
+  cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
+  
+  cat("\nmpi    = ", fit.mass, "\n")
+  cat("fpi    = ", fit.fpi, "\n")
+  if(fit$matrix.size > 2) {
+    cat("mpcac  =", fit.mass*fit$fitresult$par[3]/fit$fitresult$par[1]/2., "\n")
+  }
+  ii <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
+  cat("\nstate  =", seq(1,fit$no.masses), "\n", sep="\t")
+  cat("masses =", abs(fit$fitresult$par[ii+fit$matrix.size]), "\n", sep="\t")
+  cat("P_L    =", fit$fitresult$par[ii], "\n", sep="\t")
+  cat("P_F    =", fit$fitresult$par[ii+1], "\n", sep="\t")
+  if(fit$matrix.size >2) {
+    cat("A_L    =", fit$fitresult$par[ii+2], "\n", sep="\t")
+    cat("A_F    =", fit$fitresult$par[ii+3], "\n", sep="\t")
+  }
+  if(fit$matrix.size >4) {
+    cat("4_L    =", fit$fitresult$par[ii+4], "\n", sep="\t")
+    cat("4_F    =", fit$fitresult$par[ii+5], "\n", sep="\t")
+  }
+
+  
+  if(!is.null(fit$uwerrresultmps)) {
+    cat("\n--- Autocorrelation analysis for m_ps ---\n")
+    cat("\nS        = ", fit$uwerrresultmps$S, "\n")
+    cat("mps      = ", fit$uwerrresultmps$value, "\n")
+    cat("dmps     = ", fit$uwerrresultmps$dvalue, "\n")
+    cat("ddmps    = ", fit$uwerrresultmps$ddvalue, "\n")
+    cat("tauint   = ", fit$uwerrresultmps$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultmps$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultmps$Wopt, "\n")
+  }
+  if(!is.null(fit$uwerrresultmps2)) {
+    cat("\n--- Autocorrelation analysis for m_ps ---\n")
+    cat("\nS        = ", fit$uwerrresultmps2$S, "\n")
+    cat("mps2     = ", fit$uwerrresultmps2$value, "\n")
+    cat("dmps     = ", fit$uwerrresultmps2$dvalue, "\n")
+    cat("ddmps    = ", fit$uwerrresultmps2$ddvalue, "\n")
+    cat("tauint   = ", fit$uwerrresultmps2$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultmps2$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultmps2$Wopt, "\n")
+  }
+  if(!is.null(fit$uwerrresultmps3)) {
+    cat("\n--- Autocorrelation analysis for m_ps ---\n")
+    cat("\nS        = ", fit$uwerrresultmps3$S, "\n")
+    cat("mps3     = ", fit$uwerrresultmps3$value, "\n")
+    cat("dmps     = ", fit$uwerrresultmps3$dvalue, "\n")
+    cat("ddmps    = ", fit$uwerrresultmps3$ddvalue, "\n")
+    cat("tauint   = ", fit$uwerrresultmps3$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultmps3$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultmps3$Wopt, "\n")
+  }
+  if(!is.null(fit$uwerrresultfps)) {
+    cat("\n--- Autocorrelation analysis for f_ps ---\n")    
+    cat("\nS        = ", fit$uwerrresultfps$S, "\n")
+    cat("fps      = ", fit$uwerrresultfps$value*2*kappa*2*mu/sqrt(2), "\n")
+    cat("dfps     = ", fit$uwerrresultfps$dvalue*2*kappa*2*mu/sqrt(2), "\n")
+    cat("ddfps    = ", fit$uwerrresultfps$ddvalue*2*kappa*2*mu/sqrt(2), "\n")
+    cat("tauint   = ", fit$uwerrresultfps$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultfps$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultfps$Wopt, "\n")
+  }
+  if(!is.null(fit$uwerrresultmpcac)) {
+    cat("\n--- Autocorrelation analysis for m_pcac ---\n")
+    cat("\nS        = ", fit$uwerrresultmpcac$S, "\n")
+    cat("mpcac    = ", fit$uwerrresultmpcac$value, "\n")
+    cat("dmpcac   = ", fit$uwerrresultmpcac$dvalue, "\n")
+    cat("ddmpcac  = ", fit$uwerrresultmpcac$ddvalue, "\n")
+    cat("tauint   = ", fit$uwerrresultmpcac$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultmpcac$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultmpcac$Wopt, "\n")
+    
+  }
+
+  if(!is.null(fit$boot)) {
+    cat("--- Bootstrap analysis  ---\n")
+    cat("---", fit$boot$R, "samples  ---\n")
+    cat("          mean        -err           +err            stderr        bias\n")
+    fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=1)
+    cat("mpi    = ", fit$boot$t0[1], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[1])/1.96
+	, ",", -(fit$boot$t0[1]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,1]),
+	mean(fit$boot$t[,1])-fit$boot$t0[1],"\n")
+    
+    fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=2)
+    cat("fpi    = ", fit$boot$t0[2], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[2])/1.96
+	, ",", -(fit$boot$t0[2]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,2]),
+	mean(fit$boot$t[,2])-fit$boot$t0[2], "\n")
+
+    if(fit$matrix.size > 2) {
+      fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=fit$matrix.size+3)
+      cat("mpcac  = ", fit$boot$t0[fit$matrix.size+3], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[fit$matrix.size+3])/1.96
+          , ",", -(fit$boot$t0[fit$matrix.size+3]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,(fit$matrix.size+3)]),
+          mean(fit$boot$t[,(fit$matrix.size+3)])-fit$boot$t0[fit$matrix.size+3], "\n")
+    }
+    
+    fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=4)
+    cat("P_L    = ", fit$boot$t0[4], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[4])/1.96
+	, ",", -(fit$boot$t0[4]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,4]),
+	mean(fit$boot$t[,4])-fit$boot$t0[4], "\n")
+    
+    fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=5)
+    cat("P_F    = ", fit$boot$t0[5], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[5])/1.96
+	, ",", -(fit$boot$t0[5]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,5]),
+	mean(fit$boot$t[,5])-fit$boot$t0[5],"\n")
+  }
+  if(!is.null(fit$tsboot)) {
+    cat("\n--- Bootstrap analysis with blocking ---\n")
+    cat("---", fit$boot$R, "samples  ---\n")
+    cat("--- block size", fit$tsboot$l, "---\n")
+    fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=1)
+    cat("mpi    = ", fit$tsboot$t0[1], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[1])/1.96
+	, ",", -(fit$tsboot$t0[1]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,1]),
+	mean(fit$tsboot$t[,1])-fit$tsboot$t0[1], "\n")
+    
+    fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=2)
+    cat("fpi    = ", fit$tsboot$t0[2], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[2])/1.96
+	, ",", -(fit$tsboot$t0[2]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,2]),
+	mean(fit$tsboot$t[,2])-fit$tsboot$t0[2], "\n")
+
+    if(fit$matrix.size > 2) {
+      fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=fit$matrix.size+3)
+      cat("mpcac  = ", fit$tsboot$t0[fit$matrix.size+3], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[fit$matrix.size+3])/1.96
+          , ",", -(fit$tsboot$t0[fit$matrix.size+3]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,(fit$matrix.size+3)]),
+          mean(fit$tsboot$t[,(fit$matrix.size+3)])-fit$tsboot$t0[fit$matrix.size+3], "\n")
+    }
+
+    
+    fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=4)
+    cat("P_L    = ", fit$tsboot$t0[4], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[4])/1.96
+	, ",", -(fit$tsboot$t0[4]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,4]),
+	mean(fit$tsboot$t[,4])-fit$tsboot$t0[4], "\n")
+    
+    fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=5)
+    cat("P_F    = ", fit$tsboot$t0[5], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[5])/1.96
+	, ",", -(fit$tsboot$t0[5]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,5]),
+	mean(fit$tsboot$t[,5])-fit$tsboot$t0[5], "\n")
+    
+  }
+
+  if(!is.null(fit$variational.masses)) {
+    cat("\n--- Variational analysis ---\n")
+    cat("masses:", fit$variational.masses, "\n")
+  }
+  
+}
