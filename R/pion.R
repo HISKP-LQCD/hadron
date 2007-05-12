@@ -91,7 +91,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
             (t1p1+6*T1):(t2p1+6*T1), (t1p1+7*T1):(t2p1+7*T1),
             (t1p1+12*T1):(t2p1+12*T1), (t1p1+13*T1):(t2p1+13*T1),
             (t1p1+15*T1):(t2p1+15*T1))
-    par <- c(1.,0.1,0.1,0.1,0.16)
+    par <- c(.35, 0.45, 0., 0.7,0.2)
   }
   if(matrix.size > 4) {
     ii <- c(ii, (t1p1+16*T1):(t2p1+16*T1), (t1p1+17*T1):(t2p1+17*T1),
@@ -100,7 +100,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
             (t1p1+22*T1):(t2p1+22*T1), (t1p1+23*T1):(t2p1+23*T1),
             (t1p1+28*T1):(t2p1+28*T1), (t1p1+29*T1):(t2p1+29*T1),
             (t1p1+30*T1):(t2p1+30*T1), (t1p1+31*T1):(t2p1+31*T1))
-    par <- c(1.,0.1,0.1,0.1,0.1,0.1,0.12)
+    par <- c(1.,0.5,0.1,0.1,0.1,0.1,0.2)
   }
   for(i in 2:no.masses) {
     par <- c(par, 0.1, par[2:matrix.size], 1.)

@@ -8,26 +8,31 @@ summary.cfit <- function(fit) {
   t1 <- fit$t1
   t2 <- fit$t2
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
-  fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$fitresult$par[1])/sqrt(fit.mass^3)*exp(fit.mass*fit$Time/4)
+  fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$fitresult$par[1])/sqrt(fit.mass^3)
   fit.chisqr <- fit$fitresult$value
+  fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
   
   cat("mu     = ", mu, "\n")
   cat("kappa  = ", kappa, "\n")
   cat("Nr of measurements = ", fit$N, "\n")
   cat("fitrange = ", t1, "-", t2, "\n")
   cat("chi^2    = ", fit.chisqr, "\n")
-  if(!is.null(fit$uwerrresultmpcac) || !is.null(fit$uwerrresultmps) ||
-     !is.null(fit$uwerrresultfps)) {
-    cat("mpi    = ", fit.mass, "\n")
+  cat("dof    = ", fit.dof, "\n")
+  cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
+  
+  if(is.null(fit$uwerrresultmv) && is.null(fit$mv.boot)) {
+    cat("\nmpi    = ", fit.mass, "\n")
     cat("fpi    = ", fit.fpi, "\n")
-
-    cat("P_L    = ", fit$fitresult$par[1], "\n")
+    if(fit$matrix.size > 2) {
+      cat("mpcac  = ", fit.mass*fit$fitresult$par[3]/fit$fitresult$par[1]/2., "\n")
+    }
+    cat("\nP_L    = ", fit$fitresult$par[1], "\n")
     cat("P_F    = ", fit$fitresult$par[2], "\n")
-    if(fit$matrix.size == 4) {
+    if(fit$matrix.size >2) {
       cat("A_L    = ", fit$fitresult$par[3], "\n")
       cat("A_F    = ", fit$fitresult$par[4], "\n")
     }
-    if(fit$matrix.size == 6) {
+    if(fit$matrix.size >4) {
       cat("4_L    = ", fit$fitresult$par[5], "\n")
       cat("4_F    = ", fit$fitresult$par[6], "\n")
     }
@@ -53,9 +58,6 @@ summary.cfit <- function(fit) {
   
   if(!is.null(fit$uwerrresultmpcac)) {
     cat("\n--- Autocorrelation analysis for m_pcac ---\n")
-    fit.dof <- 2*(t2-t1+1)*3+(t2-t1+1)*4-length(fit$fitresult$par)
-    cat("dof    = ", fit.dof, "\n")
-    cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")    
     cat("\nS        = ", fit$uwerrresultmpcac$S, "\n")
     cat("mpcac    = ", fit$uwerrresultmpcac$value, "\n")
     cat("dmpcac   = ", fit$uwerrresultmpcac$dvalue, "\n")
@@ -66,10 +68,6 @@ summary.cfit <- function(fit) {
     
   }
   if(!is.null(fit$uwerrresultmps)) {
-    fit.dof <- (t2-t1+1)*3-length(fit$fitresult$par)
-    cat("dof    = ", fit.dof, "\n")
-    cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
-
     cat("\n--- Autocorrelation analysis for m_ps ---\n")
     cat("\nS        = ", fit$uwerrresultmps$S, "\n")
     cat("mps      = ", fit$uwerrresultmps$value, "\n")
@@ -81,10 +79,6 @@ summary.cfit <- function(fit) {
     
   }
   if(!is.null(fit$uwerrresultmv)) {
-    fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
-    cat("dof    = ", fit.dof, "\n")
-    cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
-
     cat("\n--- Autocorrelation analysis for m_v ---\n")
     cat("\nS        = ", fit$uwerrresultmv$S, "\n")
     cat("mv       = ", fit$uwerrresultmv$value, "\n")
@@ -105,9 +99,6 @@ summary.cfit <- function(fit) {
     }
   }
   if(!is.null(fit$uwerrresultfps)) {
-    fit.dof <- (t2-t1+1)*3-length(fit$fitresult$par)
-    cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
-    
     cat("\n--- Autocorrelation analysis for f_ps ---\n")    
     cat("\nS        = ", fit$uwerrresultfps$S, "\n")
     cat("fps      = ", fit$uwerrresultfps$value*2*kappa*2*mu/sqrt(2), "\n")
