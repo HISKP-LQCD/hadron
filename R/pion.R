@@ -1,7 +1,7 @@
 pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                 variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
                 no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
-                method="uwerr", mass.guess, par.guess) {
+                method="uwerr", mass.guess, par.guess, nrep) {
   
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
@@ -40,6 +40,15 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   nrObs <- max(cmicor[,ind.vec[1]])
   Skip <- (skip*(T1)*nrObs*4+1)
   Length <- length(cmicor[,ind.vec[3]])
+  if(missing(nrep)) {
+    nrep <- c(length(cmicor[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4))
+  }
+  else {
+    skip <- 0
+    if(sum(nrep) != length(cmicor[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4)) {
+      stop("sum of replica differs from total no of measurements!")
+    }
+  }
 
   Z <- array(cmicor[((Skip):Length),ind.vec[3]], 
              dim=c(nrObs*(T1)*4,(length(cmicor[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4))))
@@ -66,7 +75,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   
   for(i in 1:(9*4*T1)) {
     Cor[i] = mean(W[(i),])
-    E[i] = uwerrprimary(W[(i),], pl=F)$dvalue
+    E[i] = uwerrprimary(W[(i),], pl=F, nrep=nrep)$dvalue
   }
 
   N <- max(matrix.size,variational$N)
@@ -173,24 +182,24 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   fit.boot <- NULL
   fit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl,
+    fit.uwerrm <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
 
-    fit.uwerrf <- uwerr(f=fitf.pion, data=W[ii,], S=S, pl=pl,
+    fit.uwerrf <- uwerr(f=fitf.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                         kappa=kappa, mu=mu)
     if(matrix.size > 2) {
-      fit.uwerrpcac <- uwerr(f=fitmpcac.pion, data=W[ii,], S=S, pl=pl,
+      fit.uwerrpcac <- uwerr(f=fitmpcac.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                              Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                              kappa=kappa, mu=mu)
     }
     
     if(no.masses == 2) {
-      fit.uwerrm2 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl,
+      fit.uwerrm2 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=2)
     }
     if(no.masses > 2) {
-      fit.uwerrm3 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl,
+      fit.uwerrm3 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
     }
   }
@@ -250,8 +259,8 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               boot=fit.boot, tsboot=fit.tsboot,
               effmass=pion.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
-              matrix.size = matrix.size)
-  attr(res, "class") <- c("pionfit", "list")  
+              matrix.size = matrix.size, nrep=nrep)
+  attr(res, "class") <- c("pionfit", "cfit", "list")  
   return(invisible(res))
 }
 

@@ -35,7 +35,9 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     logical: if set to TRUE the function produces plots
   }
   \item{skip}{
-    number of measurements to be discarded at the beginning of the time series.
+    number of measurements to be discarded at the beginning of the time
+    series. \code{skip} has no effect if two or more replica are used,
+    see argument \code{nrep}.
   }
   \item{variational}{
     list of parameters used for the variational analysis
@@ -63,6 +65,11 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   \item{method}{
     the type of error analysis to be used. Can be either \dQuote{uwerr},
     \dQuote{boot} or \dQuote{all}.
+  }
+  \item{nrep}{
+     vector (N1, N2, ...) of replica length N1, N2. If missing it is
+     assumed that there is only one ensemble. If there are two or more
+     replica the parameter \code{skip} has no effect.
   }
 }
 \value{

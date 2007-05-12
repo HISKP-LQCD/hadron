@@ -7,10 +7,10 @@
   and determines decays constant and \eqn{m_\mathrm{PCAC}}{m_paca}
 }
 \usage{
-pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
-                variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
-                no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
-                method="uwerr")
+  pion(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
+       variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
+       no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
+       method="uwerr", mass.guess, par,guess)
 }
 \arguments{
   \item{cmicor}{
@@ -36,7 +36,9 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     logical: if set to TRUE the function produces plots
   }
   \item{skip}{
-    number of measurements to be discarded at the beginning of the time series.
+    number of measurements to be discarded at the beginning of the time
+    series. \code{skip} has no effect if two or more replica are used,
+    see argument \code{nrep}.
   }
   \item{variational}{
     list of parameters used for the variational analysis
@@ -65,11 +67,31 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   \item{method}{
     the type of error analysis to be used. Can be either \dQuote{uwerr},
-    \dQuote{boot} or \dQuote{all}.
+    \dQuote{boot}, \dQuote{all} or \dQuote{no}. For \dQuote{no} (or any
+    other string) no error analysis is performed. This might be helpful
+    for a first impression and also to test different initial values for
+    the fitting parameters. The latter is in particular needed for more
+    than one state in the fit.
+  }
+  \item{mass.guess}{
+    numerical vector of mass-values to be used as initial values in the
+    fit. If given, it must have at least \code{no.masses} entries.
+  }
+  \item{par.guess}{
+    numerical vector of couling parameter values to be used as initial
+    values in the fit. The order is \eqn{P_L}, \eqn{P_F}, \eqn{A_L},
+    \eqn{A_F}, \eqn{4_L}, \eqn{4_F}, for notation see below. If given,
+    it must have at least \code{no.masses} times \code{matrix.size}
+    entries.
+  }
+  \item{nrep}{
+     vector (N1, N2, ...) of replica length N1, N2. If missing it is
+     assumed that there is only one ensemble. If there are two or more
+     replica the parameter \code{skip} has no effect.
   }
 }
 \value{
-  returns an object of type cfit with the following items
+  returns an object of \code{class} \code{pionfit} with the following items
 
   \item{fitresult}{
     result from the fit as returned by \code{\link{optim}}
@@ -152,6 +174,9 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   2) The 20 available types must be in the following order:
   order PP PA AP AA 44 P4 4P A4 4A   for pion like  \eqn{P=\gamma_5}{P=g5} \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}
   order 44 VV AA 4V V4 4A A4 VA AV   for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4} \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}
+
+  In this routine only PP PA AP AA 44 P4 4P A4 4A are used. 
+
   order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}  \eqn{S=I}
   (cases with space index "i" are summed over i=1,2,3)
   (best choice is weaker coupling at sink - ie PA rather than AP
@@ -161,17 +186,56 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   itype=21 is conserved vector current at sink,  \eqn{\gamma_5}{g5} at source 
   ( iobs is LV  1,  FV  5 )
 
+  pion will perform a fit of of the following matrix
+  \tabular{lcccccc}{
+    \tab\eqn{P_L}\tab\eqn{P_F}\tab\eqn{A_L}\tab\eqn{A_F}\tab\eqn{4_L}\tab\eqn{4_F}\cr
+    \eqn{P_L}\tab\eqn{p_1 p_1 cosh}\tab\eqn{p_1 p_2
+      cosh}\tab\eqn{p_1 p_3 sinh}\tab\eqn{p_1 p_4
+      sinh}\tab\eqn{p_1 p_5 sinh}\tab\eqn{p_1 p_6 sinh}\cr
+    \eqn{P_F}\tab\eqn{p_2 p_1 cosh}\tab\eqn{p_2 p_2 cosh}\tab\eqn{p_2
+      p_3 sinh}\tab\eqn{p_2 p_4 sinh}\tab\eqn{p_2 p_5 sinh}\tab\eqn{p_2
+      p_6 sinh}\cr 
+    \eqn{A_L}\tab\eqn{p_3 p_1 sinh}\tab\eqn{p_3 p_2 sinh}\tab\eqn{p_3
+      p_3 cosh}\tab\eqn{p_3 p_4 cosh}\tab\eqn{p_3 p_5 cosh}\tab\eqn{p_3
+      p_6 cosh}\cr
+    \eqn{A_F}\tab\eqn{p_4 p_1 sinh}\tab\eqn{p_4 p_2 sinh}\tab\eqn{p_4
+      p_3 cosh}\tab\eqn{p_4 p_4 cosh}\tab\eqn{p_4 p_5 cosh}\tab\eqn{p_4
+      p_6 cosh}\cr
+    \eqn{4_L}\tab\eqn{p_5 p_1 sinh}\tab\eqn{p_5 p_2 sinh}\tab\eqn{p_5
+      p_3 cosh}\tab\eqn{p_5 p_4 cosh}\tab\eqn{p_5 p_5 cosh}\tab\eqn{p_5
+      p_6 cosh}\cr
+    \eqn{4_F}\tab\eqn{p_6 p_1 sinh}\tab\eqn{p_6 p_2 sinh}\tab\eqn{p_6
+      p_3 cosh}\tab\eqn{p_6 p_4 cosh}\tab\eqn{p_6 p_5 cosh}\tab\eqn{p_6
+      p_6 cosh}\cr 
+  }
+  for coupling parameter \eqn{p_1} to \eqn{p_6} and a mass \eqn{m_\mathrm{PS}}{mps} entering
+  \eqn{cosh}{\cosh} (and \eqn{sinh}{\sinh} in the same way) as
+  \eqn{\cosh(-m_\mathrm{PS}(T/2-t))}{cosh(-mps(T/2-t))}. The values of \eqn{t} are
+  running from \code{t1} to \code{t2} as specified by the user.
+
+  Corresponding to the value of \code{matrix.size} only a submatrix of
+  the matrix given above is fitted. Moreover, if \code{no.masses} larger
+  than one additional masses and coupling parameters are introduced.
+
+  The pion decay constant is computed from the relation
+  \deqn{4\kappa\mu\frac{p_1}{\sqrt{m_\mathrm{PS}}^3}}{%
+    4 kappa mu p_1/sqrt(mps)^3}
+  and the PCAC mass from
+  \deqn{m_\mathrm{PS} \frac{p_3}{2p_1}}{%
+    mps p_3/(2 p_1)}
+  when the \code{\link{summary.pionfit}} function is called.
 }
 %\references{
 %}
 \seealso{
   \code{\link{rho}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
-  \code{\link{plot.cfit}}, \code{\link{summary.cfit}}, \code{\link{pp}}
+  \code{\link{plot.cfit}}, \code{\link{summary.pionfit}}, \code{\link{pp}}
 }
 \examples{
 library(hadron)
 \dontrun{cmicor <- readcmicor("pion.dat")}
-\dontrun{rhofit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23, no.masses=1, matrix.size=4)}
+\dontrun{pionfit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23, no.masses=1, matrix.size=4)}
+\dontrun{summary(pionfit)}
 }
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{optimize}

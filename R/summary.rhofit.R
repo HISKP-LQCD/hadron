@@ -13,7 +13,9 @@ summary.rhofit <- function(fit) {
   
   cat("mu     = ", mu, "\n")
   cat("kappa  = ", kappa, "\n")
-  cat("Nr of measurements = ", fit$N, "\n")
+  cat("No of measurements = ", fit$N, "\n")
+  cat("No of replica = ", length(fit$nrep))
+  cat("no or measurements per replicum: ", nrep)
   cat("fitrange = ", t1, "-", t2, "\n")
   cat("chi^2    = ", fit.chisqr, "\n")
   cat("dof    = ", fit.dof, "\n")
@@ -44,6 +46,9 @@ summary.rhofit <- function(fit) {
     cat("tauint   = ", fit$uwerrresultmv$tauint, "\n")
     cat("dtauint  = ", fit$uwerrresultmv$dtauint, "\n")
     cat("Wopt     = ", fit$uwerrresultmv$Wopt, "\n")
+    if(fit$uwerrresultmv$R>1) {
+      cat("Qval     =", fit$uwerrresultmv$Qval, "\n")
+    }
     if(fit$no.masses > 1) {
       cat("\n--- Autocorrelation analysis for m_v2 ---\n")
       cat("\nS        = ", fit$uwerrresultmv2$S, "\n")
@@ -53,6 +58,9 @@ summary.rhofit <- function(fit) {
       cat("tauint2  = ", fit$uwerrresultmv2$tauint, "\n")
       cat("dtauint2 = ", fit$uwerrresultmv2$dtauint, "\n")
       cat("Wopt2    = ", fit$uwerrresultmv2$Wopt, "\n")
+      if(fit$uwerrresultmv2$R>1) {
+        cat("Qval     =", fit$uwerrresultmv2$Qval, "\n")
+      }
     }
   }
 

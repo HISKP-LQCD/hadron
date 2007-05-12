@@ -228,7 +228,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   }
 
 # projected deviations: 
-  delpro <- (t(data) %*% fgrad) - rep(abb %*% fgrad, times=N)
+#  delpro <- (t(data) %*% fgrad) - rep(abb %*% fgrad, times=N)
+  delpro <- crossprod(data, fgrad) - rep(abb %*% fgrad, times=N)
 
   GammaFbb<-numeric()
   GammaFbb[1] <- mean(delpro^2)
@@ -299,7 +300,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
       warning("a %.1f sigma bias of the mean has been cancelled",bF/sigmaF)
     }
     
-    Fbr = Fbr - bF*N./nrep;
+    Fbr = Fbr - bF*N/nrep;
     Fb  = Fb  - bF*R;
   }
 
@@ -340,7 +341,7 @@ summary.uwerr <- function(uwerr) {
   cat("Error analysis with Gamma method\n")
   cat("based on", uwerr$N, "measurements\n")
   if(uwerr$R>1) {
-    cat("split in", uwerr$R, "replica with", nrep, "measurements each\n")
+    cat("split in", uwerr$R, "replica with (", uwerr$nrep, ") measurements, respectively\n")
   }
   cat("The Gamma function was summed up until Wopt=", uwerr$Wopt, "\n\n")
   cat("value    =", uwerr$value, "\n")
