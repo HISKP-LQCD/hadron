@@ -6,7 +6,7 @@
 }
 \usage{
 averx(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1,
-t2, mps, par=c(0.6, 0.15), S=1.5)
+t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr")
 }
 \arguments{
   \item{data3pt}{
@@ -20,7 +20,7 @@ t2, mps, par=c(0.6, 0.15), S=1.5)
   \item{ind.vec}{
     index vector
   }
-  \item{ind.vec2}{
+  \item{ind.vec2pt}{
     index vector
   }
   \item{skip}{
@@ -42,6 +42,14 @@ t2, mps, par=c(0.6, 0.15), S=1.5)
   \item{par}{
     initial values for the fit of the pseudo-scalar mass. par[1] is the
     amplitude and par[2] is the mass for the cosh fit.
+  }
+  \item{method}{
+    the type of error analysis to be used. Can be either \dQuote{uwerr},
+    \dQuote{boot}, \dQuote{all} or \dQuote{no}. For \dQuote{no} (or any
+    other string) no error analysis is performed. This might be helpful
+    for a first impression and also to test different initial values for
+    the fitting parameters. The latter is in particular needed for more
+    than one state in the fit.
   }
 }
 \value{

@@ -189,13 +189,12 @@ a0(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   pion will perform a fit of of the following matrix
   \tabular{lcc}{
-    \tab\eqn{B_L}\tab\eqn{B_F}\cr
-    \eqn{B_L}\tab\eqn{p_1 p_1 cosh}\tab\eqn{p_1 p_2
-      cosh}\cr
-    \eqn{B_F}\tab\eqn{p_2 p_1 cosh}\tab\eqn{p_2 p_2 cosh}\cr
+    \tab BL \tab BF \cr
+    BL \tab p1 p1 cosh \tab p1 p2 cosh \cr
+    BF \tab p2 p1 cosh \tab p2 p2 cosh \cr
   }
-  for coupling parameter \eqn{p_1} to \eqn{p_2} and a mass \eqn{m_\mathrm{b1}}{mb1} entering
-  \eqn{cosh}{\cosh} as
+  for coupling parameter \eqn{p_1}{p1} to \eqn{p_2}{p2} and a mass \eqn{m_\mathrm{b1}}{mb1} entering
+  \eqn{\cosh}{cosh} as
   \eqn{\cosh(-m_\mathrm{b1}(T/2-t))}{cosh(-mb1(T/2-t))}. The values of \eqn{t} are
   running from \code{t1} to \code{t2} as specified by the user.
 

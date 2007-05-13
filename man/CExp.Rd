@@ -3,8 +3,8 @@
 \title{Cosh Or Sinh Build Out Of Two Exps}
 \description{
   Evaluates
-  \deqn{f(x) = \frac{1}{2}(\exp(-m x)\pm\exp(-m(T-x)))}{%
-  f(x) = 1/2 (exp(-m x) +- exp(-m(T-x)))}
+  \deqn{f(x) = \frac{1}{2}(\exp(-m(T-x))\pm\exp(-m x))}{%
+  f(x) = 1/2 (exp(-m(T-x)) +/- exp(-m x))}
   for given mass \eqn{m}, vector \eqn{x} and time extent \eqn{T}. This
   form is better usable in \eqn{\chi^2}{chi^2} fitting than cosh or sinh.
 }
