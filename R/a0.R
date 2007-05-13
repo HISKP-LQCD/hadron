@@ -120,7 +120,7 @@ a0 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                  -log(abs(variational.solve$values[variational.sortindex[i]]))/(tb-ta)) 
       }
     }
-    print(par)
+#    print(par)
   }
   
   variational.masses <-  -log(abs(variational.solve$values[variational.sortindex]))/(tb-ta)

@@ -4,12 +4,14 @@
 \description{
   fits one or several cosh and sinh to data for extracting the vector
   meson mass and excited states in the vector channel.
+
+  This is so far only for twisted mass lattice QCD in the twisted basis.
 }
 \usage{
-rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
-                variational=list(ta=4, tb=5, N=6), ind.vec=c(1,3,4,5),
-                no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
-                method="uwerr")
+rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
+    variational=list(ta=4, tb=5, N=6), ind.vec=c(1,3,4,5),
+    no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
+    method="uwerr")
 }
 \arguments{
   \item{cmicor}{
@@ -73,7 +75,7 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
 }
 \value{
-  returns an object of type cfit with the following items
+  returns an object of type cfit \code{rhofit} the following items
 
   \item{fitresult}{
     result from the fit as returned by \code{\link{optim}}
@@ -146,18 +148,18 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   1) the 4 operators for each type must be sorted like local-local,
   local-fuzzed, fuzzed-local and fuzzed-fuzzed. (fuzzed=non-local)
   
-  2) The 20 available types must be in the following order:
-  order PP PA AP AA 44 P4 4P A4 4A   for pion like  \eqn{P=\gamma_5}{P=g5} \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}
-  order 44 VV AA 4V V4 4A A4 VA AV   for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4} \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}
+  2) The 20 available types must be in the following order:\cr
+  order PP PA AP AA 44 P4 4P A4 4A   for pion like  \eqn{P=\gamma_5}{P=g5} \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}\cr
+  order 44 VV AA 4V V4 4A A4 VA AV   for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4} \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}\cr
   order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}
-  \eqn{S=I}
+  \eqn{S=I}\cr
 
   In this routine only  44 VV AA 4V V4 4A A4 VA AV are used.
   
-  (cases with space index "i" are summed over i=1,2,3)
-  (best choice is weaker coupling at sink - ie PA rather than AP
-  order of magnitudes \eqn{P > 4 > A}  (4 mixes A)
-  order of magnitudes \eqn{4\sim A > V}{4 ~ A > V}  (A mixes V))
+  (cases with space index "i" are summed over i=1,2,3)\cr
+  (best choice is weaker coupling at sink - ie PA rather than AP\cr
+  order of magnitudes \eqn{P > 4 > A}  (4 mixes A)\cr
+  order of magnitudes \eqn{4\sim A > V}{4 ~ A > V}  (A mixes V))\cr
   
   itype=21 is conserved vector current at sink,  \eqn{\gamma_5}{g5} at source 
   ( iobs is LV  1,  FV  5 )
