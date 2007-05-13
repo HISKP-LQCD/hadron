@@ -66,14 +66,14 @@ effmass2 <- function(data, timeextent, t) {
   return(invisible(mass))
 }
 
-effectivemass <- function(from, to, Time, Z, pl=TRUE, S) {
+effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   L <- (to-from+1)
   i <- 1
   result <- data.frame(t = array(0.,dim=c(L)), mass = array(0.,dim=c(L)), dmass = array(0.,dim=c(L)),
                        ddmass = array(0.,dim=c(L)), tauint = array(0.,dim=c(L)), dtauint = array(0.,dim=c(L)))
 
   for(t in from:to) {
-    try(mass <- uwerrderived(effmass2, Z[t:(t+1),], S=S, pl=F, timeextent=Time, t=t))
+    try(mass <- uwerrderived(effmass2, Z[t:(t+1),], S=S, pl=F, timeextent=Time, t=t, ...))
 
     result$t[i] <- t-1
     result$mass[i] <- mass$value[1]
