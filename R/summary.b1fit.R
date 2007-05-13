@@ -61,7 +61,7 @@ summary.b1fit <- function(fit) {
     cat("---", fit$boot$R, "samples  ---\n")
     cat("          mean        -err           +err            stderr        bias\n")
     for(no in 1:fit$no.masses) {
-      index <- no*(fit$matrix.size+1)
+      index <- (no-1)*(fit$matrix.size+1)+1
       b.ci <- boot.ci(fit$boot, type = c("norm"), index=index)
       cat("mb1[",no,"] = ", abs(fit$boot$t0[index]), "(", (b.ci$normal[1,2]-fit$boot$t0[index])/1.96
           , ",", -(fit$boot$t0[index]-b.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,index]),
@@ -73,7 +73,7 @@ summary.b1fit <- function(fit) {
     cat("---", fit$tsboot$R, "samples  ---\n")
     cat("--- block size", fit$tsboot$l, "---\n")
     for(no in 1:fit$no.masses) {
-      index <- no*(fit$matrix.size+1)
+      index <- (no-1)*(fit$matrix.size+1)+1
       tsb.ci <- boot.ci(fit$tsboot, type = c("norm"), index=index)
       cat("mb1[",no,"] = ", fit$tsboot$t0[index], "(", (tsb.ci$normal[1,2]-fit$tsboot$t0[index])/1.96
           , ",", -(fit$tsboot$t0[index]-tsb.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,index]),
