@@ -11,7 +11,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   cat("mean value = ", data.mean, "\n")
   cat("naive error = ", error.naive, "\n")
   
-  data.boot <- boot(data=data, statistic=mean.index, R=boot.R, stype="i")
+  data.boot <- boot(data=data[skip:length(data)], statistic=mean.index, R=boot.R, stype="i")
   data.boot.ci <- boot.ci(data.boot, type = c("norm", "basic", "perc"))
 
   cat("                  mean        -err           +err            stderr        bias\n")
@@ -34,7 +34,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   j <- 1
   while((length(data)-skip)/boot.l > 20) {
     j <- j+1
-    data.tsboot <- tsboot(data, statistic=mean, R=boot.R, l=boot.l,
+    data.tsboot <- tsboot(data[skip:length(data)], statistic=mean, R=boot.R, l=boot.l,
 	                  sim=tsboot.sim)
     data.tsboot.ci <- boot.ci(data.tsboot, type = c("norm", "basic", "perc"))
     cat("blocklength =", boot.l, "\t",

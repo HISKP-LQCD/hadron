@@ -27,25 +27,30 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t
     Z2pt[i,] <- (W2pt[i,] + W2pt[(Time-i+2),])*0.5
   }
   for(i in 2:T1) {
-    Z[i,] <- (W[i,] + W[(Time-i+2),])*0.5/Z2pt[T1,]
+    Z[i,] <- (W[i,] + W[(Time-i+2),])*0.5
   }
   ii <- c((t1+1):(t2+1))
-  Zall <- rbind(Z[ii,],Z2pt[ii,])
-  
+  Zall <- rbind(Z[ii,], Z2pt[ii,], Z2pt[Thalf,])
+
   for(i in 1:T1) {
-    Cor[i] <- mean(Z[i,])
-    Err[i] <- uwerrprimary(Z[i,])$dvalue
     Cor2pt[i] <- mean(Z2pt[i,])
     Err2pt[i] <- uwerrprimary(Z2pt[i,])$dvalue
+  }
+  for(i in 1:T1) {
+    Cor[i] <- mean(Z[i,])/Cor2pt[T1]
+    Err[i] <- uwerrderived(f=get.ratio, data=rbind(Z[i,],Z2pt[T1,]), S=S)$dvalue
   }
   rm(Z, Z2pt, W, W2pt)
   
   averx.fit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii], Err=Err[ii])
-  blub <-  get.averx(Cor=c(Cor[ii],Cor2pt[ii]), Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+  blub <-  get.averx(Cor=c(Cor[ii],Cor2pt[ii],Cor2pt[T1]), Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
   if(missing(mps)) {
     mps = averx.fit$minimum/blub
   }
-  averx.uwerr <- uwerrderived(f=get.averx, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+  averx.uwerr <- NULL
+  if(method == "uwerr") {
+    averx.uwerr <- uwerrderived(f=get.averx, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+  }
   res <- list(averx=averx.fit$minimum/mps, daverx=averx.uwerr$dvalue,
               data=data.frame(Cor=Cor, Err=Err), fit.uwerr=averx.uwerr,
               mps=mps, t1=t1, t2=t2, N=averx.uwerr$N)
@@ -63,12 +68,18 @@ ChiSqr.mpi <- function(par, Time, x, y, err) {
   return(Sumall)
 }
 
+get.ratio <- function(data) {
+  return(data[1]/data[2])
+}
+
 get.averx <- function(Cor, Err, Time, t1, t2, par) {
-  Half <- length(Cor)/2
+  Half <- (length(Cor)-1)/2
   ii1 <- c(1:Half)
   ii2 <- c((Half+1):(2*Half))
+  # 2pt function at T/2
+  ii3 <- c(length(Cor))
   #fit 3pt function to a constant
-  fitit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii1], Err=Err[ii1])
+  fitit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii1]/Cor[ii3], Err=Err[ii1])
   #get mpi
   fit.mpi <- optim(par=par, ChiSqr.mpi, method="BFGS", control=list(trace=0),Time=Time,
                     x=c((t1):(t2)), y=Cor[ii2], err=Err[ii2])
