@@ -43,7 +43,8 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t
   rm(Z, Z2pt, W, W2pt)
   
   averx.fit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii], Err=Err[ii])
-  blub <-  get.averx(Cor=c(Cor[ii],Cor2pt[ii],Cor2pt[T1]), Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+  blub <-  get.averx(Cor=c(Cor[ii]*Cor2pt[T1],Cor2pt[ii],Cor2pt[T1]),
+                     Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
   if(missing(mps)) {
     mps = averx.fit$minimum/blub
   }
