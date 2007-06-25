@@ -6,7 +6,7 @@
 }
 \usage{
 averx(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1,
-t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr")
+t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr", nrep)
 }
 \arguments{
   \item{data3pt}{
@@ -50,6 +50,11 @@ t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr")
     for a first impression and also to test different initial values for
     the fitting parameters. The latter is in particular needed for more
     than one state in the fit.
+  }
+  \item{nrep}{
+    vector (N1, N2, ...) of replica length N1, N2. If missing it is
+    assumed that there is only one ensemble. If there are two or more
+    replica the parameter \code{skip} has no effect.
   }
 }
 \value{

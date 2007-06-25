@@ -1,12 +1,33 @@
+# $Id$
 
-averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr") {
+averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2),
+                  skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5,
+                  method="uwerr", nrep) {
 
+  if(missing(data3pt) || missing(data2pt)) {
+    stop("Error! Data is missing!")
+  }
+  if(missing(t1) || missing(t2)) {
+    stop("Error! t1 and t2 must be specified!")
+  }
+  
   Time <- max(data3pt[,ind.vec[1]])+1
   Thalf <- Time/2
   T1 <- Thalf+1
   Length <- min(length(data3pt[,ind.vec[1]]), length(data2pt[,ind.vec2pt[1]]))
   nrObs <- 1
   Skip <- (skip*(Time)*nrObs+1)
+
+  if(missing(nrep)) {
+    nrep <- c(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))
+  }
+  else {
+    Skip <- 0
+    if(sum(nrep) != length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time))) {
+      stop("sum of replica differs from total no of measurements!")
+    }
+  }
+
   
   W <- -array(data3pt[((Skip):Length),ind.vec[2]], 
              dim=c(nrObs*(Time),(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))))
@@ -38,7 +59,7 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t
   }
   for(i in 1:T1) {
     Cor[i] <- mean(Z[i,])/Cor2pt[T1]
-    Err[i] <- uwerrderived(f=get.ratio, data=rbind(Z[i,],Z2pt[T1,]), S=S)$dvalue
+    Err[i] <- uwerrderived(f=get.ratio, nrep=nrep, data=rbind(Z[i,],Z2pt[T1,]), S=S)$dvalue
   }
   rm(Z, Z2pt, W, W2pt)
   
@@ -50,7 +71,7 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t
   }
   averx.uwerr <- NULL
   if(method == "uwerr") {
-    averx.uwerr <- uwerrderived(f=get.averx, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
+    averx.uwerr <- uwerrderived(f=get.averx, nrep=nrep, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
   }
   res <- list(averx=averx.fit$minimum/mps, daverx=averx.uwerr$dvalue,
               data=data.frame(Cor=Cor, Err=Err), fit.uwerr=averx.uwerr,
