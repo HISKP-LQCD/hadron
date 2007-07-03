@@ -18,7 +18,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
   if(missing(par.guess)) {
-    par.guess <- c(1.,0.8,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,) 
+    par.guess <- c(1.,0.8,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1, 0.1,0.1,0.1,0.1,0.1,0.1) 
   }
   else{
     if(length(par.guess) < no.masses*matrix.size) {

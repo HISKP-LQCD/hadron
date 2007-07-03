@@ -17,7 +17,7 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2),
   Length <- min(length(data3pt[,ind.vec[1]]), length(data2pt[,ind.vec2pt[1]]))
   nrObs <- 1
   Skip <- (skip*(Time)*nrObs+1)
-
+  
   if(missing(nrep)) {
     nrep <- c(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))
   }
@@ -75,7 +75,7 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2),
   }
   res <- list(averx=averx.fit$minimum/mps, daverx=averx.uwerr$dvalue,
               data=data.frame(Cor=Cor, Err=Err), fit.uwerr=averx.uwerr,
-              mps=mps, t1=t1, t2=t2, N=averx.uwerr$N)
+              mps=mps, t1=t1, t2=t2, N=averx.uwerr$N, nrep=nrep)
   attr(res, "class") <- c("averx", "list")  
   return(invisible(res))
 }
@@ -111,13 +111,19 @@ get.averx <- function(Cor, Err, Time, t1, t2, par) {
 
 summary.averx <- function(averx) {
   cat("<x>      =", averx$averx, "\n")
+  cat("based on", sum(averx$nrep), "measurements\n")
+  if((averx$fit.uwerr$R>1) && (!is.null(averx$fit.uwerr))) {
+    cat("split in", averx$fit.uwerr$R, "replica with (", averx$nrep, ") measurements, respectively\n")
+  }
   cat("error    =", averx$daverx, "\n")
   if(!is.null(averx$fit.uwerr)) {
     cat("tauint   =", averx$fit.uwerr$tauint, "\n")
     cat("dtauint  =", averx$fit.uwerr$dtauint, "\n")
     cat("Wopt     =", averx$fit.uwerr$Wopt, "\n")
+    if(averx$fit.uwerr$R>1) {
+      cat("Qval     =", averx$fit.uwerr$Qval, "\n")
+    }
   }
-  cat("no.meas  =", averx$fit.uwerr$N, "\n")
 }
 
 print.averx <- function(averx) {
