@@ -283,7 +283,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)])
   if(CFbbopt <= 0) {
-    stop("Gamma pathological, estimated error^2 <0\n")
+    #stop("Gamma pathological, estimated error^2 <0\n")
+    warning("Gamma pathological, estimated error^2 <0\n")
   }
   GammaFbb <- GammaFbb+CFbbopt/N # bias in Gamma corrected
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
