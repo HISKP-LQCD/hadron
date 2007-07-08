@@ -151,7 +151,9 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     if(matrix.size > 2) {
       fit.pcac <- abs(pionfit$par[5])*pionfit$par[3]/pionfit$par[1]/2.
     }
-
+    if(matrix.size > 4) {
+      fit.zv <- 2.*mu/abs(pionfit$par[5])*pionfit$par[1]/pionfit$par[5]
+    }
   }
   else if(no.masses == 2) {
     pionfit <- optim(par, ChiSqr.2mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
@@ -177,6 +179,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   fit.uwerrm <- NULL
   fit.uwerrf <- NULL
   fit.uwerrpcac <- NULL
+  fit.uwerrzv <- NULL
   fit.uwerrm2 <- NULL
   fit.uwerrm3 <- NULL
   fit.boot <- NULL
@@ -192,6 +195,11 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
       fit.uwerrpcac <- uwerr(f=fitmpcac.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
                              Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                              kappa=kappa, mu=mu)
+    }
+    if(matrix.size > 4) {
+      fit.uwerrzv <- uwerr(f=fitzv.pion, data=W[ii,], S=S, pl=pl, nrep=nrep, Time=Time, t1=t1, t2=t2,
+                           Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, kappa=kappa,
+                           mu=mu)
     }
     
     if(no.masses == 2) {
@@ -255,7 +263,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   res <- list(fitresult=pionfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultmps2=fit.uwerrm2, uwerrresultmps3=fit.uwerrm3,
-              uwerrresultfps=fit.uwerrf, uwerrresultmpcac=fit.uwerrpcac,
+              uwerrresultfps=fit.uwerrf, uwerrresultmpcac=fit.uwerrpcac, uwerrresultzv=fit.uwerrzv,
               boot=fit.boot, tsboot=fit.tsboot,
               effmass=pion.eff, kappa=kappa, mu=mu,
               variational.masses=variational.masses, no.masses=no.masses,
@@ -402,6 +410,33 @@ fitmpcac.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   return(fit.pcac)
 }
 
+fitzv.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
+                       N=2, no.masses=1, no=1, kappa, mu, kludge=FALSE) {
+  Thalf <- Time/2
+  T1 <- Thalf+1
+  t1p1 <- (t1+1)
+  t2p1 <- (t2+1)
+  tr <- (t2-t1+1)
+
+  if(no.masses == 1) {
+    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+    sort.ind <- c(1)
+  }
+  else if (no.masses == 2) {
+    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    sort.ind <- order(fit$par[c((N+1),(2*N+2))])
+  }
+  else if (no.masses == 3) {
+    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
+  }
+  fit.zv <- 2*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]
+  return(fit.zv)
+}
+
 
 fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                           N=2, no.masses=1, kludge=FALSE, kappa, mu) {
@@ -427,8 +462,14 @@ fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
     sort.ind <- c(1)
     fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
-    if(N > 2) {
-      fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
+    fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
+    fit.zv <- 2.*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]
+    if(N > 4) {
+      return(c(abs(fit$par[N+1]), fit.fpi, fit$par[c(1:N)],
+               fit.pcac, fit.zv,
+               fit$value))
+    }
+    else if(N > 2) {
       return(c(abs(fit$par[N+1]), fit.fpi, fit$par[c(1:N)],
                fit.pcac,
                fit$value))
@@ -443,9 +484,17 @@ fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
     fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
+    fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
+    fit.zv <- 2.*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]
+    if(N > 4) {
+      return(c(abs(fit$par[sort.ind[1]*(N+1)]), fit.fpi,
+               fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
+               fit.pcac, fit.zv,
+               abs(fit$par[sort.ind[2]*(N+1)]),
+               fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)-1))],
+               fit$value))
+    }
     if(N > 2) {
-      fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
-      
       return(c(abs(fit$par[sort.ind[1]*(N+1)]), fit.fpi,
                fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
                fit.pcac,
@@ -466,9 +515,19 @@ fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                      x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
     fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
+    fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
+    fit.zv <- 2.*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]
+    if(N > 4) {
+      return(c(abs(fit$par[sort.ind[1]*(N+1)]), fit.fpi,
+               fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
+               fit.pcac, fit.zv,
+               abs(fit$par[sort.ind[2]*(N+1)]),
+               fit$par[c(((sort.ind[2]-1)*(N+1)+1):((sort.ind[2])*(N+1)-1))],
+               abs(fit$par[sort.ind[3]*(N+1)]),
+               fit$par[c(((sort.ind[3]-1)*(N+1)+1):((sort.ind[3])*(N+1)-1))],
+               fit$value))
+    }
     if(N > 2) {
-      fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
-      
       return(c(abs(fit$par[sort.ind[1]*(N+1)]), fit.fpi,
                fit$par[c(((sort.ind[1]-1)*(N+1)+1):((sort.ind[1])*(N+1)-1))],
                fit.pcac,

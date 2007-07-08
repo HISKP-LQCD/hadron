@@ -221,12 +221,15 @@
   than one additional masses and coupling parameters are introduced.
 
   The pion decay constant is computed from the relation
-  \deqn{4\kappa\mu\frac{p_1}{\sqrt{m_\mathrm{PS}}^3}}{%
-    4 kappa mu p_1/sqrt(mps)^3}
+  \deqn{f_\mathrm{PS} = 4\kappa\mu\frac{p_1}{\sqrt{m_\mathrm{PS}}^3}}{%
+    fps = 4 kappa mu p_1/sqrt(mps)^3}
   and the PCAC mass (for \code{matrix.size} > 2) from
-  \deqn{m_\mathrm{PS} \frac{p_3}{2p_1}}{%
-    mps p_3/(2 p_1)}
+  \deqn{m_\mathrm{PCAC} = m_\mathrm{PS} \frac{p_3}{2p_1}}{%
+    mpcac = mps p_3/(2 p_1)}
   when the \code{\link{summary.pionfit}} function is called.
+  For \code{matrix.size} > 4 also \eqn{Z_V} is computed as
+  \deqn{Z_\mathrm{V}=\frac{2\mu}{m_\mathrm{PS}}\frac{p_1}{p_5}}{%
+    Z_V = 2 mu p_1/(mps p_5)}
 }
 %\references{
 %}

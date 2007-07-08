@@ -27,6 +27,9 @@ summary.pionfit <- function(fit) {
   if(fit$matrix.size > 2) {
     cat("mpcac  =", fit.mass*fit$fitresult$par[3]/fit$fitresult$par[1]/2., "\n")
   }
+  if(fit$matrix.size > 4) {
+    cat("Z_V    =", 2.*mu/fit.mass*fit$fitresult$par[1]/fit$fitresult$par[5], "\n")
+  }
   ii <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
   cat("\nstate  =", seq(1,fit$no.masses), "\n", sep="\t")
   cat("masses =", abs(fit$fitresult$par[ii+fit$matrix.size]), "\n", sep="\t")
@@ -107,7 +110,20 @@ summary.pionfit <- function(fit) {
       cat("Qval     =", fit$uwerrresultmpcac$Qval, "\n")
     }
   }
-
+  if(!is.null(fit$uwerrresultzv)) {
+    cat("\n--- Autocorrelation analysis for Z_V ---\n")
+    cat("\nS        = ", fit$uwerrresultzv$S, "\n")
+    cat("Z_V      = ", fit$uwerrresultzv$value, "\n")
+    cat("dzv      = ", fit$uwerrresultzv$dvalue, "\n")
+    cat("ddzv     = ", fit$uwerrresultzv$ddvalue, "\n")
+    cat("tauint   = ", fit$uwerrresultzv$tauint, "\n")
+    cat("dtauint  = ", fit$uwerrresultzv$dtauint, "\n")
+    cat("Wopt     = ", fit$uwerrresultzv$Wopt, "\n")
+    if(fit$uwerrresultmpcac$R>1) {
+      cat("Qval     =", fit$uwerrresultmpcac$Qval, "\n")
+    }
+  }
+  
   if(!is.null(fit$boot)) {
     cat("--- Bootstrap analysis  ---\n")
     cat("---", fit$boot$R, "samples  ---\n")
@@ -127,6 +143,13 @@ summary.pionfit <- function(fit) {
       cat("mpcac  = ", fit$boot$t0[fit$matrix.size+3], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[fit$matrix.size+3])/1.96
           , ",", -(fit$boot$t0[fit$matrix.size+3]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,(fit$matrix.size+3)]),
           mean(fit$boot$t[,(fit$matrix.size+3)])-fit$boot$t0[fit$matrix.size+3], "\n")
+    }
+
+    if(fit$matrix.size > 4) {
+      fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=fit$matrix.size+4)
+      cat("Z_V    = ", fit$boot$t0[fit$matrix.size+4], "(", (fit$boot.ci$normal[1,2]-fit$boot$t0[fit$matrix.size+4])/1.96
+          , ",", -(fit$boot$t0[fit$matrix.size+4]-fit$boot.ci$normal[1,3])/1.96, ")", sd(fit$boot$t[,(fit$matrix.size+4)]),
+          mean(fit$boot$t[,(fit$matrix.size+4)])-fit$boot$t0[fit$matrix.size+4], "\n")      
     }
     
     fit$boot.ci <- boot.ci(fit$boot, type = c("norm"), index=4)
@@ -160,6 +183,12 @@ summary.pionfit <- function(fit) {
           mean(fit$tsboot$t[,(fit$matrix.size+3)])-fit$tsboot$t0[fit$matrix.size+3], "\n")
     }
 
+    if(fit$matrix.size > 4) {
+      fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=fit$matrix.size+4)
+      cat("Z_V    = ", fit$tsboot$t0[fit$matrix.size+4], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[fit$matrix.size+4])/1.96
+          , ",", -(fit$tsboot$t0[fit$matrix.size+4]-fit$tsboot.ci$normal[1,3])/1.96, ")", sd(fit$tsboot$t[,(fit$matrix.size+4)]),
+          mean(fit$tsboot$t[,(fit$matrix.size+4)])-fit$tsboot$t0[fit$matrix.size+4], "\n")      
+    }
     
     fit$tsboot.ci <- boot.ci(fit$tsboot, type = c("norm"), index=4)
     cat("P_L    = ", fit$tsboot$t0[4], "(", (fit$tsboot.ci$normal[1,2]-fit$tsboot$t0[4])/1.96
