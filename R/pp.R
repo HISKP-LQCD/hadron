@@ -25,8 +25,10 @@ pp <- function(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, de
     options(error = function() {cat("\nAn Error occured in uwerrderived function! Continuing with next timeslice...\nResults of this timeslice must not be used!!\n")})
 
     cat("fitting from timeslice", cutoff, "!\n")
-    try(mass <- uwerrderived(getmass, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)], S, pl=debug, T2, cutoff, A, m, debug=debug))
-    try(amp <- uwerrderived(getamp, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)], S, pl=debug, T2, cutoff, A, m, debug=debug))
+    try(mass <- uwerrderived(f=getmass, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
+                             S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug))
+    try(amp <- uwerrderived(f=getamp, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
+                            S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug))
 
     result$t[i] <- cutoff-1
     result$mass[i] <- mass$value[1]
@@ -119,7 +121,7 @@ ppeffectivemass <- function(filename, from, to, skip=0, S=1.5, plotit=F) {
                                         # t counted form 1!!
 
   for(t in from:to) {
-    try(mass <- uwerrderived(effmass, data=rbind(Z[t:(t+1),skip:length(Z[1,])], Z[(T2+2-t-1):(T2+2-t),skip:length(Z[1,])]), S, pl=F, timeextent=T2, t=t))
+    try(mass <- uwerrderived(f=effmass, data=rbind(Z[t:(t+1),skip:length(Z[1,])], Z[(T2+2-t-1):(T2+2-t),skip:length(Z[1,])]), S=S, pl=F, timeextent=T2, t=t))
 
     result$t[i] <- t-1
     result$mass[i] <- mass$value[1]
@@ -160,7 +162,7 @@ ppcorr <-  function(filename, skip = 0, S=1.5, plotit=F) {
   cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
   rm(psscar)
   for(t in 1:T2) {
-    corr <- uwerrprimary(x=Z[t,skip:length(Z[1,])], S, pl=F)
+    corr <- uwerrprimary(x=Z[t,skip:length(Z[1,])], S=S, pl=F)
     
     result$t[i] <- t-1
     result$corr[i] <- corr$value[1]
@@ -202,14 +204,14 @@ correlator <-  function(filename, skip = 0, S=1.5, plotit=F, fold=F, symmetric=T
     for(t in 1:(T2/2+1)) {
       if((t!=1) && (t!=T2/2+1)) {
         if(symmetric) {
-          corr <- uwerrprimary(x=0.5*(Z[t,skip:length(Z[1,])]+Z[T2-t+1,skip:length(Z[1,])]), S, pl=F)
+          corr <- uwerrprimary(data=0.5*(Z[t,skip:length(Z[1,])]+Z[T2-t+1,skip:length(Z[1,])]), S=S, pl=F)
         }
         else {
-          corr <- uwerrprimary(x=0.5*(Z[t,skip:length(Z[1,])]-Z[T2-t+1,skip:length(Z[1,])]), S, pl=F)
+          corr <- uwerrprimary(data=0.5*(Z[t,skip:length(Z[1,])]-Z[T2-t+1,skip:length(Z[1,])]), S=S, pl=F)
         }
       }
       else {
-        corr <- uwerrprimary(x=Z[t,skip:length(Z[1,])], S, pl=F)
+        corr <- uwerrprimary(data=Z[t,skip:length(Z[1,])], S=S, pl=F)
       }
       
       result$t[i] <- t-1
@@ -228,7 +230,7 @@ correlator <-  function(filename, skip = 0, S=1.5, plotit=F, fold=F, symmetric=T
     cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
     rm(psscar)
     for(t in 1:T2) {
-      corr <- uwerrprimary(x=Z[t,skip:length(Z[1,])], S, pl=F)
+      corr <- uwerrprimary(data=Z[t,skip:length(Z[1,])], S=S, pl=F)
       
       result$t[i] <- t-1
       result$corr[i] <- corr$value[1]

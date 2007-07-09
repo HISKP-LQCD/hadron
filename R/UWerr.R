@@ -144,7 +144,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   ddvalue <- dvalue*sqrt((Wopt+0.5)/N)
   dtauintofW <- tauintFbb[1:(Wmax+1)]*sqrt(c(0:Wmax)/N)*2 
 
-  tauint  <- tauintFbb[(Wopt)]
+  tauint  <- tauintFbb[(Wopt+1)]
   dtauint <- tauint*2*sqrt((Wopt-tauint+0.5)/N)
   
   # Q value for replica distribution if R>=2
@@ -308,7 +308,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   value <- Fbb
   dvalue <- sigmaF
   ddvalue <- sigmaF*sqrt((Wopt+0.5)/N)
-  tauint  <- tauintFbb[(Wopt)]
+  tauint  <- tauintFbb[(Wopt+1)]
   dtauint = tauint*2*sqrt((Wopt-tauint+0.5)/N)
   dtauintofW <- tauintFbb[1:(Wmax+1)]*sqrt(c(0:Wmax)/N)*2 
   
@@ -390,7 +390,7 @@ tauintplot <- function(ti, dti, Wmax, Wopt) {
 #  plot(ti[1:Wmax], ylim=NULL)
   arrows(c(2:Wmax),ti[2:Wmax]-dti[2:Wmax],c(2:Wmax),ti[2:Wmax]+dti[2:Wmax], length=0.01,angle=90,code=3)
   abline(v=Wopt)
-  abline(h=ti[Wopt],col="red")
+  abline(h=ti[Wopt+1],col="red")
 }
 
 
