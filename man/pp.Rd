@@ -8,12 +8,17 @@
   for a moving window in the time extent with fixed upper bound.
 }
 \usage{
-pp(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE)
+pp(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE)
 }
 \arguments{
   \item{filename}{
     filename of the file from which to read the correlator. It is
-    supposed to be in GWC code format
+    supposed to be in GWC code format.  If
+    it is missing \code{psscar} must contain the data.
+  }
+  \item{psscar}{
+    \code{data.frame} containing the data with first collumn t, second
+    collumn correlator. Only used if \code{filename} is missing.
   }
   \item{skip}{
     number of measurements to be discarded at the beginning of the time series.
@@ -52,8 +57,11 @@ pp(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE)
 \seealso{
   \code{\link{rho}}, \code{\link{pion}}, \code{\link{uwerr}}
 }
-%\examples{
-%}
+\examples{
+data(pscor.sample)
+pp.res <- pp(psscar=pscor.sample, from=10, to=23)
+plot(pp.res)
+}
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{optimize}
 \keyword{ts}

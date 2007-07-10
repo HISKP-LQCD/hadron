@@ -208,7 +208,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   fgrad=rep(0., times=Nalpha)
   h <- c(1:Nalpha)
   for (i in 1:Nalpha) {
-    h[i] <- sd(data[(i),])/sqrt(length(data[(i),]))
+    h[i] <- sd(data[(i),])/sqrt(N)
   }
   ainc <- abb
   for (alpha in 1:Nalpha) {
@@ -257,7 +257,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
       GammaFbb[W+1] <- GammaFbb[W+1] + sum(delpro[i0:(i1-W)]*delpro[(i0+W):i1])
       i0 <- i0+nrep[r]
     }    
-    GammaFbb[(W+1)] <- sum(delpro[1:(N-W)]*delpro[(1+W):N])/(N-W)
+    GammaFbb[W+1] = GammaFbb[W+1]/(N-R*W)
+    #GammaFbb[(W+1)] <- sum(delpro[1:(N-W)]*delpro[(1+W):N])/(N-W)
     if(flag) {
       Gint <- Gint+GammaFbb[(W+1)]/GammaFbb[1]
       if(Gint<0) {
@@ -269,7 +270,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
       gW <- exp(-W/tauW)-tauW/sqrt(W*N)
       if(gW < 0) {
         Wopt <- W
-        Wmax <- min(Wmax,2*Wopt)
+        Wmax <- min(Wmax,2*W)
         flag=0
       }
     }
@@ -290,7 +291,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
 # Why can CFbbopt get negative?
   sigmaF <- sqrt(abs(CFbbopt)/N) #error of F
-  tauintFbb <- cumsum(GammaFbb)/GammaFbb[1]-0.5 #normalised autocorrelation
+  rho <- GammaFbb/GammaFbb[1]
+  tauintFbb <- cumsum(rho)-0.5 #normalised autocorrelation
 
   # bias cancellation for the mean value
 
@@ -355,21 +357,21 @@ summary.uwerr <- function(uwerr) {
   }
 }
 
-plot.uwerr <- function(uwerr) {
+plot.uwerr <- function(uwerr, main="x") {
   if(uwerr$primary) {
     X11()
-    hist(uwerr$data)
+    hist(uwerr$data, main = paste("Histogram of" , main))
   }
   if(!is.null(uwerr$Gamma)) {
     GammaFbb <- uwerr$Gamma/uwerr$Gamma[1]
     Gamma.err <- gammaerror(Gamma=GammaFbb, N=uwerr$N , W=uwerr$Wmax, Lambda=100)
     X11()
     plotwitherror(c(0:uwerr$Wmax),GammaFbb[1:(uwerr$Wmax+1)],
-                  Gamma.err[1:(uwerr$Wmax+1)], ylab="Gamma(t)", xlab="t")
+                  Gamma.err[1:(uwerr$Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=uwerr$Wopt)
   }
   X11()
-  tauintplot(uwerr$tauintofW, uwerr$dtauintofW, uwerr$Wmax, uwerr$Wopt)  
+  tauintplot(uwerr$tauintofW, uwerr$dtauintofW, uwerr$Wmax, uwerr$Wopt, main=main)  
   return(invisible(data.frame(t=c(0:uwerr$Wmax),Gamma=GammaFbb[1:(uwerr$Wmax+1)],dGamma=Gamma.err[1:(uwerr$Wmax+1)])))
 }
 
@@ -385,8 +387,8 @@ gammaerror <- function(Gamma, N, W, Lambda) {
   return(invisible(gamma.err))
 }
 
-tauintplot <- function(ti, dti, Wmax, Wopt) {
-  plot(ti[1:Wmax], ylim=c(0.,2*ti[Wopt]), xlab="W", ylab="tauint(W)")
+tauintplot <- function(ti, dti, Wmax, Wopt, ...) {
+  plot(ti[1:Wmax], ylim=c(0.,2*ti[Wopt]), xlab="W", ylab="tauint(W)", ...)
 #  plot(ti[1:Wmax], ylim=NULL)
   arrows(c(2:Wmax),ti[2:Wmax]-dti[2:Wmax],c(2:Wmax),ti[2:Wmax]+dti[2:Wmax], length=0.01,angle=90,code=3)
   abline(v=Wopt)

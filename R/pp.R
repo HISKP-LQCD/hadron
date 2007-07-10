@@ -1,9 +1,9 @@
-pp <- function(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE) {
+pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE) {
 
   if(!missing(filename)) {
     psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
   }
-  else {
+  else if(missing(psscar)) {
     stop("Error! Option psfilename is mandatory!")
   }
   T2 <- (max(psscar$t)-min(psscar$t)+1)
@@ -96,11 +96,11 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   return(invisible(result))
 }
 
-ppeffectivemass <- function(filename, from, to, skip=0, S=1.5, plotit=F) {
+ppeffectivemass <- function(filename, psscar, from, to, skip=0, S=1.5, plotit=F) {
   if(!missing(filename)) {
     psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
   }
-  else {
+  else if(missing(psscar)) {
     stop("Error! Option filename is mandatory!")
   }
   T2 <- (max(psscar$t)-min(psscar$t)+1)
@@ -141,17 +141,15 @@ ppeffectivemass <- function(filename, from, to, skip=0, S=1.5, plotit=F) {
   return(invisible(result))
 }
 
-ppcorr <-  function(filename, skip = 0, S=1.5, plotit=F) {
+ppcorr <-  function(filename, psscar, skip = 0, S=1.5, plotit=F) {
   if(!missing(filename)) {
-    psscar <- read.table(file=filename, col.names=c("t","ps","mps"), header=F)
-#    psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
+    psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
   }
-  else {
+  else if(missing(psscar)) {
     stop("Error! Option filename is mandatory!")
   }
   T2 <- (max(psscar$t)-min(psscar$t)+1)
-  Z <- array((psscar$ps+psscar$mps)/2, dim=c(T2,length(psscar$ps)/T2))
-#  Z <- array(psscar$ps, dim=c(T2,length(psscar$ps)/T2))
+  Z <- array(psscar$ps, dim=c(T2,length(psscar$ps)/T2))
   L <- T2
 
   i <- 1
@@ -162,7 +160,7 @@ ppcorr <-  function(filename, skip = 0, S=1.5, plotit=F) {
   cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
   rm(psscar)
   for(t in 1:T2) {
-    corr <- uwerrprimary(x=Z[t,skip:length(Z[1,])], S=S, pl=F)
+    corr <- uwerrprimary(data=Z[t,skip:length(Z[1,])], S=S, pl=F)
     
     result$t[i] <- t-1
     result$corr[i] <- corr$value[1]
@@ -181,11 +179,11 @@ ppcorr <-  function(filename, skip = 0, S=1.5, plotit=F) {
   return(invisible(result))
 }
 
-correlator <-  function(filename, skip = 0, S=1.5, plotit=F, fold=F, symmetric=T, scalefactor=1.) {
+correlator <-  function(filename, psscar, skip = 0, S=1.5, plotit=F, fold=F, symmetric=T, scalefactor=1.) {
   if(!missing(filename)) {
     psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
   }
-  else {
+  else if(missing(psscar)) {
     stop("Error! Option filename is mandatory!")
   }
   T2 <- (max(psscar$t)-min(psscar$t)+1)

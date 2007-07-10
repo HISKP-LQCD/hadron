@@ -33,7 +33,8 @@ pcacfit <- function(data, from, to, T2, pa=FALSE) {
 
 
 
-pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0, plotit=F, S=1.5, debug=F) {
+pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0, plotit=F, S=1.5) {
+  debug <- FALSE
   if(!missing(psfilename)) {
     psscar <- read.table(file=psfilename, col.names=c("t","ps"), header=F)
   }

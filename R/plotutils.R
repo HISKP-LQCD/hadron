@@ -29,32 +29,32 @@ plot.cfit <- function(fit) {
                ff=data.frame(t=fit$effmass$t, mass=fit$effmass$mff, dmass=fit$effmass$dmff))
   
   if(!is.null(fit$uwerrresultmpcac)) {
-    plot(fit$uwerrresultmpcac)
+    plot(fit$uwerrresultmpcac, main="mpcac")
   }
   if(!is.null(fit$uwerrresultmps)) {
-    plot(fit$uwerrresultmps)
+    plot(fit$uwerrresultmps, main="mps")
   }
   if(!is.null(fit$uwerrresultfps)) {
-    plot(fit$uwerrresultfps)
+    plot(fit$uwerrresultfps, main="fps")
   }
   if(!is.null(fit$uwerrresultmv)) {
-    plot(fit$uwerrresultmv)
+    plot(fit$uwerrresultmv, main="mv")
   }
   if(!is.null(fit$boot)) {
     X11()
-    plot(fit$boot)
+    plot(fit$boot, main="Bootstrap analysis for mps")
   }
   if(!is.null(fit$tsboot)) {
     X11()
-    plot(fit$tsboot)
+    plot(fit$tsboot, main="TS Boostrap analysis for mps")
   }
   if(!is.null(fit$mv.boot)) {
     X11()
-    plot(fit$mv.boot)
+    plot(fit$mv.boot, main="Bootstrap analysis for mv")
   }
   if(!is.null(fit$mv.tsboot)) {
     X11()
-    plot(fit$mv.tsboot)
+    plot(fit$mv.tsboot, main="TS Bootstrap analysis for mv")
   }
 }
 
