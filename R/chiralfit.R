@@ -10,7 +10,8 @@ g1 <- function(x) {
   return(res)
 }
 
-fitit <- function(data, corr=NULL, twoB0=5.05, f0=0.0534, xln3=-1.92, xln4=-1.06) {
+fitit <- function(data, corr=NULL, twoB0=5.05, f0=0.0534, xln3=-1.92, xln4=-1.06,
+                  fsmethod="gl") {
   
   Bmu <- twoB0*data$mu
   mpssq <- Bmu*(1.0+Bmu*(log(Bmu)-xln3)/(4.0*pi*f0)^2 )
@@ -24,7 +25,7 @@ fitit <- function(data, corr=NULL, twoB0=5.05, f0=0.0534, xln3=-1.92, xln4=-1.06
   par <- c(twoB0, f0, xln3, xln4)
   csq <- chisqr.comb(par, data=data)
   mini <- optim(par=par, fn=chisqr.comb, method="BFGS", control=list(maxit=150),
-                hessian=TRUE, data=data)
+                hessian=TRUE, data=data, fsmethod=fsmethod)
   
   # compute some errors
   # invert Hessian
@@ -131,33 +132,34 @@ fitit <- function(data, corr=NULL, twoB0=5.05, f0=0.0534, xln3=-1.92, xln4=-1.06
   mps <- data$mps/(1.+0.5*r)
   fps <- fps/(1.0-2.0*r)
   df.corrected <- data.frame(mu=data$mu, mps=mps, dmps=data$dmps, fps=fps, dfps=data$dfps)
-  library(systemfit)
+#  library(systemfit)
 
-  mps.formula <- mps/dmps ~ sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))/dmps
-  fps.formula <- fps/dfps ~ F0*(1.0-2.0*TwoB*mu*(log(TwoB*mu)-L4)/(4.0*pi*F0)^2)/dfps
+#  mps.formula <- mps/dmps ~ sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))/dmps
+#  fps.formula <- fps/dfps ~ F0*(1.0-2.0*TwoB*mu*(log(TwoB*mu)-L4)/(4.0*pi*F0)^2)/dfps
   
-  mps.formula2 <- mps/dmps ~ (sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))
-                             *(1.+0.5*TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 )/
-                               (4.0*pi*f0)*g2(L*sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))))
-                             )/dmps
-  fps.formula2 <- fps/dfps ~ (F0*(1.0-2.0*TwoB*mu*(log(TwoB*mu)-L4)/(4.0*pi*F0)^2)
-                             *(1.-2.*TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 )/
-                             (4.0*pi*f0)*g2(L*sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))))
-                             )/dfps
-  start.values <- c(TwoB=5., F0=0.054, L3=-1.92, L4=-1.06)
-  model <- list(mps.formula, fps.formula)
-  model2 <- list(mps.formula2, fps.formula2)
-  model.ols <- nlsystemfit( "OLS", model, start.values, data=df.corrected)
+#  mps.formula2 <- mps/dmps ~ (sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))
+#                             *(1.+0.5*TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 )/
+#                               (4.0*pi*f0)*g2(L*sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))))
+#                             )/dmps
+#  fps.formula2 <- fps/dfps ~ (F0*(1.0-2.0*TwoB*mu*(log(TwoB*mu)-L4)/(4.0*pi*F0)^2)
+#                             *(1.-2.*TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 )/
+#                             (4.0*pi*f0)*g2(L*sqrt(TwoB*mu*(1.0+TwoB*mu*(log(TwoB*mu)-L3)/(4.0*pi*F0)^2 ))))
+#                             )/dfps
+#  start.values <- c(TwoB=5., F0=0.054, L3=-1.92, L4=-1.06)
+#  model <- list(mps.formula, fps.formula)
+#  model2 <- list(mps.formula2, fps.formula2)
+#  model.ols <- nlsystemfit( "OLS", model, start.values, data=df.corrected)
 #  print(model.ols)
 #  model2.ols <- nlsystemfit( "SUR", model2, start.values, data=data)
 #  return(invisible(list(result=result, fit=mini, combfit=model.ols)))
   return(invisible(list(result=result, fit=mini, chidiff=chidiff,
                         result.cor=result.cor, fit.cor=mini.cor,
-                        chidiff.cor=chidiff.cor, sfit=model.ols,
+                        chidiff.cor=chidiff.cor, fsmethod=fsmethod,
                         data=data)))
 }
 
-fitit.boot <- function(data, bootsamples, corr=NULL, twoB0=5.0, f0=0.0534, xln3=-1.92, xln4=-1.06) {
+fitit.boot <- function(data, bootsamples, corr=NULL, twoB0=5.0, f0=0.0534, xln3=-1.92, xln4=-1.06,
+                       fsmethod="gl") {
   boots <- data.frame(TwoB0 = rep(0., times=length(bootsamples[,1,1])),
                       F0 = rep(0., times=length(bootsamples[,1,1])),
                       L3 = rep(0., times=length(bootsamples[,1,1])),
@@ -171,7 +173,7 @@ fitit.boot <- function(data, bootsamples, corr=NULL, twoB0=5.0, f0=0.0534, xln3=
 
   par <- c(twoB0, f0, xln3, xln4)
   mini.first <- optim(par=par, fn=chisqr.comb, method="BFGS", 
-                hessian=FALSE, data=data)
+                hessian=FALSE, data=data, fsmethod=fsmethod)
   
   # compute l3, l4, a and mu.phys
   mu.phys <- uniroot(fovermps, c(0.0001,0.001), tol = 1.e-12, par=mini.first$par)$root
@@ -224,7 +226,7 @@ fitit.boot <- function(data, bootsamples, corr=NULL, twoB0=5.0, f0=0.0534, xln3=
     df <- data.frame(mu=data$mu, mps=mps, dmps=data$dmps, fps=fps, dfps=data$dfps, L=data$L)
     par <- mini.first$par
     mini <- optim(par=par, fn=chisqr.comb, method="BFGS", 
-                  hessian=FALSE, data=df)
+                  hessian=FALSE, data=df, fsmethod=fsmethod)
                                         # compute l3, l4, a and mu.phys
     boots[s,1] <- mini$par[1]
     boots[s,2] <- mini$par[2]
@@ -251,7 +253,8 @@ fitit.boot <- function(data, bootsamples, corr=NULL, twoB0=5.0, f0=0.0534, xln3=
                             F=mean(boots[,10]), dF=sd(boots[,10]))
 
   return(invisible(list(result=result, result.cor=result.cor,result.boot=boot.result,
-                        t=boots, mini=mini.first, mini.cor=mini.cor, data=data)))
+                        t=boots, mini=mini.first, mini.cor=mini.cor, data=data,
+                        fsmethod=fsmethod)))
 }
 
 correct.mf <- function(par, data) {
@@ -292,24 +295,44 @@ correct.mf <- function(data, f0) {
 
 fovermps <- function(x, par) {
   TwoBmu <- par[1]*x
-  mpssq <- TwoBmu*(1.0+TwoBmu*(log(TwoBmu)-par[3])/(4.0*pi*par[2])^2 )
+  mps <- sqrt( TwoBmu*(1.0+TwoBmu*(log(TwoBmu)-par[3])/(4.0*pi*par[2])^2 ) )
   fps <- par[2]*(1.0-2.0*TwoBmu*(log(TwoBmu)-par[4])/(4.0*pi*par[2])^2 )
-  mps <- sqrt(mpssq)
   return(fps/mps - (130.7/139.6))
 }
 
-chisqr.comb <- function(par, data) {
-  
+fs.model <-  function(x, m, L, par) {
+  return(m-x-par[1]*exp(-x*L))
+}
+
+
+chisqr.comb <- function(par, data, fsmethod="gl", model.par=c(9.08874565, -6.12895863)) {
+
   TwoBmu <- par[1]*data$mu
   mpssq <- TwoBmu*(1.0+TwoBmu*(log(TwoBmu)-par[3])/(4.0*pi*par[2])^2 )
   fps <- par[2]*(1.0-2.0*TwoBmu*(log(TwoBmu)-par[4])/(4.0*pi*par[2])^2 )
-  
-  mpsv <- data$L*sqrt(mpssq)
-  r <-  mpssq/(4.0*pi*par[2])^2*g1(mpsv)
-  
-  mps <- sqrt(mpssq)*(1.+0.5*r)
-  fps <- fps*(1.0-2.0*r)
-  
+
+  if(fsmethod == "cdh") {
+    mu.phys <- try(uniroot(fovermps, c(0.0005,0.0009), tol = 1.e-12, par=par)$root, silent=T)
+    if(inherits(mu.phys, "try-error")) mu.phys <- 0.00078
+    a_fm <- (par[2]*(1.0-2.0*par[1]*mu.phys*(log(par[1]*mu.phys)-par[4])/(4.0*pi*par[2])^2 ))/0.1307*0.198
+    res <- cdh(aLamb3=sqrt(exp(par[3])) , aLamb4=sqrt(exp(par[4])), ampiV=sqrt(mpssq), afpiV=fps,
+               aF0=fps, a_fm=a_fm, L=data$L, rev=1)
+    mps <- res$mpiFV
+    fps <- res$fpiFV
+  }
+  else if(fsmethod == "model") {
+    mps <- sqrt(mpssq)
+    emps <- exp(-mps*data$L)/data$L^(3/2)
+    mps <- mps + model.par[1]*emps
+    fps <- fps + model.par[2]*emps
+  }
+  else {
+    mpsv <- data$L*sqrt(mpssq)
+    r <-  mpssq/(4.0*pi*par[2])^2*g1(mpsv)
+    
+    mps <- sqrt(mpssq)*(1.+0.5*r)
+    fps <- fps*(1.0-2.0*r)
+  }
   return(invisible(sum(((data$mps-mps)/data$dmps)^2) + sum(((data$fps-fps)/data$dfps)^2)))
 
 }
