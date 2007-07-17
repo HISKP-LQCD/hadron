@@ -3,7 +3,7 @@ mean.index <- function(data, indexvector) {
 }
 
 bootstrap.analysis <- function(data, skip=0, boot.R=100,
-                               tsboot.sim="geom", pl=F) {
+                               tsboot.sim="geom", pl=F, boot.l=2) {
   
   data.mean = mean(data[skip:length(data)])
   error.naive = sd(data[skip:length(data)])/sqrt(length(data)-skip)
@@ -29,7 +29,6 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   DError[1] <- 0.
   Tauint[1] <- 0.
   cat("blocking analysis:\n")
-  boot.l <- 2
   cat("\t\t\t mean   \t stderr \t dstderr\t tau_int\n")
   j <- 1
   while((length(data)-skip)/boot.l > 20) {

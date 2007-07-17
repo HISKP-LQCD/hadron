@@ -6,7 +6,7 @@ fs <- function(data) {
   fps <- data[,4]
   dfps <-  data[,5]
   fit.mpi.fs <- optim(par=c(0.15,2.,1.), ChiSqr.fs, method="BFGS",
-                      L=L, y=mps, err=err)
+                      L=L, y=mps, err=err, control=list(maxit=1000))
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")
   xfit <- seq(L[1], L[length(L)], 0.05)
   yfit <- fit.mpi.fs$par[1] + fit.mpi.fs$par[2]/xfit^(3/2)*exp(-fit.mpi.fs$par[3]*fit.mpi.fs$par[1]*xfit)
@@ -15,7 +15,7 @@ fs <- function(data) {
   title("FS effects in m_ps, single fit")
 
   fit.fpi.fs <- optim(par=c(0.15,-10.,1.), ChiSqr.fs.fps, method="BFGS",
-                      L=L, y=fps, err=dfps, mpi=fit.mpi.fs$par[1])
+                      L=L, y=fps, err=dfps, mpi=fit.mpi.fs$par[1], control=list(maxit=1000))
   X11()
   plotwitherror(fit.mpi.fs$par[1]*L, fps, dfps, xlab="mps*L", ylab="f_ps")
   yfit <- fit.fpi.fs$par[1] + fit.fpi.fs$par[2]/xfit^(3/2)*exp(-fit.fpi.fs$par[3]*fit.mpi.fs$par[1]*xfit)
@@ -24,7 +24,7 @@ fs <- function(data) {
   title("FS effects in f_ps b=4.05, mu=0.006, single fit")
 
   fit.comb <- optim(par=c(fit.mpi.fs$par, fit.fpi.fs$par[1], fit.fpi.fs$par[2]), ChiSqr.fs.comb, method="BFGS", control=list(maxit=1000),
-                    L=L, mps=mps, fps=fps, dmps=err, dfps=dfps)
+                    L=L, mps=mps, fps=fps, dmps=err, dfps=dfps, control=list(maxit=1000))
   print(fit.comb)
   X11()
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")
