@@ -322,7 +322,7 @@ chisqr.comb <- function(par, data, fsmethod="gl", model.par=c(9.08874565, -6.128
 
   if(fsmethod == "cdh") {
     mu.phys <- try(uniroot(fovermps, c(0.0005,0.0009), tol = 1.e-12, par=par)$root, silent=T)
-    if(inherits(mu.phys, "try-error")) a_fm <- a.guess
+    if(inherits(mu.phys, "try-error") || is.nan(mu.phys)) a_fm <- a.guess
     else a_fm <- (par[2]*(1.0-2.0*par[1]*mu.phys*(log(par[1]*mu.phys)-par[4])/(4.0*pi*par[2])^2 ))/0.1307*0.1973
     aLamb1=sqrt(exp(-0.4+log((0.135*a_fm/0.1973)^2)))
     aLamb2=sqrt(exp(4.3+log((0.135*a_fm/0.1973)^2)))
@@ -535,7 +535,7 @@ chisqr.Na <- function(par, data, fsmethod="gl", a.guess) {
 
     if(fsmethod=="cdh") {
       mu.phys <- try(uniroot(fovermps.Na, c(0.0001, 0.004), tol=1.e-12, par=par, indd=i)$root, silent=T)
-      if(inherits(mu.phys, "try-error")) a_fm <- a.guess[i]
+      if(inherits(mu.phys, "try-error") || is.nan(mu.phys)) a_fm <- a.guess[i]
       else {
         TwoBmu <- TwoaB*mu.phys
         a_fm <- aF*(1.0-2.0*TwoBmu*(log(TwoBmu/aF^2)-log(par[2]^2))/(4.0*pi*aF)^2 )/0.1307*0.1973
