@@ -7,16 +7,21 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
   # our normalisation
   aF0 <- aF0/sqrt(2)
 
+  # Eg.(62)
   gg <- c(2-pi/2, pi/4-0.5, 0.5-pi/8, 3*pi/16 - 0.5)
+  # Tab.1
   mm <- c(6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24)
   mml <- length(mm)
   N <- 16*pi^2
+  # physical mass of the rho in lattice units
   amrho_phys <- a_fm*770/197.3
+  # related to those of tab.2a by Eq.(53)
   lb1 <- 2*log(aLamb1/ampiV)
   lb2 <- 2*log(aLamb2/ampiV)
   lb3 <- 2*log(aLamb3/ampiV)
   lb4 <- 2*log(aLamb4/ampiV)
   lpi <- 2*log(ampiV/amrho_phys)
+  # tab 2b
   rtilde <- c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)
   rtilder <- c(-1.5,  3.2, -4.2, -2.5,  1.0, 0.1)
 
@@ -29,15 +34,20 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
 
   M_P <- ampiV
   F_P <- afpiV
+  # Eq.(10)
   xi_P <- (M_P/(4*pi*aF0))^2
   mmB0 <- rep(0., times=length(ampiV))
   mmB2 <- mmB0
   for(jj in 1:length(ampiV)) {
+    # Eq.(11)
     lambda_pi <-  ampiV[jj]*L[jj]
+    # argument of unctions in Eq.(50). sqrt(n) comes from Eq.(26-27)
     z <-  sqrt(c(1:mml))*lambda_pi
     B0 <- 2*besselK(z,1)/z
     B2 <- 2*besselK(z,2)/z^2
+    # remaining factor from Eq.(26-27) and sum, ...
     mmB0[jj] <- sum(mm*B0)
+    # which I can already do since all the dependence on n is here
     mmB2[jj] <- sum(mm*B2)
   }
   # simplifyed S's: Eq.(59)
@@ -58,7 +68,6 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
                          - 32/3*lb4*(lb1+4*lb2) + lpi*(100/9*lpi + 8/3*lb1 + 176/9*lb2 - 248/9)
                          - 8*rtilde[3] - 56*rtilde[4] - 48*rtilde[5] + 16*rtilde[6])+
                            S6mpi
-
   I2fpi <- -2*mmB0;
   I4fpi <- mmB0*(-7/9 + 2*lb1 + (4/3)*lb2 - 3*lb4) + 
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
