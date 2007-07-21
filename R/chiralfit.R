@@ -270,28 +270,51 @@ correct.mf <- function(par, data) {
   return(invisible(data.frame(mu=data$mu, mpsinf=mpsinf, fpsinf=fpsinf, mpsL=mps, fpsL=fps, dmps=data$dmps, dfps=data$dfps, L=data$L)))
 }
 
-prediction.mf <- function(par, x, L) {
-  TwoBmu <- par[1]*x
-  mpssq <- TwoBmu*(1.0+TwoBmu*(log(TwoBmu)-par[3])/(4.0*pi*par[2])^2 )
-  fps <- par[2]*(1.0-2.0*TwoBmu*(log(TwoBmu)-par[4])/(4.0*pi*par[2])^2 )
+prediction.mf <- function(TwoB, aF, aL3, aL4, x, L, fsmodel="gl", a_fm, predict.inf=FALSE) {
+  if(predict.inf) rev <- -1
+  else rev <- 1
+  TwoBmu <- TwoB*x
+  mpssq <- TwoBmu*(1.0+TwoBmu*(log(TwoBmu)-log(aL3^2))/(4.0*pi*aF)^2 )
+  fps <- aF*(1.0-2.0*TwoBmu*(log(TwoBmu)-log(aL4^2))/(4.0*pi*aF)^2 )
   mps <- sqrt(mpssq) 
   mpsv <- L*sqrt(mpssq)
-  # mpsv <- L*sqrt(TwoBmu)
-  r <-  mpssq/(4.0*pi*par[2])^2*g1(mpsv)
+  if(fsmodel == "cdh") {
+    aLamb1=sqrt(exp(-0.4+log((0.135*a_fm/0.1973)^2)))
+    aLamb2=sqrt(exp(4.3+log((0.135*a_fm/0.1973)^2)))
+    res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aL3,
+               aLamb4=aL4, ampiV=mps, afpiV=fps,
+               aF0=fps, a_fm=a_fm, L=data$L, rev=1)
+    mpsL <- res$mpiFV
+    fpsL <- res$fpiFV
+  }
+  else {
+    r <-  mpssq/(4.0*pi*aF)^2*g1(mpsv)
   # r <-  TwoBmu/(4.0*pi*par[2])^2*g1(mpsv)
-  mpsL <- sqrt(mpssq)*(1.+0.5*r)
-  fpsL <- fps*(1.0-2.0*r)
-  return(invisible(data.frame(x=x, mps=mps, fps=fps, mpsL=mpsL, fpsL=fpsL)))
+    mpsL <- sqrt(mpssq)*(1.+rev*0.5*r)
+    fpsL <- fps*(1.0-rev*2.0*r)
+  }
+  return(invisible(data.frame(x=x, mps=mps, fps=fps, mpsL=mpsL, fpsL=fpsL, TwoBmu=TwoBmu)))
 }
 
-correct.mf <- function(data, f0) {
+correct.datamf <- function(data, aF, aL3, aL4, fsmodel="gl", a_fm) {
 
   mpssq <- data$mps^2
   mpsv <- data$L*sqrt(mpssq)
-  r <- mpssq/(4.0*pi*f0)^2*g1(mpsv)
-  mps <- data$mps/(1.+0.5*r)
-  fps <- data$fps/(1.0-2.0*r)
-  df.corrected <- data.frame(mu=data$mu, mps=mps, dmps=data$dmps, fps=fps, dfps=data$dfps, L=data$L, f0=f0)
+  if(fsmodel == "cdh") {
+    aLamb1=sqrt(exp(-0.4+log((0.135*a_fm/0.1973)^2)))
+    aLamb2=sqrt(exp(4.3+log((0.135*a_fm/0.1973)^2)))
+    res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aL3,
+               aLamb4=aL4, ampiV=data$mps, afpiV=data$fps,
+               aF0=data$fps, a_fm=a_fm, L=data$L, rev=-1)
+    mps <- res$mpiFV
+    fps <- res$fpiFV    
+  }
+  else {
+    r <- mpssq/(4.0*pi*aF)^2*g1(mpsv)
+    mps <- data$mps/(1.+0.5*r)
+    fps <- data$fps/(1.0-2.0*r)
+  }
+  df.corrected <- data.frame(mu=data$mu, mps=mps, dmps=data$dmps, fps=fps, dfps=data$dfps, L=data$L)
   return(invisible(df.corrected))
 }
 

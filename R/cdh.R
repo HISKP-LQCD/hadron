@@ -16,11 +16,15 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
   # physical mass of the rho in lattice units
   amrho_phys <- a_fm*770/197.3
   # related to those of tab.2a by Eq.(53)
-  lb1 <- 2*log(aLamb1/ampiV)
-  lb2 <- 2*log(aLamb2/ampiV)
-  lb3 <- 2*log(aLamb3/ampiV)
-  lb4 <- 2*log(aLamb4/ampiV)
-  lpi <- 2*log(ampiV/amrho_phys)
+  lb1 <- log((aLamb1/ampiV)^2)
+  lb2 <- log((aLamb2/ampiV)^2)
+  lb3 <- log((aLamb3/ampiV)^2)
+  lb4 <- log((aLamb4/ampiV)^2)
+  lpi <- log((ampiV/amrho_phys)^2)
+  if(any(is.na(c(lb1, lb2, lb3, lb4, lpi)))){
+    cat("why ", ampiV, aLamb2/ampiV, aLamb3/ampiV, aLamb4/ampiV,
+  ampiV/amrho_phys, "\n")
+  }
   # tab 2b
   rtilde <- c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)
   rtilder <- c(-1.5,  3.2, -4.2, -2.5,  1.0, 0.1)
@@ -93,6 +97,10 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
                                         #    ['percent fin V corr: Mpi_LO   Mpi_NLO   Mpi_NNLO    Fpi_LO   Fpi_NLO']
                                         #[mlo', mnlo', mnnlo', flo', fnlo']
                                         #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
+  }
+  if(any(is.na(c(mpiFV, fpiFV)))) {
+    warning("NaNs produced in: cdh!\n")
+    return(invisible(list(mpiFV=ampiV, fpiFV=afpiV)))
   }
   return(invisible(list(mpiFV=mpiFV, fpiFV=fpiFV)))
 }
