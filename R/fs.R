@@ -23,7 +23,7 @@ fs <- function(data) {
   abline(h=fit.fpi.fs$par[1], col="red")
   title("FS effects in f_ps b=4.05, mu=0.006, single fit")
 
-  fit.comb <- optim(par=c(fit.mpi.fs$par, fit.fpi.fs$par[1], fit.fpi.fs$par[2]), ChiSqr.fs.comb, method="BFGS", control=list(maxit=1000),
+  fit.comb <- optim(par=c(fit.mpi.fs$par, fit.fpi.fs$par[1], fit.fpi.fs$par[2]), ChiSqr.fs.comb, method="BFGS",
                     L=L, mps=mps, fps=fps, dmps=err, dfps=dfps, control=list(maxit=1000))
   print(fit.comb)
   X11()

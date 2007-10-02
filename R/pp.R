@@ -1,4 +1,4 @@
-pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE) {
+pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE, mq) {
 
   if(!missing(filename)) {
     psscar <- read.table(file=filename, col.names=c("t","ps"), header=F)
@@ -15,10 +15,21 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
   }
 
   Z <- array(psscar$ps, dim=c(T2,length(psscar$ps)/T2))
-  result <- data.frame(t = array(0., dim=c((to-from+1))), mass = array(0., dim=c((to-from+1))), dmass = array(0., dim=c((to-from+1))),
-                       amp = array(0., dim=c((to-from+1))), damp = array(0., dim=c((to-from+1))), ddmass = array(0., dim=c((to-from+1))),
-                       masstauint = array(0., dim=c((to-from+1))), massdtauint = array(0., dim=c((to-from+1))), ddamp = array(0., dim=c((to-from+1))),
-                       amptauint = array(0., dim=c((to-from+1))), ampdtauint = array(0., dim=c((to-from+1))))
+  if(missing(mq)) {
+    result <- data.frame(t = array(0., dim=c((to-from+1))), mass = array(0., dim=c((to-from+1))), dmass = array(0., dim=c((to-from+1))),
+                         amp = array(0., dim=c((to-from+1))), damp = array(0., dim=c((to-from+1))), ddmass = array(0., dim=c((to-from+1))),
+                         masstauint = array(0., dim=c((to-from+1))), massdtauint = array(0., dim=c((to-from+1))), ddamp = array(0., dim=c((to-from+1))),
+                         amptauint = array(0., dim=c((to-from+1))), ampdtauint = array(0., dim=c((to-from+1))))
+  }
+  else {
+    result <- data.frame(t = array(0., dim=c((to-from+1))), mass = array(0., dim=c((to-from+1))), dmass = array(0., dim=c((to-from+1))),
+                         amp = array(0., dim=c((to-from+1))), damp = array(0., dim=c((to-from+1))), ddmass = array(0., dim=c((to-from+1))),
+                         masstauint = array(0., dim=c((to-from+1))), massdtauint = array(0., dim=c((to-from+1))), ddamp = array(0., dim=c((to-from+1))),
+                         amptauint = array(0., dim=c((to-from+1))), ampdtauint = array(0., dim=c((to-from+1))),
+                         fps = array(0., dim=c((to-from+1))), dfps = array(0., dim=c((to-from+1))),
+                         fpstauint = array(0., dim=c((to-from+1))), fpsdtauint = array(0., dim=c((to-from+1))))
+  }
+  
   i=1
   cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
   for(cutoff in from:to) {
@@ -30,6 +41,12 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
     try(amp <- uwerrderived(f=getamp, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
                             S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug))
 
+    if(!missing(mq)) {
+      try(fps <- uwerrderived(f=getfps, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
+                              S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug, mq=mq))
+    }
+
+    
     result$t[i] <- cutoff-1
     result$mass[i] <- mass$value[1]
     result$dmass[i] <- mass$dvalue[1]
@@ -41,6 +58,12 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
     result$ddamp[i] <- amp$ddvalue[1]
     result$amptauint[i] <- amp$tauint[1]
     result$ampdtauint[i] <- amp$dtauint[1]
+    if(!missing(mq)) {
+      result$fps[i] <- fps$value
+      result$dfps[i] <- fps$dvalue
+      result$fpstauint[i] <- fps$tauint
+      result$fpsdtauint[i] <- fps$dtauint
+    }
     i=i+1
   }
   attr(result, "class") <- c("massfit", "ampfit", "data.frame")
