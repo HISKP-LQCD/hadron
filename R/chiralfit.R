@@ -764,7 +764,7 @@ fovermps.Na.withr0 <- function(x, par, indd) {
 
 
 fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
-                          r0bootsamples, r0data) {
+                          r0bootsamples, r0data, fit.l12=FALSE) {
   if(missing(data) || missing(startvalues)) {
     stop("data and startvalues must be provided!\n")
   }
@@ -772,18 +772,26 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
     cat("bootstrap samples missing, will not compute error estimates!\n")
   }
   N <- length(data)
+  np <- 3+N
+  if(fit.l12) np=np+2
+  if(length(startvalues)!= np) stop("length of startvalues", length(startvalues),
+             "must match number of fit parameters", np, "!\n")
   if(fsmethod=="cdh") {
     if(missing(a.guess)) {
       cat("a.guess was missing! Guessing myself!\n")
       a.guess <- rep(0.1, times=N) 
     }
   }
-
   
   mini <- optim(par=startvalues, fn=chisqr.Na.withr0, method="BFGS", hessian=TRUE,
                 control=list(maxit=500), data=data,
-                fsmethod=fsmethod, a.guess=a.guess, r0data=r0data)
-
+                fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, fit.l12=fit.l12)
+  if(mini$convergence != 0) {
+    cat("Attention: optim did not converge!\n\n")
+    print(mini)
+    cat("\n")
+  }
+  
   dof <- 0
   for(i in 1:length(data)) {
     dof = dof + 2*length(data[[i]]$mu)
@@ -793,64 +801,73 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
   par <- mini$par
   # compute observables
   mu.phys <- c(0.)
-  a <- c(0.)
-  l3 <- c(0.)
-  l4 <- c(0.)
-  F <- c(0.)
+  a <- rep(0., times=N)
+  l3 <- rep(0., times=N)
+  l4 <- rep(0., times=N)
+  l1 <- rep(0., times=N)
+  l2 <- rep(0., times=N)
+  F <- rep(0., times=N)
   for(i in 1:length(data)) {
     mu.phys[i] <- uniroot(fovermps.Na.withr0, c(r0data$r0*0.0001, r0data$r0*0.004), tol=1.e-12, par=par, indd=i)$root
     r0TwoB <- par[(3+i)]
     r0sqTwoBmu <- r0TwoB*mu.phys[i]
     r0F <- par[3]
-    a[i] <- r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 )/0.1307*0.1973/r0data$r0[i]
-    l3[i] <- log(par[1]^2) -
-      log( r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 ) )
-    l4[i] <- log(par[2]^2) -
-      log( r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 ) )
+    mpisq <- getmpssq(r0sqTwoBmu, r0F, par, N, fit.l12)
+    fpi <- getfps(r0sqTwoBmu, r0F, par, N, fit.l12)
+    a[i] <- fpi/0.1307*0.1973/r0data$r0[i]
+    l3[i] <- log(par[1]^2) - log( mpisq ) 
+    l4[i] <- log(par[2]^2) - log( mpisq )
+    if(fit.l12) {
+      l1[i] <- log(par[3+N+1]^2) - log( mpisq ) 
+      l2[i] <- log(par[3+N+2]^2) - log( mpisq )
+    }
     F[i] = r0F/r0data$r0[i]/a[i]*0.1973
   }
   
   boot.result <- NULL
   boots <- NULL
   if(!missing(bootsamples) && !missing(r0bootsamples)) {
-
-    boots <- array(0., dim=c(length(bootsamples[[1]][,1,1]), (2*length(data)+length(startvalues)+3)))
-
+    
+    boots <- array(0., dim=c(length(bootsamples[[1]][,1,1]), (2*length(data)+length(startvalues)+5)))
+    
     for(s in 1:length(bootsamples[[1]][,1,1])) {
       mps <- bootsamples[[1]][s,1,(1:length(data[[1]]$mu))]
       fps <- bootsamples[[1]][s,2,(1:length(data[[1]]$mu))]
       df <- list(data.frame(mu=data[[1]]$mu, mps=mps, dmps=data[[1]]$dmps,
-                         fps=fps, dfps=data[[1]]$dfps, L=data[[1]]$L))
+                            fps=fps, dfps=data[[1]]$dfps, L=data[[1]]$L))
       r0df <- data.frame(r0=r0bootsamples[s,], dr0=r0data$dr0)
       for(i in 2:length(data)) {
         mps <- bootsamples[[i]][s,1,(1:length(data[[i]]$mu))]
         fps <- bootsamples[[i]][s,2,(1:length(data[[i]]$mu))]
         df[[i]] <- data.frame(mu=data[[i]]$mu, mps=mps, dmps=data[[i]]$dmps,
-                            fps=fps, dfps=data[[i]]$dfps, L=data[[i]]$L)
+                              fps=fps, dfps=data[[i]]$dfps, L=data[[i]]$L)
       }
-
+      
       mini.boot <- optim(par=par, fn=chisqr.Na.withr0, method="BFGS", 
                          hessian=FALSE, data=df, fsmethod=fsmethod,
-                         a.guess=a.guess, r0data = r0df)
+                         a.guess=a.guess, r0data = r0df, fit.l12=fit.l12)
       par.boot <- mini.boot$par
-      TwoaB <- 0.
-      TwoBmu <- 0.
-      aF <- 0.
+      r0F <- 0.
+      mpssqr <- 0.
       for(i in 1:length(data)) {
         boots[s,i] <- uniroot(fovermps.Na.withr0, c(r0df$r0[i]*0.0001, r0df$r0[i]*0.004), tol=1.e-12, par=par.boot, indd=i)$root
         r0TwoB <- par.boot[3+i]
         r0sqTwoBmu <- r0TwoB*boots[s,i]
         r0F <- par.boot[3]
-        boots[s,(i+length(data))] <-
-          r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par.boot[2]^2))/(4.0*pi*r0F)^2 )/0.1307*0.1973/r0df$r0[i]
+        mpssqr <- getmpssq(r0sqTwoBmu, r0F, par.boot, N, fit.l12)
+        fps <- getfps(r0sqTwoBmu, r0F, par.boot, N, fit.l12)
+        boots[s,(i+length(data))] <- fps/0.1307*0.1973/r0df$r0[i]
       }
-      boots[s,(1+2*length(data))] <- log(par.boot[1]^2) -
-        log( r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par.boot[1]^2))/(4.0*pi*r0F)^2 ) )
-      boots[s,(2+2*length(data))] <- log(par.boot[2]^2) -
-        log( r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par.boot[1]^2))/(4.0*pi*r0F)^2 ) )
-      boots[s,(3+2*length(data))] <- r0F/r0df$r0[i]/boots[s,(2*length(data))]*0.1973
+      lmpssqr <- log( mpssqr )
+      boots[s,(1+2*length(data))] <- log(par.boot[1]^2) - lmpssqr
+      boots[s,(2+2*length(data))] <- log(par.boot[2]^2) - lmpssqr
+      boots[s,(3+2*length(data))] <- log(par.boot[3+N+1]^2) - lmpssqr
+      if(fit.l12) {
+        boots[s,(4+2*length(data))] <- log(par.boot[3+N+2]^2) - lmpssqr
+        boots[s,(5+2*length(data))] <- r0F/r0df$r0[i]/boots[s,(2*length(data))]*0.1973
+      }
       for(i in 1:length(startvalues)) {
-        boots[s,(2*length(data)+3+i)] <- par.boot[i]
+        boots[s,(2*length(data)+5+i)] <- par.boot[i]
       }
     }
     boot.result <- array(0., dim=c(length(boots[1,]), 2))
@@ -863,12 +880,12 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
   if(missing(bootsamples)) bootsamples <- NULL
   if(missing(r0bootsamples)) r0bootsamples <- NULL
   
-  result <- list(par=par, mu.phys=mu.phys, F=F, a=a, l3=l3, l4=l4, chisqr=chisqr, dof=dof,
+  result <- list(par=par, mu.phys=mu.phys, F=F, a=a, l1=l1, l2=l2, l3=l3, l4=l4, chisqr=chisqr, dof=dof,
                  data=data, boot.result=boot.result, boots=boots, r0data=r0data, bootsamples=bootsamples, r0bootsamples=r0bootsamples)
   return(invisible(result))
 }
 
-chisqr.Na.withr0 <- function(par, data, r0data, fsmethod="gl", a.guess) {
+chisqr.Na.withr0 <- function(par, data, r0data, fsmethod="gl", a.guess, fit.l12=FALSE) {
 
   N <- length(data)
   chisum <- 0.
@@ -880,24 +897,28 @@ chisqr.Na.withr0 <- function(par, data, r0data, fsmethod="gl", a.guess) {
     }
     r0F <- par[3]
     r0sqTwoBmu <- r0TwoB*data[[i]]$mu*r0data$r0[i]
-    mpssq <- r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 )
+    mpssq <- getmpssq(r0sqTwoBmu, r0F, par, N, fit.l12)
+    fps <- getfps(r0sqTwoBmu, r0F, par, N, fit.l12)
     if(any(mpssq < 0)) {
       return(NaN)
     }
-    fps <- r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 )
-
     if(fsmethod=="cdh") {
       r0mu.phys <- try(uniroot(fovermps.Na.withr0,
                                c(r0data$r0[i]*0.0001, r0data$r0[i]*0.004),
                                tol=1.e-12, par=par, indd=i)$root, silent=T)
       if(inherits(r0mu.phys, "try-error") || is.nan(r0mu.phys)) a_fm <- a.guess[i]
       else {
-        r0sqTwoBmu <- r0TwoB*r0mu.phys
-        a_fm <- r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 )/0.1307*0.1973/r0data$r0[i]
+        a_fm <- getfps(r0sqTwoBmu=r0TwoB*r0mu.phys, r0F, par, fit.l12)/0.1307*0.1973/r0data$r0[i]
       }
       #a_fm <- a.guess[i]
-      aLamb1=sqrt(exp(-0.4+log((0.1396*a_fm/0.1973)^2)))
-      aLamb2=sqrt(exp(4.3+log((0.1396*a_fm/0.1973)^2)))
+      if(fit.l12) {
+        aLamb1=par[3+N+1]/r0data$r0[i]
+        aLamb2=par[3+N+2]/r0data$r0[i]
+      }
+      else {
+        aLamb1=sqrt(exp(-0.4+log((0.1396*a_fm/0.1973)^2)))
+        aLamb2=sqrt(exp(4.3+log((0.1396*a_fm/0.1973)^2)))
+      }
       res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/r0data$r0[i],
                  aLamb4=par[2]/r0data$r0[i], ampiV=sqrt(mpssq)/r0data$r0[i], afpiV=fps/r0data$r0[i],
                  aF0=fps/r0data$r0[i], a_fm=a_fm, L=data[[i]]$L, rev=1, printit=F)
@@ -918,4 +939,26 @@ chisqr.Na.withr0 <- function(par, data, r0data, fsmethod="gl", a.guess) {
   }
   return(invisible(chisum))
 
+}
+
+getmpssq <- function(r0sqTwoBmu, r0F, par, N, fit.l12=FALSE) {
+
+#  return(r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 ))
+  if(fit.l12) {
+    mpssq <- return(r0sqTwoBmu*(1.0 + r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 -
+                                17*r0sqTwoBmu^2*((28*log(r0sqTwoBmu/par[N+4]^2)+32*log(r0sqTwoBmu/par[N+5]^2)-9*log(r0sqTwoBmu/par[1]^2) + 49)/51.)^2/(8.0*pi*r0F)^4 )
+                    )
+  }
+  return(r0sqTwoBmu*(1.0+r0sqTwoBmu*(log(r0sqTwoBmu/par[1]^2))/(4.0*pi*r0F)^2 ))
+}
+
+getfps <- function(r0sqTwoBmu, r0F, par, N, fit.l12=FALSE) {
+
+#  return(r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 ))
+  if(fit.l12) {
+    return(r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 +
+                5*r0sqTwoBmu^2*((14*log(r0sqTwoBmu/par[N+4]^2) + 16*log(r0sqTwoBmu/par[N+5]^2) + 6*log(r0sqTwoBmu/par[1]^2) - 6*log(r0sqTwoBmu/par[2]^2)  + 23)/30.)^2/(4.0*pi*r0F)^4)
+           )
+  }
+  return(r0F*(1.0-2.0*r0sqTwoBmu*(log(r0sqTwoBmu/par[2]^2))/(4.0*pi*r0F)^2 ))
 }
