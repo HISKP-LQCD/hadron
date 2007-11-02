@@ -8,7 +8,8 @@
   for a moving window in the time extent with fixed upper bound.
 }
 \usage{
-pp(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=FALSE)
+pp(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01,
+plot=FALSE, debug=FALSE, mq)
 }
 \arguments{
   \item{filename}{
@@ -45,6 +46,10 @@ pp(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE, debug=
   }
   \item{debug}{
     logical: if set to TRUE some debug output and plots are produced
+  }
+  \item{mq}{
+    for the overlap and the twisted mass case the code computes also the
+    pseudo scalar decay constant, if mq is set to the bare quark mass.
   }
 }
 \value{
