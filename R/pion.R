@@ -231,26 +231,26 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   Fit[jj+2*T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   Fit[jj+3*T1] <- pionfit$par[2]*pionfit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   if(matrix.size > 2) {
-    Fit[jj+20*T1] <- pionfit$par[1]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+21*T1] <- pionfit$par[1]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+22*T1] <- pionfit$par[2]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+23*T1] <- pionfit$par[2]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+4*T1] <- pionfit$par[1]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+5*T1] <- pionfit$par[1]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+6*T1] <- pionfit$par[2]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+7*T1] <- pionfit$par[2]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
 
-    Fit[jj+16*T1] <- pionfit$par[3]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+17*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+18*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+19*T1] <- pionfit$par[4]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+12*T1] <- pionfit$par[3]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+13*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+14*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+15*T1] <- pionfit$par[4]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
   }
   if(matrix.size > 4) {
-    Fit[jj+12*T1] <- pionfit$par[5]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+13*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+14*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+15*T1] <- pionfit$par[6]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+16*T1] <- pionfit$par[5]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+17*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+18*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+19*T1] <- pionfit$par[6]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
 
-    Fit[jj+4*T1] <- pionfit$par[1]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+5*T1] <- pionfit$par[1]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+6*T1] <- pionfit$par[2]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+7*T1] <- pionfit$par[2]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+20*T1] <- pionfit$par[1]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+21*T1] <- pionfit$par[1]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+22*T1] <- pionfit$par[2]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+23*T1] <- pionfit$par[2]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
     
     Fit[jj+28*T1] <- pionfit$par[3]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
     Fit[jj+29*T1] <- pionfit$par[3]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
@@ -297,6 +297,7 @@ arrangeCor.pion <- function(T1, W, Z) {
     W[(i+10*T1),] <- W[(i+6*T1),]
     W[(i+11*T1),] <- W[(i+7*T1),]
     # AA for LL, (LF + FL)/2, FF -> symmetric cosh
+    # if needed, bug fix minus here
     W[(i+12*T1),] <- (W[(i+12*T1),] + Z[(i+12*T1),])/two
     W[(i+13*T1),] <- (W[(i+13*T1),] + W[(i+14*T1),] + Z[(i+13*T1),] + Z[(i+14*T1),])/two/2.
     W[(i+14*T1),] <-  W[(i+13*T1),]
@@ -317,6 +318,7 @@ arrangeCor.pion <- function(T1, W, Z) {
     W[(i+26*T1),] <- W[(i+22*T1),]
     W[(i+27*T1),] <- W[(i+23*T1),]
     # A4 use 4A -> cosh
+    # if needed, bug fix minus here
     W[(i+28*T1),] <- (W[(i+32*T1),] + Z[(i+32*T1),])/two
     W[(i+29*T1),] <- (W[(i+34*T1),] + Z[(i+34*T1),])/two
     W[(i+30*T1),] <- (W[(i+33*T1),] + Z[(i+33*T1),])/two

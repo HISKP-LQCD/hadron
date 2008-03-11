@@ -56,6 +56,10 @@ plot.cfit <- function(fit) {
     X11()
     plot(fit$mv.tsboot, main="TS Bootstrap analysis for mv")
   }
+  if(!is.null(fit$fitdata)) {
+    X11()
+    plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab="Chi", type="h")
+  }
 }
 
 plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
