@@ -110,7 +110,9 @@ rho <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   #BFGS
   if(no.masses == 1) {
-    rhofit <- optim(par, ChiSqr.1mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
+#    rhofit <- optim(par, ChiSqr.1mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
+#                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    rhofit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
     fit.mass <- abs(rhofit$par[matrix.size+1])
   }
@@ -291,8 +293,10 @@ fitmasses.vector <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
 
   if(no.masses == 1) {
-    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+#    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                    x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
     return(abs(fit$par[N+1]))
   }
   else if (no.masses == 2) {
@@ -327,8 +331,10 @@ fitmasses.vector.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   }
 
   if(no.masses == 1) {
-    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+#    fit <- optim(par, ChiSqr.1mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                    x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
     return(c(fit$par[c(1:N)], abs(fit$par[N+1]), fit$value))
   }
   else if (no.masses == 2) {
