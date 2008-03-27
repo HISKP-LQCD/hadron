@@ -4,6 +4,7 @@ Date: 2007-04-25
 Title: package to extract hadronic quantities
 Author: Carsten Urbach <carsten.urbach@liverpool.ac.uk>
 Maintainer: Carsten Urbach <carsten.urbach@liverpool.ac.uk>
+SystemRequirements: Gnu Scientific Library version >= 1.5
 Description: package to extract hadronic quantities
 Depends: boot
 License: GPL

@@ -197,20 +197,22 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     }
     i0 <- i0+nrep[r]
   }
-  
+
   Fbb <- f(abb, ...)
   Fbr <- rep(0., times=R)
   for(r in 1:R) {
     Fbr[r] <-  f(abr[r,], ...)
   }
   Fb=sum(Fbr*nrep)/N;  # weighted mean of replica means
-  
+
   fgrad=rep(0., times=Nalpha)
   h <- c(1:Nalpha)
   for (i in 1:Nalpha) {
-    h[i] <- sd(data[(i),])/sqrt(N)
+    h[i] <- stats::sd(data[(i),])/sqrt(N)
   }
+
   ainc <- abb
+
   for (alpha in 1:Nalpha) {
     if (h[alpha] == 0) {
       # Data for this observable do not fluctuate

@@ -762,6 +762,16 @@ fovermps.Na.withr0 <- function(x, par, indd) {
 }
 
 
+# order of fit parameters (N no of lattice spacings)
+# 1:            r0*L3
+# 2:            r0*L4
+# 3:            r0*f0
+# 4 to 3+N:     2*r0*B0*Z_mu
+# 4+N to 3+2*N: r0
+# 4+2*N+1:      r0*L1
+# 4+2*N+2:      r0*L2
+# 4+2*N+3:      k_M
+# 4+2*N+4:      k_F
 
 fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                           r0bootsamples, r0data, fit.l12=FALSE, ii, boot.R, debug=FALSE) {
@@ -784,17 +794,22 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
   else {
     N <- length(ii)
   }
-  np <- 3+N
+  np <- 3+2*N
   if(fit.l12) np=np+2
   if(length(startvalues)!= np) stop("length of startvalues", length(startvalues),
-             "must match number of fit parameters", np, "!\n")
+             "must match number of fit parameters ", np, "!\n")
   if(fsmethod=="cdh") {
     if(missing(a.guess)) {
       cat("a.guess was missing! Guessing myself!\n")
       a.guess <- rep(0.1, times=N) 
     }
   }
-  
+
+  if(debug) {
+    chisqr.Na.withr0(par=startvalues, data=data, ii=ii,fsmethod=fsmethod,
+                     a.guess=a.guess, r0data=r0data, fit.l12=fit.l12, printit=debug)
+  }
+
   mini <- optim(par=startvalues, fn=chisqr.Na.withr0, method="BFGS", hessian=TRUE,
                 control=list(maxit=500), data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, fit.l12=fit.l12)
@@ -811,9 +826,10 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
   for(i in 1:length(data)) {
     dof = dof + 2*length( ii[[i]] )
   }
-  dof <- dof - length(startvalues)
+  dof <- dof + length(r0data$r0) - length(startvalues)
   chisqr <- mini$value
   par <- mini$par
+
   # compute observables
   mu.phys <- c(0.)
   a <- rep(0., times=N)
@@ -907,7 +923,7 @@ fit.Na.withr0 <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess
 
 chisqr.Na.withr0 <- function(par, data, ii, r0data, fsmethod="gl", a.guess, fit.l12=FALSE, printit=FALSE) {
 
-  attach(r0data, warn.conflicts=FALSE)
+
   N <- length(ii)
   chisum <- 0.
   for( i in 1:N) {
@@ -915,81 +931,84 @@ chisqr.Na.withr0 <- function(par, data, ii, r0data, fsmethod="gl", a.guess, fit.
     ij <- ii[[i]]
     r0TwoB <- par[(3+i)]
     if(any(r0TwoB < 0)) {
-      detach(r0data)
       detach(data[[i]])
       return(invisible(NaN))
     }
+    r0 <- par[3+N+i]
     r0F <- par[3]
-    r0sqTwoBmu <- r0TwoB*mu[ij]*r0[i]
+    r0sqTwoBmu <- r0TwoB*mu[ij]*r0
     mpssq <- getmpssq(r0sqTwoBmu, r0F, par, N, fit.l12)
     fpsV <- getfps(r0sqTwoBmu, r0F, par, N, fit.l12)
     if(printit) {
-      cat("r0    ", r0[i], "\n")
+      cat("r0    ", r0, "\n")
       cat("mu    ", mu[ij], "\n")
-      cat("noFSm ", sqrt(mpssq)/r0[i], "\n")
-      cat("noFSf ", fpsV/r0[i], "\n")
+      cat("noFSm ", sqrt(mpssq)/r0, "\n")
+      cat("noFSf ", fpsV/r0, "\n")
       cat("r0sqTwoBmu ", r0sqTwoBmu, "\n")
       cat("r0F   ", r0F, "\n")
       cat("par   ", par, "\n")
       cat("N     ", N, "\n")
       cat("fit.l12 ", fit.l12, "\n") 
     }
-    if(any(mpssq < 0)) {
-      detach(r0data)
+    if(any(is.nan(mpssq)) || any(mpssq < 0)) {
       detach(data[[i]])
       return(NaN)
     }
     if(fsmethod=="cdh") {
       r0mu.phys <- try(uniroot(fovermps.Na.withr0,
-                               c(r0[i]*0.0001, r0[i]*0.004),
+                               c(r0*0.0001, r0*0.004),
                                tol=1.e-12, par=par, indd=i)$root, silent=T)
       if(inherits(r0mu.phys, "try-error") || is.nan(r0mu.phys)) a_fm <- a.guess[i]
       else {
-        a_fm <- getfps(r0sqTwoBmu=r0TwoB*r0mu.phys, r0F, par, fit.l12)/0.1307*0.1973/r0data$r0[i]
+        a_fm <- getfps(r0sqTwoBmu=r0TwoB*r0mu.phys, r0F, par, fit.l12)/0.1307*0.1973/r0
       }
       #a_fm <- a.guess[i]
       if(fit.l12) {
-        aLamb1=par[3+N+1]/r0[i]
-        aLamb2=par[3+N+2]/r0[i]
+        aLamb1=par[3+2*N+1]/r0
+        aLamb2=par[3+2*N+2]/r0
       }
       else {
         aLamb1=sqrt(exp(-0.4+log((0.1396*a_fm/0.1973)^2)))
         aLamb2=sqrt(exp(4.3+log((0.1396*a_fm/0.1973)^2)))
       }
-      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/r0data$r0[i],
-                 aLamb4=par[2]/r0[i], ampiV=sqrt(mpssq)/r0[i], afpiV=fpsV/r0[i],
-                 aF0=fpsV/r0[i], a_fm=a_fm, L=L[ij], rev=1, printit=printit)
-      mpsV <- res$mpiFV*r0[i]
-      fpsV <- res$fpiFV*r0[i]
+
+      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/r0,
+                 aLamb4=par[2]/r0, ampiV=sqrt(mpssq)/r0, afpiV=fpsV/r0,
+                 aF0=fpsV/r0, a_fm=a_fm, L=L[ij], rev=1, printit=printit)
+      mpsV <- res$mpiFV
+      fpsV <- res$fpiFV
     }
     else {
-      mpsv <- L[ij]*sqrt(mpssq)/r0[i]
-      r <-  mpssq/(4.0*pi*r0F)^2*g1(mpsv)/r0[i]
+      mpsv <- L[ij]*sqrt(mpssq)/r0
+      r <-  mpssq/(4.0*pi*r0F)^2*g1(mpsv)/r0
 
-      mpsV <- sqrt(mpssq)*(1.+0.5*r)
-      fpsV <- fps*(1.0-2.0*r)
+      mpsV <- sqrt(mpssq)*(1.+0.5*r)/r0
+      fpsV <- fpsV*(1.0-2.0*r)/r0
     }
-    dr0mps <-sqrt((dr0[i]*mps[ij])^2 + (r0[i]*dmps[ij])^2)
-    dr0fps <-sqrt((dr0[i]*fps[ij])^2 + (r0[i]*dfps[ij])^2)
-    chisum <- chisum + (sum(((r0[i]*mps[ij]-mpsV)/dr0mps)^2) +
-                        sum(((r0[i]*fps[ij]-fpsV)/dr0fps)^2))
-#    chisum <- chisum + (sum(((r0[i]*mps[ij]-mpsV)/(r0[i]*dmps[ij]))^2) +
-#                        sum(((r0[i]*fps[ij]-fpsV)/(r0[i]*dfps[ij]))^2))
+    chisum <- chisum + (sum(((mps[ij]-mpsV)/(dmps[ij]))^2) +
+                        sum(((fps[ij]-fpsV)/(dfps[ij]))^2))
     if(printit) {
-      cat("model ", mpsV/r0[i], "\n")
-      cat("data  ", mps[ij], "\n")
-      cat("err   ", dmps[ij], "\n")
-      cat("err_w ", dr0mps, "\n")
-      cat("chi   ", ((r0[i]*mps[ij]-mpsV)/dr0mps), "\n")
-      cat("model ", fpsV/r0[i], "\n")
-      cat("data  ", fps[ij], "\n")
-      cat("err   ", dfps[ij], "\n")
-      cat("err_w ", dr0fps, "\n")
-      cat("chi   ", ((r0[i]*fps[ij]-fpsV)/dr0fps), "\n")
+      cat("r0model ", r0, "\n")
+      cat("r0data  ", r0data$r0[i], "\n")
+      cat("chir0   ", (r0data$r0[i]-r0)/r0data$dr0[i], "\n")
+      cat("model   ", mpsV, "\n")
+      cat("data    ", mps[ij], "\n")
+      cat("err     ", dmps[ij], "\n")
+      cat("chim    ", ((mps[ij]-mpsV)/dmps[ij]), "\n")
+      cat("model   ", fpsV, "\n")
+      cat("data    ", fps[ij], "\n")
+      cat("err     ", dfps[ij], "\n")
+      cat("chif    ", ((fps[ij]-fpsV)/dfps), "\n")
     }
     detach(data[[i]])
   }
-  detach(r0data)
+  if(printit) {
+    cat("chisqr ", chisum, "\n")
+  }
+  chisum <- chisum + sum(((par[(3+N+1):(3+2*N)]-r0data$r0)/r0data$dr0)^2)
+  if(printit) {
+    cat("chisqr ", chisum, "\n\n")
+  }
   return(invisible(chisum))
 }
 
@@ -998,8 +1017,8 @@ getmpssq <- function(r0sqTwoBmu, r0F, par, N, fit.l12=FALSE) {
   xi <- r0sqTwoBmu/(4.0*pi*r0F)^2
   rln3 <- log(r0sqTwoBmu/par[1]^2)
   if(fit.l12) {
-    rln1 <- log(r0sqTwoBmu/par[N+4]^2)
-    rln2 <- log(r0sqTwoBmu/par[N+5]^2)
+    rln1 <- log(r0sqTwoBmu/par[2*N+4]^2)
+    rln2 <- log(r0sqTwoBmu/par[2*N+5]^2)
     return(r0sqTwoBmu*(1. + xi*rln3 +
                        17./2.*xi^2*(((-28.*rln1 -32.*rln2 + 9.*rln3 + 49.)/51.)^2
 #                                    +8./17.*par[N+6]
@@ -1016,8 +1035,8 @@ getfps <- function(r0sqTwoBmu, r0F, par, N, fit.l12=FALSE) {
   rln3 <- log(r0sqTwoBmu/par[1]^2)
   rln4 <- log(r0sqTwoBmu/par[2]^2)
   if(fit.l12) {
-    rln1 <- log(r0sqTwoBmu/par[N+4]^2)
-    rln2 <- log(r0sqTwoBmu/par[N+5]^2)
+    rln1 <- log(r0sqTwoBmu/par[2*N+4]^2)
+    rln2 <- log(r0sqTwoBmu/par[2*N+5]^2)
     return(r0F*(1. - 2.*xi*rln4 -
                 5*xi^2*(((-14*rln1 - 16*rln2 - 6*rln3 + 6*rln4 + 23)/30.)^2
 #                        + 4./5.*par[N+7]

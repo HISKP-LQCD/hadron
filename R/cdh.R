@@ -45,7 +45,7 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
   for(jj in 1:length(ampiV)) {
     # Eq.(11)
     lambda_pi <-  ampiV[jj]*L[jj]
-    # argument of unctions in Eq.(50). sqrt(n) comes from Eq.(26-27)
+    # argument of functions in Eq.(50). sqrt(n) comes from Eq.(26-27)
     z <-  sqrt(c(1:mml))*lambda_pi
     B0 <- 2*besselK(z,1)/z
     B2 <- 2*besselK(z,2)/z^2
