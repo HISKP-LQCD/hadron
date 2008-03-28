@@ -60,7 +60,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   W <- arrangeCor.pion(T1=T1, W=W, Z=Z)
   rm(Z)
   
-  options(show.error.messages = FALSE)
+#  options(show.error.messages = FALSE)
   pion.eff.ll <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
   pion.eff.lf <- effectivemass(from=(t1+1), to=(t2+1), Time, W[(T1+1):(2*T1),] , pl=FALSE, S=1.5, nrep=nrep)
   pion.eff.ff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[(3*T1+1):(4*T1),] , pl=FALSE, S=1.5, nrep=nrep)
@@ -161,17 +161,21 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
   else if(no.masses == 2) {
-    pionfit <- optim(par, ChiSqr.2mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
-                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+#    pionfit <- optim(par, ChiSqr.2mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
+#                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    pionfit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses = 2)
     fit.mass <- sort(abs(pionfit$par[c((matrix.size+1),(2*matrix.size+2))]))
   }
   else if(no.masses > 2) {
-    pionfit <- optim(par, ChiSqr.3mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
-                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+#    pionfit <- optim(par, ChiSqr.3mass, method="BFGS", control=list(trace=0),Thalf=Thalf,
+#                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size)
+    pionfit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses = 3)
     fit.mass <- sort(abs(pionfit$par[c((matrix.size+1),(2*matrix.size+2),(3*matrix.size+3))]))
   }
-  if(pionfit$convergence != 0) {
-    warning("optim did not converge for pionfit!", call.=F)
+  if(pionfit$convergence < 0) {
+    warning("gsl_multifit did not converge for pionfit! ", pionfit$convergence, call.=F)
   }
 
   fit.dof <- (t2-t1+1)*3-length(pionfit$par)
@@ -354,13 +358,18 @@ fitmasses.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     return(abs(fit$par[N+1]))
   }
   else if (no.masses == 2) {
-    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 2)
+
     return(sort(abs(fit$par[c((N+1),(2*N+2))]))[no])
   }
   else if (no.masses == 3) {
-    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 3)
     return(sort(abs(fit$par[c((N+1),(2*N+2),(3*N+3))]))[no])
   }
 }
@@ -381,13 +390,17 @@ fitf.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     sort.ind <- c(1)
   }
   else if (no.masses == 2) {
-    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 2)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
   }
   else if (no.masses == 3) {
-    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 3)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
   }
 #  fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
@@ -412,13 +425,17 @@ fitmpcac.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     sort.ind <- c(1)
   }
   else if (no.masses == 2) {
-    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 2)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
   }
   else if (no.masses == 3) {
-    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 3)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
   }
   fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
@@ -438,17 +455,20 @@ fitzv.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
 #                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N)
     fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
                      x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
-
     sort.ind <- c(1)
   }
   else if (no.masses == 2) {
-    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 2)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
   }
   else if (no.masses == 3) {
-    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 3)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
   }
   fit.zv <- 2*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]
@@ -500,8 +520,10 @@ fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
   }
   else if (no.masses == 2) {
-    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.2mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 2)
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
     fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
     fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.
@@ -531,8 +553,10 @@ fit.pion.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
   }
   else if (no.masses == 3) {
-    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+#    fit <- optim(par, ChiSqr.3mass, method="BFGS", Thalf=Thalf,
+#                     x=c((t1):(t2)), y=Cor, err=Err, tr=tr, N=N, kludge=kludge)
+    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N, no_masses = 3)
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
     fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
     fit.pcac <- abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+3]/fit$par[(sort.ind[1]-1)*(N+1)+1]/2.

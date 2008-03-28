@@ -235,8 +235,22 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 
   GammaFbb<-numeric()
   GammaFbb[1] <- mean(delpro^2)
-  if(GammaFbb[1] == 0) {
-    warning("no fluctuations!")
+  if(!any(is.na(GammaFbb))) {
+    if(GammaFbb[1] == 0) {
+      warning("no fluctuations!")
+    }
+  }
+  else {
+    res <- list(value = Fbb, dvalue = NA, ddvalue = NA,
+                tauint = NA, dtauint = NA, Wopt=NA, Wmax=NA,
+                tauintofW=NA, dtauintofW=NA,
+                Qval=NA, S=S,
+                N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=0)
+    
+    attr(res, "class") <- c("uwerr", "list")
+    options(error = NULL)
+    return(invisible(res))
+    
   }
 
   if(S==0) {
