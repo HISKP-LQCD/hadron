@@ -1,7 +1,12 @@
 # $Id$
-plotwitherror <- function(x, y, dy, ylim, ...) {
+plotwitherror <- function(x, y, dy, ylim, rep=FALSE, ...) {
   if(missing(ylim)) {
-    plot(x,y, ylim=c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE)), ...)
+    if(rep) {
+      points(x, y, ...)
+    }
+    else {
+      plot(x,y, ylim=c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE)), ...)
+    }
   }
   else {
     plot(x,y, ylim=ylim, ...)

@@ -21,6 +21,7 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
   lb3 <- log((aLamb3/ampiV)^2)
   lb4 <- log((aLamb4/ampiV)^2)
   lpi <- log((ampiV/amrho_phys)^2)
+
   if(any(is.na(c(lb1, lb2, lb3, lb4, lpi)))){
     cat("why ", ampiV, aLamb2/ampiV, aLamb3/ampiV, aLamb4/ampiV,
   ampiV/amrho_phys, "\n")
@@ -72,6 +73,7 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
                          - 32/3*lb4*(lb1+4*lb2) + lpi*(100/9*lpi + 8/3*lb1 + 176/9*lb2 - 248/9)
                          - 8*rtilde[3] - 56*rtilde[4] - 48*rtilde[5] + 16*rtilde[6])+
                            S6mpi
+
   I2fpi <- -2*mmB0;
   I4fpi <- mmB0*(-7/9 + 2*lb1 + (4/3)*lb2 - 3*lb4) + 
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
@@ -98,6 +100,7 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
                                         #[mlo', mnlo', mnnlo', flo', fnlo']
                                         #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
   }
+
   if(any(is.na(c(mpiFV, fpiFV)))) {
     warning("NaNs produced in: cdh!\n")
     return(invisible(list(mpiFV=ampiV, fpiFV=afpiV)))

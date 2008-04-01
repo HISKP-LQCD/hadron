@@ -871,7 +871,6 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
     R0[i] <- par[4+i]
     Zp[i] <- par[4+i+N]
   }
-
   
   boot.result <- NULL
   boots <- NULL
@@ -923,7 +922,8 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
         r0F <- numeric()
         mpssqr <- numeric()
         for(i in 1:N) {
-          boots[s,i] <- uniroot(fovermps.Na.withr0, c(r0df$r0[i]*0.0001, r0df$r0[i]*0.004), tol=1.e-12, par=par.boot, indd=i)$root
+          boots[s,i] <- uniroot(fovermps.Na.withr0, c(r0df$r0[i]*0.0001, r0df$r0[i]*0.004),
+                                tol=1.e-12, par=par.boot, indd=i)$root
                                         #        r0TwoB <- par.boot[4]
           r0sqTwoBmu <- par.boot[4]*boots[s,i]
           r0F <- par.boot[3]
@@ -965,7 +965,7 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
                  chisqr=chisqr, dof=dof), fit=mini,
                  data=data, boot.result=boot.result, boots=boots, r0data=r0data, ZPdata=ZPdata,
                  bootsamples=bootsamples, r0bootsamples=r0bootsamples, ZPbootsamples=ZPbootsamples,
-                 ii=ii, fit.l12=fit.l12, boot.R=boot.R)
+                 ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod)
   attr(result, "class") <- c("chiralfit", "list")  
   return(invisible(result))
 }
@@ -1068,6 +1068,74 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
     cat("chisqr ", chisum, "\n\n")
   }
   return(invisible(chisum))
+}
+
+getchi.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a, fit.l12=FALSE) {
+
+
+  N <- length(ii)
+  chisum <- 0.
+  for( i in 1:N) {
+    a_fm = a[i]
+    ij <- ii[[i]]
+    r0TwoB <- par[4]
+    if(any(r0TwoB < 0)) {
+      return(invisible(NaN))
+    }
+#    r0 <- par[4+i]
+#    ZP <- par[4+N+i]
+    r0F <- par[3]
+    r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[4+N+i]
+    mpssq <- getmpssq(r0sqTwoBmu, par, N, fit.l12)
+    fpsV <- getfps(r0sqTwoBmu, par, N, fit.l12)
+    if(any(is.nan(mpssq)) || any(mpssq < 0)) {
+      return(NaN)
+    }
+    if(fsmethod=="cdh") {
+      if(fit.l12) {
+        aLamb1=par[8+2*N]/par[4+i]
+        aLamb2=par[9+2*N]/par[4+i]
+      }
+      else {
+        aLamb1=sqrt(exp(-0.4)*(0.1396*a_fm/0.1973)^2)
+        aLamb2=sqrt(exp(4.3)*(0.1396*a_fm/0.1973)^2)
+      }
+
+      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/par[4+i],
+                 aLamb4=par[2]/par[4+i], ampiV=sqrt(mpssq)/par[4+i], afpiV=fpsV/par[4+i],
+                 aF0=fpsV/par[4+i], a_fm=a_fm, L=data[[i]]$L[ij], rev=1, printit=FALSE)
+      mpsV <- res$mpiFV
+      fpsV <- res$fpiFV
+    }
+    else {
+      mpsv <- L[ij]*sqrt(mpssq)/par[4+i]
+      r <-  mpssq/(4.0*pi*par[3])^2*g1(mpsv)/par[4+i]
+
+      mpsV <- sqrt(mpssq)*(1.+0.5*r)/par[4+i]
+      fpsV <- fpsV*(1.0-2.0*r)/par[4+i]
+    }
+    cat("\n*** lattice spacing", i, "a=", a_fm,"fm ***\n")
+    cat("mps:\n")
+    print(data.frame(data=data[[i]]$mps[ij], Err=data[[i]]$dmps[ij], Fit=mpsV, Chi=(data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij])))
+    cat("fps:\n")
+    print(data.frame(data=data[[i]]$fps[ij], Err=data[[i]]$dfps[ij], Fit=fpsV, Chi=(data[[i]]$fps[ij]-fpsV)/(data[[i]]$dfps[ij])))
+    if(fit.l12) {
+      cat("l12:\n")
+      print(data.frame(data=c(-0.4,4.3), Err=c(0.6,0.1),
+                       Fit=c((log((aLamb1)^2/(0.1396*a_fm/0.1973)^2)), (log((aLamb2)^2/(0.1396*a_fm/0.1973)^2))),
+                       Chi=c((-0.4-log((aLamb1)^2/(0.1396*a_fm/0.1973)^2))/0.6, (4.3-log((aLamb2)^2/(0.1396*a_fm/0.1973)^2))/0.1)
+                       ))
+    }
+    cat("r0:\n")
+    print(data.frame(data=r0data$r0[i],Err=r0data$dr0[i], Fit=par[4+i], Chi=(r0data$r0[i]-par[4+i])/r0data$dr0[i]))
+    cat("ZP:\n")
+    print(data.frame(data=ZPdata$ZP[i],Err=ZPdata$dZP[i], Fit=par[4+N+i], Chi=(ZPdata$ZP[i]-par[4+N+i])/ZPdata$dZP[i]))
+    
+# the nucleon
+    mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N)/par[4+i]
+    cat("mN:\n")
+    print(data.frame(data=data[[i]]$mN, Err=data[[i]]$dmN, Fit=mN, Chi=(data[[i]]$mN-mN)/data[[i]]$dmN))
+  }
 }
 
 getmpssq <- function(r0sqTwoBmu, par, N, fit.l12=FALSE) {
