@@ -1,6 +1,7 @@
 plot.chiralfit <- function(fit, ...) {
   N <- length(fit$data)
   npar <- length(fit$par)
+  fit.a <- -1.
   par <- fit$par
   X11()
   fplot <- dev.cur()
@@ -12,6 +13,9 @@ plot.chiralfit <- function(fit, ...) {
   mNplot <- dev.cur()
   
   for(i in 1:N) {
+    if(fit$fit.asq) {
+     fit.a <- 4+i
+    }
     dev.set(fplot)
     ij <- ii[[i]]
     if(fit$fit.l12) {
@@ -37,70 +41,83 @@ plot.chiralfit <- function(fit, ...) {
 
     r0TwoB <- par[4]
     r0sqTwoBmu <- r0TwoB*xfit
-    msq <- getmpssq(r0sqTwoBmu, fit$par, N, fit$fit.l12)
-    f <- getfps(r0sqTwoBmu, fit$par, N, fit$fit.l12)
-    mN <- getmN(r0sqTwoBmu, fit$par, N)
+    msq <- getmpssq(r0sqTwoBmu, fit$par, N, fit$fit.l12, fit.asq=fit.a)
+    f <- getfps(r0sqTwoBmu, fit$par, N, fit$fit.l12, fit.asq=fit.a)
+    mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
     color <- c("red", "blue", "black")
+    xmu <- fit$par[4+i]/fit$par[4+N+i]*fit$data[[i]]$mu[ij]
     if(i == 1) {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    fit$r0data$r0[i]*fpsV, fit$r0data$r0[i]*fit$data[[i]]$dfps[ij],
-                    ylim=c(0.85*min(fit$r0data$r0[i]*fpsV, na.rm=TRUE), 1.1*max(fit$r0data$r0[i]*fpsV, na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu, na.rm=TRUE)), col=color[i],
+      plotwitherror(xmu,
+                    fit$par[4+i]*fpsV, fit$par[4+i]*fit$data[[i]]$dfps[ij],
+                    ylim=c(0.85*min(fit$par[4+i]*fpsV, na.rm=TRUE), 1.1*max(fit$par[4+i]*fpsV, na.rm=TRUE)),
+                    xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i],
                     pch=i, ylab="r0 fps", xlab="r0 mu / ZP")
-      lines(spline(xfit, f), lty=2)
+      lines(xfit, f, lty=2)
     }
     else{
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    fit$r0data$r0[i]*fpsV, fit$r0data$r0[i]*fit$data[[i]]$dfps[ij], rep=TRUE,
+      plotwitherror(xmu,
+                    fit$par[4+i]*fpsV, fit$par[4+i]*fit$data[[i]]$dfps[ij], rep=TRUE,
                     col=color[i], pch=i)
+      if(fit$fit.asq) {
+        lines(xfit, f, lty=2)
+      }
     }
     dev.set(mpsplot)
     if(i == 1) {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    (fit$r0data$r0[i]*mpsV)^2, 2*fit$r0data$r0[i]*fit$r0data$r0[i]*mpsV*fit$data[[i]]$dmps[ij],
-                    ylim=c(0., 1.1*max((fit$r0data$r0[i]*mpsV)^2, na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij], na.rm=TRUE)), col=color[i],
+      plotwitherror(xmu,
+                    (fit$par[4+i]*mpsV)^2, 2*fit$par[4+i]^2*mpsV*fit$data[[i]]$dmps[ij],
+                    ylim=c(0., 1.1*max((fit$par[4+i]*mpsV)^2, na.rm=TRUE)),
+                    xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i],
                     pch=i, ylab="(r0 mps)^2", xlab="r0 mu / ZP")
-      lines(spline(xfit, msq), lty=2)
+      lines(xfit, msq, lty=2)
     }
     else {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    (fit$r0data$r0[i]*mpsV)^2, 2*fit$r0data$r0[i]*fit$r0data$r0[i]*mpsV*fit$data[[i]]$dmps[ij],
-                    rep=TRUE, col=color[i], pch=i)      
+      plotwitherror(xmu,
+                    (fit$par[4+i]*mpsV)^2, 2*fit$par[4+i]^2*mpsV*fit$data[[i]]$dmps[ij],
+                    rep=TRUE, col=color[i], pch=i)
+      if(fit$fit.asq) {
+        lines(xfit, msq, lty=2)
+      }
     }
     dev.set(mpsmuplot)
     if(i == 1) {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    (fit$r0data$r0[i]*mpsV)^2/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
-                    2*fit$r0data$r0[i]*fit$r0data$r0[i]*mpsV*fit$data[[i]]$dmps[ij]/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
-                    ylim=c(0.85*min((fit$r0data$r0[i]*mpsV)^2/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
+      plotwitherror(xmu,
+                    (fit$par[4+i]*mpsV)^2/(xmu),
+                    2*fit$par[4+i]^2*mpsV*fit$data[[i]]$dmps[ij]/(xmu),
+                    ylim=c(0.95*min((fit$par[4+i]*mpsV)^2/(xmu),
                       na.rm=TRUE),
-                      1.1*max((fit$r0data$r0[i]*mpsV)^2/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
+                      1.1*max((fit$par[4+i]*mpsV)^2/(xmu),
                               na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij], na.rm=TRUE)), col=color[i],
+                    xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i],
                     pch=i, ylab="(r0 mps)^2/mu", xlab="r0 mu / ZP")
-      lines(spline(xfit, msq/xfit), lty=2)
+      lines(xfit, msq/xfit, lty=2)
     }
     else {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    (fit$r0data$r0[i]*mpsV)^2/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
-                    2*fit$r0data$r0[i]*fit$r0data$r0[i]*mpsV*fit$data[[i]]$dmps[ij]/(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij]),
-                    rep=TRUE, col=color[i], pch=i)      
+      plotwitherror(xmu,
+                    (fit$par[4+i]*mpsV)^2/(xmu),
+                    2*fit$par[4+i]^2*mpsV*fit$data[[i]]$dmps[ij]/(xmu),
+                    rep=TRUE, col=color[i], pch=i)
+      if(fit$fit.asq) {
+        lines(xfit, msq/xfit, lty=2)
+      }
     }
     dev.set(mNplot)
     if(i==1) {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    fit$r0data$r0[i]*fit$data[[i]]$mN[ij], fit$r0data$r0[i]*fit$data[[i]]$dmN[ij],
-                    ylim=c(0.85*min(fit$r0data$r0[i]*fit$data[[i]]$mN[ij], na.rm=TRUE),
-                      1.1*max(fit$r0data$r0[i]*fit$data[[i]]$mN[ij], na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij], na.rm=TRUE)), col=color[i],
+      plotwitherror(xmu,
+                    fit$par[4+i]*fit$data[[i]]$mN[ij], fit$par[4+i]*fit$data[[i]]$dmN[ij],
+                    ylim=c(0.85*min(fit$par[4+i]*fit$data[[i]]$mN[ij], na.rm=TRUE),
+                      1.1*max(fit$par[4+i]*fit$data[[i]]$mN[ij], na.rm=TRUE)),
+                    xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i],
                     pch=i, ylab="r0 mN", xlab="r0 mu / ZP")
-      lines(spline(xfit, mN), lty=2)
+      lines(xfit, mN, lty=2)
     }
     else {
-      plotwitherror(fit$r0data$r0[i]/fit$ZPdata$ZP[i]*fit$data[[i]]$mu[ij],
-                    fit$r0data$r0[i]*fit$data[[i]]$mN[ij], fit$r0data$r0[i]*fit$data[[i]]$dmN[ij],
+      plotwitherror(xmu,
+                    fit$par[4+i]*fit$data[[i]]$mN[ij], fit$par[4+i]*fit$data[[i]]$dmN[ij],
                     rep=TRUE, col=color[i], pch=i)
+      if(fit$fit.asq) {
+        lines(xfit, mN, lty=2)
+      }
     }
   }
 }
@@ -120,18 +137,20 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   cat("red. chisqr  = ", fit$result$chisqr/fit$result$dof, "\n")
   if(!is.null(fit$boot.result)) {
     if(fit$fit.l12) {
-      cat("l1           = ", fit$result$l1, "+-", sd(fit$boots[,(8+2*N)], na.rm=TRUE), "\n")
-      cat("l2           = ", fit$result$l2, "+-", sd(fit$boots[,(9+2*N)], na.rm=TRUE), "\n")
+      cat("l1           = ", fit$result$l1, "+-", sd(fit$boots[,(3+2*N)], na.rm=TRUE), "\n")
+      cat("l2           = ", fit$result$l2, "+-", sd(fit$boots[,(4+2*N)], na.rm=TRUE), "\n")
     }
     cat("l3           = ", fit$result$l3, "+-", sd(fit$boots[,(1+2*N)], na.rm=TRUE), "\n")
     cat("l4           = ", fit$result$l4, "+-", sd(fit$boots[,(2+2*N)], na.rm=TRUE), "\n")
-    cat("F0           = ", fit$result$F, "+-", sd(fit$boots[,(5+2*N)], na.rm=TRUE), "MeV \n")
-    cat("B0           = ", fit$result$B0, "+-", sd(fit$boots[,(6+2*N)], na.rm=TRUE), "MeV \n")
-    cat("mN0          = ", fit$result$mN0, "+-", sd(fit$boots[,(7+2*N)], na.rm=TRUE), "MeV \n")
-    cat("mN           = ", fit$result$mN, "+-", sd(fit$boots[,(8+2*N)], na.rm=TRUE), "MeV \n")
-    cat("c1           = ", fit$result$c1, "+-", sd(fit$boots[,(8+2*N+6+2*N)], na.rm=TRUE), "\n")
-    cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(8+2*N+7+2*N)], na.rm=TRUE), "\n")
-    cat("mu_phys      = ", fit$result$mu.phys[1], "+-", sd(fit$boots[,1], na.rm=TRUE), "MeV \n\n")
+    cat("F0           = ", fit$result$F, "+-", sd(fit$boots[,(5+2*N)], na.rm=TRUE), "GeV \n")
+    cat("B0           = ", fit$result$B0, "+-", sd(fit$boots[,(6+2*N)], na.rm=TRUE), "GeV \n")
+    cat("Sigma^(1/3)  = ", fit$result$Sigma, "+-", sd(fit$boots[,(10+2*N)], na.rm=TRUE), "GeV \n")
+    cat("<r^2>_s      = ", fit$result$rssq, "+-", sd(fit$boots[,(11+2*N)], na.rm=TRUE), "fm^2 \n")
+    cat("mN0          = ", fit$result$mN0, "+-", sd(fit$boots[,(7+2*N)], na.rm=TRUE), "GeV \n")
+    cat("mN           = ", fit$result$mN, "+-", sd(fit$boots[,(8+2*N)], na.rm=TRUE), "GeV \n")
+    cat("c1           = ", fit$result$c1, "+-", sd(fit$boots[,(9+2*N)], na.rm=TRUE), "GeV^(-1)\n")
+    cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(11+2*N+7+2*N)], na.rm=TRUE), "\n")
+    cat("mu_phys      = ", fit$result$mu.phys[1], "+-", sd(fit$boots[,1], na.rm=TRUE), "GeV \n\n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$r0data$r0[i], ": a = ", fit$result$a[i], "+-",
@@ -148,6 +167,8 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       }
       cat("\n")
     }
+    cat("Fit Parameter:\n")
+    print(data.frame(Par=fit$par, Err=fit$boot.result[(2*N+12):(2*N+11+npar),2], Bias=fit$par- fit$boot.result[(2*N+12):(2*N+11+npar),1]))
   }
   else {
     if(fit$fit.l12) {
@@ -158,6 +179,8 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     cat("l4           = ", fit$result$l4, "\n")
     cat("F0           = ", fit$result$F, "MeV \n")
     cat("B0           = ", fit$result$B0, "MeV \n")
+    cat("Sigma^(1/3)  = ", fit$result$Sigma, "GeV \n")
+    cat("<r^2>_s      = ", fit$result$rssq, "fm^2 \n")
     cat("mN0          = ", fit$result$mN0, "MeV \n")
     cat("mN           = ", fit$result$mN, "MeV \n")
     cat("c1           = ", fit$result$c1, "\n")
@@ -178,6 +201,8 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       }
       cat("\n")
     }
+    cat("Fit Parameter:\n")
+    print(data.frame(Par=fit$par))
   }
   if(show.chis) {
     getchi.Na.withr0ZP(par=fit$par, data=fit$data, ii=fit$ii, r0data=fit$r0data, ZPdata=fit$ZPdata,

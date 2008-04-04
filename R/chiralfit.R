@@ -778,7 +778,9 @@ fovermps.Na.withr0 <- function(x, par, indd) {
 # 7+2*N+4:        k_F
 
 fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
-                          r0bootsamples, r0data, ZPdata, ZPbootsamples, fit.l12=FALSE, ii, boot.R=100, debug=FALSE) {
+                            r0bootsamples, r0data, ZPdata, ZPbootsamples,
+                            fit.l12=FALSE, fit.asq=FALSE,
+                            ii, boot.R=100, debug=FALSE) {
   if(missing(data) || missing(startvalues)) {
     stop("data and startvalues must be provided!\n")
   }
@@ -800,7 +802,8 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   }
   np <- 7+2*N
   if(fit.l12) np=np+2
-  if(length(startvalues)!= np) stop("length of startvalues", length(startvalues),
+  if(fit.asq) np=np+3
+  if(length(startvalues) != np) stop("length of startvalues", length(startvalues),
              "must match number of fit parameters ", np, "!\n")
   if(fsmethod=="cdh") {
     if(missing(a.guess)) {
@@ -811,12 +814,14 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
 
   if(debug) {
     chisqr.Na.withr0ZP(par=startvalues, data=data, ii=ii,fsmethod=fsmethod,
-                     a.guess=a.guess, r0data=r0data, ZPdata=ZPdata, fit.l12=fit.l12, printit=debug)
+                       a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
+                       fit.l12=fit.l12, fit.asq=fit.asq, printit=debug)
   }
 
-  mini <- optim(par=startvalues, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=TRUE,
+  mini <- optim(par=startvalues, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=FALSE,
                 control=list(maxit=500), data=data, ii=ii,
-                fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, ZPdata=ZPdata, fit.l12=fit.l12)
+                fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
+                fit.l12=fit.l12, fit.asq=fit.asq)
   if(mini$convergence != 0) {
     warning("Attention: optim did not converge in initial run!\n Please adjust start values!")
   }
@@ -846,6 +851,8 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   mN <- numeric()
   c1 <- numeric()
   gA <- numeric()
+  Sigma <- numeric()
+  rssq <- numeric()
   for(i in 1:N) {
     mu.phys[i] <- uniroot(fovermps.Na.withr0, c(r0data$r0[i]*0.0001, r0data$r0[i]*0.004),
                           tol=1.e-12, par=par, indd=i)$root
@@ -857,19 +864,22 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
     fpi <- getfps(r0sqTwoBmu, par, N, fit.l12)
     mN <- getmN(r0sqTwoBmu, par, N)/fpi*0.130
     a[i] <- fpi/0.1307*0.1973/par[4+i]
-    l3 <- log(par[1]^2) - log( mpisq ) 
-    l4 <- log(par[2]^2) - log( mpisq )
+    lmpssq <-  log( 0.1396^2 )
+    l3 <- log((par[1]/fpi*0.130)^2) - lmpssq
+    l4 <- log((par[2]/fpi*0.130)^2) - lmpssq
     if(fit.l12) {
-      l1 <- log(par[8+2*N]^2) - log( mpisq ) 
-      l2 <- log(par[9+2*N]^2) - log( mpisq )
+      l1 <- log((par[8+2*N]/fpi*0.130)^2) - lmpssq
+      l2 <- log((par[9+2*N]/fpi*0.130)^2) - lmpssq
     }
     F <- r0F/fpi*0.130
     mN0 <- r0mN/fpi*0.130
-    c1 <- par[6+2*N]
+    c1 <- par[6+2*N]*fpi/0.130
     gA <- par[7+2*N]
     B0 <- r0TwoB/fpi*0.130/2.
     R0[i] <- par[4+i]
     Zp[i] <- par[4+i+N]
+    Sigma <- (B0*F^2/2)^(1/3)
+    rssq <- 12./(4*pi*F)^2*(l4-12./13.)*0.1973^2
   }
   
   boot.result <- NULL
@@ -888,9 +898,8 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
         ZPbootsamples[,i] <- rnorm(boot.R, mean=ZPdata$ZP[i], sd=ZPdata$dZP[i])
       }
     }
-    mNbootsampels <- 
 
-    boots <- array(0., dim=c(boot.R, (2*N+length(startvalues)+11)))
+    boots <- array(0., dim=c(boot.R, (2*N+length(startvalues)+14)))
     for(s in 1:boot.R) {
       df <- list(data.frame(mu=data[[1]]$mu[ ii[[1]] ], mps=bootsamples[[1]][s, 1, ii[[1]] ],
                             dmps=data[[1]]$dmps[ ii[[1]] ],
@@ -908,10 +917,11 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
                               mN=rnorm(length(ii[[i]]), mean=data[[i]]$mN[ ii[[i]] ], sd=data[[i]]$dmN[ ii[[i]] ]),
                               dmN=data[[i]]$dmN[ ii[[i]] ])
       }
-      
-      mini.boot <- optim(par=par, fn=chisqr.Na.withr0ZP, method="BFGS", control=list(trace=0, maxit=500),
-                         hessian=FALSE, data=df, ii=ii, fsmethod=fsmethod,
-                         a.guess=a.guess, r0data = r0df, ZPdata = ZPdf, fit.l12=fit.l12)
+
+      mini.boot <- optim(par=par, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=FALSE,
+                         control=list(maxit=500, trace=0), data=df, ii=ii,
+                         fsmethod=fsmethod, a.guess=a.guess, r0data=r0df, ZPdata=ZPdf,
+                         fit.l12=fit.l12, fit.asq=fit.asq)
       if(mini.boot$convergence != 0) {
         warning("optim did not converge for one bootsample")
         par.boot <- rep(NA, length(mini.boot$par))
@@ -931,20 +941,22 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
           fpi <- getfps(r0sqTwoBmu, par.boot, N, fit.l12)
           boots[s,(i+N)] <- fpi/0.1307*0.1973/par.boot[4+i]
         }
-        lmpssqr <- log( mpssqr )
-        boots[s,(1+2*N)] <- log(par.boot[1]^2) - lmpssqr
-        boots[s,(2+2*N)] <- log(par.boot[2]^2) - lmpssqr
+        lmpssqr <- log( 0.1396^2 )
+        boots[s,(1+2*N)] <- log((par.boot[1]/fpi*0.130)^2) - lmpssqr
+        boots[s,(2+2*N)] <- log((par.boot[2]/fpi*0.130)^2) - lmpssqr
         if(fit.l12) {
-          boots[s,(3+2*N)] <- log(par.boot[8+2*N]^2) - lmpssqr
-          boots[s,(4+2*N)] <- log(par.boot[9+2*N]^2) - lmpssqr
+          boots[s,(3+2*N)] <- log((par.boot[8+2*N]/fpi*0.130)^2) - lmpssqr
+          boots[s,(4+2*N)] <- log((par.boot[9+2*N]/fpi*0.130)^2) - lmpssqr
         }
         boots[s,(5+2*N)] <- par.boot[3]/fpi*0.130
         boots[s,(6+2*N)] <- par.boot[4]/fpi*0.130/2.
         boots[s,(7+2*N)] <- par.boot[5+2*N]/fpi*0.130
         boots[s,(8+2*N)] <- getmN(r0sqTwoBmu, par.boot, N)/fpi*0.130
-
+        boots[s,(9+2*N)] <- par.boot[6+2*N]*fpi/0.130
+        boots[s,(10+2*N)] <- (boots[s,(6+2*N)]*boots[s,(5+2*N)]^2/2)^(1/3)
+        boots[s,(11+2*N)] <- 12./(4*pi*boots[s,(5+2*N)])^2*(boots[s,(2+2*N)]-12./13.)*0.1973^2
         for(i in 1:length(par.boot)) {
-          boots[s,(2*N+8+i)] <- par.boot[i]
+          boots[s,(2*N+11+i)] <- par.boot[i]
         }
       }
     }
@@ -961,32 +973,37 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
     ZPbootsamples <- NULL
   }
   
-  result <- list(par=par, result=list(mu.phys=mu.phys, F=F, a=a, l1=l1, l2=l2, l3=l3, l4=l4, B0=B0, mN0=mN0, mN=mN, c1=c1, gA=gA,r0=R0, ZP=Zp,
-                 chisqr=chisqr, dof=dof), fit=mini,
+  result <- list(par=par, result=list(mu.phys=mu.phys, F=F, a=a, l1=l1, l2=l2, l3=l3, l4=l4,
+                            B0=B0, mN0=mN0, mN=mN, c1=c1, gA=gA,r0=R0, ZP=Zp, Sigma=Sigma, rssq=rssq,
+                            chisqr=chisqr, dof=dof), fit=mini,
                  data=data, boot.result=boot.result, boots=boots, r0data=r0data, ZPdata=ZPdata,
                  bootsamples=bootsamples, r0bootsamples=r0bootsamples, ZPbootsamples=ZPbootsamples,
-                 ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod)
+                 ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, fit.asq=fit.asq)
   attr(result, "class") <- c("chiralfit", "list")  
   return(invisible(result))
 }
 
-chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.guess, fit.l12=FALSE, printit=FALSE) {
+chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.guess,
+                               fit.l12=FALSE, fit.asq=FALSE, printit=FALSE) {
 
-
+  fit.a <- -1.
   N <- length(ii)
   chisum <- 0.
   for( i in 1:N) {
+    if(fit.asq) {
+      fit.a <- 4+i
+    }
     ij <- ii[[i]]
     r0TwoB <- par[4]
-    if(any(r0TwoB < 0)) {
+    if(any(r0TwoB <= 0)) {
       return(invisible(NaN))
     }
 #    r0 <- par[4+i]
 #    ZP <- par[4+N+i]
     r0F <- par[3]
     r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[4+N+i]
-    mpssq <- getmpssq(r0sqTwoBmu, par, N, fit.l12)
-    fpsV <- getfps(r0sqTwoBmu, par, N, fit.l12)
+    mpssq <- getmpssq(r0sqTwoBmu, par, N, fit.l12, fit.asq=fit.a)
+    fpsV <- getfps(r0sqTwoBmu, par, N, fit.l12, fit.asq=fit.a)
     if(FALSE) {
       cat("r0         ", r0, "\n")
       cat("ZP         ", ZP, "\n")
@@ -999,7 +1016,7 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
       cat("N          ", N, "\n")
       cat("fit.l12    ", fit.l12, "\n\n")
     }
-    if(any(is.nan(mpssq)) || any(mpssq < 0)) {
+    if(any(is.nan(mpssq)) || any(mpssq <= 0)) {
       return(NaN)
     }
     if(fsmethod=="cdh") {
@@ -1042,12 +1059,12 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
 #      cat(log((aLamb1)^2/(0.1396*a_fm/0.1973)^2), log((aLamb2)^2/(0.1396*a_fm/0.1973)^2), "\n")
     }
     if(printit) {
-      cat("r0model ", r0, "\n")
+      cat("r0model ", par[4+i], "\n")
       cat("r0data  ", r0data$r0[i], "\n")
-      cat("chir0   ", (r0data$r0[i]-r0)/r0data$dr0[i], "\n")
+      cat("chir0   ", (r0data$r0[i]-par[4+i])/r0data$dr0[i], "\n")
       cat("modelZP ", par[4+N+i], "\n")
       cat("ZPdata  ", ZPdata$ZP[i], "\n")
-      cat("chiZP   ", (ZPdata$ZP[i]-ZP)/ZPdata$dZP[i], "\n")
+      cat("chiZP   ", (ZPdata$ZP[i]-par[4+N+i])/ZPdata$dZP[i], "\n")
       cat("modelm  ", mpsV, "\n")
       cat("datam   ", data[[i]]$mps[ij], "\n")
       cat("errm    ", data[[i]]$dmps[ij], "\n")
@@ -1059,7 +1076,7 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
     }
 
 # the nucleon
-    mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N)/par[4+i]
+    mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N, fit.asq=fit.a)/par[4+i]
     chisum <- chisum + sum(((data[[i]]$mN-mN)/data[[i]]$dmN)^2, na.rm=TRUE)
   }
   chisum <- chisum + sum(((par[(5):(4+N)]-r0data$r0)/r0data$dr0)^2) +
@@ -1138,41 +1155,59 @@ getchi.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a, 
   }
 }
 
-getmpssq <- function(r0sqTwoBmu, par, N, fit.l12=FALSE) {
-  
+getmpssq <- function(r0sqTwoBmu, par, N, fit.l12=FALSE, fit.asq=-1) {
+
+  npar <- length(par)
   xi <- r0sqTwoBmu/(4.0*pi*par[3])^2
   rln3 <- log(r0sqTwoBmu/par[1]^2)
+  asq <- 1.
+  if(fit.asq == -1) {
+    asq <- 0.
+    fit.asq <- 1
+  }
   if(fit.l12) {
     rln1 <- log(r0sqTwoBmu/par[2*N+8]^2)
     rln2 <- log(r0sqTwoBmu/par[2*N+9]^2)
-    return(r0sqTwoBmu*(1. + xi*rln3 +
+    return(r0sqTwoBmu*(1. + xi*rln3 + asq/par[fit.asq]^2*par[npar-2] +
                        17./2.*xi^2*(((-28.*rln1 -32.*rln2 + 9.*rln3 + 49.)/51.)^2
 #                                    +8./17.*par[N+6]
                                     )
                        )
            )
   }
-  return(r0sqTwoBmu*(1.0+r0sqTwoBmu*(rln3/(4.0*pi*par[3])^2 )))
+  return(r0sqTwoBmu*(1.0 + asq/par[fit.asq]^2*par[npar-2] + r0sqTwoBmu*(rln3/(4.0*pi*par[3])^2 )))
 }
 
-getfps <- function(r0sqTwoBmu, par, N, fit.l12=FALSE) {
+getfps <- function(r0sqTwoBmu, par, N, fit.l12=FALSE, fit.asq=-1.) {
 
+  npar <- length(par)
   xi <- r0sqTwoBmu/(4.0*pi*par[3])^2
   rln3 <- log(r0sqTwoBmu/par[1]^2)
   rln4 <- log(r0sqTwoBmu/par[2]^2)
+  asq <- 1.
+  if(fit.asq == -1) {
+    asq <- 0.
+    fit.asq <- 1
+  }
   if(fit.l12) {
     rln1 <- log(r0sqTwoBmu/par[2*N+8]^2)
     rln2 <- log(r0sqTwoBmu/par[2*N+9]^2)
-    return(par[3]*(1. - 2.*xi*rln4 -
+    return(par[3]*(1. - 2.*xi*rln4 +  asq/par[fit.asq]^2*par[npar-1] -
                    5*xi^2*(((-14*rln1 - 16*rln2 - 6*rln3 + 6*rln4 + 23)/30.)^2
                                         #                        + 4./5.*par[N+7]
                            )
                    )
            )
   }
-  return(par[3]*(1.0-2.0*r0sqTwoBmu*(rln4)/(4.0*pi*par[3])^2 ))
+  return(par[3]*(1.0 + asq/par[fit.asq]^2*par[npar-1]  - 2.0*r0sqTwoBmu*(rln4)/(4.0*pi*par[3])^2 ))
 }
 
-getmN <- function(r0sqTwoBmu, par, N) {
-  return(par[5+2*N] - 4.*par[6+2*N]*r0sqTwoBmu - 3.*par[7+2*N]^2/(32*pi*par[3]^2)*r0sqTwoBmu^(3/2))
+getmN <- function(r0sqTwoBmu, par, N, fit.asq=-1.) {
+  npar <- length(par)
+  asq <- 1.
+  if(fit.asq == -1) {
+    asq <- 0.
+    fit.asq <- 1
+  }
+  return(par[5+2*N]*(1 + asq/par[fit.asq]^2*par[npar]) - 4.*par[6+2*N]*r0sqTwoBmu - 6.*par[7+2*N]^2/(32*pi*par[3]^2)*r0sqTwoBmu^(3/2))
 }
