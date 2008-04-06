@@ -42,7 +42,7 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
                             S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug))
 
     if(!missing(mq)) {
-      try(fps <- uwerrderived(f=getfps, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
+      try(fps <- uwerrderived(f=getfps.old, data=Z[(cutoff):(T2+2-cutoff),skip:(length(psscar$ps)/T2)],
                               S=S, pl=debug, T2=T2, cutoff=cutoff, A=A, m=m, debug=debug, mq=mq))
     }
 

@@ -125,7 +125,7 @@ getamp <- function(data, T2, cutoff, A=0.01, m=0.01, debug=FALSE) {
   return(fit$A)
 }
 
-getfps <- function(data, T2, cutoff, A=0.01, m=0.01, debug=FALSE, mq) {
+getfps.old <- function(data, T2, cutoff, A=0.01, m=0.01, debug=FALSE, mq) {
   fit <- fitcoshnls(data=data, T2=T2, cutoff=cutoff, A=1., m=0.1, debug=debug)
   return(2.*mq*sqrt(fit$A/abs(fit$m)^3)*exp(abs(fit$m)*T2/4.))
 }

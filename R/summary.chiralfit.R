@@ -23,9 +23,7 @@ plot.chiralfit <- function(fit, ...) {
       aLamb2=par[9+2*N]/par[4+i]
     }
     else {
-                                        #        aLamb1=sqrt(exp(-0.4+log((0.1396*a_fm/0.1973)^2)))
       aLamb1=sqrt(exp(-0.4)*(0.1396*fit$result$a[i]/0.1973)^2)
-                                        #        aLamb2=sqrt(exp(4.3+log((0.1396*a_fm/0.1973)^2)))
       aLamb2=sqrt(exp(4.3)*(0.1396*fit$result$a[i]/0.1973)^2)
     }
     
@@ -41,8 +39,8 @@ plot.chiralfit <- function(fit, ...) {
 
     r0TwoB <- par[4]
     r0sqTwoBmu <- r0TwoB*xfit
-    msq <- getmpssq(r0sqTwoBmu, fit$par, N, fit$fit.l12, fit.asq=fit.a)
-    f <- getfps(r0sqTwoBmu, fit$par, N, fit$fit.l12, fit.asq=fit.a)
+    msq <- getmpssq(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    f <- getfps(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
     mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
     color <- c("red", "blue", "black")
     xmu <- fit$par[4+i]/fit$par[4+N+i]*fit$data[[i]]$mu[ij]
@@ -132,9 +130,11 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   if(!is.null(fit$boot.result)) {
     cat("Errors computed using", fit$boot.R, "bootsamples \n")
   }
+  cat("FS           = ", fit$fsmethod, "\n")
   cat("chisqr       = ", fit$result$chisqr, "\n")
   cat("dof          = ", fit$result$dof, "\n")
   cat("red. chisqr  = ", fit$result$chisqr/fit$result$dof, "\n")
+  cat("Qval         = ", 1-pgamma(fit$result$chisqr/2, fit$result$dof/2), "\n")
   if(!is.null(fit$boot.result)) {
     if(fit$fit.l12) {
       cat("l1           = ", fit$result$l1, "+-", sd(fit$boots[,(3+2*N)], na.rm=TRUE), "\n")
@@ -149,14 +149,15 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     cat("mN0          = ", fit$result$mN0, "+-", sd(fit$boots[,(7+2*N)], na.rm=TRUE), "GeV \n")
     cat("mN           = ", fit$result$mN, "+-", sd(fit$boots[,(8+2*N)], na.rm=TRUE), "GeV \n")
     cat("c1           = ", fit$result$c1, "+-", sd(fit$boots[,(9+2*N)], na.rm=TRUE), "GeV^(-1)\n")
-    cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(11+2*N+7+2*N)], na.rm=TRUE), "\n")
+    cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(12+2*N+7+2*N)], na.rm=TRUE), "\n")
+    cat("r0           = ", fit$result$r0, "+-", sd(fit$boots[,(12+2*N)], na.rm=TRUE), "\n")
     cat("mu_phys      = ", fit$result$mu.phys[1], "+-", sd(fit$boots[,1], na.rm=TRUE), "GeV \n\n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$r0data$r0[i], ": a = ", fit$result$a[i], "+-",
           sd(fit$boots[,(N+i)], na.rm=TRUE),"fm \n")
-      cat("            fitted r0/a = ", fit$par[4+i], "\n")
-      cat("            fitted ZP   = ", fit$par[4+N+i], "\n")
+      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(12+2*N+4+i)], na.rm=TRUE), "\n")
+      cat("            fitted ZP   = ", fit$par[4+N+i], "+-", sd(fit$boots[,(12+2*N+4+N+i)], na.rm=TRUE), "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -168,7 +169,7 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("\n")
     }
     cat("Fit Parameter:\n")
-    print(data.frame(Par=fit$par, Err=fit$boot.result[(2*N+12):(2*N+11+npar),2], Bias=fit$par- fit$boot.result[(2*N+12):(2*N+11+npar),1]))
+    print(data.frame(Par=fit$par, Err=fit$boot.result[(2*N+13):(2*N+12+npar),2], Bias=fit$par- fit$boot.result[(2*N+13):(2*N+12+npar),1]))
   }
   else {
     if(fit$fit.l12) {
@@ -185,6 +186,7 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     cat("mN           = ", fit$result$mN, "MeV \n")
     cat("c1           = ", fit$result$c1, "\n")
     cat("gA           = ", fit$result$gA, "\n")
+    cat("r0           = ", fit$result$r0, "\n")
     cat("mu_phys      = ", fit$result$mu.phys[1], "MeV \n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
