@@ -101,7 +101,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   # this does not quite work for the pion ?
   variational.sortindex <- order(-log(abs(variational.solve$values)*(tb-ta)))
-  if(TRUE) {
+  if(FALSE) {
 
     left.vectors <- array(0., dim=c(N,N))
     left.vectors <- crossprod(C1, variational.solve$vectors)
