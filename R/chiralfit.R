@@ -184,21 +184,21 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
 
     boots <- array(0., dim=c(boot.R, (2*N+length(startvalues)+15)))
     for(s in 1:boot.R) {
-      df <- list(data.frame(mu=data[[1]]$mu[ ii[[1]] ], mps=bootsamples[[1]][s, 1, ii[[1]] ],
-                            dmps=data[[1]]$dmps[ ii[[1]] ],
-                            fps=bootsamples[[1]][s, 2, ii[[1]] ],
-                            dfps=data[[1]]$dfps[ ii[[1]] ], L=data[[1]]$L[ ii[[1]] ],
-                            mN=rnorm(length(ii[[1]]), mean=data[[1]]$mN[ ii[[1]] ], sd=data[[1]]$dmN[ ii[[1]] ]),
-                            dmN=data[[1]]$dmN[ ii[[1]] ] ))
+      df <- list(data.frame(mu=data[[1]]$mu, mps=bootsamples[[1]][s, 1,],
+                            dmps=data[[1]]$dmps,
+                            fps=bootsamples[[1]][s, 2,],
+                            dfps=data[[1]]$dfps, L=data[[1]]$L,
+                            mN=rnorm(length(data[[1]]$mN), mean=data[[1]]$mN, sd=data[[1]]$dmN),
+                            dmN=data[[1]]$dmN))
       r0df <- data.frame(r0=r0bootsamples[s,], dr0=r0data$dr0[1:N])
       ZPdf <- data.frame(ZP=ZPbootsamples[s,], dZP=ZPdata$dZP[1:N])
       for(i in 2:N) {
-        df[[i]] <- data.frame(mu=data[[i]]$mu[ ii[[i]] ], mps=bootsamples[[i]][s,1, ii[[i]] ],
-                              dmps=data[[i]]$dmps[ ii[[i]] ],
-                              fps=bootsamples[[i]][s,2, ii[[i]] ],
-                              dfps=data[[i]]$dfps[ ii[[i]] ], L=data[[i]]$L[ ii[[i]] ],
-                              mN=rnorm(length(ii[[i]]), mean=data[[i]]$mN[ ii[[i]] ], sd=data[[i]]$dmN[ ii[[i]] ]),
-                              dmN=data[[i]]$dmN[ ii[[i]] ])
+        df[[i]] <- data.frame(mu=data[[i]]$mu, mps=bootsamples[[i]][s,1,],
+                              dmps=data[[i]]$dmps,
+                              fps=bootsamples[[i]][s,2,],
+                              dfps=data[[i]]$dfps, L=data[[i]]$L,
+                              mN=rnorm(length(data[[i]]$mN), mean=data[[i]]$mN, sd=data[[i]]$dmN),
+                              dmN=data[[i]]$dmN)
       }
 
       mini.boot <- optim(par=par, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=FALSE,

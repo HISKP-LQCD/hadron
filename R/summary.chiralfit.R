@@ -157,9 +157,9 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       points(0., fit$par[4], pch=25, bg="sandybrown")
       if(!is.null(fit$boot.result)) {
         arrows(0,
-               fit$par[4]-fit$boot.result[(2*N+12+4),2],
+               fit$par[4]-fit$boot.result[(2*N+13+4),2],
                0,
-               fit$par[4]+fit$boot.result[(2*N+12+4),2],
+               fit$par[4]+fit$boot.result[(2*N+13+4),2],
                length=0.01,angle=90,code=3)
       }
     }
@@ -188,9 +188,9 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
              pch=25, bg="sandybrown")
       if(!is.null(fit$boot.result)) {
         arrows(fit$result$r0*fit$result$mu.phys/0.1973,
-               fit$result$r0*fit$result$mN/0.1973-fit$boot.result[(2*N+12+5+2*N),2],
+               fit$result$r0*fit$result$mN/0.1973-fit$boot.result[(2*N+13+5+2*N),2],
                fit$result$r0*fit$result$mu.phys/0.1973,
-               fit$result$r0*fit$result$mN/0.1973+fit$boot.result[(2*N+12+5+2*N),2],
+               fit$result$r0*fit$result$mN/0.1973+fit$boot.result[(2*N+13+5+2*N),2],
                length=0.01,angle=90,code=3)
       }
     }
@@ -260,8 +260,8 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$r0data$r0[i], ": a = ", fit$result$a[i], "+-",
           sd(fit$boots[,(N+i)], na.rm=TRUE),"fm \n")
-      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(12+2*N+4+i)], na.rm=TRUE), "\n")
-      cat("            fitted ZP   = ", fit$par[4+N+i], "+-", sd(fit$boots[,(12+2*N+4+N+i)], na.rm=TRUE), "\n")
+      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(13+2*N+4+i)], na.rm=TRUE), "\n")
+      cat("            fitted ZP   = ", fit$par[4+N+i], "+-", sd(fit$boots[,(13+2*N+4+N+i)], na.rm=TRUE), "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -340,33 +340,34 @@ tab <- function(fit) {
   npar <- length(par)
   N <- length(fit$data)
   cat(fit$fsmethod, "\n")
-                                        #2*N+12
-  printtab(par[4], br[2*N+12+4,2])
-  printtab(par[3], br[2*N+12+3,2])
-  printtab(par[2*N+5], br[2*N+12+2*N+5,2])
+  nm <- 2*N+13
+
+  printtab(par[4], br[nm+4,2])
+  printtab(par[3], br[nm+3,2])
+  printtab(par[2*N+5], br[nm+2*N+5,2])
   for(i in 1:N) {
-    printtab(par[4+i], br[2*N+12+4+i,2])
+    printtab(par[4+i], br[nm+4+i,2])
   }
   for(i in 1:N) {
-    printtab(par[4+N+i], br[2*N+12+4+N+i,2])
+    printtab(par[4+N+i], br[nm+4+N+i,2])
   }
   for(i in 1:2) {
-    if(fit$fit.l12) printtab(par[7+2*N+i], br[2*N+12+7+2*N+i,2])
+    if(fit$fit.l12) printtab(par[7+2*N+i], br[nm+7+2*N+i,2])
     else cat("$-$\n")
   }
   for(i in 1:2) {
-    printtab(par[i], br[2*N+12+i,2])
+    printtab(par[i], br[nm+i,2])
   }
   for(i in 3:4) {
-    if(fit$fit.kmf) printtab(par[7+2*N+i], br[2*N+12+7+2*N+i,2])
+    if(fit$fit.kmf) printtab(par[7+2*N+i], br[nm+7+2*N+i,2])
     else cat("$-$\n")
   }
   for(i in 1:2) {
-    printtab(par[5+2*N+i], br[2*N+12+5+2*N+i,2])
+    printtab(par[5+2*N+i], br[nm+5+2*N+i,2])
   }
   for(i in 2:0) {
     if(fit$fit.asq) {
-      printtab(par[npar-i], br[2*N+12+npar-i,2])
+      printtab(par[npar-i], br[nm+npar-i,2])
     }
   }
   cat("$",fit$result$chisqr,"/",fit$result$dof,"$\n", sep="")
@@ -376,8 +377,8 @@ tab <- function(fit) {
     printtab(fit$result$a[i], br[N+i,2])
   }
   printtab(fit$result$r0, br[12+2*N,2])
-  printtab(fit$result$l1, br[3+2*N, 2])
   if(fit$fit.l12) {
+    printtab(fit$result$l1, br[3+2*N, 2])
     printtab(fit$result$l2, br[4+2*N, 2])
   }
   else cat("$-$\n$-$\n")
