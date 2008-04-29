@@ -69,9 +69,11 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   \code{\link{plot.uwerr}}
 }
 \examples{
-library(hadron)
-\dontrun{uwerr(plaqhist)}
+data(plaq.sample)
+plaq.res <- uwerrprimary(plaq.sample)
+summary(plaq.res)
+plot(plaq.res)
 }
-\author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
+\author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{optimize}
 \keyword{ts}
