@@ -41,7 +41,7 @@ fovermps.Na.withr0 <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.a
 fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                             r0bootsamples, r0data, ZPdata, ZPbootsamples,
                             fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
-                            ii, boot.R=100, debug=FALSE) {
+                            ii, boot.R=100, debug=FALSE, fit.mN=TRUE) {
   if(missing(data) || missing(startvalues)) {
     stop("data and startvalues must be provided!\n")
   }
@@ -90,7 +90,7 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   mini <- optim(par=startvalues, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=TRUE,
                 control=list(maxit=500), data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
-                fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf)
+                fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, fit.mN=fit.mN)
   if(mini$convergence != 0) {
     warning("Attention: optim did not converge in initial run!\n Please adjust start values!")
   }
@@ -111,6 +111,9 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   }
   if(fit.kmf) {
     dof <- dof + 2
+  }
+  if(!fit.mN) {
+    dof <- dof - 3
   }
   chisqr <- mini$value
   par <- mini$par
@@ -265,14 +268,14 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
                  data=data, boot.result=boot.result, boots=boots, r0data=r0data, ZPdata=ZPdata,
                  bootsamples=bootsamples, r0bootsamples=r0bootsamples, ZPbootsamples=ZPbootsamples,
                  ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, fit.asq=fit.asq,
-                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo)
+                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=fit.mN)
   attr(result, "class") <- c("chiralfit", "list")  
   return(invisible(result))
 }
 
 chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.guess,
                                fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
-                               printit=FALSE) {
+                               printit=FALSE, fit.mN=TRUE) {
 
   fit.a <- -1.
   N <- length(ii)
@@ -356,8 +359,10 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
     }
 
 # the nucleon
-    mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N, fit.asq=fit.a)/par[4+i]
-    chisum <- chisum + sum(((data[[i]]$mN[ij]-mN)/data[[i]]$dmN[ij])^2, na.rm=TRUE)
+    if(fit.mN) {
+      mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N, fit.asq=fit.a)/par[4+i]
+      chisum <- chisum + sum(((data[[i]]$mN[ij]-mN)/data[[i]]$dmN[ij])^2, na.rm=TRUE)
+    }
   }
   chisum <- chisum + sum(((par[(5):(4+N)]-r0data$r0)/r0data$dr0)^2) +
     sum(((par[(5+N):(4+2*N)]-ZPdata$ZP)/ZPdata$dZP)^2)
