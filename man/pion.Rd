@@ -12,7 +12,7 @@
   pion(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
        variational=list(ta=3, tb=4, N=6), ind.vec=c(1,3,4,5),
        no.masses=1, matrix.size=2, boot.R=99, boot.l=10, tsboot.sim="geom",
-       method="uwerr", mass.guess, par.guess, nrep)
+       method="uwerr", mass.guess, par.guess, nrep, fit.routine="gsl")
 }
 \arguments{
   \item{cmicor}{
@@ -87,9 +87,16 @@
     entries.
   }
   \item{nrep}{
-     vector (N1, N2, ...) of replica length N1, N2. If missing it is
-     assumed that there is only one ensemble. If there are two or more
-     replica the parameter \code{skip} has no effect.
+    vector (N1, N2, ...) of replica length N1, N2. If missing it is
+    assumed that there is only one ensemble. If there are two or more
+    replica the parameter \code{skip} has no effect.
+  }
+  \item{fit.routine}{
+    The fit routine to be used. Default is \dQuote{gsl}, which uses the
+    gnu scientific library \dQuote{gsl_multifit_fdfsolver} solver to
+    minimise the chisquare. All other values lead to the usage of R's
+    \link{optim} function. The latter choice might be significantly
+    slower.
   }
 }
 \value{
