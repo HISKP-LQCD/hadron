@@ -26,6 +26,10 @@ plot.rhofit <- function(fit) {
   plot.cfit(fit)
 }
 
+plot.b1fit <- function(fit) {
+  plot.cfit(fit)
+}
+
 plot.cfit <- function(fit) {
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   plot.effmass(m=fit.mass,

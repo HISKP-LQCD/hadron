@@ -103,7 +103,10 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   }
   dof <- 0
   for(i in 1:length(data)) {
-    dof = dof + 2*length( ii[[i]] ) + length(na.omit(data[[i]]$mN[ii[[i]]]))
+    dof = dof + 2*length( ii[[i]] ) 
+    if(fit.mN){
+      dof = dof + length(na.omit(data[[i]]$mN[ii[[i]]]))
+    }
   }
   dof <- dof + length(r0data$r0) + length(ZPdata$ZP) - length(startvalues)
   if(fit.l12) {
@@ -113,7 +116,7 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
     dof <- dof + 2
   }
   if(!fit.mN) {
-    dof <- dof - 3
+    dof <- dof + 3
   }
   chisqr <- mini$value
   par <- mini$par

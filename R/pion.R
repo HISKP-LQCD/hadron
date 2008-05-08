@@ -67,7 +67,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   options(show.error.messages = TRUE)
   
 
- pion.eff <- data.frame(t=pion.eff.ll$t, mll=pion.eff.ll$mass, dmll=pion.eff.ll$dmass,
+  pion.eff <- data.frame(t=pion.eff.ll$t, mll=pion.eff.ll$mass, dmll=pion.eff.ll$dmass,
                          mlf=pion.eff.lf$mass, dmlf=pion.eff.lf$dmass,
                          mff=pion.eff.ff$mass, dmff=pion.eff.ff$dmass)
 
@@ -193,8 +193,8 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
     fit.mass <- sort(abs(pionfit$par[c((matrix.size+1),(2*matrix.size+2),(3*matrix.size+3))]))
   }
-  if(pionfit$convergence < 0) {
-    stop("gsl_multifit did not converge for pionfit! ", pionfit$convergence)
+  if(fit.routine != "gls" && pionfit$convergence!=0) {
+    warning("optim did not converge for pionfit! ", pionfit$convergence)
   }
 
   fit.dof <- (t2-t1+1)*3-length(pionfit$par)
