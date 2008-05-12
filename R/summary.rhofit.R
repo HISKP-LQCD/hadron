@@ -7,7 +7,11 @@ summary.rhofit <- function(fit) {
   mu <- fit$mu
   t1 <- fit$t1
   t2 <- fit$t2
-  fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
+  ij <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
+  sortindex <- order(abs(fit$fitresult$par[ii+fit$matrix.size]))
+  ii <- ij[sortindex]
+
+  fit.mass <- abs(fit$fitresult$par[ii[1] + fit$matrix.size])
   fit.chisqr <- fit$fitresult$value
   fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
   

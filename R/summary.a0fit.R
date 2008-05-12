@@ -7,7 +7,11 @@ summary.a0fit <- function(fit) {
   mu <- fit$mu
   t1 <- fit$t1
   t2 <- fit$t2
-  fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
+  ij <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
+  sortindex <- order(abs(fit$fitresult$par[ii+fit$matrix.size]))
+  ii <- ij[sortindex]
+
+  fit.mass <- abs(fit$fitresult$par[ii[1] + fit$matrix.size])
   fit.chisqr <- fit$fitresult$value
   fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
   
@@ -20,10 +24,11 @@ summary.a0fit <- function(fit) {
   cat("chi^2    = ", fit.chisqr, "\n")
   cat("dof    = ", fit.dof, "\n")
   cat("chi^2/dof = ", fit.chisqr/fit.dof, "\n")
-  
-  cat("ma0    = ", fit.mass, "\n")
-  ii <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
 
+  if(fit$no.masses == 1) {
+    cat("ma0    = ", fit.mass, "\n")
+  }
+  
   cat("\nstate  =", seq(1,fit$no.masses), "\n", sep="\t")
   cat("masses =", abs(fit$fitresult$par[ii+fit$matrix.size]), "\n", sep="\t")
   cat("B_L    =", fit$fitresult$par[ii], "\n", sep="\t")
