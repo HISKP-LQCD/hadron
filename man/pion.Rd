@@ -142,6 +142,9 @@
     the result of the time series analysis for the PCAC mass as
     carried out by \code{\link{uwerr}} if no.masses larger than 1.
   }
+  \item{uwerrresultzv}{
+    the gamma method analysis for \eqn{Z_V}{Z_V}, if matrix size equals 6
+  }
   \item{effmass}{
     effective masses
   }
@@ -155,10 +158,10 @@
     mass values as determined by the variational analysis
   }
   \item{no.masses}{
-    no.masses determined
+    no.masses determined, copied from input
   }
   \item{matrix.size}{
-    size of the data matrix
+    size of the data matrix, copied from input
   }
   \item{boot}{
     object returned by the call to \code{\link{boot}} if \code{method}
@@ -168,8 +171,45 @@
     object returned by the call to \code{\link{tsboot}} if \code{method}
     was set correspodingly. Otherwise \code{NULL}.
   }
+  \item{var.res}{
+    the full result of the variational analysis, as returned by a call
+    to \code{\link{variational}}
+  }
+  \item{method}{
+    error analysis method as copied from input
+  }
+  \item{fit.routine}{
+    \code{fit.routine} as copied from input
+  }
+  \item{nrep}{
+    \code{nrep} as copied from input
+  }
 }
 \details{
+  A call to \code{pion} returns an object, for which several generic
+  functions are available, such as \code{summary} and \code{plot}. The
+  function should always be used by also considering the output of
+  \code{plot}. In particular, in case of the gamma matrix method it
+  should always be checked whether the autocorrelation function could be
+  integrated in a sensible way. For this reason the autocorrelation
+  function is plotted as well as the integrated autocorrelation time as
+  a function of the cut-off value for the integral. Obviously, the
+  autocorrelation function should be zero at the cut-off and for larger
+  values only fluctuate around zero. In other words, the autocorrelation
+  time should reach a plateau. Changing the parameter \code{S} (see
+  above) allows to influence the automatic determination of the cut-off
+  value (see \code{\link{uwerr}} for details).
+
+  Another useful check is also to devide the full ensemble into two (or more)
+  sub-ensembles (using the parameter \code{nrep}). The summary function
+  will then also compute a Q-value, which should be larger than
+  \eqn{0.1} at least for the error to be trustworthy. Otherwise the
+  autocorrlation times are presumably too large to determine the error
+  reliably.
+
+  Finally it is also usefull to check the value of \eqn{\chi}{chi} per
+  data point. Such a plot is produced when \code{plot} is used. 
+
   The data must be ordered as in the output of
   \code{\link{readcmicor}}, see \code{help(readcmicor)} for details.
   
@@ -242,7 +282,8 @@
 %}
 \seealso{
   \code{\link{rho}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
-  \code{\link{plot.cfit}}, \code{\link{summary.pionfit}}, \code{\link{pp}}
+  \code{\link{plot.cfit}}, \code{\link{summary.pionfit}},
+  \code{\link{pp}}, \code{\link{variational}}
 }
 \examples{
 library(hadron)
@@ -250,6 +291,6 @@ library(hadron)
 \dontrun{pionfit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23, no.masses=1, matrix.size=4)}
 \dontrun{summary(pionfit)}
 }
-\author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
+\author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{optimize}
 \keyword{ts}

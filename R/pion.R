@@ -86,52 +86,12 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
 
+  res.var <- variational(Cor=Cor, N=variational$N, ta=variational$ta, tb=variational$tb, tmax = T1,
+                         T1=T1, matrix.size=matrix.size, no.masses = no.masses)
   N <- max(matrix.size,variational$N)
-  ta <- (variational$ta+1)
-  tb <- (variational$tb+1)
-  C1 <- getNxNmatrix(Cor=Cor, t=ta, T1=T1, N=N)
-  C2 <- getNxNmatrix(Cor=Cor, t=tb, T1=T1, N=N)
-  C3 <- getNxNmatrix(Cor=Cor, t=tb, T1=T1, N=N)
-
-  # first index is rows, second columns
-  for(i in 1:N) {
-    C3[,i] <- solve(C1, C2[,i])
-  }
-  variational.solve <- eigen(C3, symmetric=FALSE, only.values = FALSE, EISPACK=FALSE)
-  # get the left eigenvectors, the eigenvectors have unit length
-  for(i in 1:N) {
-    if(abs(variational.solve$values[i]) > 0.95/(tb-ta)) {
-      variational.solve$values[i] <- 0.0001
-    }
-  }
-  # this does not quite work for the pion ?
-  variational.sortindex <- order(-log(abs(variational.solve$values)*(tb-ta)))
-  if(FALSE) {
-
-    left.vectors <- array(0., dim=c(N,N))
-    left.vectors <- crossprod(C1, variational.solve$vectors)
-    X <- crossprod(left.vectors,variational.solve$vectors)
-    for(i in 1:no.masses) {
-      j <-  variational.sortindex[i]
-      left.vectors[,j] <- left.vectors[,i]/sqrt(X[j,j])
-      variational.solve$vectors[,j] <- variational.solve$vectors[,j]/sqrt(X[j,j])
-    }
-    
-    
-    par <- c(2*left.vectors[(1:matrix.size),1],
-             -log(abs(variational.solve$values[variational.sortindex[1]]))/(tb-ta))
-    if(no.masses > 1) {
-      for(i in 2:(no.masses)) {
-        par <- c(par,
-                 left.vectors[(1:matrix.size),i],
-                 -log(abs(variational.solve$values[variational.sortindex[i]]))/(tb-ta)) 
-      }
-    }
-#    print(par)
-  }
-  
-  variational.masses <-  -log(abs(variational.solve$values[variational.sortindex]))/(tb-ta)
-  rm(C1, C2, C3, ta, tb, N)
+#  par <- res.var$par
+#  cat(res.var$par, "\n")
+  variational.masses <-  res.var$variational.masses
 
   # Index vector of data to be used in the analysis
   ii <- c((t1p1):(t2p1), (t1p1+T1):(t2p1+T1), (t1p1+3*T1):(t2p1+3*T1))
@@ -295,10 +255,10 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultmps2=fit.uwerrm2, uwerrresultmps3=fit.uwerrm3,
               uwerrresultfps=fit.uwerrf, uwerrresultmpcac=fit.uwerrpcac, uwerrresultzv=fit.uwerrzv,
-              boot=fit.boot, tsboot=fit.tsboot,
-              effmass=pion.eff, kappa=kappa, mu=mu,
+              boot=fit.boot, tsboot=fit.tsboot, method=method,
+              effmass=pion.eff, kappa=kappa, mu=mu, fit.routine=fit.routine,
               variational.masses=variational.masses, no.masses=no.masses,
-              matrix.size = matrix.size, nrep=nrep)
+              matrix.size = matrix.size, nrep=nrep, var.res=var.res)
   attr(res, "class") <- c("pionfit", "cfit", "list")  
   return(invisible(res))
 }

@@ -1,5 +1,5 @@
 getNxNmatrix <- function(Cor, T1, t, N=2) {
-  C1 <- array(0., dim=c(N,N))
+  C1 <- matrix(0., nrow=N, ncol=N)
   C1[1,1] = Cor[t]
   C1[1,2] = Cor[(t+T1)]
   C1[2,1] = Cor[(t+2*T1)]

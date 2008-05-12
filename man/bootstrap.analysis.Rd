@@ -1,5 +1,5 @@
 \name{bootstrap.analysis}
-\alias{bootstrap.analysis}}
+\alias{bootstrap.analysis}
 \title{Performs a Bootstrap and Blocking Analysis of a Timeseries}
 \description{
   Performs a Bootstrap and Blocking Analysis of a Timeseries
