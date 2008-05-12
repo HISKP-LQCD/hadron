@@ -157,7 +157,8 @@ a0 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   else {
     a0fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf, x=c((t1):(t2)), y=Cor[ii],
-                                       err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses=no.masses)
+                                       err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses=no.masses,
+                                       prec=c(1.e-3,1.e-3))
 
     if(no.masses == 1) fit.mass <- abs(a0fit$par[matrix.size+1])
     if(no.masses == 2) fit.mass <- sort(abs(a0fit$par[c((matrix.size+1),(2*matrix.size+2))]))
@@ -208,7 +209,6 @@ a0 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
                          kappa=kappa, mu=mu, fit.routine=fit.routine)
   }
 
-  
   Chi <- rep(0., times=4*T1)
   Fit <- rep(0., times=4*T1)
 
@@ -276,7 +276,8 @@ fitmasses.a0 <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   }
   else {
     fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf, x=c((t1):(t2)), y=Cor,
-                                     err=Err, tr = tr, N=N, no_masses = no.masses)
+                                     err=Err, tr = tr, N=N, no_masses = no.masses,
+                                     prec=c(1.e-3,1.e-3))
     if(no.masses == 1) return(abs(fit$par[N+1]))
     if(no.masses == 2) return(sort(abs(fit$par[c((N+1),(2*N+2))]))[no])
     if(no.masses == 3) return(sort(abs(fit$par[c((N+1),(2*N+2),(3*N+3))]))[no])
@@ -310,7 +311,8 @@ fit.a0.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
     else {
       fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
+                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N,
+                                       prec=c(1.e-3,1.e-3))
     }
     sort.ind <- c(1)
     return(c(abs(fit$par[N+1]), fit$par[c(1:N)],
@@ -323,7 +325,8 @@ fit.a0.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
     else {
       fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf, x=c((t1):(t2)), y=Cor,
-                                       err=Err, tr = tr, N=N, no_masses = 2)
+                                       err=Err, tr = tr, N=N, no_masses = 2,
+                                       prec=c(1.e-3,1.e-3))
     }
     sort.ind <- order(fit$par[c((N+1),(2*N+2))])
     return(c(abs(fit$par[sort.ind[1]*(N+1)]),
@@ -339,7 +342,8 @@ fit.a0.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
     else {
       fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf, x=c((t1):(t2)), y=Cor,
-                                       err=Err, tr = tr, N=N, no_masses = 3)
+                                       err=Err, tr = tr, N=N, no_masses = 3,
+                                       prec=c(1.e-3,1.e-3))
     }
     sort.ind <- order(fit$par[c((N+1),(2*N+2),(3*N+3))])
     return(c(abs(fit$par[sort.ind[1]*(N+1)]),
