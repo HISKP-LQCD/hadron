@@ -8,7 +8,7 @@ summary.rhofit <- function(fit) {
   t1 <- fit$t1
   t2 <- fit$t2
   ij <- seq(1, fit$no.masses*(fit$matrix.size+1), by=fit$matrix.size+1)
-  sortindex <- order(abs(fit$fitresult$par[ii+fit$matrix.size]))
+  sortindex <- order(abs(fit$fitresult$par[ij+fit$matrix.size]))
   ii <- ij[sortindex]
 
   fit.mass <- abs(fit$fitresult$par[ii[1] + fit$matrix.size])
