@@ -41,7 +41,7 @@ avercycle <- function(cmicor, cycle.l, ind.vec=c(1,3,4,5,6)) {
     }
   }
   cat("sum of measurements used", sum(cycle.ind[1,]), "(check!) \n")
-  newcor <- array(0, dim=c(cycle.no*(nrObs*(T1)*4), 6))
+  newcor <- array(0, dim=c(100*cycle.no*(nrObs*(T1)*4), 6))
   ii <- c(1:3,6)
   
   for(i in 1:cycle.no) {
@@ -49,19 +49,21 @@ avercycle <- function(cmicor, cycle.l, ind.vec=c(1,3,4,5,6)) {
       newcor[(i-1)*(nrObs*(T1)*4)+c(1:(nrObs*(T1)*4)), ii[j]] <-
         cmicor[(cycle.ind[2, i]-1)*(nrObs*(T1)*4) + c(1:(nrObs*(T1)*4)), ii[j]]
     }
-    for(j in cycle.ind[2, i]:cycle.ind[3, i]) {
-#    jj <- c(cycle.ind[2,i]:cycle.ind[3, i])-1
-      for(k in 4:5) {
+
+    for(k in 4:5) {
+      for(j in cycle.ind[2, i]:cycle.ind[3, i]) {
+                                        #    jj <- c(cycle.ind[2,i]:cycle.ind[3, i])-1
 #      for(p in 1:(nrObs*(T1)*4)) {
 #        newcor[(i-1)*(nrObs*(T1)*4)+p,k] <- sum(cmicor[p+jj*(nrObs*(T1)*4), k])
         newcor[(i-1)*(nrObs*(T1)*4)+c(1:(nrObs*(T1)*4)), k] <-
-          sum(newcor[(i-1)*(nrObs*(T1)*4)+c(1:(nrObs*(T1)*4)), k],
-              cmicor[(j-1)*(nrObs*(T1)*4) + c(1:(nrObs*(T1)*4)), k]/nrep*cycle.no)
+          newcor[(i-1)*(nrObs*(T1)*4)+c(1:(nrObs*(T1)*4)), k] +
+            cmicor[(j-1)*(nrObs*(T1)*4) + c(1:(nrObs*(T1)*4)), k]/nrep*cycle.no
         
       }
     }
     cat(".")
   }
+  cat("\n")
   gc(reset=TRUE)
   return(invisible(newcor))
 
