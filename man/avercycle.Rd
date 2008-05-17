@@ -9,7 +9,7 @@ avercycle(cmicor, cycle.l)
 }
 \arguments{
   \item{cmicor}{
-    correlator data as obtained with \link{\code{readcmicor}}.
+    correlator data as obtained with \code{\link{readcmicor}}.
   }
   \item{cycle.l}{
     the cycle length in units of gauge numbering
@@ -17,7 +17,7 @@ avercycle(cmicor, cycle.l)
 }
 \value{
   returns the averaged correlator data in the same format as provided by
-  \link{\code{readcmicor}}.
+  \code{\link{readcmicor}}.
 }
 \details{
   the function will determine the average number of measurements per
@@ -30,7 +30,7 @@ avercycle(cmicor, cycle.l)
   takes properly care of the correlations in between in within the cycles.
 }
 \seealso{
-  \link{\code{readcmicor}}
+  \code{\link{readcmicor}}
 }
 \examples{
 \dontrun{avercycle(cmicor, 10)}
