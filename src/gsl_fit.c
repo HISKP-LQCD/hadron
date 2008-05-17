@@ -439,11 +439,11 @@ void Print_State_Mass_Fit_Helper_1(int iter, gsl_multifit_fdfsolver *solver)
 }
 
 SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr, 
-		  SEXP value, SEXP prec, SEXP N, SEXP max_iter, SEXP no_masses)
+		  SEXP prec, SEXP N, SEXP max_iter, SEXP no_masses)
 {
   int npar, nx, ny, i, j, iter_max;
   double p1, p2, m;
-  double *yp, *errp, *parp, *precp, *statep, *valuep;
+  double *yp, *errp, *parp, *precp, *statep;
   double chi_square, red_chi_square;
   int dof;
   int * xp, *Thalfp, *trp, *Np, *mip, *nmp;
@@ -466,7 +466,6 @@ SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   PROTECT(y = AS_NUMERIC(y));
   PROTECT(err = AS_NUMERIC(err));
   PROTECT(tr = AS_INTEGER(tr));
-  PROTECT(value = AS_NUMERIC(value));
   PROTECT(prec = AS_NUMERIC(prec));
   PROTECT(N = AS_INTEGER(N));
   PROTECT(max_iter = AS_INTEGER(max_iter));
@@ -480,7 +479,6 @@ SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   errp = NUMERIC_POINTER(err);
   parp = NUMERIC_POINTER(par);
   precp = NUMERIC_POINTER(prec);
-  valuep = NUMERIC_POINTER(value);
   mip = INTEGER_POINTER(max_iter);
   nmp = INTEGER_POINTER(no_masses);
   iter_max = mip[0];
@@ -490,7 +488,7 @@ SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   ny = LENGTH(y);
 
   assert(npar == nmp[0]*(Np[0]+1));
-  PROTECT(state = NEW_NUMERIC(5));
+  PROTECT(state = NEW_NUMERIC(5+npar));
   statep = NUMERIC_POINTER(state);
 
 /*   PROTECT(gradient = allocMatrix(REALSXP, npar, npar)); */
@@ -606,16 +604,16 @@ SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
 #endif
 
   for(i = 0; i < npar; i++) {
-    parp[i] =  gsl_vector_get(solver->x, i);
+    statep[5+i] =  gsl_vector_get(solver->x, i);
   }
 
-  valuep[0] = chi_square;
   statep[0] = chi_square;
   statep[1] = gsl_blas_dnrm2(solver->f);
   statep[2] = (double)iter;
   statep[3] = (double)dof;
   statep[4] = (double)status;
 
+  
   gsl_multifit_fdfsolver_free(solver);
 #ifdef _DEBUG
   gsl_matrix_free(covar);
@@ -626,6 +624,6 @@ SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   free(data_struct.err);
   free(para_initial);
 
-  UNPROTECT(12);
+  UNPROTECT(11);
   return(state);
 }

@@ -217,36 +217,36 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   Fit <- rep(0., times=9*4*T1)
 
   jj <-  c(t1p1:t2p1)
-  Fit[jj] <- pionfit$par[1]^2*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+2*T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+3*T1] <- pionfit$par[2]*pionfit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+  Fit[jj] <- pionfit$par[1]^2*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+  Fit[jj+T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+  Fit[jj+2*T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+  Fit[jj+3*T1] <- pionfit$par[2]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
   if(matrix.size > 2) {
-    Fit[jj+4*T1] <- pionfit$par[1]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+5*T1] <- pionfit$par[1]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+6*T1] <- pionfit$par[2]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+7*T1] <- pionfit$par[2]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+4*T1] <- pionfit$par[1]*pionfit$par[3]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+5*T1] <- pionfit$par[1]*pionfit$par[4]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+6*T1] <- pionfit$par[2]*pionfit$par[3]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+7*T1] <- pionfit$par[2]*pionfit$par[4]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
 
-    Fit[jj+12*T1] <- pionfit$par[3]*pionfit$par[3]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+13*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+14*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+15*T1] <- pionfit$par[4]*pionfit$par[4]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+12*T1] <- pionfit$par[3]*pionfit$par[3]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+13*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+14*T1] <- pionfit$par[3]*pionfit$par[4]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+15*T1] <- pionfit$par[4]*pionfit$par[4]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
   }
   if(matrix.size > 4) {
-    Fit[jj+16*T1] <- pionfit$par[5]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+17*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+18*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+19*T1] <- pionfit$par[6]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+16*T1] <- pionfit$par[5]*pionfit$par[5]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+17*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+18*T1] <- pionfit$par[5]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+19*T1] <- pionfit$par[6]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
 
-    Fit[jj+20*T1] <- pionfit$par[1]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+21*T1] <- pionfit$par[1]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+22*T1] <- pionfit$par[2]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
-    Fit[jj+23*T1] <- pionfit$par[2]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+20*T1] <- pionfit$par[1]*pionfit$par[5]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+21*T1] <- pionfit$par[1]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+22*T1] <- pionfit$par[2]*pionfit$par[5]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
+    Fit[jj+23*T1] <- pionfit$par[2]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1, sign=-1.)
     
-    Fit[jj+28*T1] <- pionfit$par[3]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+29*T1] <- pionfit$par[3]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+30*T1] <- pionfit$par[4]*pionfit$par[5]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-    Fit[jj+31*T1] <- pionfit$par[4]*pionfit$par[6]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
+    Fit[jj+28*T1] <- pionfit$par[3]*pionfit$par[5]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+29*T1] <- pionfit$par[3]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+30*T1] <- pionfit$par[4]*pionfit$par[5]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+    Fit[jj+31*T1] <- pionfit$par[4]*pionfit$par[6]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
   }
   
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
@@ -258,7 +258,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               boot=fit.boot, tsboot=fit.tsboot, method=method,
               effmass=pion.eff, kappa=kappa, mu=mu, fit.routine=fit.routine,
               variational.masses=variational.masses, no.masses=no.masses,
-              matrix.size = matrix.size, nrep=nrep, var.res=var.res)
+              matrix.size = matrix.size, nrep=nrep, res.var=res.var)
   attr(res, "class") <- c("pionfit", "cfit", "list")  
   return(invisible(res))
 }
