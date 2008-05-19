@@ -185,7 +185,7 @@ int exp_f(const gsl_vector * x, void *data,
 	  c = p[id0][k]*p[id1][k];	  
 	  Y += c*0.5*(exp(-m[k]*(Time-t[i])) + sign*exp(-m[k]*t[i]));
 	}
-	gsl_vector_set (f, i+(17+j)*tr, (Y - y[i+(17+j)*tr])/err[i+(17+j)*tr]);
+	gsl_vector_set(f, i+(17+j)*tr, (Y - y[i+(17+j)*tr])/err[i+(17+j)*tr]);
       }
     }
   }

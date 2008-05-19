@@ -54,7 +54,7 @@ variational <- function(Cor, ta, tb, tmax, N, T1, matrix.size, no.masses) {
   if(no.masses > 1) {
     for(i in 2:(no.masses)) {
       par <- c(par,
-               left.vectors[(1:matrix.size),sortindex[i]],
+               2*left.vectors[(1:matrix.size),sortindex[i]],
                -log(abs(variational.solve$values[sortindex[i]]))/(tb-ta)) 
     }
   }

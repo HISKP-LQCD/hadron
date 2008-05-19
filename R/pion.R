@@ -462,7 +462,8 @@ fitmpcac.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
 }
 
 fitzv.pion <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
-                       N=2, no.masses=1, no=1, kappa, mu, kludge=FALSE) {
+                       N=2, no.masses=1, no=1, kappa, mu, kludge=FALSE,
+                       fit.routine="gsl") {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
