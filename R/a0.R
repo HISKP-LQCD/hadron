@@ -211,13 +211,19 @@ a0 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   Chi <- rep(0., times=4*T1)
   Fit <- rep(0., times=4*T1)
-
+  N <- matrix.size
   jj <-  c(t1p1:t2p1)
-  Fit[jj] <- a0fit$par[1]^2*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+T1] <- a0fit$par[1]*a0fit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+2*T1] <- a0fit$par[1]*a0fit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  Fit[jj+3*T1] <- a0fit$par[2]*a0fit$par[2]*CExp(m=fit.mass, Time=2*Thalf, x=jj-1)
-  
+  for(i in 1:no.masses) {
+    Fit[jj] <- Fit[jj] +
+      a0fit$par[1+(i-1)*(N+1)]^2*CExp(m=a0fit$par[i*(N+1)], Time=2*Thalf, x=jj-1)
+    Fit[jj+T1] <- Fit[jj+T1] +
+      a0fit$par[1+(i-1)*(N+1)]*a0fit$par[2+(i-1)*(N+1)]*CExp(m=a0fit$par[i*(N+1)], Time=2*Thalf, x=jj-1)
+    Fit[jj+2*T1] <- Fit[jj+2*T1] +
+      a0fit$par[1+(i-1)*(N+1)]*a0fit$par[2+(i-1)*(N+1)]*CExp(m=a0fit$par[i*(N+1)], Time=2*Thalf, x=jj-1)
+    Fit[jj+3*T1] <- Fit[jj+3*T1] +
+      a0fit$par[2+(i-1)*(N+1)]^2*CExp(m=a0fit$par[i*(N+1)], Time=2*Thalf, x=jj-1)
+  }
+
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
   
   res <- list(fitresult=a0fit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
