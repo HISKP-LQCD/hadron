@@ -662,7 +662,7 @@ SEXP multimin_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   int * xp, *Thalfp, *trp, *Np, *mip, *nmp;
   SEXP state;
   const gsl_multimin_fdfminimizer_type *minimizer_type =
-  gsl_multimin_fdfminimizer_vector_bfgs2;
+  gsl_multimin_fdfminimizer_vector_bfgs;
 /*
   gsl_multimin_fdfminimizer_conjugate_fr;
   gsl_multimin_fdfminimizer_conjugate_pr;

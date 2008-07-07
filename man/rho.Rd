@@ -154,7 +154,7 @@ rho(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}
   \eqn{S=I}\cr
 
-  In this routine only  44 VV AA 4V V4 4A A4 VA AV are used.
+  In this routine only  44 VV AA 4V V4 4A A4 VA AV are used. See also \link{cmicor}!
   
   (cases with space index "i" are summed over i=1,2,3)\cr
   (best choice is weaker coupling at sink - ie PA rather than AP\cr

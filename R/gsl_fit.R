@@ -9,7 +9,8 @@ gsl_fit_correlator_matrix <- function(par, Thalf, x, y, err, tr, N, no_masses=1,
 
   npar <- length(par)
   parsave <- numeric(npar)
-  for(i in 1:npar) parsave[i] <- par[i]
+  parsave <- par
+#  for(i in 1:npar) parsave[i] <- par[i]
 
   state <- .Call("multifit_cor", par, Thalf, x, y, err, tr, prec, N, 500, no_masses)
   if(state[5] >= 0) {

@@ -32,11 +32,15 @@ plot.b1fit <- function(fit) {
 
 plot.cfit <- function(fit) {
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
-  plot.effmass(m=fit.mass,
-               ll=data.frame(t=fit$effmass$t, mass=fit$effmass$mll, dmass=fit$effmass$dmll),
-               lf=data.frame(t=fit$effmass$t, mass=fit$effmass$mlf, dmass=fit$effmass$dmlf),
-               ff=data.frame(t=fit$effmass$t, mass=fit$effmass$mff, dmass=fit$effmass$dmff))
-  
+  if(!is.null(fit$effmass$mll)) {
+    plot.effmass(m=fit.mass,
+                 ll=data.frame(t=fit$effmass$t, mass=fit$effmass$mll, dmass=fit$effmass$dmll),
+                 lf=data.frame(t=fit$effmass$t, mass=fit$effmass$mlf, dmass=fit$effmass$dmlf),
+                 ff=data.frame(t=fit$effmass$t, mass=fit$effmass$mff, dmass=fit$effmass$dmff))
+  }
+  if(!is.null(fit$effmass$m)) {
+    plot.effmass(m=fit.mass, ll=data.frame(t=fit$effmass$t, mass=fit$effmass$m, dmass=fit$effmass$dm))
+  }
   if(!is.null(fit$uwerrresultmpcac)) {
     plot(fit$uwerrresultmpcac, main="mpcac")
   }
@@ -78,14 +82,20 @@ plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
 plot.effmass <- function(m, ll, lf, ff, ...) {
 
   X11()
-  plot.massfit(ff, ylab="m_eff", xlab="t")
-  points((ll$t-0.2), ll$mass, pch=1, col="blue")
-  arrows((ll$t-0.2), ll$mass-ll$dmass,
-         (ll$t-0.2), ll$mass+ll$dmass, length=0.01,angle=90,code=3)
-  points((lf$t+0.2), lf$mass, pch=2, col="red")
-  arrows((lf$t+0.2), lf$mass-lf$dmass,
-         (lf$t+0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
-  lines(ll$t, rep(m, times=length(ll$t)))
+  if(!missing(ff)) {
+    plot.massfit(ff, ylab="m_eff", xlab="t")
+    points((ll$t-0.2), ll$mass, pch=1, col="blue")
+    arrows((ll$t-0.2), ll$mass-ll$dmass,
+           (ll$t-0.2), ll$mass+ll$dmass, length=0.01,angle=90,code=3)
+    points((lf$t+0.2), lf$mass, pch=2, col="red")
+    arrows((lf$t+0.2), lf$mass-lf$dmass,
+           (lf$t+0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
+    lines(ll$t, rep(m, times=length(ll$t)))
+  }
+  else {
+    plot.massfit(ll, ylab="m_eff", xlab="t")
+    lines(ll$t, rep(m, times=length(ll$t)))
+  }
 }
 
 

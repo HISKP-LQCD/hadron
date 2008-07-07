@@ -1,3 +1,9 @@
+ChiSqr.singleCor <- function(par, Thalf, x, y, err, tr, sign) {
+  ii <- c(1:tr)
+  Sumall <- 0.
+  return( sum(((y[ii] - par[1]*( CExp(m=par[2], Time=2*Thalf, x=x, sign=sign) ))/err[ii])^2) )
+}
+
 ChiSqr.1mass <- function(par, Thalf, x, y, err, tr, N=2) {
   # index of mass
   # l <- length(par)/no.masses
