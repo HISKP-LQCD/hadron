@@ -109,3 +109,17 @@ plot.averx <- function(averx, ...) {
     plot(averx$fit.uwerr)
   }
 }
+
+#postscript(file = "test.eps", family="NimbusRom", paper="special", horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
+# linewidth, tick length and direction, margings, orientation
+#opar <- par(lwd=0.5, tck=0.02, mgp=c(2,.5,0), las=1)
+#plot(b, axes="F")
+#main axis
+#axis(1, lwd=0.5)
+#axis(2, lwd=0.5)
+#sub ticks
+#axis(1, at=seq(0,100,10), tck=0.01, labels=F, lwd=0.5)
+#axis(2, at=seq(0,100,10), tck=0.01, labels=F, lwd=0.5)
+#box()
+#dev.off()
+#par(opar)

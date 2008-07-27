@@ -157,9 +157,12 @@ b1 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
   else {
-    b1fit <- gsl_fit_correlator_matrix(fitpar, Thalf=Thalf, x=c((t1):(t2)), y=Cor[ii],
-                                       err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses=no.masses,
-                                       prec=c(1.e-10,1.e-3))
+#    b1fit <- gsl_fit_correlator_matrix(fitpar, Thalf=Thalf, x=c((t1):(t2)), y=Cor[ii],
+#                                       err=E[ii], tr = (t2-t1+1), N=matrix.size, no_masses=no.masses,
+#                                       prec=c(1.e-10,1.e-3))
+    b1fit <- cmfit(fitpar=fitpar, Thalf=Thalf, x=c((t1):(t2)), y=Cor[ii],
+                   err=E[ii], tr = (t2-t1+1), N=matrix.size, no.masses=no.masses,
+                   gsl.prec=c(1.e-10,1.e-3), fit.routine="gsl")
     if(no.masses == 1) fit.mass <- abs(b1fit$par[matrix.size+1])
     if(no.masses == 2) fit.mass <- sort(abs(b1fit$par[c((matrix.size+1),(2*matrix.size+2))]))
     if(no.masses > 2) fit.mass <- sort(abs(b1fit$par[c((matrix.size+1),(2*matrix.size+2),(3*matrix.size+3))]))

@@ -121,7 +121,7 @@ a0 <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     if(no.masses > 1) {
       for(i in 2:(no.masses)) {
         par <- c(par,
-                 2*left.vectors[(1:matrix.size),i],
+                 left.vectors[(1:matrix.size),i],
                  -log(abs(variational.solve$values[variational.sortindex[i]]))/(tb-ta)) 
       }
     }
