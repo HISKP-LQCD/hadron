@@ -1,17 +1,17 @@
 # $Id$
-plotwitherror <- function(x, y, dy, ylim, rep=FALSE, ...) {
+plotwitherror <- function(x, y, dy, ylim, rep=FALSE, col="black", ...) {
   if(missing(ylim)) {
     if(rep) {
-      points(x, y, ...)
+      points(x, y, col=col, ...)
     }
     else {
-      plot(x,y, ylim=c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE)), ...)
+      plot(x,y, ylim=c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE)), col=col, ...)
     }
   }
   else {
-    plot(x,y, ylim=ylim, ...)
+    plot(x,y, ylim=ylim, col=col, ...)
   }
-  arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3)
+  arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
 }
 
 plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {

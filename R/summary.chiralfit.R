@@ -91,11 +91,11 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       fpsV <- res$fpiFV
     }
     else {
-      mpsv <- fit$data[[i]]$L[ij]*fit$data[[i]]$mps/fr0
-      r <-  - fit$data[[i]]$mps^2/(4.0*pi*par[3])^2*g1(mpsv)/fr0
+      mpsv <- fit$data[[i]]$L*fit$data[[i]]$mps
+      r <-  - fit$data[[i]]$mps^2/(4.0*pi*par[3])^2*g1(mpsv)
       
-      mpsV <- fit$data[[i]]$mps*(1.+0.5*r)/fr0
-      fpsV <- fit$data[[i]]$fps*(1.0-2.0*r)/fr0
+      mpsV <- fit$data[[i]]$mps*(1.+0.5*r)
+      fpsV <- fit$data[[i]]$fps*(1.0-2.0*r)
     }
     
 #    xfit <- seq(from=0., to=1.05*max(fit$data[[i]]$mu[ij]*fr0/fZP, na.rm=TRUE),
@@ -111,6 +111,14 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
     color <- c("red", "blue", "darkseagreen", "darksalmon", "darkviolet")
     xmu <- ur0/uZP*fit$data[[i]]$mu
+    pxmu <- split(xmu[ij], fit$data[[i]]$L[ij])
+    pdfps <- split(fit$data[[i]]$dfps[ij], fit$data[[i]]$L[ij])
+    pfpsV <- split(fpsV[ij], fit$data[[i]]$L[ij])
+    pmpsV <- split(mpsV[ij], fit$data[[i]]$L[ij])
+    pdmps <- split(fit$data[[i]]$dmps[ij], fit$data[[i]]$L[ij])
+    pmN <- split(fit$data[[i]]$mN[ij], fit$data[[i]]$L[ij])
+    pdmN <- split(fit$data[[i]]$dmN[ij], fit$data[[i]]$L[ij])
+    k <- length(pfpsV)
                                         # continuum curves
     if(fit$fit.asq && i == 1) {
       f2 <- getfps(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
@@ -145,13 +153,22 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
                   file=file)
     }
     if(i == 1) {
-      plotwitherror(xmu[ij],
-                    ur0*fpsV[ij],
-                    sqrt((ur0*fit$data[[i]]$dfps[ij])^2 + (dr0*fit$data[[i]]$fps[ij])^2),
+      j <- 1
+      plotwitherror(pxmu[[j]],
+                    ur0*pfpsV[[j]],
+                    sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
                     ylim=c(0.9*par[3], 1.1*max(fr0*fpsV[ij], na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=20+i, ylab=expression(r[0]*f[PS]), xlab=expression(r[0]*mu[R]),
-                    axes="F")
+                    pch=20, ylab=expression(r[0]*f[PS]), xlab=expression(r[0]*mu[R]),
+                    axes=F, rep=rep)
+      for(j in 2:k) {
+        plotwitherror(pxmu[[j]],
+                      ur0*pfpsV[[j]],
+                      sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
+                      col=color[i], bg=color[i],
+                      pch=20+(i-1)*2+(j-1), rep=TRUE)
+      }
+      rm(j)
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
@@ -174,10 +191,12 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       }
     }
     else {
-      plotwitherror(xmu[ij],
-                    ur0*fpsV[ij],
-                    sqrt((ur0*fit$data[[i]]$dfps[ij])^2 + (dr0*fit$data[[i]]$fps[ij])^2),
-                    rep=TRUE, col=color[i], pch=20+i, bg=color[i])
+      for(j in 1:length(pfpsV)) {
+        plotwitherror(pxmu[[j]],
+                      ur0*pfpsV[[j]],
+                      sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
+                      rep=TRUE, col=color[i], pch=20+(i-1)*2+(j-1), bg=color[i])
+      }
       if(fit$fit.asq) {
         lines(xfit, f, lty="solid", col=color[i])
       }
@@ -193,13 +212,21 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     }
     dev.set(mpsplot)
     if(i == 1) {
-      plotwitherror(xmu[ij],
-                    (ur0*mpsV[ij])^2,
-                    sqrt((2*ur0^2*mpsV[ij]*fit$data[[i]]$dmps[ij])^2 + (2*dr0*ur0*mpsV[ij]^2)^2),
+      j <- 1
+      plotwitherror(pxmu[[j]],
+                    (ur0*pmpsV[[j]])^2,
+                    sqrt((2*ur0^2*pmpsV[[j]]*pdmps[[j]])^2 + (2*dr0*ur0*pmpsV[[j]]^2)^2),
                     ylim=c(0., 1.1*max((fr0*mpsV[ij])^2, na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=20+i, ylab=expression((r[0]*m[PS])^2), xlab=expression(r[0]*mu[R]),
-                    axes="F")
+                    pch=20, ylab=expression((r[0]*m[PS])^2), xlab=expression(r[0]*mu[R]),
+                    axes=F)
+      for(j in 2:k) {
+        plotwitherror(pxmu[[j]],
+                      (ur0*pmpsV[[j]])^2,
+                      sqrt((2*ur0^2*pmpsV[[j]]*pdmps[[j]])^2 + (2*dr0*ur0*pmpsV[[j]]^2)^2),
+                      col=color[i], bg=color[i],
+                      pch=20+(j-1), rep=TRUE)
+      }
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
@@ -213,10 +240,13 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       else lines(xfit, msq, lty="solid")
     }
     else {
-      plotwitherror(xmu[ij],
-                    (ur0*mpsV[ij])^2,
-                    sqrt((2*ur0^2*mpsV[ij]*fit$data[[i]]$dmps[ij])^2 + (2*dr0*ur0*mpsV[ij]^2)^2),
-                    rep=TRUE, col=color[i], pch=20+i, bg=color[i])
+      for(j in 1:k) {
+        plotwitherror(pxmu[[j]],
+                      (ur0*pmpsV[[j]])^2,
+                      sqrt((2*ur0^2*pmpsV[[j]]*pdmps[[j]])^2 + (2*dr0*ur0*pmpsV[[j]]^2)^2),
+                      col=color[i], bg=color[i],
+                      pch=20+(i-1)*2+(j-1), rep=TRUE)
+      }
       if(fit$fit.asq) {
         lines(xfit, msq, lty="solid", col=color[i])
       }
@@ -226,16 +256,25 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     }
     dev.set(mpsmuplot)
     if(i == 1) {
-      plotwitherror(xmu[ij],
-                    (ur0*mpsV[ij])^2/(xmu[ij]),
-                    sqrt((2*ur0*mpsV[ij]*fit$data[[i]]$dmps[ij])^2 + (dr0*mpsV[ij]^2)^2
-                         + (ur0*mpsV[ij]^2*dZP/uZP)^2 )*ur0/(xmu[ij]),
+      j <- 1
+      plotwitherror(pxmu[[j]],
+                    (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
+                    sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
+                         + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
                     ylim=c(0.95*min((fr0*mpsV[ij])^2/(xmu[ij]),
                       na.rm=TRUE),
                       1.1*fit$par[4]),
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=20+i, ylab=expression((r[0]*m[PS])^2/(r[0]*mu[R])), xlab=expression(r[0]*mu[R]),
-                    axes="F")
+                    pch=20, ylab=expression((r[0]*m[PS])^2/(r[0]*mu[R])), xlab=expression(r[0]*mu[R]),
+                    axes=F)
+      for(j in 2:k) {
+        plotwitherror(pxmu[[j]],
+                      (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
+                      sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
+                           + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
+                      col=color[i], bg=color[i],
+                      pch=20+(j-1), rep=TRUE)
+      }
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
@@ -257,10 +296,14 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       }
     }
     else {
-      plotwitherror(xmu[ij],
-                    (ur0*mpsV[ij])^2/(xmu[ij]),
-                    sqrt((2*ur0^2*mpsV[ij]*fit$data[[i]]$dmps[ij])^2 + (2*dr0*ur0*mpsV[ij]^2)^2)/(xmu[ij]),
-                    rep=TRUE, col=color[i], pch=20+i, bg=color[i])
+      for(j in 1:k) {
+        plotwitherror(pxmu[[j]],
+                      (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
+                      sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
+                           + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
+                      col=color[i], bg=color[i],
+                      pch=20+(i-1)*2+(j-1), rep=TRUE)
+      }
       if(fit$fit.asq) {
         lines(xfit, msq/xfit, lty="solid", col=color[i])
       }
@@ -271,14 +314,22 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     if(fit$fit.mN) {
       dev.set(mNplot)
       if(i==1) {
-        plotwitherror(xmu[ij],
-                      ur0*fit$data[[i]]$mN[ij],
-                      sqrt((ur0*fit$data[[i]]$dmN[ij])^2 + (dr0*fit$data[[i]]$mN[ij])^2),
+        j <- 1
+        plotwitherror(pxmu[[j]],
+                      ur0*pmN[[j]],
+                      sqrt((ur0*pdmN[[j]])^2 + (dr0*pmN[[j]])^2),
                       ylim=c(0.90*par[5+2*N],
                         1.1*max(fr0*fit$data[[i]]$mN[ij], na.rm=TRUE)),
                       xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
-                      pch=20+i, ylab=expression(r[0]*m[N]), xlab=expression(r[0]*mu[R]),
-                      axes="F")
+                      pch=20, ylab=expression(r[0]*m[N]), xlab=expression(r[0]*mu[R]),
+                      axes=F)
+        for(j in 2:k) {
+          plotwitherror(pxmu[[j]],
+                        ur0*pmN[[j]],
+                        sqrt((ur0*pdmN[[j]])^2 + (dr0*pmN[[j]])^2),
+                        col=color[i], bg=color[i],
+                        pch=20+(j-1), rep=TRUE)
+        }
         axis(1, lwd=0.5)
         axis(2, lwd=0.5)
         axis(3, lwd=0.5, labels=F)
@@ -301,6 +352,13 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
         }
       }
       else {
+        for(j in 1:k) {
+          plotwitherror(pxmu[[j]],
+                        ur0*pmN[[j]],
+                        sqrt((ur0*pdmN[[j]])^2 + (dr0*pmN[[j]])^2),
+                        col=color[i], bg=color[i],
+                        pch=20 + (i-1)*2+(j-1), rep=TRUE)
+        }
         plotwitherror(xmu[ij],
                       ur0*fit$data[[i]]$mN[ij],
                       sqrt((ur0*fit$data[[i]]$dmN[ij])^2 + (dr0*fit$data[[i]]$mN[ij])^2),
