@@ -30,6 +30,10 @@ plot.b1fit <- function(fit) {
   plot.cfit(fit)
 }
 
+plot.ofit <- function(fit) {
+  plot.cfit(fit)
+}
+
 plot.cfit <- function(fit) {
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
@@ -42,16 +46,16 @@ plot.cfit <- function(fit) {
     plot.effmass(m=fit.mass, ll=data.frame(t=fit$effmass$t, mass=fit$effmass$m, dmass=fit$effmass$dm))
   }
   if(!is.null(fit$uwerrresultmpcac)) {
-    plot(fit$uwerrresultmpcac, main="mpcac")
+    plot(fit$uwerrresultmpcac, main=expression(m[PCAC]))
   }
   if(!is.null(fit$uwerrresultmps)) {
-    plot(fit$uwerrresultmps, main="mps")
+    plot(fit$uwerrresultmps, main=expression(m[PS]))
   }
   if(!is.null(fit$uwerrresultfps)) {
-    plot(fit$uwerrresultfps, main="fps")
+    plot(fit$uwerrresultfps, main=expression(f[PS]))
   }
   if(!is.null(fit$uwerrresultmv)) {
-    plot(fit$uwerrresultmv, main="mv")
+    plot(fit$uwerrresultmv, main=expression(m[V]))
   }
   if(!is.null(fit$boot)) {
     X11()
@@ -71,7 +75,13 @@ plot.cfit <- function(fit) {
   }
   if(!is.null(fit$fitdata)) {
     X11()
-    plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab="Chi", type="h")
+    plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab=expression(chi), type="h")
+  }
+  if(!is.null(fit$dpaopp)) {
+    X11()
+    plotwitherror(fit$dpaopp$t, fit$dpaopp$mass, fit$dpaopp$dmass,
+                  main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
+    abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2.)
   }
 }
 
@@ -83,7 +93,7 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 
   X11()
   if(!missing(ff)) {
-    plot.massfit(ff, ylab="m_eff", xlab="t")
+    plot.massfit(ff, ylab=expression(m[eff]), xlab="t")
     points((ll$t-0.2), ll$mass, pch=1, col="blue")
     arrows((ll$t-0.2), ll$mass-ll$dmass,
            (ll$t-0.2), ll$mass+ll$dmass, length=0.01,angle=90,code=3)
@@ -93,7 +103,7 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
     lines(ll$t, rep(m, times=length(ll$t)))
   }
   else {
-    plot.massfit(ll, ylab="m_eff", xlab="t")
+    plot.massfit(ll, ylab=expression(m[eff]), xlab="t")
     lines(ll$t, rep(m, times=length(ll$t)))
   }
 }

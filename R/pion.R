@@ -259,7 +259,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
               effmass=pion.eff, kappa=kappa, mu=mu, fit.routine=fit.routine,
               variational.masses=variational.masses, no.masses=no.masses,
               matrix.size = matrix.size, nrep=nrep, res.var=res.var)
-  attr(res, "class") <- c("pionfit", "cfit", "list")  
+  attr(res, "class") <- c("pionfit", "list")  
   return(invisible(res))
 }
 

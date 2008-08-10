@@ -1,5 +1,5 @@
 cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
-                      itype=1, iobs=1, sign=+1., ind.vec=c(1,3,4,5),
+                      itype=1, iobs=1, type="cosh", ind.vec=c(1,3,4,5),
                       boot.R=99, boot.l=10, tsboot.sim="geom",
                       method="uwerr", fit.routine="optim", nrep) {
   
@@ -10,35 +10,45 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
     stop("Error! t1 and t2 must be specified!")
   }
   par <- numeric(2)
+
+  if(!any(data$V1 == itype && data$V2 == iobs)) {
+    stop("The particular correlation function is missing!")
+  }
+  data <- data[data$V1==itype,]
+  data <- data[data$V2==iobs,]
+  sign <- +1.
+  if(type == "sinh") sign <- -1.
   
   Time <-  2*max(data[,ind.vec[2]])
+#  Time <- Time + 1
   Thalf <- max(data[,ind.vec[2]])
   T1 <- Thalf+1
   t1p1 <- (t1+1)
   t2p1 <- (t2+1)
-  nrObs <- max(data[,ind.vec[1]])
-  Skip <- (skip*(T1)*nrObs*4+1)
+#  nrObs <- max(data[,ind.vec[1]])
+  nrObs <- 1
+  nrType <- 1
+  Skip <- (skip*(T1)*nrType*nrObs+1)
   Length <- length(data[,ind.vec[3]])
   if(missing(nrep)) {
-    nrep <- c(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4))
+    nrep <- c(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))
   }
   else {
     skip <- 0
-    if(sum(nrep) != length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4)) {
+    if(sum(nrep) != length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType)) {
       stop("sum of replica differs from total no of measurements!")
     }
   }
 
   Z <- array(data[((Skip):Length),ind.vec[3]], 
-             dim=c(nrObs*(T1)*4,(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*4))))
+             dim=c(nrObs*(T1)*nrType,(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))))
   # negative times
   W <- array(data[((Skip):Length),ind.vec[4]], 
-             dim=c(nrObs*(T1)*4,(length(data[((Skip):Length),ind.vec[4]])/(nrObs*(T1)*4))))
+             dim=c(nrObs*(T1)*nrType,(length(data[((Skip):Length),ind.vec[4]])/(nrObs*(T1)*nrType))))
 
   rm(data)
-  W <- getCor(T1=T1, W=W, Z=Z, itype, iobs)
+  W <- getCor(T1=T1, W=W, Z=Z, type=type)
   rm(Z)
-  
                                         #  options(show.error.messages = FALSE)
   eff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
   options(show.error.messages = TRUE)
@@ -118,28 +128,29 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
   return(invisible(res))
 }
 
-getCor <- function(T1, W, Z, itype=1, iobs=1, type="cosh") {
+getCor <- function(T1, W, Z, type=c("cosh")) {
 
   # iobs enumerating the gamma matrix combination
   # ityp enumeratiog the smearing level
-  sign = +1
-  if(type=="sinh") {
-    sign = -1.
-  }
-  shift = 0
-  if(iobs == 3) shift=1
-  if(iobs == 5) shift=2
-  if(iobs == 7) shift=3
-  
-  for(i in 1:(T1)) {
-    two <- 2.
-    if(i==1 || i==(T1)) {
-      # Take care of zeros in the correlators when summing t and T-t+1
-      two <- 1.
+  N <- length(type)
+  sign = rep(+1., times=N)
+  for(i in 1:N) {
+    if(type[i]=="sinh") {
+      sign[i] = -1.
     }
-
-    W[i,] <- (W[(i+T1*(((itype-1)*4) + shift)),]
-              + sign*Z[(i+T1*(((itype-1)*4) + shift)),])/two
+  }
+  
+  for(j in 1:N) {
+    for(i in 1:(T1)) {
+      two <- 2.
+      if(i==1 || i==(T1)) {
+                                        # Take care of zeros in the correlators when summing t and T-t+1
+        two <- 1.
+      }
+      
+      W[(i+(j-1)*T1),] <- (W[(i+(j-1)*T1),]
+                + sign[j]*Z[(i+(j-1)*T1),])/two
+    }
   }
   return(invisible(W))
 }
