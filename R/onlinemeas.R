@@ -1,4 +1,4 @@
-onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
+onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
                       iobs=1, ind.vec=c(1,3,4,5),
                       boot.R=99, boot.l=10, tsboot.sim="geom",
                       method="uwerr", fit.routine="optim", nrep) {
@@ -132,6 +132,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
   fit.dof <- (t2-t1+1)-length(massfit$par)
   fit.chisqr <- massfit$value
 
+  fit.uwerrm <- NULL
   fit.uwerrpcac <- NULL
   fit.boot <- NULL
   fit.tsboot <- NULL
