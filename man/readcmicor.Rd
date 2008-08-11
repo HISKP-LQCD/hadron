@@ -44,7 +44,7 @@
   follows:\cr
   order PP PA AP AA 44 P4 4P A4 4A   for pion like  \eqn{P=\gamma_5}{P=g5} \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}\cr
   order 44 VV AA 4V V4 4A A4 VA AV   for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4} \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}\cr
-  order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}\cr
+  order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5} 
   \eqn{S=I}\cr
   itype=21 is conserved vector current at sink,  \eqn{\gamma_5}{g5} at source
 
