@@ -1,5 +1,5 @@
 onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
-                      iobs=1, ind.vec=c(1,3,4,5),
+                      iobs=1, ind.vec=c(1,3,4,5), mu, kappa,
                       boot.R=99, boot.l=10, tsboot.sim="geom",
                       method="uwerr", fit.routine="optim", nrep) {
   
@@ -42,6 +42,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   rm(data)
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh","sinh"))
+#  W <- W*(2*kappa)^2
   rm(Z)
 #  print(t(W))
 
@@ -81,6 +82,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
                                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   }
   sfit.mass <- abs(massfit$par[2])
+  sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
   if(fit.routine != "gls" && massfit$convergence!=0) {
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
@@ -134,6 +136,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   fit.uwerrm <- NULL
   fit.uwerrpcac <- NULL
+  fit.uwerrfpi <- NULL
   fit.boot <- NULL
   fit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
@@ -143,6 +146,9 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     fit.uwerrpcac <- uwerr(f=fitmpcac.online, data=W[ii,], S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
                            fit.routine=fit.routine)
+    fit.uwerrfpi <- uwerr(f=fitf.online, data=W[ii,], S=S, pl=pl, nrep=nrep,
+                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
+                      fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
     fit.boot <- boot(data=t(W[ii,]), statistic=fit.online.boot, R=boot.R, stype="i",
@@ -179,10 +185,10 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
-              uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac,
+              uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac, uwerrresultfps=fit.uwerrfpi, 
               boot=fit.boot, tsboot=fit.tsboot, method=method,
               effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp,
-              iobs=iobs, sign=sign,
+              iobs=iobs, mu=mu, kappa=kappa,
               nrep=nrep, matrix.size=2)
   attr(res, "class") <- c("ofit", "list")  
   return(invisible(res))
@@ -234,6 +240,30 @@ fitmass.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     sort.ind <- c(1)
   }
   return(abs(fit$par[3]))
+}
+
+fitf.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
+                        N=2, no.masses=1, no=1, kappa, mu,
+                        fit.routine="gsl") {
+  Thalf <- Time/2
+  T1 <- Thalf+1
+  t1p1 <- (t1+1)
+  t2p1 <- (t2+1)
+  tr <- (t2-t1+1)
+
+  if(no.masses == 1) {
+    if(fit.routine != "gsl75") {
+      fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
+                   x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+    }
+    else {
+      fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
+                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
+    }
+
+    sort.ind <- c(1)
+  }
+  return(abs(fit$par[1])/sqrt(fit$par[3]^3))
 }
 
 
