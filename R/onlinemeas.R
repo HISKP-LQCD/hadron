@@ -83,7 +83,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   sfit.mass <- abs(massfit$par[2])
   sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
-  if(fit.routine != "gls" && massfit$convergence!=0) {
+  if(fit.routine != "gsl" && massfit$convergence!=0) {
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
 
@@ -128,7 +128,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   fit.pcac <- 0.5*abs(pcacfit$par[3])*pcacfit$par[2]/pcacfit$par[1]
 
-  if(fit.routine != "gls" && pcacfit$convergence!=0) {
+  if(fit.routine != "gsl" && pcacfit$convergence!=0) {
     warning("optim did not converge for pcacfit! ", massfit$convergence)
   }
   fit.dof <- (t2-t1+1)-length(massfit$par)

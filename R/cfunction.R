@@ -83,7 +83,7 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
                                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   }
   fit.mass <- abs(massfit$par[2])
-  if(fit.routine != "gls" && massfit$convergence!=0) {
+  if(fit.routine != "gsl" && massfit$convergence!=0) {
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
 

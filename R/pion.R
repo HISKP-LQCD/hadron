@@ -153,7 +153,7 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
     fit.mass <- sort(abs(pionfit$par[c((matrix.size+1),(2*matrix.size+2),(3*matrix.size+3))]))
   }
-  if(fit.routine != "gls" && pionfit$convergence!=0) {
+  if(fit.routine != "gsl" && pionfit$convergence!=0) {
     warning("optim did not converge for pionfit! ", pionfit$convergence)
   }
 
