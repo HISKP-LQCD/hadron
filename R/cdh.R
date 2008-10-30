@@ -1,9 +1,15 @@
-cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV, afpiV, aF0, a_fm, L, printit=F) {
+cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+                 ampiV, afpiV, aF0, a_fm, L, printit=F,
+                 rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)) {
 
   # aF0 at beta=3.9 =0.0534 for correction a la GL 
   # aF0 = af_ps(mu) for higher orders (=F_pi)
   # aLamb1=0.055 and aLamb2=0.58
 
+  if(length(rtilde)!=6) {
+    rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)
+    warning("rtilde had not enough entries, using defaults instead")
+  }
   # our normalisation
   aF0 <- aF0/sqrt(2)
 
@@ -22,20 +28,11 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
   lb4 <- log((aLamb4/ampiV)^2)
   lpi <- log((ampiV/amrho_phys)^2)
 
-  if(any(is.na(c(lb1, lb2, lb3, lb4, lpi)))){
-    cat("why ", ampiV, aLamb2/ampiV, aLamb3/ampiV, aLamb4/ampiV,
-  ampiV/amrho_phys, "\n")
-  }
-  # tab 2b
-  rtilde <- c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)
-  rtilder <- c(-1.5,  3.2, -4.2, -2.5,  1.0, 0.1)
-
+  # tab 2b -> rtilde
+  
   if(missing(parm)) {
     parm <- rep(0, times=6)
   }
-  rtilde <- rtilde + parm*rtilder
-  #transpose rtilde?
-  #rtilde <- t(rtilde)
 
   M_P <- ampiV
   F_P <- afpiV
@@ -79,10 +76,10 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
       S4fpi
   I6fpi <- 0
-
+  I6mpi <- 0
   # Eq. (26-27). The sum over n is already done
-  Rmpi <- - (xi_P/2) * (ampiV/M_P) * (I2mpi + xi_P * I4mpi + xi_P^2 * I6mpi)
-  Rfpi <- (xi_P)   * (afpiV/F_P) * (I2fpi + xi_P * I4fpi + xi_P^2 * I6fpi);
+  Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi + xi_P^2 * I6mpi)
+  Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi + xi_P^2 * I6fpi);
 
   mpiFV <- ampiV * (1 + rev* Rmpi);
   fpiFV <- afpiV * (1 + rev* Rfpi);
@@ -90,12 +87,12 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
 
   # print out some further information (i.e. the contribuition of each order)
   if (printit) {
-    mlo <- - (xi_P/2) * (ampiV/M_P) * (I2mpi)
-    mnlo <- - (xi_P/2) * (ampiV/M_P) * (xi_P * I4mpi)
-    mnnlo <- - (xi_P/2) * (ampiV/M_P) * (xi_P^2 * I6mpi)
-    flo <- (xi_P) * (afpiV/F_P) * (I2fpi)
-    fnlo= (xi_P) * (afpiV/F_P) * (xi_P * I4fpi)
-    cat(mlo, mnlo, mnnlo, flo, fnlo, "\n")
+    mlo <- - (xi_P/2) * (I2mpi)
+    mnlo <- - (xi_P/2) * (xi_P * I4mpi)
+    mnnlo <- - (xi_P/2) * (xi_P^2 * I6mpi)
+    flo <- (xi_P) * (I2fpi)
+    fnlo= (xi_P) * (xi_P * I4fpi)
+    cat("mpi: ", mlo, mnlo, mnnlo, "\nfpi: ", flo, fnlo, "\n")
                                         #    ['percent fin V corr: Mpi_LO   Mpi_NLO   Mpi_NNLO    Fpi_LO   Fpi_NLO']
                                         #[mlo', mnlo', mnnlo', flo', fnlo']
                                         #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
@@ -117,3 +114,89 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV,
 #% "a_fm" is the lattice spacing in fm and it is used only where is necessary (not at LO).
 #% L is the number of points in one spatial direction (we assume the spatial volume V=L^3)
 #% Eq. (49) and (54)
+
+cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+                   ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE)
+{
+
+  # our normalisation need this?
+  aF0 <- aF0/sqrt(2)
+
+  # Eg.(62)
+  gg <- c(2-pi/2, pi/4-0.5, 0.5-pi/8, 3*pi/16 - 0.5)
+  # Tab.1
+  mm <- c(6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24)
+  mml <- length(mm)
+  N <- 16*pi^2
+
+  # related to those of tab.2a by Eq.(53)
+  lb1 <- log(aLamb1^2/a2B0mu)
+  lb2 <- log(aLamb2^2/a2B0mu)
+  lb3 <- log(aLamb3^2/a2B0mu)
+  lb4 <- log(aLamb4^2/a2B0mu)
+
+  # Eq.(10)
+  xi_P <- a2B0mu/(4*pi*aF0)^2
+  mmB0 <- rep(0., times=length(ampiV))
+  mmB1 <- mmB0
+  mmB2 <- mmB0
+  for(jj in 1:length(ampiV)) {
+    # Eq.(11)
+    lambda <-  sqrt(c(1:mml))*sqrt(a2B0mu[jj])*L[jj]
+    B0 <- 2*besselK(lambda,0)
+    # moved original B0 -> B1
+    B1 <- 2*besselK(lambda,1)/lambda
+    B2 <- 2*besselK(lambda,2)/lambda^2
+    # remaining factor from Eq.(26-27) and sum, ...
+    mmB0[jj] <- sum(mm*B0)
+    mmB1[jj] <- sum(mm*B1)
+    # which I can already do since all the dependence on n is here
+    mmB2[jj] <- sum(mm*B2)
+  }
+  # DeltaM and DeltaF
+  DeltaM <- -1/(2*N)*lb3
+  DeltaF <- 2/N*lb4
+  
+  # simplifyed S's: Eq.(59)
+  S4mpi <- (13/3)*gg[1] * mmB1 - (1/3)*(40*gg[1] + 32*gg[2] + 26*gg[3])*mmB2
+  S6mpi <- 0
+  S4fpi=(1/6)*(8*gg[1] - 13*gg[2])* mmB1 - (1/3)*(40*gg[1] - 12*gg[2] - 8*gg[3] - 13*gg[4])*mmB2
+
+  # Eq. (49) and (54)
+  I2mpi <- -mmB1
+  I4mpi <- mmB1*(-55/18 + 4*lb1 + 8/3*lb2 - 5/2*lb3 -2*lb4) +
+    mmB2*(112/9 - (8/3)*lb1 - (32/3)*lb2) + S4mpi +
+      N/2*DeltaM*mmB0 + N*DeltaF*mmB1
+
+  I2fpi <- -2*mmB1;
+  I4fpi <- mmB1*(-7/9 + 2*lb1 + (4/3)*lb2 - 3*lb4) + 
+    mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
+      S4fpi + N*DeltaM*mmB0 + 2*N*DeltaF*mmB1
+
+  # Eq. (26-27). The sum over n is already done
+  #Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi)
+  #Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi)
+
+  mpiFV <- ampiV * (1 + rev* ( - (xi_P/2) * (I2mpi + xi_P * I4mpi)));
+  fpiFV <- afpiV * (1 + rev* ((xi_P)   * (I2fpi + xi_P * I4fpi)));
+
+
+  # print out some further information (i.e. the contribuition of each order)
+  if (printit) {
+    mlo <- - (xi_P/2) * (I2mpi)
+    mnlo <- - (xi_P/2) * (xi_P * I4mpi)
+    flo <- (xi_P) * (I2fpi)
+    fnlo= (xi_P) * (xi_P * I4fpi)
+    cat("mpi: ", mlo, mnlo, "\n", "fpi: ", flo, fnlo, "\n")
+                                        #    ['percent fin V corr: Mpi_LO   Mpi_NLO   Mpi_NNLO    Fpi_LO   Fpi_NLO']
+                                        #[mlo', mnlo', mnnlo', flo', fnlo']
+                                        #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
+  }
+
+  
+  if(any(is.na(c(mpiFV, fpiFV)))) {
+    warning("NaNs produced in: cdh!\n")
+    return(invisible(list(mpiFV=ampiV, fpiFV=afpiV)))
+  }
+  return(invisible(list(mpiFV=mpiFV, fpiFV=fpiFV)))
+}
