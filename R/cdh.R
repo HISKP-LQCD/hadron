@@ -76,7 +76,7 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
       S4fpi
   I6fpi <- 0
-  I6mpi <- 0
+#  I6mpi <- 0
   # Eq. (26-27). The sum over n is already done
   Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi + xi_P^2 * I6mpi)
   Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi + xi_P^2 * I6fpi);

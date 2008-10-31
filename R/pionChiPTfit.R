@@ -258,7 +258,6 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
                              c(0.0001, 0.030), tol=1.e-12,
                              par=par, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=-1.,
                              fit.kmf=fit.kmf, N=N)$root, silent=T)
-#    fpi <- getfps.pion(r0sqTwoBmu=r0TwoB*r0mu.phys, par, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=FALSE)
   }
   for( i in 1:N) {
     if(fit.asq) {
@@ -269,7 +268,12 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
       return(invisible(NaN))
     }
 # fit r0/a as a function of (a mu)^2 first
-    r0 <- par[4+i] + data[[i]]$mu[ij]^2*par[4+N+i]
+    if(inherits(r0mu.phys, "try-error") || is.nan(r0mu.phys)) {
+      r0 <- par[4+i]  + (data[[i]]$mu[ij]^2)*par[4+N+i]
+    }
+    else {
+      r0 <- par[4+i]  + (data[[i]]$mu[ij]^2 -r0mu.phys/par[4+i])*par[4+N+i]
+    }
     chisum <- chisum + sum(((data[[i]]$r0a[ij]-r0)/data[[i]]$dr0[ij])^2, na.rm=TRUE)
     
 # now the rest
@@ -347,9 +351,8 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
   return(invisible(chisum))
 }
 
-getchi.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a, fit.l12=FALSE) {
-
-
+getchi.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a, fit.l12=FALSE)
+{
   N <- length(ii)
   chisum <- 0.
   for( i in 1:N) {
