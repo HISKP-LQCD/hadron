@@ -26,7 +26,7 @@ fovermps.pion <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.asq=-1
 pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                          ZPdata, ZPbootsamples,
                          fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
-                         ii, boot.R=100, debug=FALSE) {
+                         fit.corr=FALSE, ii, boot.R=100, debug=FALSE) {
   if(missing(data) || missing(startvalues) || missing(ZPdata)) {
     stop("data and startvalues must be provided!\n")
   }
@@ -54,7 +54,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   }
   np <- 4+3*N
   if(fit.l12) np=np+2
-  if(fit.asq) np=np+3
+  if(fit.asq) np=np+2
   if(fit.nnlo && fit.kmf) np=np+2
   if(length(startvalues) != np) stop("length of startvalues", length(startvalues),
              "must match number of fit parameters ", np, "!\n")
@@ -65,24 +65,47 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
     }
   }
 
+  corrmatrix <- NULL
+  if(!missing(bootsamples) && fit.corr==TRUE) {
+    corrmatrix <- list()
+    for(i in 1:N) {
+      corrmatrix[[i]] <- array(0., dim=c(2,2,length(data[[i]]$mu)))
+      for(j in 1:length(data[[i]]$mu)) {
+        corr <- cor(bootsamples[[i]][,1:2,j])
+        corr[1,1] <- corr[1,1]*data[[i]]$dmps[j]^2
+        corr[2,2] <- corr[2,2]*data[[i]]$dfps[j]^2
+        corr[2,1] <- corr[2,1]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
+        corr[1,2] <- corr[1,2]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
+        cat(i, " ", j, "\n")
+        print(solve(corr))
+        corrmatrix[[i]][,,j] <- solve(corr)
+      }
+    }
+  }
+  else {
+    warning("no bootstrapsamples to compute the correlation matrix\nPerform uncorrelated fit\n")
+    fit.corr = FALSE
+  }
+  
   if(debug) {
     chisqr.piononly(par=startvalues, data=data, ii=ii,fsmethod=fsmethod,
                     a.guess=a.guess, ZPdata=ZPdata,
-                    fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
+                    fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, cm=corrmatrix,
                     printit=debug)
   }
 
   mini <- optim(par=startvalues, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
                 control=list(maxit=500), data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
-                fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, fit.mN=fit.mN)
+                fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
+                fit.mN=fit.mN, cm=corrmatrix)
   if(mini$convergence != 0) {
     warning("Attention: optim did not converge in initial run!\n Please adjust start values!")
   }
   if(debug) {
     chisqr.piononly(par=mini$par, data=data, ii=ii,fsmethod=fsmethod,
                     a.guess=a.guess, ZPdata=ZPdata,
-                    fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
+                    fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, cm=corrmatrix,
                     printit=debug)
   }
   dof <- 0
@@ -175,7 +198,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
 
       mini.boot <- optim(par=par, fn=chisqr.piononly, method="BFGS", hessian=FALSE,
                          control=list(maxit=500, trace=0), data=df, ii=ii,
-                         fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdf,
+                         fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdf, cm=corrmatrix,
                          fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf)
       if(mini.boot$convergence != 0) {
         warning("optim did not converge for one bootsample")
@@ -227,7 +250,6 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
 
   if(missing(bootsamples)) {
     bootsamples <- NULL
-    r0bootsamples <- NULL
     ZPbootsamples <- NULL
   }
   
@@ -235,16 +257,16 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                             B0=B0, ZP=Zp, Sigma=Sigma, rssq=rssq, sr0=sr0,
                             chisqr=chisqr, dof=dof), fit=mini,
                  data=data, boot.result=boot.result, boots=boots, ZPdata=ZPdata,
-                 bootsamples=bootsamples, r0bootsamples=r0bootsamples, ZPbootsamples=ZPbootsamples,
+                 bootsamples=bootsamples, ZPbootsamples=ZPbootsamples,
                  ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, fit.asq=fit.asq,
-                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=FALSE)
+                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=FALSE, fit.corr=fit.corr)
   attr(result, "class") <- c("chiralfit", "list")  
   return(invisible(result))
 }
 
 chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
                             fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
-                            printit=FALSE, fit.mN=TRUE) {
+                            printit=FALSE, fit.mN=TRUE, cm=NULL) {
 
   fit.a <- -1.
   N <- length(ii)
@@ -299,12 +321,12 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
         aLamb2=sqrt(exp(4.3)*(0.1396*a_fm/0.1973)^2)
       }
 
-      res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/par[4+i],
-                 aLamb4=par[2]/par[4+i], ampiV=sqrt(mpssq)/par[4+i], afpiV=fpsV/par[4+i],
-                 aF0=par[3]/par[4+i], a2B0mu=r0sqTwoBmu/par[4+i]^2, L=data[[i]]$L[ij], rev=1, printit=FALSE)
-#      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/par[4+i],
+#      res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/par[4+i],
 #                 aLamb4=par[2]/par[4+i], ampiV=sqrt(mpssq)/par[4+i], afpiV=fpsV/par[4+i],
-#                 aF0=fpsV/par[4+i], a_fm=a_fm, L=data[[i]]$L[ij], rev=1, printit=FALSE)
+#                 aF0=par[3]/par[4+i], a2B0mu=r0sqTwoBmu/par[4+i]^2, L=data[[i]]$L[ij], rev=1, printit=FALSE)
+      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/par[4+i],
+                 aLamb4=par[2]/par[4+i], ampiV=sqrt(mpssq)/par[4+i], afpiV=fpsV/par[4+i],
+                 aF0=fpsV/par[4+i], a_fm=a_fm, L=data[[i]]$L[ij], rev=1, printit=FALSE)
       mpsV <- res$mpiFV
       fpsV <- res$fpiFV
     }
@@ -315,8 +337,17 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
       mpsV <- sqrt(mpssq)*(1.+0.5*r)/par[4+i]
       fpsV <- fpsV*(1.0-2.0*r)/par[4+i]
     }
-    chisum <- chisum + (sum(((data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij]))^2) +
-                        sum(((data[[i]]$fps[ij]-fpsV)/(data[[i]]$dfps[ij]))^2))
+    if(is.null(cm)) {
+      chisum <- chisum + (sum(((data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij]))^2) +
+                          sum(((data[[i]]$fps[ij]-fpsV)/(data[[i]]$dfps[ij]))^2))
+    }
+    else {
+      chisum <- chisum + (sum(((data[[i]]$mps[ij]-mpsV))^2*cm[[i]][1,1,ij]) +
+                          sum(((data[[i]]$fps[ij]-fpsV))^2*cm[[i]][2,2,ij]) +
+                          2*sum((data[[i]]$mps[ij]-mpsV)*(data[[i]]$fps[ij]-fpsV)*cm[[i]][2,1,ij]))
+    }
+#    cat((sum(((data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij]))^2) + sum(((data[[i]]$fps[ij]-fpsV)/(data[[i]]$dfps[ij]))^2)), "\n")
+#    cat(sum((data[[i]]$mps[ij]-mpsV)^2*cm[[i]][1,1,ij] + (data[[i]]$fps[ij]-fpsV)^2*cm[[i]][2,2,ij] + (data[[i]]$mps[ij]-mpsV)*(data[[i]]$fps[ij]-fpsV)*cm[[i]][2,1,ij]), "\n",cm[[i]][1,1,ij], "\n\n")
     if(fit.l12 && i==1) {
       chisum <- chisum + ((-0.4-log((aLamb1)^2/(0.1396*a_fm/0.1973)^2))/0.6)^2 +
         ((4.3-log((aLamb2)^2/(0.1396*a_fm/0.1973)^2))/0.1)^2

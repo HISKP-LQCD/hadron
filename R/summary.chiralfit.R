@@ -1,12 +1,18 @@
 plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALSE,
-                           filesuffix="", rawpoints=T,
+                           filesuffix="", rawpoints=TRUE,
                            leg.text=c(expression(beta==3.9), expression(beta==4.05)), ...) {
   N <- length(fit$data)
   npar <- length(fit$par)
-  Hinv <- try(solve( fit$fit$hessian ))
   dpar <- numeric(npar)
-  for(i in 1:npar) {
-    dpar[i] <- sqrt(2*Hinv[i,i])
+  Hinv <- try(solve( fit$fit$hessian ))
+  if(inherits(Hinv, "try-error")) {
+    Hinv <- diag(nrow=npar, ncol=npar)
+    dpar <- rep(0.0001, times=npar)
+  }
+  else {
+    for(i in 1:npar) {
+      dpar[i] <- sqrt(2*Hinv[i,i])
+    }
   }
   fit.a <- -1.
   par <- fit$par
@@ -110,12 +116,12 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     
     r0TwoB <- par[4]
     r0sqTwoBmu <- r0TwoB*xfit
-    msq <- getmpssq(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
-    f <- getfps(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    msq <- getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    f <- getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
     mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
     color <- c("red", "blue", "darkseagreen", "darksalmon", "darkviolet")
     xmu <- ur0/uZP*fit$data[[i]]$mu
-    fitr0 <- par[4+i] + par[4+N+i]*xfit^2/ur0^2
+    fitr0 <- par[4+i] + par[4+N+i]*xfit^2/ur0^2*fZP^2
     pxmu <- split(xmu[ij], fit$data[[i]]$L[ij])
     pdfps <- split(fit$data[[i]]$dfps[ij], fit$data[[i]]$L[ij])
     pfpsV <- split(fpsV[ij], fit$data[[i]]$L[ij])
@@ -128,9 +134,9 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     k <- length(pfpsV)
                                         # continuum curves
     if(fit$fit.asq && i == 1) {
-      f2 <- getfps(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
+      f2 <- getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
       mN2 <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=-1.)
-      msq2 <- getmpssq(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
+      msq2 <- getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
     }
     if(write.data) {
       file <- paste("curve_",i,".dat", sep="")
@@ -323,13 +329,14 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     dev.set(r0plot)
     if(i==1) {
       j <- 1
-      plotwitherror(pxmu[[j]]^2, r0a[[j]], dr0a[[j]],
-                    ylim=c(0.8*min(fit$data[[i]]$r0a, na.rm=TRUE), 1.2*max(fit$data[[i]]$r0a, na.rm=TRUE)),
+      plotwitherror(pxmu[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
+                    ylim=c(0.8*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
+                      1.2*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu^2, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=20, ylab=expression(r[0]/a), xlab=expression((r[0]*mu[R])^2),
+                    pch=20, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^2),
                     axes=F)
       for(j in 2:k) {
-        plotwitherror(pxmu[[j]]^2, r0a[[j]], dr0a[[j]],
+        plotwitherror(pxmu[[j]]^2, r0a[[j]]/fit$par[4+1], dr0a[[j]]/fit$par[4+1],
                       col=color[i], bg=color[i],
                       pch=20+(j-1), rep=TRUE)
       }
@@ -337,21 +344,25 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
       axis(4, lwd=0.5, labels=F)
-      legend(x="bottomright", legend=c(leg.text, expression(r[0]/a), "Fit"),
+      legend(x="bottomright", legend=c(leg.text, expression(r[0]/r[0](mu==0)), "Fit"),
              pch=c(21:(21+N-1), 25, -1), col=c(color[1:N],"sandybrown", "black"),
              pt.bg=c(color[1:N],"sandybrown", "black"),
              inset=.05, lty=c(rep(0,times=N+1), 1))      
       box()
-      if(fit$fit.asq) lines(xfit, msq/xfit, lty="solid", col=color[i])
-      else lines(xfit^2, fitr0, lty="solid")
-      points((fit$result$r0*fit$result$mu.phys/0.1973)^2, fit$par[4+i],
+      lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
+      points((fit$result$r0*fit$result$mu.phys/0.1973)^2, fit$par[4+i]/fit$par[4+i],
              pch=25, bg="sandybrown", col="sandybrown")
       if(!is.null(fit$boot.result)) {
 
       }
     }
     else {
-
+      for(j in 1:k) {
+        plotwitherror(pxmu[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
+                      col=color[i], bg=color[i],
+                      pch=20+(i-1)*2+(j-1), rep=TRUE)
+      }
+      lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
     }
     if(fit$fit.mN) {
       dev.set(mNplot)
@@ -437,6 +448,9 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   N <- length(fit$data)
   npar <- length(fit$par)
   Hinv <- try(solve( fit$fit$hessian ))
+  if(inherits(Hinv, "try-error")) {
+    Hinv <- diag(nrow=npar, ncol=npar)
+  }
   dpar <- numeric(npar)
   for(i in 1:npar) {
     dpar[i] <- sqrt(2*Hinv[i,i])
@@ -470,7 +484,7 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(13+2*N+7+2*N)], na.rm=TRUE), "\n")
       cat("sigma(0)     = ", fit$result$s0, "+-", sd(fit$boots[,(13+2*N)], na.rm=TRUE), "\n")
     }
-    cat("r0           = ", fit$result$r0, "+-", sd(fit$boots[,(12+2*N)], na.rm=TRUE), "\n")
+    cat("r0           = ", fit$result$r0, "+-", sd(fit$boots[,(12+2*N)], na.rm=TRUE), "fm \n")
     cat("mu_phys      = ", fit$result$mu.phys[1], "+-", sd(fit$boots[,1], na.rm=TRUE), "GeV \n\n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
@@ -509,12 +523,11 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("gA           = ", fit$result$gA, "\n")
       cat("sigma(0)     = ", fit$result$s0, "\n")
     }
-    cat("r0           = ", fit$result$r0, "\n")
+    cat("r0           = ", fit$result$r0, "fm \n")
     cat("mu_phys      = ", fit$result$mu.phys[1], "MeV \n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "fm \n")
-      cat("            fitted r0/a = ", fit$par[4+i], "\n")
       cat("            fitted ZP   = ", fit$par[4+2*N+i], "\n")
       if(show.input) {
         cat("Raw data used:\n")
