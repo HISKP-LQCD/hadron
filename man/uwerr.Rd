@@ -17,12 +17,18 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
 \arguments{
 
   \item{f}{
-    function taking the averaged data and returning the derived quantity
-    as one numeric object. If not given it is assumed that a primary
-    quantity is analysed.
+    function computing the derived quantity. If not given it is assumed
+    that a primary quantity is analysed.
+
+    f must have the data vector of length Nalpha as the first
+    argument. Further arguments to f can be passed to uwerr via the
+    ... argument.
+
+    f must return a scalar object of numeric type.
   }
   \item{data}{
-    array of data to be analysed. It must be of dimension (Nalpha x N),
+    array of data to be analysed. It must be of dimension (Nalpha x N)
+    (i.e. Nalpha rows and N columns),
     where N is the total number of measurements and Nalpha is the number
     of primary observables
   }

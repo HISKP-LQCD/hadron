@@ -72,12 +72,12 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
       corrmatrix[[i]] <- array(0., dim=c(2,2,length(data[[i]]$mu)))
       for(j in 1:length(data[[i]]$mu)) {
         corr <- cor(bootsamples[[i]][,1:2,j])
+        cat(i, " ", j, "\n")
+        print(corr)
         corr[1,1] <- corr[1,1]*data[[i]]$dmps[j]^2
         corr[2,2] <- corr[2,2]*data[[i]]$dfps[j]^2
         corr[2,1] <- corr[2,1]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
         corr[1,2] <- corr[1,2]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
-        cat(i, " ", j, "\n")
-        print(solve(corr))
         corrmatrix[[i]][,,j] <- solve(corr)
       }
     }
