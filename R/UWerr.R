@@ -391,6 +391,9 @@ plot.uwerr <- function(uwerr, main="x") {
   return(invisible(data.frame(t=c(0:uwerr$Wmax),Gamma=GammaFbb[1:(uwerr$Wmax+1)],dGamma=Gamma.err[1:(uwerr$Wmax+1)])))
 }
 
+# compute the error of the autocorrelation function using the approximate formula
+# given in appendix E of hep-lat/0409106
+
 gammaerror <- function(Gamma, N, W, Lambda) {
   gamma.err <- rep(0., times=W+1)
   Gamma[(W+2):(2*W+W+1)]=0.;

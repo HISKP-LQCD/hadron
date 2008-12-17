@@ -15,6 +15,8 @@ summary.ofit <- function(fit) {
   cat("mu        = ", mu, "\n")
   cat("kappa     = ", kappa, "\n")
   cat("Nr of measurements = ", fit$N, "\n")
+  cat("No of replica = ", length(fit$nrep), "\n")
+  cat("no or measurements per replicum: ", fit$nrep, "\n")
   cat("fitrange  = ", t1, "-", t2, "\n")
   cat("chi^2     = ", fit.chisqr, "\n")
   cat("dof       = ", fit.dof, "\n")
@@ -34,7 +36,9 @@ summary.ofit <- function(fit) {
     cat("tauint   = ", fit$uwerrresultmps$tauint, "\n")
     cat("dtauint  = ", fit$uwerrresultmps$dtauint, "\n")
     cat("Wopt     = ", fit$uwerrresultmps$Wopt, "\n")
-    
+    if(fit$uwerrresultmps$R>1) {
+      cat("Qval     =", fit$uwerrresultmps$Qval, "\n")
+    }    
   }
   if(!is.null(fit$uwerrresultfps)) {
     cat("\n--- Autocorrelation analysis for f_ps ---\n")    
@@ -45,6 +49,9 @@ summary.ofit <- function(fit) {
     cat("tauint   = ", fit$uwerrresultfps$tauint, "\n")
     cat("dtauint  = ", fit$uwerrresultfps$dtauint, "\n")
     cat("Wopt     = ", fit$uwerrresultfps$Wopt, "\n")
+    if(fit$uwerrresultfps$R>1) {
+      cat("Qval     =", fit$uwerrresultfps$Qval, "\n")
+    }
   }
   if(!is.null(fit$uwerrresultmpcac)) {
     cat("\n--- Autocorrelation analysis for m_pcac ---\n")
@@ -55,7 +62,9 @@ summary.ofit <- function(fit) {
     cat("tauint   = ", fit$uwerrresultmpcac$tauint, "\n")
     cat("dtauint  = ", fit$uwerrresultmpcac$dtauint, "\n")
     cat("Wopt     = ", fit$uwerrresultmpcac$Wopt, "\n")
-    
+    if(fit$uwerrresultmpcac$R>1) {
+      cat("Qval     =", fit$uwerrresultmpcac$Qval, "\n")
+    }
   }
   if(!is.null(fit$boot)) {
     cat("--- Bootstrap analysis  ---\n")

@@ -1,5 +1,5 @@
 onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
-                      iobs=1, ind.vec=c(1,3,4,5), mu, kappa,
+                      iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
                       boot.R=99, boot.l=10, tsboot.sim="geom",
                       method="uwerr", fit.routine="optim", nrep) {
   
@@ -11,11 +11,10 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   par <- numeric(2)
   sign <- +1.
-  data <- data[data$V1==1 || data$V1==2,]
+  data <- data[data$V1<3,]
   data <- data[data$V2==iobs,]
 
   Time <-  2*max(data[,ind.vec[2]])
-#  Time <- Time + 1
   Thalf <- max(data[,ind.vec[2]])
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -24,6 +23,8 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   nrType <- 1
   Skip <- (skip*(T1)*nrType*nrObs+1)
   Length <- length(data[,ind.vec[3]])
+  cat("time =", Time, "Thalf =", Thalf, "\n")
+#  Thalf <- Thalf + 1
   if(missing(nrep)) {
     nrep <- c(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))
   }
@@ -42,7 +43,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   rm(data)
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh","sinh"))
-#  W <- W*(2*kappa)^2
+  W <- W*(2*kappa)^2
   rm(Z)
 #  print(t(W))
 
@@ -67,7 +68,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   # now the PP correlator first _only_ 
   par[2] <- eff$mass[1]
-  par[1] <- sqrt(Cor[(t1+1)]*exp(par[2]*(t1+1)))
+  par[1] <- sqrt(abs(Cor[(t1+1)]*exp(par[2]*(t1+1))))
   
   # Index vector of data to be used in the analysis
   ii <- c((t1p1):(t2p1))
@@ -86,7 +87,10 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   if(fit.routine != "gsl" && massfit$convergence!=0) {
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
-
+  sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
+#    sfit.fpi <- 2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
+  cat("mpi =", sfit.mass, " fpi =",sfit.fpi, "\n")
+  
   sfit.dof <- (t2-t1+1)-length(massfit$par)
   sfit.chisqr <- massfit$value
 
@@ -115,7 +119,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   par2 <- c(1, 0.1, 0.1)
   par2[3] <- eff$mass[1]
-  par2[1] <- sqrt(Cor[(t1+1)]*exp(par[2]*(t1+1)))
+  par2[1] <- sqrt(abs(Cor[(t1+1)]*exp(par[2]*(t1+1))))
   par2[2] <- 0.
                                         #BFGS
   if(fit.routine != "gsl75") {
@@ -263,7 +267,7 @@ fitf.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
 
     sort.ind <- c(1)
   }
-  return(abs(fit$par[1])/sqrt(fit$par[3]^3))
+  return(abs(fit$par[1])/sqrt(abs(fit$par[3]^3)))
 }
 
 
