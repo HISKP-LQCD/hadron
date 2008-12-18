@@ -99,13 +99,13 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
     if(parscale[i] < 0.001) parscale[i] <- 1.
   }
   mini <- optim(par=startvalues, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
-                control=list(maxit=150, trace=debug, parscale=parscale),
+                control=list(maxit=150, trace=debug, parscale=parscale, REPORT=50),
                 data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
                 fit.mN=fit.mN, cm=corrmatrix)
   mini <- optim(par=mini$par, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
-                control=list(maxit=500, trace=debug, parscale=mini$par),
+                control=list(maxit=500, trace=debug, parscale=mini$par, REPORT=50),
                 data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
@@ -208,7 +208,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
       }
 
       mini.boot <- optim(par=par, fn=chisqr.piononly, method="BFGS", hessian=FALSE,
-                         control=list(maxit=150, parscale=par, trace=TRUE),
+                         control=list(maxit=150, parscale=par, trace=0, REPORT=100),
                          data=df, ii=ii,
                          fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdf, cm=corrmatrix,
                          fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf)
@@ -370,14 +370,12 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
                           sum(((data[[i]]$fps[ij]-fpsV))^2*cm[[i]][2,2,ij]) +
                           2*sum((data[[i]]$mps[ij]-mpsV)*(data[[i]]$fps[ij]-fpsV)*cm[[i]][2,1,ij]))
     }
-#    cat((sum(((data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij]))^2) + sum(((data[[i]]$fps[ij]-fpsV)/(data[[i]]$dfps[ij]))^2)), "\n")
-#    cat(sum((data[[i]]$mps[ij]-mpsV)^2*cm[[i]][1,1,ij] + (data[[i]]$fps[ij]-fpsV)^2*cm[[i]][2,2,ij] + (data[[i]]$mps[ij]-mpsV)*(data[[i]]$fps[ij]-fpsV)*cm[[i]][2,1,ij]), "\n",cm[[i]][1,1,ij], "\n\n")
     if(fit.l12 && i==1) {
       chisum <- chisum + ((-0.4-log((aLamb1)^2/(0.1396*a_fm/0.1973)^2))/0.6)^2 +
         ((4.3-log((aLamb2)^2/(0.1396*a_fm/0.1973)^2))/0.1)^2
     }
     if(fit.kmf && i==1) {
-      chisum <- chisum + (par[7+2*N]/5.)^2 + (par[8+2*N]/5.)^2
+      chisum <- chisum + (par[7+2*N]/10.)^2 + (par[8+2*N]/10.)^2
     }
     if(printit) {
       cat("r0chiral", par[4+i], "\n")

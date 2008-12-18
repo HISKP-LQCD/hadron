@@ -1,5 +1,5 @@
 cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
-                 ampiV, afpiV, aF0, a_fm, L, printit=F,
+                 ampiV, afpiV, aF0, a_fm, L, printit=F, incim6 = TRUE,
                  rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)) {
 
   # aF0 at beta=3.9 =0.0534 for correction a la GL 
@@ -27,7 +27,6 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
   lb3 <- log((aLamb3/ampiV)^2)
   lb4 <- log((aLamb4/ampiV)^2)
   lpi <- log((ampiV/amrho_phys)^2)
-
   # tab 2b -> rtilde
   
   if(missing(parm)) {
@@ -61,22 +60,26 @@ cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
   I2mpi <- -mmB0
   I4mpi <- mmB0*(-55/18 + 4*lb1 + 8/3*lb2 - 5/2*lb3 -2*lb4) +
     mmB2*(112/9 - (8/3)*lb1 - (32/3)*lb2) + S4mpi
-  I6mpi <- mmB0*(10049/1296 - 13/72*N + 20/9*lb1 - 40/27*lb2 - 3/4*lb3 - 110/9*lb4
-                 - 5/2*lb3^2 - 5*lb4^2 
-                 + lb4*(16*lb1 + 32/3*lb2 - 11*lb3)
-                 + lpi*(70/9*lpi + 12*lb1 + 32/9*lb2 - lb3 + lb4 + 47/18)
-                 + 5*rtilde[1] + 4*rtilde[2] + 8*rtilde[3] + 8*rtilde[4] + 16*rtilde[5] + 16*rtilde[6]) +
-                   mmB2*(3476/81 - 77/288*N + 32/9*lb1 + 464/27*lb2 + 448/9*lb4 
-                         - 32/3*lb4*(lb1+4*lb2) + lpi*(100/9*lpi + 8/3*lb1 + 176/9*lb2 - 248/9)
-                         - 8*rtilde[3] - 56*rtilde[4] - 48*rtilde[5] + 16*rtilde[6])+
-                           S6mpi
+  if(incim6) {
+    I6mpi <- mmB0*(10049/1296 - 13/72*N + 20/9*lb1 - 40/27*lb2 - 3/4*lb3 - 110/9*lb4
+                   - 5/2*lb3^2 - 5*lb4^2 
+                   + lb4*(16*lb1 + 32/3*lb2 - 11*lb3)
+                   + lpi*(70/9*lpi + 12*lb1 + 32/9*lb2 - lb3 + lb4 + 47/18)
+                   + 5*rtilde[1] + 4*rtilde[2] + 8*rtilde[3] + 8*rtilde[4] + 16*rtilde[5] + 16*rtilde[6]) +
+                     mmB2*(3476/81 - 77/288*N + 32/9*lb1 + 464/27*lb2 + 448/9*lb4 
+                           - 32/3*lb4*(lb1+4*lb2) + lpi*(100/9*lpi + 8/3*lb1 + 176/9*lb2 - 248/9)
+                           - 8*rtilde[3] - 56*rtilde[4] - 48*rtilde[5] + 16*rtilde[6])+
+                             S6mpi
+  }
+  else {
+    I6mpi <- 0
+  }
 
   I2fpi <- -2*mmB0;
   I4fpi <- mmB0*(-7/9 + 2*lb1 + (4/3)*lb2 - 3*lb4) + 
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
       S4fpi
   I6fpi <- 0
-  I6mpi <- 0
   # Eq. (26-27). The sum over n is already done
   Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi + xi_P^2 * I6mpi)
   Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi + xi_P^2 * I6fpi);
@@ -195,7 +198,7 @@ cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
 
   
   if(any(is.na(c(mpiFV, fpiFV)))) {
-    warning("NaNs produced in: cdh!\n")
+    warning("NaNs produced in: cdhnew!\n")
     return(invisible(list(mpiFV=ampiV, fpiFV=afpiV)))
   }
   return(invisible(list(mpiFV=mpiFV, fpiFV=fpiFV)))

@@ -85,7 +85,7 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     if(plot.all) {
       ij <- c(1:length(fit$data[[i]]$mu))
     }
-    if(fit$fsmethod == "cdh") {
+    if(fit$fsmethod == "cdh" || fit$fsmethod == "cdhnew") {
       if(fit$fit.l12) {
         aLamb1=par[5+3*N]/ur0
         aLamb2=par[6+3*N]/ur0
@@ -95,10 +95,19 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
         aLamb2=sqrt(exp(4.3)*(0.1396*fit$result$a[i]/0.1973)^2)
       }
       
-      
-      res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
-                 aLamb4=par[2]/ur0, ampiV=fit$data[[i]]$mps, afpiV=fit$data[[i]]$fps,
-                 aF0=fit$data[[i]]$fps, a_fm=fit$result$a[i], L=fit$data[[i]]$L, rev=-1, printit=FALSE)
+      if(fit$fsmethod == "cdhnew") {
+        res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
+                      aLamb4=par[2]/ur0, ampiV=fit$data[[i]]$mps,
+                      afpiV=fit$data[[i]]$fps, aF0=par[3]/ur0,
+                      a2B0mu=par[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
+                      printit=FALSE)
+      }
+      else {
+        res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
+                   aLamb4=par[2]/ur0, ampiV=fit$data[[i]]$mps, afpiV=fit$data[[i]]$fps,
+                   aF0=fit$data[[i]]$fps, a_fm=fit$result$a[i], L=fit$data[[i]]$L, rev=-1,
+                   printit=FALSE)
+      }
       
       mpsV <- res$mpiFV
       
@@ -336,8 +345,8 @@ plot.chiralfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=FALS
     if(i==1) {
       j <- 1
       plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
-                    ylim=c(0.8*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
-                      1.2*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
+                    ylim=c(0.85*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
+                      1.05*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu^2, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^2),
                     axes=F)
