@@ -1,8 +1,8 @@
-print.chiralfit <- function(fit, ...) {
+print.pionChiPTfit <- function(fit, ...) {
   summary(fit, ...)
 }
 
-summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
+summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   N <- length(fit$data)
   npar <- length(fit$par)
   Hinv <- try(solve( fit$fit$hessian ))
@@ -26,11 +26,11 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("l1           = ", fit$result$l1, "+-", sd(fit$boots[,(3+3*N)], na.rm=TRUE), "\n")
       cat("l2           = ", fit$result$l2, "+-", sd(fit$boots[,(4+3*N)], na.rm=TRUE), "\n")
     }
-    cat("l3           = ", fit$result$l3, "+-", sd(fit$boots[,(1+2*N)], na.rm=TRUE), "\n")
-    cat("l4           = ", fit$result$l4, "+-", sd(fit$boots[,(2+2*N)], na.rm=TRUE), "\n")
-    cat("F0           = ", fit$result$F, "+-", sd(fit$boots[,(5+2*N)], na.rm=TRUE), "GeV \n")
-    cat("Fpi/F0       = ", 1./fit$result$F*0.1307, "+-", sd(1./fit$boots[,(5+2*N)], na.rm=TRUE)*0.1307, "\n")
-    cat("B0           = ", fit$result$B0, "+-", sd(fit$boots[,(6+2*N)], na.rm=TRUE), "GeV \n")
+    cat("l3           = ", fit$result$l3, "+-", sd(fit$boots[,(1+3*N)], na.rm=TRUE), "\n")
+    cat("l4           = ", fit$result$l4, "+-", sd(fit$boots[,(2+3*N)], na.rm=TRUE), "\n")
+    cat("F0           = ", fit$result$F, "+-", sd(fit$boots[,(5+3*N)], na.rm=TRUE), "GeV \n")
+    cat("Fpi/F0       = ", 1./fit$result$F*0.1307, "+-", sd(1./fit$boots[,(5+3*N)], na.rm=TRUE)*0.1307, "\n")
+    cat("B0           = ", fit$result$B0, "+-", sd(fit$boots[,(6+3*N)], na.rm=TRUE), "GeV \n")
     cat("Sigma^(1/3)  = ", fit$result$Sigma, "+-", sd(fit$boots[,(10+2*N)], na.rm=TRUE), "GeV \n")
     cat("<r^2>_s      = ", fit$result$rssq, "+-", sd(fit$boots[,(11+2*N)], na.rm=TRUE), "fm^2 \n")
     if(fit$fit.mN) {
@@ -42,14 +42,14 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("gA           = ", fit$result$gA, "+-", sd(fit$boots[,(13+2*N+7+2*N)], na.rm=TRUE), "\n")
       cat("sigma(0)     = ", fit$result$s0, "+-", sd(fit$boots[,(13+2*N)], na.rm=TRUE), "\n")
     }
-    cat("r0           = ", fit$result$r0, "+-", sd(fit$boots[,(12+2*N)], na.rm=TRUE), "fm \n")
+    cat("r0           = ", fit$result$r0, "+-", sd(fit$boots[,(7+3*N)], na.rm=TRUE), "fm \n")
     cat("mu_phys      = ", fit$result$mu.phys[1], "+-", sd(fit$boots[,1], na.rm=TRUE), "GeV \n\n")
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "+-",
           sd(fit$boots[,(N+i)], na.rm=TRUE),"fm \n")
-      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(13+2*N+4+i)], na.rm=TRUE), "\n")
-      cat("            fitted ZP   = ", fit$par[4+N+i], "+-", sd(fit$boots[,(13+2*N+4+N+i)], na.rm=TRUE), "\n")
+      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(8+3*N+4+i)], na.rm=TRUE), "\n")
+      cat("            fitted ZP   = ", fit$par[4+2*N+i], "+-", sd(fit$boots[,(8+3*N+4+2*N+i)], na.rm=TRUE), "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -59,8 +59,7 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("\n")
     }
     cat("Fit Parameter:\n")
-    print(data.frame(Par=fit$par, Err=fit$boot.result[(2*N+14):(2*N+13+npar),2],
-                     Bias=fit$par- fit$boot.result[(2*N+14):(2*N+13+npar),1], ErrHessian=dpar))
+    print(data.frame(Par=fit$par, Err=fit$boot.result[(3*N+10):(3*N+9+npar),2], Bias=fit$par- fit$boot.result[(3*N+10):(3*N+9+npar),1], ErrHessian=dpar))
   }
   else {
     if(fit$fit.l12) {
@@ -87,7 +86,7 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "fm \n")
-      cat("            fitted ZP   = ", fit$par[4+N+i], "\n")
+      cat("            fitted ZP   = ", fit$par[4+2*N+i], "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -105,3 +104,94 @@ summary.chiralfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   }
 }
 
+printtab <- function(x, dx, digits=2, c=1.) {
+  if(!is.null(dx)) {
+    x <- c*x
+    dx <- c*dx
+    n <- 1.
+    while(n*dx < 10^(digits-1)) {
+      n=n*10.
+    }
+    op <- options(scipen=6)
+    cat("$", round(n*x)/n, "(", signif(n*dx, digits=digits), ")$\n", sep="")
+    options(op)
+  }
+  else {
+    cat("$", c*x,"()$\n", sep="")
+  }
+}
+
+tab <- function(fit) {
+  par <- fit$par
+  br <- fit$boot.result
+  npar <- length(par)
+  N <- length(fit$data)
+  cat(fit$fsmethod, "\n")
+  nm <- 3*N+9
+
+  # 2 r0 B0
+  printtab(par[4], br[nm+4,2])
+  # r0 f0
+  printtab(par[3], br[nm+3,2])
+  if(fit$fit.mN) printtab(par[2*N+5], br[nm+2*N+5,2])
+  # r0
+  for(i in 1:N) {
+    printtab(par[4+i], br[nm+4+i,2])
+  }
+  # sr0 (slope)
+  for(i in 1:N) {
+    printtab(par[4+N+i], br[nm+4+N+i,2])
+  }
+  # l1 l2
+  for(i in 1:2) {
+    if(fit$fit.l12) printtab(par[4+3*N+i], br[nm+4+3*N+i,2])
+    else cat("$-$\n")
+  }
+  # l3 l4
+  for(i in 1:2) {
+    printtab(par[i], br[nm+i,2])
+  }
+  # kM, kF
+  for(i in 1:2) {
+    if(fit$fit.kmf) printtab(par[6+3*N+i], br[nm+6+3*N+i,2])
+    else cat("$-$\n")
+  }
+#  for(i in 1:2) {
+#    if(fit$fit.mN) printtab(par[5+2*N+i], br[nm+5+2*N+i,2])
+#  }
+  # Dm, Df
+  for(i in 1:0) {
+    if(fit$fit.asq) {
+      printtab(par[npar-i], br[nm+npar-i,2])
+    }
+  }
+  cat("$",fit$result$chisqr,"/",fit$result$dof,"$\n", sep="")
+  cat("---\n")
+  printtab(fit$result$mu.phys, br[1,2], c=1000.)
+  for(i in 1:2) {
+    printtab(fit$result$a[i], br[N+i,2])
+  }
+  printtab(fit$result$r0, br[7+3*N,2])
+  if(fit$fit.l12) {
+    printtab(fit$result$l1, br[3+3*N, 2])
+    printtab(fit$result$l2, br[4+3*N, 2])
+  }
+  else cat("$-$\n$-$\n")
+  printtab(fit$result$l3, br[1+3*N, 2])
+  printtab(fit$result$l4, br[2+3*N, 2])
+  printtab(fit$result$F, br[5+3*N, 2], c=1000.)
+#  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
+#  if(inherits(stddev, "try-error")) stddev=NA
+  printtab(1./fit$result$F*0.1307, 0.001)
+  cat("-----\n")
+  printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
+  printtab(fit$result$Sigma, br[9+3*N, 2], c=1000.)
+  printtab(fit$result$rssq, br[8+3*N, 2])
+  if(fit$fit.mN) {
+    printtab(fit$result$mN0, br[7+2*N, 2], c=1000.)
+    printtab(fit$result$c1, br[9+2*N, 2])
+    printtab(fit$result$s0, br[13+2*N, 2], c=1000)
+    printtab(fit$result$mN, br[8+2*N, 2], c=1000)
+    printtab(fit$result$mN/fit$result$mN0, sd(fit$boots[,(8+2*N)]/fit$boots[,(7+2*N)], na.rm=TRUE))
+  }
+}

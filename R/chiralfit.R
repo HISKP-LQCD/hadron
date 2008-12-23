@@ -26,17 +26,18 @@ fovermps.Na.withr0 <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.a
 # npar-1:         D_f^0
 # npar:           D_N^0
 
-fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
-                            r0bootsamples, r0data, ZPdata, ZPbootsamples,
-                            fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
-                            ii, boot.R=100, debug=FALSE, fit.mN=TRUE) {
+chiralfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
+                      r0bootsamples, r0data, ZPdata, ZPbootsamples, method="no",
+                      fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
+                      ii, boot.R=100, debug=FALSE, fit.mN=TRUE, fit.corr=FALSE) {
   if(missing(data) || missing(startvalues)) {
     stop("data and startvalues must be provided!\n")
   }
-  if(missing(bootsamples)) {
-    cat("bootstrap samples missing, will not compute error estimates!\n")
+  if(missing(bootsamples) && fit.corr) {
+    warning("bootstrap samples missing, will not compute correlation matrix!\n")
+    fit.corr=FALSE
   }
-  else if(missing(boot.R)) {
+  if(!missing(bootsamples) && missing(boot.R)) {
     boot.R <- length(bootsamples[[1]][,1,1])
   }
   if(fit.nnlo) {
@@ -68,17 +69,49 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
     }
   }
 
+  corrmatrix <- NULL
+  if(!missing(bootsamples) && fit.corr==TRUE) {
+    corrmatrix <- list()
+    for(i in 1:N) {
+      corrmatrix[[i]] <- array(0., dim=c(2,2,length(data[[i]]$mu)))
+      for(j in 1:length(data[[i]]$mu)) {
+        corr <- cor(bootsamples[[i]][,1:2,j])
+        cat(i, " ", j, "\n")
+        print(corr)
+        corr[1,1] <- corr[1,1]*data[[i]]$dmps[j]^2
+        corr[2,2] <- corr[2,2]*data[[i]]$dfps[j]^2
+        corr[2,1] <- corr[2,1]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
+        corr[1,2] <- corr[1,2]*data[[i]]$dmps[j]*data[[i]]$dfps[j]
+        corrmatrix[[i]][,,j] <- solve(corr)
+      }
+    }
+  }
+  else {
+    warning("no bootstrapsamples to compute the correlation matrix\nPerform uncorrelated fit\n")
+    fit.corr = FALSE
+  }
+
   if(debug) {
     chisqr.Na.withr0ZP(par=startvalues, data=data, ii=ii,fsmethod=fsmethod,
                        a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
                        fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
                        printit=debug)
   }
-
+  parscale <- startvalues
+  for(i in 1:length(startvalues)) {
+    if(parscale[i] < 0.001) parscale[i] <- 1.
+  }
   mini <- optim(par=startvalues, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=TRUE,
-                control=list(maxit=500), data=data, ii=ii,
+                control=list(maxit=150, trace=debug, parscale=parscale, REPORT=50),
+                data=data, ii=ii,
                 fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, fit.mN=fit.mN)
+  mini <- optim(par=mini$par, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=TRUE,
+                control=list(maxit=150, trace=debug, parscale=mini$par, REPORT=50),
+                data=data, ii=ii,
+                fsmethod=fsmethod, a.guess=a.guess, r0data=r0data, ZPdata=ZPdata,
+                fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, fit.mN=fit.mN)
+
   if(mini$convergence != 0) {
     warning("Attention: optim did not converge in initial run!\n Please adjust start values!")
   }
@@ -161,7 +194,7 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
   
   boot.result <- NULL
   boots <- NULL
-  if(!missing(bootsamples)) {
+  if(method != "no") {
     if(missing(r0bootsamples)) {
       r0bootsamples <- array(0., dim=c(boot.R,N))
       for(i in 1:N) {
@@ -178,25 +211,40 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
 
     boots <- array(0., dim=c(boot.R, (2*N+length(startvalues)+15)))
     for(s in 1:boot.R) {
-      df <- list(data.frame(mu=data[[1]]$mu, mps=bootsamples[[1]][s, 1,],
-                            dmps=data[[1]]$dmps,
-                            fps=bootsamples[[1]][s, 2,],
-                            dfps=data[[1]]$dfps, L=data[[1]]$L,
-                            mN=rnorm(length(data[[1]]$mN), mean=data[[1]]$mN, sd=data[[1]]$dmN),
-                            dmN=data[[1]]$dmN))
+      if(missing(bootsamples)) {
+        bmps=rnorm(length(data[[1]]$mps), mean=data[[1]]$mps, sd=data[[1]]$dmps)
+        bfps=rnorm(length(data[[1]]$fps), mean=data[[1]]$fps, sd=data[[1]]$dfps)
+      }
+      else {
+        bmps=bootsamples[[1]][s, 1,]
+        bfps=bootsamples[[1]][s, 2,]
+      }
+      bmN=rnorm(length(data[[1]]$mN), mean=data[[1]]$mN, sd=data[[1]]$dmN)
+      df <- list(data.frame(mu=data[[1]]$mu, mps=bmps, dmps=data[[1]]$dmps,
+                            fps=bfps, dfps=data[[1]]$dfps, L=data[[1]]$L,
+                            mN=bmN, dmN=data[[1]]$dmN))
       r0df <- data.frame(r0=r0bootsamples[s,], dr0=r0data$dr0[1:N])
       ZPdf <- data.frame(ZP=ZPbootsamples[s,], dZP=ZPdata$dZP[1:N])
-      for(i in 2:N) {
-        df[[i]] <- data.frame(mu=data[[i]]$mu, mps=bootsamples[[i]][s,1,],
-                              dmps=data[[i]]$dmps,
-                              fps=bootsamples[[i]][s,2,],
-                              dfps=data[[i]]$dfps, L=data[[i]]$L,
-                              mN=rnorm(length(data[[i]]$mN), mean=data[[i]]$mN, sd=data[[i]]$dmN),
-                              dmN=data[[i]]$dmN)
+      i <- 2
+      while(i <= N) {
+        if(missing(bootsamples)) {
+          bmps=rnorm(length(data[[i]]$mps), mean=data[[i]]$mps, sd=data[[i]]$dmps)
+          bfps=rnorm(length(data[[i]]$fps), mean=data[[i]]$fps, sd=data[[i]]$dfps)
+        }
+        else {
+          bmps=bootsamples[[i]][s, 1,]
+          bfps=bootsamples[[i]][s, 2,]
+        }
+        bmN=rnorm(length(data[[i]]$mN), mean=data[[i]]$mN, sd=data[[i]]$dmN)
+        df[[i]] <- data.frame(mu=data[[i]]$mu, mps=bmps, dmps=data[[i]]$dmps,
+                              fps=bfps, dfps=data[[i]]$dfps, L=data[[i]]$L,
+                              mN=bmN, dmN=data[[i]]$dmN)
+        i <- i+1
       }
 
       mini.boot <- optim(par=par, fn=chisqr.Na.withr0ZP, method="BFGS", hessian=FALSE,
-                         control=list(maxit=500, trace=0), data=df, ii=ii,
+                         control=list(maxit=500, trace=1, parscale=par, REPORT=50),
+                         data=df, ii=ii,
                          fsmethod=fsmethod, a.guess=a.guess, r0data=r0df, ZPdata=ZPdf,
                          fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf)
       if(mini.boot$convergence != 0) {
@@ -220,20 +268,31 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
           boots[s,(i+N)] <- fpi/0.1307*0.1973/par.boot[4+i]
         }
         lmpssqr <- log( 0.1396^2 )
+        #l3 l4
         boots[s,(1+2*N)] <- log((par.boot[1]/fpi*0.1307)^2) - lmpssqr
         boots[s,(2+2*N)] <- log((par.boot[2]/fpi*0.1307)^2) - lmpssqr
+        #l1 l2
         if(fit.l12) {
           boots[s,(3+2*N)] <- log((par.boot[8+2*N]/fpi*0.1307)^2) - lmpssqr
           boots[s,(4+2*N)] <- log((par.boot[9+2*N]/fpi*0.1307)^2) - lmpssqr
         }
+        #f0
         boots[s,(5+2*N)] <- par.boot[3]/fpi*0.1307
+        #2B0
         boots[s,(6+2*N)] <- par.boot[4]/fpi*0.1307/2.
+        #mN0
         boots[s,(7+2*N)] <- par.boot[5+2*N]/fpi*0.1307
+        #mN
         boots[s,(8+2*N)] <- getmN(r0sqTwoBmu, par.boot, N)/fpi*0.1307
+        #c1
         boots[s,(9+2*N)] <- par.boot[6+2*N]*fpi/0.1307
+        #sigma
         boots[s,(10+2*N)] <- (boots[s,(6+2*N)]*boots[s,(5+2*N)]^2/2)^(1/3)
+        #<r^2>
         boots[s,(11+2*N)] <- 12./(4*pi*boots[s,(5+2*N)])^2*(boots[s,(2+2*N)]-12./13.)*0.1973^2
+        #r0
         boots[s,(12+2*N)] <- fpi/0.1307*0.1973
+        # sigma(0)
         boots[s,(13+2*N)] <- -4.*boots[s,(9+2*N)]*0.1396^2 - 9*par[7+2*N]^2/32/pi/boots[s,(5+2*N)]^2*0.1396^3
         for(i in 1:length(par.boot)) {
           boots[s,(2*N+13+i)] <- par.boot[i]
@@ -259,7 +318,7 @@ fit.Na.withr0ZP <- function(data, startvalues, bootsamples, fsmethod="gl", a.gue
                  data=data, boot.result=boot.result, boots=boots, r0data=r0data, ZPdata=ZPdata,
                  bootsamples=bootsamples, r0bootsamples=r0bootsamples, ZPbootsamples=ZPbootsamples,
                  ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, fit.asq=fit.asq,
-                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=fit.mN)
+                 fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=fit.mN, method=method, fit.corr=fit.corr)
   attr(result, "class") <- c("chiralfit", "list")  
   return(invisible(result))
 }
@@ -332,33 +391,38 @@ chisqr.Na.withr0ZP <- function(par, data, ii, r0data, ZPdata, fsmethod="gl", a.g
     if(fit.kmf && i==1) {
       chisum <- chisum + (par[10+2*N])^2 + (par[11+2*N])^2
     }
-    if(printit) {
-      cat("r0model ", par[4+i], "\n")
-      cat("r0data  ", r0data$r0[i], "\n")
-      cat("chir0   ", (r0data$r0[i]-par[4+i])/r0data$dr0[i], "\n")
-      cat("modelZP ", par[4+N+i], "\n")
-      cat("ZPdata  ", ZPdata$ZP[i], "\n")
-      cat("chiZP   ", (ZPdata$ZP[i]-par[4+N+i])/ZPdata$dZP[i], "\n")
-      cat("modelm  ", mpsV, "\n")
-      cat("datam   ", data[[i]]$mps[ij], "\n")
-      cat("errm    ", data[[i]]$dmps[ij], "\n")
-      cat("chim    ", ((data[[i]]$mps[ij]-mpsV)/data[[i]]$dmps[ij]), "\n")
-      cat("modelf  ", fpsV, "\n")
-      cat("dataf   ", data[[i]]$fps[ij], "\n")
-      cat("errf    ", data[[i]]$dfps[ij], "\n")
-      cat("chif    ", ((data[[i]]$fps[ij]-fpsV)/data[[i]]$dfps), "\n")
-    }
-
 # the nucleon
     if(fit.mN) {
       mN <- getmN(r0sqTwoBmu=r0sqTwoBmu, par, N, fit.asq=fit.a)/par[4+i]
       chisum <- chisum + sum(((data[[i]]$mN[ij]-mN)/data[[i]]$dmN[ij])^2, na.rm=TRUE)
     }
+
+    if(printit) {
+      cat("mu-val  ", data[[i]]$mu[ij], "\n")
+      cat("r0model ", par[4+i], "\n")
+      cat("r0data  ", r0data$r0[i], "\n")
+      cat("chir0   ", (r0data$r0[i]-par[4+i])/r0data$dr0[i], "\n\n")
+      cat("ZPmodel ", par[4+N+i], "\n")
+      cat("ZPdata  ", ZPdata$ZP[i], "\n")
+      cat("chiZP   ", (ZPdata$ZP[i]-par[4+N+i])/ZPdata$dZP[i], "\n\n")
+      cat("mpsmodel", mpsV, "\n")
+      cat("mpsdata ", data[[i]]$mps[ij], "\n")
+      cat("chimps  ", ((data[[i]]$mps[ij]-mpsV)/data[[i]]$dmps[ij]), "\n\n")
+      cat("fpsmodel", fpsV, "\n")
+      cat("fpsdata ", data[[i]]$fps[ij], "\n")
+      cat("chif    ", ((data[[i]]$fps[ij]-fpsV)/data[[i]]$dfps), "\n\n")
+      if(fit.mN) {
+        cat("mNmodel ", mN, "\n")
+        cat("mNdata  ", data[[i]]$mN[ij], "\n")
+        cat("chimN   ", ((data[[i]]$mN[ij]-mN)/data[[i]]$dmN), "\n\n")
+      }
+    }
+
   }
   chisum <- chisum + sum(((par[(5):(4+N)]-r0data$r0)/r0data$dr0)^2) +
     sum(((par[(5+N):(4+2*N)]-ZPdata$ZP)/ZPdata$dZP)^2)
   if(printit) {
-    cat("chisqr ", chisum, "\n\n")
+    cat("Total Chisqr ", chisum, "\n\n")
   }
   return(invisible(chisum))
 }

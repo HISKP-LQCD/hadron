@@ -89,7 +89,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   }
   
   if(debug) {
-    chisqr.piononly(par=startvalues, data=data, ii=ii,fsmethod=fsmethod,
+    chisqr.piononly(par=startvalues, data=data, ii=ii, fsmethod=fsmethod,
                     a.guess=a.guess, ZPdata=ZPdata,
                     fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, cm=corrmatrix,
                     printit=debug)
@@ -280,7 +280,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                  bootsamples=bootsamples, ZPbootsamples=ZPbootsamples, method=method,
                  ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, fit.asq=fit.asq,
                  fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=FALSE, fit.corr=fit.corr)
-  attr(result, "class") <- c("chiralfit", "list")  
+  attr(result, "class") <- c("pionChiPTfit", "list")  
   return(invisible(result))
 }
 
