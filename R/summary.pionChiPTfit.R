@@ -142,6 +142,10 @@ tab <- function(fit) {
   for(i in 1:N) {
     printtab(par[4+N+i], br[nm+4+N+i,2])
   }
+  # ZP
+  for(i in 1:N) {
+    printtab(par[4+2*N+i], br[nm+4+2*N+i,2])
+  }
   # l1 l2
   for(i in 1:2) {
     if(fit$fit.l12) printtab(par[4+3*N+i], br[nm+4+3*N+i,2])
@@ -164,6 +168,9 @@ tab <- function(fit) {
     if(fit$fit.asq) {
       printtab(par[npar-i], br[nm+npar-i,2])
     }
+    else {
+      cat("$-$\n")
+    }
   }
   cat("$",fit$result$chisqr,"/",fit$result$dof,"$\n", sep="")
   cat("---\n")
@@ -182,8 +189,9 @@ tab <- function(fit) {
   printtab(fit$result$F, br[5+3*N, 2], c=1000.)
 #  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
 #  if(inherits(stddev, "try-error")) stddev=NA
-  printtab(1./fit$result$F*0.1307, 0.001)
-  cat("-----\n")
+#  printtab(1./fit$result$F*0.1307, 0.001)
+  printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307))
+#  cat("-----\n")
   printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
   printtab(fit$result$Sigma, br[9+3*N, 2], c=1000.)
   printtab(fit$result$rssq, br[8+3*N, 2])

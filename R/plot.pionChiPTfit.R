@@ -22,10 +22,16 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     fplot <- dev.cur()
     X11()
     par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
+    forderplot <- dev.cur()
+    X11()
+    par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
     mpsplot <- dev.cur()
     X11()
     par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
     mpsmuplot <- dev.cur()
+    X11()
+    par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
+    morderplot <- dev.cur()
     X11()
     par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
     r0plot <- dev.cur()
@@ -57,6 +63,14 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
     par(tck=0.02, mgp=c(2.5,.5,0), las=1, lwd=0.5, cex.lab=1.2)
     r0plot <- dev.cur()
+    postscript(file = paste("forder", postfix, sep=""), family="NimbusRom", paper="special",
+               horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
+    par(tck=0.02, mgp=c(2.5,.5,0), las=1, lwd=0.5, cex.lab=1.2)
+    forderplot <- dev.cur()
+    postscript(file = paste("morder", postfix, sep=""), family="NimbusRom", paper="special",
+               horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
+    par(tck=0.02, mgp=c(2.5,.5,0), las=1, lwd=0.5, cex.lab=1.2)
+    morderplot <- dev.cur()
     if(fit$fit.mN) {
       postscript(file = paste("mNvmu", postfix, sep=""), family="NimbusRom", paper="special",
                  horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
@@ -239,6 +253,35 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                     file=file)
       }
     }
+    dev.set(forderplot)
+    if(i == 1) {
+      ff0 <- fit$par[3]
+      plot(xfit, rep(1., times=length(xfit)), axes=FALSE,
+           ylim=c(0.9, 1.1*max(ur0*fpsV[ij]/ff0, na.rm=TRUE)),
+           xlim=c(0.,1.1*max(xmu, na.rm=TRUE)),
+           ylab=expression((f[PS]/f[0])), xlab=expression(r[0]*mu[R]),
+           type="l")
+      axis(1, lwd=0.5)
+      axis(2, lwd=0.5)
+      axis(3, lwd=0.5, labels=F)
+      axis(4, lwd=0.5, labels=F)
+      box()
+      if(fit$fit.nnlo) {
+        legend(x="topleft", legend=c("LO", "NLO", "NNLO"),
+               inset=.05, lty=c(1, 2, 4))
+        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/ff0
+              , lty=2)
+        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
+              lty=4)
+      }
+      else {
+        legend(x="topleft", legend=c("LO", "NLO"),
+               inset=.05, lty=c(1, 2))
+        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
+              lty=2)
+      }
+    }
+
     dev.set(mpsplot)
     if(i == 1) {
       j <- 1
@@ -378,6 +421,33 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                       pch=20+(i-1)*2+(j-1), rep=TRUE)
       }
       lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
+    }
+    dev.set(morderplot)
+    if(i == 1) {
+      plot(xfit, rep(1., times=length(xfit)), axes=FALSE,
+           ylim=c(0.95*min(getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4], na.rm=TRUE), 1.1),
+           xlim=c(0.,1.1*max(xmu, na.rm=TRUE)),
+           ylab=expression((m[PS]^2/(2*B[0]))), xlab=expression(r[0]*mu[R]),
+           type="l")
+      axis(1, lwd=0.5)
+      axis(2, lwd=0.5)
+      axis(3, lwd=0.5, labels=F)
+      axis(4, lwd=0.5, labels=F)
+      box()
+      if(fit$fit.nnlo) {
+        legend(x="topleft", legend=c("LO", "NLO", "NNLO"),
+               inset=.05, lty=c(1, 2, 4))
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/xfit/fit$par[4]
+              , lty=2)
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4],
+              lty=4)
+      }
+      else {
+        legend(x="topleft", legend=c("LO", "NLO"),
+               inset=.05, lty=c(1, 2))
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4],
+              lty=2)
+      }
     }
     if(fit$fit.mN) {
       dev.set(mNplot)
