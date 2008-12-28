@@ -204,12 +204,14 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression(r[0]*f[PS]), xlab=expression(r[0]*mu[R]),
                     axes=F, rep=rep)
-      for(j in 2:k) {
+      j <- 2
+      while(j <= k) { 
         plotwitherror(pxmu[[j]],
                       ur0*pfpsV[[j]],
                       sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
                       col=color[i], bg=color[i],
                       pch=20+(i-1)*2+(j-1), rep=TRUE)
+        j <- j+1
       }
       rm(j)
       axis(1, lwd=0.5)
@@ -292,12 +294,14 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression((r[0]*m[PS])^2), xlab=expression(r[0]*mu[R]),
                     axes=F)
-      for(j in 2:k) {
+      j <- 2
+      while(j <= k) {
         plotwitherror(pxmu[[j]],
                       (ur0*pmpsV[[j]])^2,
                       sqrt((2*ur0^2*pmpsV[[j]]*pdmps[[j]])^2 + (2*dr0*ur0*pmpsV[[j]]^2)^2),
                       col=color[i], bg=color[i],
                       pch=20+(j-1), rep=TRUE)
+        j <- j+1
       }
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
@@ -339,13 +343,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression((r[0]*m[PS])^2/(r[0]*mu[R])), xlab=expression(r[0]*mu[R]),
                     axes=F)
-      for(j in 2:k) {
+      j <- 2
+      while(j <= k) {
         plotwitherror(pxmu[[j]],
                       (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
                       sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
                            + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
                       col=color[i], bg=color[i],
                       pch=20+(j-1), rep=TRUE)
+        j <- j+1
       }
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
@@ -391,19 +397,21 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                     ylim=c(0.85*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
                       1.05*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu^2, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=20, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^2),
+                    pch=19, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^2),
                     axes=F)
-      for(j in 2:length(pxmuall)) {
+      j <- 2
+      while(j <= length(pxmuall)) {
         plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+1], dr0a[[j]]/fit$par[4+1],
                       col=color[i], bg=color[i],
-                      pch=20+(j-1), rep=TRUE)
+                      pch=19+(j-1), rep=TRUE)
+        j <- j+1
       }
       axis(1, lwd=0.5)
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
       axis(4, lwd=0.5, labels=F)
       legend(x="bottomright", legend=c(leg.text, expression(r[0]/r[0](mu==0)), "Fit"),
-             pch=c(21:(21+N-1), 25, -1), col=c(color[1:N],"sandybrown", "black"),
+             pch=c(19:(19+N-1), 25, -1), col=c(color[1:N],"sandybrown", "black"),
              pt.bg=c(color[1:N],"sandybrown", "black"),
              inset=.05, lty=c(rep(0,times=N+1), 1))      
       box()
@@ -418,7 +426,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       for(j in 1:length(pxmuall)) {
         plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
                       col=color[i], bg=color[i],
-                      pch=20+(i-1)*2+(j-1), rep=TRUE)
+                      pch=19+(i-1)*2+(j-1), rep=TRUE)
       }
       lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
     }
@@ -461,12 +469,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                       xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                       pch=20, ylab=expression(r[0]*m[N]), xlab=expression(r[0]*mu[R]),
                       axes=F)
-        for(j in 2:k) {
+        
+        j <- 2
+        while(j <= k) {
           plotwitherror(pxmu[[j]],
                         ur0*pmN[[j]],
                         sqrt((ur0*pdmN[[j]])^2 + (dr0*pmN[[j]])^2),
                         col=color[i], bg=color[i],
                         pch=20+(j-1), rep=TRUE)
+          j <- j+1
         }
         axis(1, lwd=0.5)
         axis(2, lwd=0.5)
