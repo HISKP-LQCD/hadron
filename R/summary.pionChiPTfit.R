@@ -31,8 +31,8 @@ summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     cat("F0           = ", fit$result$F, "+-", sd(fit$boots[,(5+3*N)], na.rm=TRUE), "GeV \n")
     cat("Fpi/F0       = ", 1./fit$result$F*0.1307, "+-", sd(1./fit$boots[,(5+3*N)], na.rm=TRUE)*0.1307, "\n")
     cat("B0           = ", fit$result$B0, "+-", sd(fit$boots[,(6+3*N)], na.rm=TRUE), "GeV \n")
-    cat("Sigma^(1/3)  = ", fit$result$Sigma, "+-", sd(fit$boots[,(10+2*N)], na.rm=TRUE), "GeV \n")
-    cat("<r^2>_s      = ", fit$result$rssq, "+-", sd(fit$boots[,(11+2*N)], na.rm=TRUE), "fm^2 \n")
+    cat("Sigma^(1/3)  = ", fit$result$Sigma, "+-", sd( ((fit$boots[,(6+3*N)]*fit$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), "GeV \n")
+    cat("<r^2>_s      = ", fit$result$rssq, "+-", sd(fit$boots[,(9+3*N)], na.rm=TRUE), "fm^2 \n")
     if(fit$fit.mN) {
       cat("mN0          = ", fit$result$mN0, "+-", sd(fit$boots[,(7+2*N)], na.rm=TRUE), "GeV \n")
       cat("mN           = ", fit$result$mN, "+-", sd(fit$boots[,(8+2*N)], na.rm=TRUE), "GeV \n")
@@ -172,10 +172,11 @@ tab <- function(fit) {
       cat("$-$\n")
     }
   }
-  cat("$",fit$result$chisqr,"/",fit$result$dof,"$\n", sep="")
+  cat("$",round(fit$result$chisqr, digits=2),"/",fit$result$dof,"$\n", sep="")
+  cat("$",round(1-pchisq(fit$result$chisqr, fit$result$dof), digits=4), "$\n", sep="")
   cat("---\n")
   printtab(fit$result$mu.phys, br[1,2], c=1000.)
-  for(i in 1:2) {
+  for(i in 1:N) {
     printtab(fit$result$a[i], br[N+i,2])
   }
   printtab(fit$result$r0, br[7+3*N,2])
@@ -193,8 +194,8 @@ tab <- function(fit) {
   printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307))
 #  cat("-----\n")
   printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
-  printtab(fit$result$Sigma, br[9+3*N, 2], c=1000.)
-  printtab(fit$result$rssq, br[8+3*N, 2])
+  printtab(fit$result$Sigma, br[8+3*N, 2], c=1000.)
+  printtab(fit$result$rssq, br[9+3*N, 2])
   if(fit$fit.mN) {
     printtab(fit$result$mN0, br[7+2*N, 2], c=1000.)
     printtab(fit$result$c1, br[9+2*N, 2])

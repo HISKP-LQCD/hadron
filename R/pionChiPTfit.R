@@ -243,15 +243,15 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
           boots[s,(3+3*N)] <- log((par.boot[5+3*N]/fpi*0.1307)^2) - lmpssqr
           boots[s,(4+3*N)] <- log((par.boot[6+3*N]/fpi*0.1307)^2) - lmpssqr
         }
-        # r0*f0 and 2*r0*B0
+        # f0 and B0
         boots[s,(5+3*N)] <- par.boot[3]/fpi*0.1307
         boots[s,(6+3*N)] <- par.boot[4]/fpi*0.1307/2.
         # r0
         boots[s,(7+3*N)] <- fpi/0.1307*0.1973
         # <r^2>_s
         boots[s,(8+3*N)] <- 12./(4*pi*boots[s,(5+3*N)])^2*(boots[s,(2+3*N)]-12./13.)*0.1973^2
-        # sigma
-        boots[s,(9+3*N)] <- (boots[s,(5+3*N)]*(boots[s,(6+3*N)])^2/2)^(1/3)
+        # sigma (B0*F^2/2)^(1/3)
+        boots[s,(9+3*N)] <- (boots[s,(6+3*N)]*(boots[s,(5+3*N)])^2/2)^(1/3)
         for(i in 1:length(par.boot)) {
           boots[s,(3*N+9+i)] <- par.boot[i]
         }
@@ -531,4 +531,89 @@ getfps.pion <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.a
            )
   }
   return(par[3]*(1.0 + asq/par[4+fit.asq]^2*par[npar]  - 2.0*r0sqTwoBmu*(rln4)/(4.0*pi*par[3])^2 ))
+}
+
+anova.pionChiPTfit <- function(fit1, fit2) {
+  Fvalue <- ((fit1$result$chisqr-fit2$result$chisqr)/(fit1$result$dof-fit2$result$dof))/(fit2$result$chisqr/fit2$result$dof)
+  return(list(Fvalue=Fvalue, pvalue=1-pf(Fvalue, fit1$result$dof-fit2$result$dof, fit2$result$dof)))
+}
+
+average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
+  e1 <- new.env()
+  nl <- length(list.fits)
+
+  weights <- rep(1., times=nl)
+  i <- 1
+  load(list.fits[i], e1)
+  fit.cur <- get(ls(e1), e1)
+  N <- length(fit.cur$data)
+  boot.R <- fit.cur$boot.R
+  if(av.weight) weights[i] <- 1-pgamma(fit.cur$result$chisqr/2, fit.cur$result$dof/2)
+  fitlist <- list(fit.cur)
+  rm(list=ls(e1), envir=e1)
+  for(i in 2:nl) {
+    load(list.fits[i], e1)
+    fit.cur <- get(ls(e1), e1)
+    if(av.weight) weights[i] <- 1-pgamma(fit.cur$result$chisqr/2, fit.cur$result$dof/2)
+                                        #    weights[i] <- 1./pgamma(fit.cur$result$chisqr/2, fit.cur$result$dof/2)
+    fitlist[[i]] <- fit.cur
+    rm(list=ls(e1), envir=e1)
+  }
+  Wsum <- 1./sum(weights)
+
+  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1)
+  nlist <- c("mu.phys", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "<r^2>_s", "sigma", "fpif0")
+
+  bres <- array(0., dim=c(boot.R, length(ii)))
+  for(j in 1:length(ii)) {
+    if(nlist[j] == "sigma") {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          bres[i, j] <- bres[i, j] + weights[k]*((fitlist[[k]]$boots[i, 6+3*N]*fitlist[[k]]$boots[i, 5+3*N]^2)/2)^(1/3)
+        }
+        bres[i, j] <- bres[i, j]*Wsum
+      }
+    }
+    else if(nlist[j] == "fpif0") {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          bres[i, j] <- bres[i, j] + weights[k]*0.1307/fitlist[[k]]$boots[i,(5+3*N)]
+        }
+        bres[i, j] <- bres[i, j]*Wsum
+      }
+    }
+    else {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          bres[i, j] <- bres[i, j] + weights[k]*fitlist[[k]]$boots[i, ii[j]]
+        }
+        bres[i, j] <- bres[i, j]*Wsum
+      }
+    }
+  }
+
+  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2)
+  nr <- length(jj)
+  res <- numeric(nr)
+
+  for(i in 1:nr) {
+    res[i] <- 0.
+    if(nlist[i] == "fpif0") {
+      for(j in 1:nl) {
+        res[i] <- res[i] + 0.1307/fitlist[[j]]$result[[2]]*weights[j]
+      }
+    }
+    else {
+      for(j in 1:nl) {
+        res[i] <- res[i] + fitlist[[j]]$result[[jj[i]]]*weights[j]
+      }
+    }
+    res[i] <- res[i]*Wsum
+  }
+
+  for(i in 1:length(ii)) {
+    cat(nlist[i], "\t", res[i], "+-", sd(bres[,i]), "bias:", res[i]-mean(bres[,i]), "\n")
+  }
+  
+  return(invisible(list(bootres=bres, res=res)))
 }
