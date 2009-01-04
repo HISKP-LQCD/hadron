@@ -104,7 +104,7 @@ summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
   }
 }
 
-printtab <- function(x, dx, digits=2, c=1.) {
+printtab.old <- function(x, dx, digits=2, c=1.) {
   if(!is.null(dx)) {
     x <- c*x
     dx <- c*dx
@@ -120,6 +120,39 @@ printtab <- function(x, dx, digits=2, c=1.) {
     cat("$", c*x,"()$\n", sep="")
   }
 }
+
+printtab <- function(x, dx, digits=2, c=1.) {
+  if(!is.null(dx)) {
+
+    x <- c*x
+    dx <- c*dx
+    n <- 1.
+    i <- 0
+    while(n*dx < 10^(digits-1)) {
+      i <- i+1
+      n=n*10.
+    }
+    y <- round(n*abs(x))/n
+    z <- abs(round((x-floor(x)), digits=i))
+    if(x < 0.) cat("$-", floor(y), sep="")
+    else cat("$", floor(y), sep="")
+    if(n > 1.) cat(".", sep="")
+    while(i > 0) {
+      z <- z*10.
+      cat(floor(z))
+      z <- z-floor(z)
+      i <- i-1
+    }
+    op <- options(scipen=6)
+    if(floor(dx) > 0 && n > 1.) cat("(", signif(dx, digits=digits), ")$\n", sep="")
+    else cat("(", signif(n*dx, digits=digits), ")$\n", sep="")
+    options(op)
+  }
+  else {
+    cat("$", c*x,"()$\n", sep="")
+  }
+}
+
 
 tab <- function(fit) {
   par <- fit$par
@@ -191,10 +224,10 @@ tab <- function(fit) {
 #  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
 #  if(inherits(stddev, "try-error")) stddev=NA
 #  printtab(1./fit$result$F*0.1307, 0.001)
-  printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307))
+  printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307, na.rm=TRUE))
 #  cat("-----\n")
   printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
-  printtab(fit$result$Sigma, br[8+3*N, 2], c=1000.)
+  printtab(fit$result$Sigma, sd( ((fit$boots[,(6+3*N)]*fit$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), c=1000.)
   printtab(fit$result$rssq, br[9+3*N, 2])
   if(fit$fit.mN) {
     printtab(fit$result$mN0, br[7+2*N, 2], c=1000.)

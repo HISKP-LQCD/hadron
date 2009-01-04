@@ -612,7 +612,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   }
 
   for(i in 1:length(ii)) {
-    cat(nlist[i], "\t", res[i], "+-", sd(bres[,i]), "bias:", res[i]-mean(bres[,i]), "\n")
+    cat(nlist[i], "\t", res[i], "+-", sd(bres[,i], na.rm=TRUE), "bias:", res[i]-mean(bres[,i], na.rm=TRUE), "\n")
   }
   
   return(invisible(list(bootres=bres, res=res)))
