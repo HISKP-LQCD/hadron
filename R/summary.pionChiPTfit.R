@@ -186,7 +186,7 @@ tab <- function(fit) {
   }
   # l3 l4
   for(i in 1:2) {
-    printtab(par[i], br[nm+i,2])
+    printtab(abs(par[i]), br[nm+i,2])
   }
   # kM, kF
   for(i in 1:2) {
@@ -221,11 +221,11 @@ tab <- function(fit) {
   printtab(fit$result$l3, br[1+3*N, 2])
   printtab(fit$result$l4, br[2+3*N, 2])
   printtab(fit$result$F, br[5+3*N, 2], c=1000.)
-#  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
-#  if(inherits(stddev, "try-error")) stddev=NA
-#  printtab(1./fit$result$F*0.1307, 0.001)
+                                        #  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
+                                        #  if(inherits(stddev, "try-error")) stddev=NA
+                                        #  printtab(1./fit$result$F*0.1307, 0.001)
   printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307, na.rm=TRUE))
-#  cat("-----\n")
+                                        #  cat("-----\n")
   printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
   printtab(fit$result$Sigma, sd( ((fit$boots[,(6+3*N)]*fit$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), c=1000.)
   printtab(fit$result$rssq, br[9+3*N, 2])
