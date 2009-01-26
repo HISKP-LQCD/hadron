@@ -48,8 +48,8 @@ summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "+-",
           sd(fit$boots[,(N+i)], na.rm=TRUE),"fm \n")
-      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(8+3*N+4+i)], na.rm=TRUE), "\n")
-      cat("            fitted ZP   = ", fit$par[4+2*N+i], "+-", sd(fit$boots[,(8+3*N+4+2*N+i)], na.rm=TRUE), "\n")
+      cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(9+3*N+4+i)], na.rm=TRUE), "\n")
+      cat("            fitted ZP   = ", fit$par[4+2*N+i], "+-", sd(fit$boots[,(9+3*N+4+2*N+i)], na.rm=TRUE), "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -226,7 +226,7 @@ tab <- function(fit) {
                                         #  printtab(1./fit$result$F*0.1307, 0.001)
   printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307, na.rm=TRUE))
                                         #  cat("-----\n")
-  printtab(fit$result$B0, br[6+2*N, 2], c=1000.)
+  printtab(fit$result$B0, br[6+3*N, 2], c=1000.)
   printtab(fit$result$Sigma, sd( ((fit$boots[,(6+3*N)]*fit$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), c=1000.)
   printtab(fit$result$rssq, br[9+3*N, 2])
   if(fit$fit.mN) {

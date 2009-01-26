@@ -389,7 +389,7 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
       cat("r0chiral", par[4+i], "\n")
       cat("datar0  ", data[[i]]$r0a[ij], "\n")
       cat("modelr0 ", r0, "\n")
-      cat("chir0   ", (data[[i]]$r0a[ij]-r0)/data[[i]]$dr0[ij], "\n")
+      cat("chir0   ", (data[[i]]$r0a-r0)/data[[i]]$dr0, "\n")
       cat("modelZP ", par[4+2*N+i], "\n")
       cat("ZPdata  ", ZPdata$ZP[i], "\n")
       cat("chiZP   ", (ZPdata$ZP[i]-par[4+2*N+i])/ZPdata$dZP[i], "\n")
@@ -498,7 +498,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   Wsum <- 1./sum(weights)
 
   ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1)
-  nlist <- c("mu.phys", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "<r^2>_s", "sigma", "fpif0")
+  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0")
 
   bres <- array(0., dim=c(boot.R, length(ii)))
   for(j in 1:length(ii)) {
@@ -506,6 +506,14 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
       for(i in 1:boot.R) {
         for(k in 1:nl) {
           bres[i, j] <- bres[i, j] + weights[k]*((fitlist[[k]]$boots[i, 6+3*N]*fitlist[[k]]$boots[i, 5+3*N]^2)/2)^(1/3)
+        }
+        bres[i, j] <- bres[i, j]*Wsum
+      }
+    }
+    else if(nlist[j] == "B0") {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          bres[i, j] <- bres[i, j] + weights[k]*fitlist[[k]]$boots[i,(6+3*N)]
         }
         bres[i, j] <- bres[i, j]*Wsum
       }
@@ -530,27 +538,48 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
 
   jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2)
   nr <- length(jj)
-  res <- numeric(nr)
 
+  res <- numeric(nr)
+  histres <- array(0., dim=c(nr, nl))
+  
   for(i in 1:nr) {
     res[i] <- 0.
     if(nlist[i] == "fpif0") {
       for(j in 1:nl) {
         res[i] <- res[i] + 0.1307/fitlist[[j]]$result[[2]]*weights[j]
+        histres[i,j] <- 0.1307/fitlist[[j]]$result[[2]]
       }
     }
     else {
       for(j in 1:nl) {
         res[i] <- res[i] + fitlist[[j]]$result[[jj[i]]]*weights[j]
+        histres[i,j] <- fitlist[[j]]$result[[jj[i]]]
       }
     }
-    res[i] <- res[i]*Wsum
   }
+  res <- res*Wsum
 
   kk <- c(1:length(ii))
   for(i in 1:length(ii)) {
-    cat(nlist[kk[i]], "\t", res[kk[i]], "+-", sd(bres[,kk[i]], na.rm=TRUE), "bias:", res[kk[i]]-mean(bres[,kk[i]], na.rm=TRUE), "\n")
+    cat(nlist[kk[i]], "\t", res[kk[i]], "+-", sd(bres[,kk[i]], na.rm=TRUE), "+-", sqrt(cov.wt(data.frame(histres[kk[i],]), weights)$cov[1]), "bias:", res[kk[i]]-mean(bres[,kk[i]], na.rm=TRUE), "\n")
+  }
+  for(i in 1:length(ii)) {
+    if(nlist[kk[i]] == "sigma" || nlist[kk[i]] == "B0" || nlist[kk[i]] == "f0" || nlist[kk[i]] == "m_ud") {
+      printtab(res[kk[i]], sd(bres[,kk[i]], na.rm=TRUE), c=1000.)
+    }
+    else {
+      printtab(res[kk[i]], sd(bres[,kk[i]], na.rm=TRUE))
+    }
+  }
+  cat("---\n")
+  for(i in 1:length(ii)) {
+    if(nlist[kk[i]] == "sigma" || nlist[kk[i]] == "B0" || nlist[kk[i]] == "f0" || nlist[kk[i]] == "m_ud") {
+      printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE)+ cov.wt(data.frame(histres[kk[i],]), weights)$cov[1]), c=1000.)
+    }
+    else {
+      printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE)+ cov.wt(data.frame(histres[kk[i],]), weights)$cov[1]))
+    }
   }
   
-  return(invisible(list(bootres=bres, res=res)))
+  return(invisible(list(bootres=bres, res=res, histres=histres, weights=weights)))
 }

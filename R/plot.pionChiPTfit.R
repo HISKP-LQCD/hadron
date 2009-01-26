@@ -115,6 +115,10 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                       afpiV=fit$data[[i]]$fps, aF0=par[3]/ur0,
                       a2B0mu=par[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
                       printit=FALSE)
+        print(res)
+        cat(fit$data[[i]]$fps, "\n")
+        cat(fit$data[[i]]$mps, "\n")
+        cat(fit$data[[i]]$L, "\n")
       }
       else {
         res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
