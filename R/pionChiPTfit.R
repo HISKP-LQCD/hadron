@@ -478,6 +478,8 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   e1 <- new.env()
   nl <- length(list.fits)
 
+  ## first we copute the weights for each fit in list.fits
+  ## we also build a list of all the fits -> fitlist
   weights <- rep(1., times=nl)
   i <- 1
   load(list.fits[i], e1)
@@ -490,6 +492,9 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   for(i in 2:nl) {
     load(list.fits[i], e1)
     fit.cur <- get(ls(e1), e1)
+    if(boot.R > fit.cur$boot.R) {
+      boot.R <- fit.cur$boot.R
+    }
     if(av.weight) weights[i] <- 1-pgamma(fit.cur$result$chisqr/2, fit.cur$result$dof/2)
                                         #    weights[i] <- 1./pgamma(fit.cur$result$chisqr/2, fit.cur$result$dof/2)
     fitlist[[i]] <- fit.cur
@@ -497,9 +502,12 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   }
   Wsum <- 1./sum(weights)
 
-  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1)
-  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0")
+  ## here we create the list of variables to be averaged
+  ## their indices as well as their names
+  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1, (9+3*N+5):(9+3*N+4+N), (N+1):(2*N))
+  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0", rep("r0/a", times=N), rep("a", times=N))
 
+  ## bres will hold the results for each bootstrap sample
   bres <- array(0., dim=c(boot.R, length(ii)))
   for(j in 1:length(ii)) {
     if(nlist[j] == "sigma") {
@@ -536,7 +544,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     }
   }
 
-  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2)
+  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N)
   nr <- length(jj)
 
   res <- numeric(nr)
@@ -548,6 +556,18 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
       for(j in 1:nl) {
         res[i] <- res[i] + 0.1307/fitlist[[j]]$result[[2]]*weights[j]
         histres[i,j] <- 0.1307/fitlist[[j]]$result[[2]]
+      }
+    }
+    else if(nlist[i] == "r0/a") {
+      for(j in 1:nl) {
+        res[i] <- res[i] + fitlist[[j]]$par[jj[i]]*weights[j]
+        histres[i,j] <- fitlist[[j]]$par[jj[i]]
+      }
+    }
+    else if(nlist[i] == "a") {
+      for(j in 1:nl) {
+        res[i] <- res[i] + fitlist[[j]]$result$a[jj[i]]*weights[j]
+        histres[i,j] <- fitlist[[j]]$result$a[jj[i]]
       }
     }
     else {
@@ -582,4 +602,23 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   }
   
   return(invisible(list(bootres=bres, res=res, histres=histres, weights=weights)))
+}
+
+
+predict.pion <- function(fit, r0, ZP, to=0.2) {
+  N <- length(fit$data)
+  npar <- length(fit$par)
+  par <- fit$par
+  xfit <- seq(from=0., to=to, length.out=500)
+
+  fit.a <- -1
+  if(fit$fit.asq) {
+    fit.a <- 1
+    par[4+1] <- r0
+  }
+
+  r0TwoB <- par[4]
+  r0sqTwoBmu <- r0TwoB*xfit
+  msq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+  return(data.frame(mu=xfit*ZP/r0, msq=msq/0.43^2*0.198^2, mpi=sqrt(msq)/0.43*0.198))
 }
