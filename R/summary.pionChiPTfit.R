@@ -121,7 +121,7 @@ printtab.old <- function(x, dx, digits=2, c=1.) {
   }
 }
 
-printtab <- function(x, dx, digits=2, c=1.) {
+printtab <- function(x, dx, digits=2, c=1., endl=TRUE) {
   if(!is.null(dx)) {
 
     x <- c*x
@@ -133,107 +133,222 @@ printtab <- function(x, dx, digits=2, c=1.) {
       n=n*10.
     }
     y <- round(n*abs(x))/n
-    z <- abs(round((x-floor(x)), digits=i))
+    z <- abs(round((abs(x)-floor(abs(x))), digits=i))
     if(x < 0.) cat("$-", floor(y), sep="")
     else cat("$", floor(y), sep="")
     if(n > 1.) cat(".", sep="")
     while(i > 0) {
-      z <- z*10.
+      z <- z*10.000001
       cat(floor(z))
       z <- z-floor(z)
       i <- i-1
     }
     op <- options(scipen=6)
-    if(floor(dx) > 0 && n > 1.) cat("(", signif(dx, digits=digits), ")$\n", sep="")
-    else cat("(", signif(n*dx, digits=digits), ")$\n", sep="")
+    if(floor(dx) > 0 && n > 1.) cat("(", signif(dx, digits=digits), ")$", sep="")
+    else cat("(", signif(n*dx, digits=digits), ")$", sep="")
     options(op)
   }
   else {
-    cat("$", c*x,"()$\n", sep="")
+    cat("$", c*x,"()$", sep="")
   }
+  if(endl) cat(" \\\\\n", sep="")
 }
 
 
-tab <- function(fit) {
-  par <- fit$par
-  br <- fit$boot.result
+tab <- function(fitlist) {
+  nl <- length(fitlist)
+  
+  par <- fitlist[[1]]$par
+  br <- fitlist[[1]]$boot.result
   npar <- length(par)
-  N <- length(fit$data)
-  cat(fit$fsmethod, "\n")
+  N <- length(fitlist[[1]]$data)
+  #cat("FS    ", sep="")
+  #for(k in 1:nl) {
+  #  cat(" & ", sep="")
+  #  cat(fitlist[[1]]$fsmethod)
+  #}
+  #cat(" \\\\\n", sep="")
+  cat("$2r_0B_0$   ", sep="")
   nm <- 3*N+9
 
-  # 2 r0 B0
-  printtab(par[4], br[nm+4,2])
-  # r0 f0
-  printtab(par[3], br[nm+3,2])
-  if(fit$fit.mN) printtab(par[2*N+5], br[nm+2*N+5,2])
+  ## 2 r0 B0
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$par[4], fitlist[[k]]$boot.result[nm+4,2], endl=FALSE)
+  }
+  cat(" \\\\\n$r_0f_0$   ", sep="")
+  ## r0 f0
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$par[3], fitlist[[k]]$boot.result[nm+3,2], endl=FALSE)
+  }
+  cat(" \\\\\n", sep="")
+  
+  if(fitlist[[1]]$fit.mN) {
+    ## r0 mN
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$par[2*N+5], fitlist[[k]]$boot.result[nm+2*N+5,2], endl=FALSE)
+    }
+    cat(" \\\\\n", sep="")
+  }
   # r0
   for(i in 1:N) {
-    printtab(par[4+i], br[nm+4+i,2])
+    cat("$r_0/a$   ", sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$par[4+i], fitlist[[k]]$boot.result[nm+4+i,2], endl=(k==nl))
+    }
   }
   # sr0 (slope)
   for(i in 1:N) {
-    printtab(par[4+N+i], br[nm+4+N+i,2])
+    cat("$D_{r_0}$   ", sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$par[4+N+i], fitlist[[k]]$boot.result[nm+4+N+i,2], endl=(k==nl))
+    }
   }
   # ZP
   for(i in 1:N) {
-    printtab(par[4+2*N+i], br[nm+4+2*N+i,2])
+    cat("$Z_\\mathrm{P}$   ", sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$par[4+2*N+i], fitlist[[k]]$boot.result[nm+4+2*N+i,2], endl=FALSE)
+    }
+    cat(" \\\\\n", sep="")
   }
   # l1 l2
   for(i in 1:2) {
-    if(fit$fit.l12) printtab(par[4+3*N+i], br[nm+4+3*N+i,2])
-    else cat("$-$\n")
+    cat(c("$r_0\\Lambda_1$   ","$r_0\\Lambda_2$   ")[i], sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      if(fitlist[[k]]$fit.l12) printtab(fitlist[[k]]$par[4+3*N+i], fitlist[[k]]$boot.result[nm+4+3*N+i,2], endl=FALSE)
+      else cat("$-$")
+    }
+    if(k==nl)cat(" \\\\\n", sep="")
   }
   # l3 l4
   for(i in 1:2) {
-    printtab(abs(par[i]), br[nm+i,2])
+    cat(c("$r_0\\Lambda_3$   ","$r_0\\Lambda_4$   ")[i], sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(abs(fitlist[[k]]$par[i]), fitlist[[k]]$boot.result[nm+i,2], endl=(k==nl))
+    }
   }
   # kM, kF
   for(i in 1:2) {
-    if(fit$fit.kmf) printtab(par[6+3*N+i], br[nm+6+3*N+i,2])
-    else cat("$-$\n")
+    cat(c("$k_M$   ","$k_F$   ")[i], sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      if(fitlist[[k]]$fit.kmf) printtab(fitlist[[k]]$par[6+3*N+i], fitlist[[k]]$boot.result[nm+6+3*N+i,2], endl=FALSE)
+      else cat("$-$")
+      if(k==nl) cat(" \\\\\n", sep="")
+    }
   }
 #  for(i in 1:2) {
-#    if(fit$fit.mN) printtab(par[5+2*N+i], br[nm+5+2*N+i,2])
+#    if(fitlist[[k]]$fit.mN) printtab(fitlist[[k]]$par[5+2*N+i], fitlist[[k]]$boot.result[nm+5+2*N+i,2])
 #  }
   # Dm, Df
   for(i in 1:0) {
-    if(fit$fit.asq) {
-      printtab(par[npar-i], br[nm+npar-i,2])
-    }
-    else {
-      cat("$-$\n")
+    cat(c("$D_f$   ","$D_m$   ")[i+1], sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      if(fitlist[[k]]$fit.asq) {
+        printtab(fitlist[[k]]$par[npar-i], fitlist[[k]]$boot.result[nm+npar-i,2], endl=(k==nl))
+      }
+      else {
+        cat("$-$")
+      }
     }
   }
-  cat("$",round(fit$result$chisqr, digits=2),"/",fit$result$dof,"$\n", sep="")
-  cat("$",round(1-pchisq(fit$result$chisqr, fit$result$dof), digits=4), "$\n", sep="")
-  cat("---\n")
-  printtab(fit$result$mu.phys, br[1,2], c=1000.)
+  cat("$\\chi^2/\\mathrm{dof}$   ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    cat("$",round(fitlist[[k]]$result$chisqr, digits=2),"/",fitlist[[k]]$result$dof,"$", sep="")
+  }
+  cat(" \\\\\nCL   ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    cat("$",round(1-pchisq(fitlist[[k]]$result$chisqr, fitlist[[k]]$result$dof), digits=4), "$", sep="")
+  }
+  cat(" \\\\\n", sep="")
+  cat("\\hline\n$m_{u,d}\\ [\\mathrm{MeV}]$   ")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$mu.phys, fitlist[[k]]$boot.result[1,2], c=1000., endl=(k==nl))
+  }
   for(i in 1:N) {
-    printtab(fit$result$a[i], br[N+i,2])
+    cat("$a(xxx)\\ [\\mathrm{fm}]$   ", sep="")
+    for(k in 1:nl) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$result$a[i], fitlist[[k]]$boot.result[N+i,2], endl=(k==nl))
+    }
   }
-  printtab(fit$result$r0, br[7+3*N,2])
-  if(fit$fit.l12) {
-    printtab(fit$result$l1, br[3+3*N, 2])
-    printtab(fit$result$l2, br[4+3*N, 2])
+  cat("$r_0\\ [\\mathrm{fm}]$   ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$r0, fitlist[[k]]$boot.result[7+3*N,2], endl=(k==nl))
   }
-  else cat("$-$\n$-$\n")
-  printtab(fit$result$l3, br[1+3*N, 2])
-  printtab(fit$result$l4, br[2+3*N, 2])
-  printtab(fit$result$F, br[5+3*N, 2], c=1000.)
-                                        #  try(stddev=sd(1./fit$boots[,(5+3*N)])*0.1307)
+  cat("$\\bar{\\ell}_1$   ", sep="")
+  for(k in 1:nl) {
+    if(fitlist[[k]]$fit.l12) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$result$l1, fitlist[[k]]$boot.result[3+3*N, 2], endl=(k==nl))
+    }
+    else cat("$-$", sep="")
+  }
+  cat("$\\bar{\\ell}_2$   ", sep="")
+  for(k in 1:nl) {
+    if(fitlist[[k]]$fit.l12) {
+      cat(" & ", sep="")
+      printtab(fitlist[[k]]$result$l2, fitlist[[k]]$boot.result[4+3*N, 2], endl=(k==nl))
+    }
+    else cat("$-$", sep="")
+  }
+  cat("$\\bar{\\ell}_3$   ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$l3, fitlist[[k]]$boot.result[1+3*N, 2], endl=(k==nl))
+  }
+  cat("$\\bar{\\ell}_4$   ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$l4, fitlist[[k]]$boot.result[2+3*N, 2], endl=(k==nl))
+  }
+  cat("$f_0\\ [\\mathrm{MeV}]$    ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$F, fitlist[[k]]$boot.result[5+3*N, 2], c=1000., endl=(k==nl))
+  }
+                                        #  try(stddev=sd(1./fitlist[[k]]$boots[,(5+3*N)])*0.1307)
                                         #  if(inherits(stddev, "try-error")) stddev=NA
-                                        #  printtab(1./fit$result$F*0.1307, 0.001)
-  printtab(1./fit$result$F*0.1307, sd(1./fit$boots[,(5+3*N)]*0.1307, na.rm=TRUE))
+                                        #  printtab(1./fitlist[[k]]$result$F*0.1307, 0.001)
+  cat("$f_\\pi/f_0$    ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(1./fitlist[[k]]$result$F*0.1307, sd(1./fitlist[[k]]$boots[,(5+3*N)]*0.1307, na.rm=TRUE), endl=(k==nl))
+  }
                                         #  cat("-----\n")
-  printtab(fit$result$B0, br[6+3*N, 2], c=1000.)
-  printtab(fit$result$Sigma, sd( ((fit$boots[,(6+3*N)]*fit$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), c=1000.)
-  printtab(fit$result$rssq, br[9+3*N, 2])
-  if(fit$fit.mN) {
-    printtab(fit$result$mN0, br[7+2*N, 2], c=1000.)
-    printtab(fit$result$c1, br[9+2*N, 2])
-    printtab(fit$result$s0, br[13+2*N, 2], c=1000)
-    printtab(fit$result$mN, br[8+2*N, 2], c=1000)
-    printtab(fit$result$mN/fit$result$mN0, sd(fit$boots[,(8+2*N)]/fit$boots[,(7+2*N)], na.rm=TRUE))
+  cat("$B_0\\ [\\mathrm{MeV}]$    ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$B0, fitlist[[k]]$boot.result[6+3*N, 2], c=1000., endl=(k==nl))
+  }
+  cat("$\\Sigma^{1/3}\\ [\\mathrm{MeV}]$    ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$Sigma, sd( ((fitlist[[k]]$boots[,(6+3*N)]*fitlist[[k]]$boots[,(5+3*N)]^2)/2)^(1/3), na.rm=TRUE), c=1000., endl=(k==nl))
+  }
+  cat("$\\langle r^2\\rangle_s\\ [\\mathrm{fm}^2]$    ", sep="")
+  for(k in 1:nl) {
+    cat(" & ", sep="")
+    printtab(fitlist[[k]]$result$rssq, fitlist[[k]]$boot.result[9+3*N, 2], endl=(k==nl))
+  }
+  if(fitlist[[k]]$fit.mN) {
+    printtab(fitlist[[k]]$result$mN0, fitlist[[k]]$boot.result[7+2*N, 2], c=1000.)
+    printtab(fitlist[[k]]$result$c1, fitlist[[k]]$boot.result[9+2*N, 2])
+    printtab(fitlist[[k]]$result$s0, fitlist[[k]]$boot.result[13+2*N, 2], c=1000)
+    printtab(fitlist[[k]]$result$mN, fitlist[[k]]$boot.result[8+2*N, 2], c=1000)
+    printtab(fitlist[[k]]$result$mN/fitlist[[k]]$result$mN0, sd(fitlist[[k]]$boots[,(8+2*N)]/fitlist[[k]]$boots[,(7+2*N)], na.rm=TRUE))
   }
 }
