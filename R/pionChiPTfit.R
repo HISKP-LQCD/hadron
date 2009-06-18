@@ -24,7 +24,7 @@ fovermps.pion <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.asq=-1
 # npar:           D_f^0
 
 pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
-                         ZPdata, method="no", seed=123456,
+                         ZPdata, method="no", seed=123456, r0exp=2,
                          priors = list(l1=-0.4, dl1=0.6, l2=4.3, dl2=0.1, kM=0., dkM=10., kF=0., dkF=10.),
                          fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
                          fit.corr=FALSE, ii, boot.R=100, debug=FALSE) {
@@ -90,7 +90,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   
   if(debug) {
     chisqr.piononly(par=startvalues, data=data, ii=ii, fsmethod=fsmethod,
-                    a.guess=a.guess, ZPdata=ZPdata, priors=priors,
+                    a.guess=a.guess, ZPdata=ZPdata, priors=priors, r0exp=r0exp,
                     fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, cm=corrmatrix,
                     printit=debug)
   }
@@ -100,19 +100,19 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   }
   mini <- optim(par=startvalues, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
                 control=list(maxit=150, trace=debug, parscale=parscale, REPORT=50),
-                data=data, ii=ii, priors=priors,
+                data=data, ii=ii, priors=priors,  r0exp=r0exp,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
                 fit.mN=fit.mN, cm=corrmatrix)
   mini <- optim(par=mini$par, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
                 control=list(maxit=500, trace=debug, parscale=mini$par, REPORT=50),
-                data=data, ii=ii, priors=priors,
+                data=data, ii=ii, priors=priors,  r0exp=r0exp,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
                 fit.mN=fit.mN, cm=corrmatrix)
   mini <- optim(par=mini$par, fn=chisqr.piononly, method="BFGS", hessian=TRUE,
                 control=list(maxit=500, trace=debug, parscale=mini$par, REPORT=50),
-                data=data, ii=ii, priors=priors,
+                data=data, ii=ii, priors=priors,  r0exp=r0exp,
                 fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdata,
                 fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf,
                 fit.mN=fit.mN, cm=corrmatrix)
@@ -121,7 +121,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   }
   if(debug) {
     chisqr.piononly(par=mini$par, data=data, ii=ii,fsmethod=fsmethod,
-                    a.guess=a.guess, ZPdata=ZPdata, priors=priors,
+                    a.guess=a.guess, ZPdata=ZPdata, priors=priors, r0exp=r0exp,
                     fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf, cm=corrmatrix,
                     printit=debug)
   }
@@ -218,7 +218,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
       
       mini.boot <- optim(par=par, fn=chisqr.piononly, method="BFGS", hessian=FALSE,
                          control=list(maxit=150, parscale=par, trace=0, REPORT=100),
-                         data=df, ii=ii, priors=boot.priors,
+                         data=df, ii=ii, priors=boot.priors,  r0exp=r0exp,
                          fsmethod=fsmethod, a.guess=a.guess, ZPdata=ZPdf, cm=corrmatrix,
                          fit.nnlo=fit.nnlo, fit.l12=fit.l12, fit.asq=fit.asq, fit.kmf=fit.kmf)
       if(mini.boot$convergence != 0) {
@@ -284,13 +284,13 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
                             chisqr=chisqr, dof=dof), fit=mini,
                  data=data, boot.result=boot.result, boots=boots, ZPdata=ZPdata, seed=seed,
                  fmcorrmatrix=corrmatrix, bootsamples=bootsamples, ZPbootsamples=ZPbootsamples,
-                 method=method, ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod,
+                 method=method, ii=ii, fit.l12=fit.l12, boot.R=boot.R, fsmethod=fsmethod, r0exp=r0exp,
                  fit.asq=fit.asq, fit.kmf=fit.kmf, fit.nnlo=fit.nnlo, fit.mN=FALSE, fit.corr=fit.corr)
   attr(result, "class") <- c("pionChiPTfit", "list")  
   return(invisible(result))
 }
 
-chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
+chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp=2,
                             priors = list(l1=-0.4, dl1=0.6, l2=4.3, dl2=0.1, kM=0, dkM=10., kF=0., dkF=10.),
                             fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
                             printit=FALSE, fit.mN=TRUE, cm=NULL) {
@@ -316,10 +316,10 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess,
     }
 # fit r0/a as a function of (a mu)^2 first
     if(inherits(r0mu.phys, "try-error") || is.nan(r0mu.phys)) {
-      r0 <- par[4+i]  + (data[[i]]$mu^2)*par[4+N+i]
+      r0 <- par[4+i]  + (data[[i]]$mu^r0exp)*par[4+N+i]
     }
     else {
-      r0 <- par[4+i]  + (data[[i]]$mu^2 -r0mu.phys/par[4+i])*par[4+N+i]
+      r0 <- par[4+i]  + (data[[i]]$mu^r0exp -r0mu.phys/par[4+i])*par[4+N+i]
     }
     chisum <- chisum + sum(((data[[i]]$r0a-r0)/data[[i]]$dr0)^2, na.rm=TRUE)
 
@@ -515,8 +515,8 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
 
   ## here we create the list of variables to be averaged
   ## their indices as well as their names
-  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1, (9+3*N+5):(9+3*N+4+N), (N+1):(2*N))
-  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0", rep("r0/a", times=N), rep("a", times=N))
+  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1, (9+3*N+5):(9+3*N+4+N), (N+1):(2*N), (9+3*N+4+2*N+1):(9+3*N+4+2*N+N))
+  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0", rep("r0/a", times=N), rep("a", times=N), rep("ZP", times=N))
 
   ## bres will hold the results for each bootstrap sample
   bres <- array(0., dim=c(boot.R, length(ii)))
@@ -556,7 +556,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     }
   }
 
-  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N)
+  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N, (4+2*N+1):(4+2*N+N))
   nr <- length(jj)
 
   res <- numeric(nr)
@@ -568,7 +568,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
         histres[i,j] <- 0.1307/fitlist[[j]]$result[[2]]
       }
     }
-    else if(nlist[i] == "r0/a") {
+    else if(nlist[i] == "r0/a" || nlist[i] == "ZP") {
       for(j in 1:nl) {
         histres[i,j] <- fitlist[[j]]$par[jj[i]]
       }

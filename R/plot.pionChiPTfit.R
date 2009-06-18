@@ -14,6 +14,10 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       dpar[i] <- sqrt(2*Hinv[i,i])
     }
   }
+  r0exp <- 2
+  if(!is.null(fit$r0exp)) {
+    r0exp <- fit$r0exp
+  }
   fit.a <- -1.
   par <- fit$par
   if(!plot.file) {
@@ -85,7 +89,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     dr0 <- dpar[4+i]
     mZP <- fit$ZPdata$ZP[i]
     fZP <- fit$par[4+2*N+i]
-    dZP <- fit$ZPdata$dZP[i]
+#    dZP <- fit$ZPdata$dZP[i]
+    dZP <- dpar[4+2*N+i]
     if(rawpoints) {
       uZP <- mZP
     }
@@ -115,10 +120,6 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                       afpiV=fit$data[[i]]$fps, aF0=par[3]/ur0,
                       a2B0mu=par[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
                       printit=FALSE)
-        print(res)
-        cat(fit$data[[i]]$fps, "\n")
-        cat(fit$data[[i]]$mps, "\n")
-        cat(fit$data[[i]]$L, "\n")
       }
       else {
         res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
@@ -152,7 +153,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
     color <- c("red", "blue", "darkseagreen", "darksalmon", "darkviolet")
     xmu <- ur0/uZP*fit$data[[i]]$mu
-    fitr0 <- par[4+i] + par[4+N+i]*xfit^2/ur0^2*fZP^2
+    fitr0 <- par[4+i] + par[4+N+i]*(xfit/ur0*fZP)^r0exp
     pxmu <- split(xmu[ij], fit$data[[i]]$L[ij])
     pxmuall <- split(xmu, fit$data[[i]]$L)
     pdfps <- split(fit$data[[i]]$dfps[ij], fit$data[[i]]$L[ij])
@@ -397,15 +398,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     dev.set(r0plot)
     if(i==1) {
       j <- 1
-      plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
+      plotwitherror(pxmuall[[j]]^r0exp, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
                     ylim=c(0.85*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
                       1.05*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(xmu^2, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=19, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^2),
+                    xlim=c(0.,1.1*max(xmu^r0exp, na.rm=TRUE)), col=color[i], bg=color[i],
+                    pch=19, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^r0exp),
                     axes=F)
       j <- 2
       while(j <= length(pxmuall)) {
-        plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+1], dr0a[[j]]/fit$par[4+1],
+        plotwitherror(pxmuall[[j]]^r0exp, r0a[[j]]/fit$par[4+1], dr0a[[j]]/fit$par[4+1],
                       col=color[i], bg=color[i],
                       pch=19+(j-1), rep=TRUE)
         j <- j+1
@@ -419,8 +420,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
              pt.bg=c(color[1:N],"sandybrown", "black"),
              inset=.05, lty=c(rep(0,times=N+1), 1))      
       box()
-      lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
-      points((fit$result$r0*fit$result$mu.phys/0.1973)^2, fit$par[4+i]/fit$par[4+i],
+      lines(xfit^r0exp, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
+      points((fit$result$r0*fit$result$mu.phys/0.1973)^r0exp, fit$par[4+i]/fit$par[4+i],
              pch=25, bg="sandybrown", col="sandybrown")
       if(fit$method != "no") {
 
