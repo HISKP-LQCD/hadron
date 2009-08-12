@@ -58,7 +58,6 @@ void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb
   double *S4mpi, *S4fpi, *I4mpi, *I2mpi, *I2fpi, *I4fpi;
   double aF0;
 
-  printf("%d %f %f\n", n, aF0_, a_fm);
   aF0 = aF0_/sqrt(2.);
 
   gg[0] = 2. - pi/2.;
