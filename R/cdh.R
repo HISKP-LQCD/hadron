@@ -1,3 +1,10 @@
+cdh_cimp <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+                     ampiV, afpiV, aF0, a_fm, L) {
+
+  res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV)
+  return(invisible(list(mpiFV=res[1:length(ampiV)], fpiFV=res[(length(ampiV)+1):(2*length(ampiV))])))
+}
+
 cdh <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
                  ampiV, afpiV, aF0, a_fm, L, printit=F, incim6 = TRUE,
                  rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)) {
