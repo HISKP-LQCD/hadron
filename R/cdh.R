@@ -1,8 +1,8 @@
 cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
                      ampiV, afpiV, aF0, a_fm, L, printit=FALSE, incim6 = FALSE,
-                     rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)) {
+                     rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), c_impl=TRUE) {
 
-  if(printit || incim6) {
+  if(!c_impl || incim6) {
     return(invisible(cdh.R(parm=parm, rev=rev, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
                            ampiV=ampiV, afpiV=afpiV, aF0=aF0, a_fm=a_fm, L=L, printit=printit, incim6=incim6,
                            rtilde=rtilde)))
@@ -12,7 +12,7 @@ cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb
     return(invisible(list(mpiFV=rep(NA, times=length(ampiV)), fpiFV=rep(NA, times=length(ampiV)))))
   }
 
-  res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV)
+  res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV, as.integer(printit))
   return(invisible(list(mpiFV=res[1:length(ampiV)], fpiFV=res[(length(ampiV)+1):(2*length(ampiV))])))
 }
 
@@ -28,24 +28,24 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0)
     warning("rtilde had not enough entries, using defaults instead")
   }
-  # our normalisation
+  ## our normalisation
   aF0 <- aF0/sqrt(2)
 
-  # Eg.(62)
+  ## Eq.(62)
   gg <- c(2-pi/2, pi/4-0.5, 0.5-pi/8, 3*pi/16 - 0.5)
-  # Tab.1
+  ## Tab.1
   mm <- c(6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24)
   mml <- length(mm)
   N <- 16*pi^2
-  # physical mass of the rho in lattice units
+  ## physical mass of the rho in lattice units
   amrho_phys <- a_fm*770/197.3
-  # related to those of tab.2a by Eq.(53)
+  ## related to those of tab.2a by Eq.(53)
   lb1 <- log((aLamb1/ampiV)^2)
   lb2 <- log((aLamb2/ampiV)^2)
   lb3 <- log((aLamb3/ampiV)^2)
   lb4 <- log((aLamb4/ampiV)^2)
   lpi <- log((ampiV/amrho_phys)^2)
-  # tab 2b -> rtilde
+  ## tab 2b -> rtilde
   
   if(missing(parm)) {
     parm <- rep(0, times=6)
@@ -53,28 +53,28 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
 
   M_P <- ampiV
   F_P <- afpiV
-  # Eq.(10)
+  ## Eq.(10)
   xi_P <- (M_P/(4*pi*aF0))^2
   mmB0 <- rep(0., times=length(ampiV))
   mmB2 <- mmB0
   for(jj in 1:length(ampiV)) {
-    # Eq.(11)
+    ## Eq.(11)
     lambda_pi <-  ampiV[jj]*L[jj]
-    # argument of functions in Eq.(50). sqrt(n) comes from Eq.(26-27)
+    ## argument of functions in Eq.(50). sqrt(n) comes from Eq.(26-27)
     z <-  sqrt(c(1:mml))*lambda_pi
     B0 <- 2*besselK(z,1)/z
     B2 <- 2*besselK(z,2)/z^2
-    # remaining factor from Eq.(26-27) and sum, ...
+    ## remaining factor from Eq.(26-27) and sum, ...
     mmB0[jj] <- sum(mm*B0)
-    # which I can already do since all the dependence on n is here
+    ## which I can already do since all the dependence on n is here
     mmB2[jj] <- sum(mm*B2)
   }
-  # simplifyed S's: Eq.(59)
+  ## simplifyed S's: Eq.(59)
   S4mpi <- (13/3)*gg[1] * mmB0 - (1/3)*(40*gg[1] + 32*gg[2] + 26*gg[3])*mmB2
   S6mpi <- 0
-  S4fpi=(1/6)*(8*gg[1] - 13*gg[2])* mmB0 - (1/3)*(40*gg[1] - 12*gg[2] - 8*gg[3] - 13*gg[4])*mmB2
+  S4fpi <- (1/6)*(8*gg[1] - 13*gg[2])* mmB0 - (1/3)*(40*gg[1] - 12*gg[2] - 8*gg[3] - 13*gg[4])*mmB2
 
-  # Eq. (49) and (54)
+  ## Eq. (49) and (54)
   I2mpi <- -mmB0
   I4mpi <- mmB0*(-55/18 + 4*lb1 + 8/3*lb2 - 5/2*lb3 -2*lb4) +
     mmB2*(112/9 - (8/3)*lb1 - (32/3)*lb2) + S4mpi
@@ -98,7 +98,7 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
       S4fpi
   I6fpi <- 0
-  # Eq. (26-27). The sum over n is already done
+  ## Eq. (26-27). The sum over n is already done
   Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi + xi_P^2 * I6mpi)
   Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi + xi_P^2 * I6fpi);
 
@@ -106,17 +106,18 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
   fpiFV <- afpiV * (1 + rev* Rfpi);
 
 
-  # print out some further information (i.e. the contribuition of each order)
-  if (printit) {
+  ## print out some further information (i.e. the contribuition of each order)
+  if (0) {
     mlo <- - (xi_P/2) * (I2mpi)
     mnlo <- - (xi_P/2) * (xi_P * I4mpi)
     mnnlo <- - (xi_P/2) * (xi_P^2 * I6mpi)
     flo <- (xi_P) * (I2fpi)
     fnlo= (xi_P) * (xi_P * I4fpi)
     cat("mpi: ", mlo, mnlo, mnnlo, "\nfpi: ", flo, fnlo, "\n")
-                                        #    ['percent fin V corr: Mpi_LO   Mpi_NLO   Mpi_NNLO    Fpi_LO   Fpi_NLO']
-                                        #[mlo', mnlo', mnnlo', flo', fnlo']
-                                        #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
+  }
+  if(printit) {
+    cat("Rmpi:", Rmpi, "\n")
+    cat("Rfpi:", Rfpi, "\n")
   }
 
   if(any(is.na(c(mpiFV, fpiFV)))) {
@@ -140,50 +141,51 @@ cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
                    ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE)
 {
 
-  # our normalisation need this?
+  ## our normalisation need this?
   aF0 <- aF0/sqrt(2)
 
-  # Eg.(62)
+  ## Eq.(62)
   gg <- c(2-pi/2, pi/4-0.5, 0.5-pi/8, 3*pi/16 - 0.5)
-  # Tab.1
+  ## Tab.1
   mm <- c(6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24)
   mml <- length(mm)
   N <- 16*pi^2
 
-  # related to those of tab.2a by Eq.(53)
+  ## related to those of tab.2a by Eq.(53)
   lb1 <- log(aLamb1^2/a2B0mu)
   lb2 <- log(aLamb2^2/a2B0mu)
   lb3 <- log(aLamb3^2/a2B0mu)
   lb4 <- log(aLamb4^2/a2B0mu)
 
-  # Eq.(10)
+  ## Eq.(10)
   xi_P <- a2B0mu/(4*pi*aF0)^2
   mmB0 <- rep(0., times=length(ampiV))
   mmB1 <- mmB0
   mmB2 <- mmB0
   for(jj in 1:length(ampiV)) {
-    # Eq.(11)
+    ## Eq.(11)
     lambda <-  sqrt(c(1:mml))*sqrt(a2B0mu[jj])*L[jj]
     B0 <- 2*besselK(lambda,0)
-    # moved original B0 -> B1
+    ## moved original B0 -> B1
     B1 <- 2*besselK(lambda,1)/lambda
     B2 <- 2*besselK(lambda,2)/lambda^2
-    # remaining factor from Eq.(26-27) and sum, ...
+    ## remaining factor from Eq.(26-27) and sum, ...
     mmB0[jj] <- sum(mm*B0)
     mmB1[jj] <- sum(mm*B1)
-    # which I can already do since all the dependence on n is here
+    ## which I can already do since all the dependence on n is here
     mmB2[jj] <- sum(mm*B2)
   }
-  # DeltaM and DeltaF
+
+  ## DeltaM and DeltaF
   DeltaM <- -1/(2*N)*lb3
   DeltaF <- 2/N*lb4
   
-  # simplifyed S's: Eq.(59)
+  ## simplifyed S's: Eq.(59)
   S4mpi <- (13/3)*gg[1] * mmB1 - (1/3)*(40*gg[1] + 32*gg[2] + 26*gg[3])*mmB2
   S6mpi <- 0
   S4fpi=(1/6)*(8*gg[1] - 13*gg[2])* mmB1 - (1/3)*(40*gg[1] - 12*gg[2] - 8*gg[3] - 13*gg[4])*mmB2
 
-  # Eq. (49) and (54)
+  ## Eq. (49) and (54)
   I2mpi <- -mmB1
   I4mpi <- mmB1*(-55/18 + 4*lb1 + 8/3*lb2 - 5/2*lb3 -2*lb4) +
     mmB2*(112/9 - (8/3)*lb1 - (32/3)*lb2) + S4mpi +
@@ -194,15 +196,15 @@ cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     mmB2*(112/9 - (8/3)*lb1 -(32/3)*lb2) + 
       S4fpi + N*DeltaM*mmB0 + 2*N*DeltaF*mmB1
 
-  # Eq. (26-27). The sum over n is already done
-  #Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi)
-  #Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi)
+  ## Eq. (26-27). The sum over n is already done
+  ##Rmpi <- - (xi_P/2) * (I2mpi + xi_P * I4mpi)
+  ##Rfpi <- (xi_P)   * (I2fpi + xi_P * I4fpi)
 
   mpiFV <- ampiV * (1 + rev* ( - (xi_P/2) * (I2mpi + xi_P * I4mpi)));
   fpiFV <- afpiV * (1 + rev* ((xi_P)   * (I2fpi + xi_P * I4fpi)));
 
 
-  # print out some further information (i.e. the contribuition of each order)
+  ## print out some further information (i.e. the contribuition of each order)
   if (printit) {
     mlo <- - (xi_P/2) * (I2mpi)
     mnlo <- - (xi_P/2) * (xi_P * I4mpi)
