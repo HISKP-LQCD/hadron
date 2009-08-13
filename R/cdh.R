@@ -1,8 +1,8 @@
 cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
                      ampiV, afpiV, aF0, a_fm, L, printit=FALSE, incim6 = FALSE,
-                     rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), c_impl=TRUE) {
+                     rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE) {
 
-  if(!c_impl || incim6) {
+  if(!use.cimpl) {
     return(invisible(cdh.R(parm=parm, rev=rev, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
                            ampiV=ampiV, afpiV=afpiV, aF0=aF0, a_fm=a_fm, L=L, printit=printit, incim6=incim6,
                            rtilde=rtilde)))
@@ -12,7 +12,23 @@ cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb
     return(invisible(list(mpiFV=rep(NA, times=length(ampiV)), fpiFV=rep(NA, times=length(ampiV)))))
   }
 
-  res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV, as.integer(printit))
+  res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV, as.integer(printit), rtilde, as.integer(incim6))
+  return(invisible(list(mpiFV=res[1:length(ampiV)], fpiFV=res[(length(ampiV)+1):(2*length(ampiV))])))
+}
+
+cdhnew <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+                     ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE, use.cimpl = TRUE) {
+
+  if(!use.cimpl) {
+    return(invisible(cdhnew.R(rev=rev, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
+                              ampiV=ampiV, afpiV=afpiV, aF0=aF0, a2B0mu=a2B0mu, L=L, printit=printit)))
+  }
+  if(any(ampiV <= 0.)) {
+    warning("ampiV must not be negative!\n")
+    return(invisible(list(mpiFV=rep(NA, times=length(ampiV)), fpiFV=rep(NA, times=length(ampiV)))))
+  }
+
+  res <- .Call("cdhnew_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a2B0mu, L, ampiV, afpiV, as.integer(printit))
   return(invisible(list(mpiFV=res[1:length(ampiV)], fpiFV=res[(length(ampiV)+1):(2*length(ampiV))])))
 }
 
@@ -137,8 +153,8 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
 #% L is the number of points in one spatial direction (we assume the spatial volume V=L^3)
 #% Eq. (49) and (54)
 
-cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
-                   ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE)
+cdhnew.R <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+                     ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE)
 {
 
   ## our normalisation need this?
@@ -205,17 +221,17 @@ cdhnew <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
 
 
   ## print out some further information (i.e. the contribuition of each order)
-  if (printit) {
+  if (0) {
     mlo <- - (xi_P/2) * (I2mpi)
     mnlo <- - (xi_P/2) * (xi_P * I4mpi)
     flo <- (xi_P) * (I2fpi)
     fnlo= (xi_P) * (xi_P * I4fpi)
     cat("mpi: ", mlo, mnlo, "\n", "fpi: ", flo, fnlo, "\n")
-                                        #    ['percent fin V corr: Mpi_LO   Mpi_NLO   Mpi_NNLO    Fpi_LO   Fpi_NLO']
-                                        #[mlo', mnlo', mnnlo', flo', fnlo']
-                                        #report=[(ampiV.*L)', ampiV', Rmpi', sqrt(2)*afpiV', Rfpi'];
   }
-
+  if(printit) {
+    cat("Rmpi:", ( - (xi_P/2) * (I2mpi + xi_P * I4mpi)), "\n")
+    cat("Rfpi:", ((xi_P)   * (I2fpi + xi_P * I4fpi)), "\n")
+  }
   
   if(any(is.na(c(mpiFV, fpiFV)))) {
     warning("NaNs produced in: cdhnew!\n")

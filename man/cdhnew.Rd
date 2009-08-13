@@ -1,25 +1,46 @@
 \name{cdhnew}
 \alias{cdhnew}
-\title{finite size corrections a la Colangelo, Duerr, Haefeli, but as a
-  series in the quark mass}
+\title{finite size corrections a la Colangelo, Duerr, Haefeli, but
+  re-expanded as series in the quark mass}
 \description{
-  finite size corrections a la Colangelo, Duerr, Haefeli, but as a
-  series in the quark mass
+  finite size corrections a la Colangelo, Duerr, Haefeli, but
+  re-expanded as series in the quark mass
 }
 \usage{
 cdhnew(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
-       ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE)
+       ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE, use.cimpl=TRUE)
 }
 \arguments{
-  \item{rev}{bla}
+  \item{rev}{\eqn{rev=+1} corrects from \eqn{L} to \eqn{L=\infty}{L =
+      unendlich}, \eqn{rev=-1} the other way around}
+  \item{aLambn}{The four low energy
+    \eqn{\Lambda_{1-4}}{Lambda1-Lambda4}constants in lattice units.}
+  \item{ampiV}{pseudo scalar mass values to be corrected}
+  \item{afpiV}{pseudo scalar decay constant values to be corrected}
+  \item{aF0}{\eqn{af_0}{af0} in lattice units}
+  \item{a2B0mu}{\eqn{2B_0\mu}{2 B0 mu} in lattice units, where
+    \eqn{\mu}{mu} is the quark mass and \eqn{B_0}{B0} a low energy
+    constant}
+  \item{L}{the lattice spatial extent}
+  \item{printit}{if set to TRUE the corrections are printed}
+  \item{use.cimpl}{use the four times faster direct c Implementation of
+    the correction routine}
 }
 \value{
   a list with the corrected values for mpi and fpi
 }
 \details{
-  bla
+  see reference for details. We use the simplyfied formulae for the S
+  quantities, see eq. (59) in first reference.
 }
 \references{
+  Gilberto Colangelo, Stephan Durr, Christoph Haefeli,
+  Nucl.Phys.B721:136-174,2005. hep-lat/0503014
+
+  and
+
+  R. Frezzotti, V. Lubicz, S. Simula,
+  arXiv:0812.4042 [hep-lat] 
 }
 %\seealso{
 %}

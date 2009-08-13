@@ -5,20 +5,36 @@
   finite size corrections a la Colangelo, Duerr, Haefeli
 }
 \usage{
-cdh(parm=NULL, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+   cdh(parm=NULL, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
                  ampiV, afpiV, aF0, a_fm, L, printit=F, incim6 = TRUE,
-                 rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0))
+                 rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE)
 }
 \arguments{
-  \item{rev}{bla}
+  \item{rev}{\eqn{rev=+1} corrects from \eqn{L} to \eqn{L=\infty}{L =
+      unendlich}, \eqn{rev=-1} the other way around}
+  \item{aLambn}{The four low energy
+    \eqn{\Lambda_{1-4}}{Lambda1-Lambda4}constants in lattice units.}
+  \item{ampiV}{pseudo scalar mass values to be corrected}
+  \item{afpiV}{pseudo scalar decay constant values to be corrected}
+  \item{aF0}{\eqn{af_0}{af0} in lattice units}
+  \item{a_fm}{the value of the lattice spacing in fermi}
+  \item{L}{the lattice spatial extent}
+  \item{printit}{if set to TRUE the corrections are printed}
+  \item{incim6}{in- or exclude the NNNLO correction for the mass}
+  \item{rtilde}{the low energy constants \eqn{\tilde{r}}{rtilde}, needed
+  only if \code{incim6=TRUE}}
+  \item{use.cimpl}{use the four times faster direct c Implementation of
+    the correction routine}
 }
 \value{
   a list with the corrected values for mpi and fpi
 }
 \details{
-  bla
+  see reference for details. We use the simplyfied formulae for the S
+  quantities, see eq. (59) in the reference.
 }
 \references{
+  Gilberto Colangelo, Stephan Durr, Christoph Haefeli, Nucl.Phys.B721:136-174,2005. hep-lat/0503014
 }
 %\seealso{
 %}
