@@ -10,6 +10,18 @@
 #include <gsl/gsl_sf_bessel.h>
 #include "cdh.h"
 
+gsl_error_handler_t * old_handler;
+
+void my_errhandler(const char * reason, const char * file, int line, int gsl_errno) {
+  if(gsl_errno != GSL_EUNDRFLW) {
+    error("ERROR: In GSL the following error occured: %s\nline %d of file %s\n", gsl_strerror(gsl_errno), line, file);
+  }
+  else {
+    warning("WARNING: In GSL routines the following error occured: %s in cdh.c\n", gsl_strerror(gsl_errno));
+  }
+  return;
+}
+
 double g1(double x) {
   double weights[20] = {6.,12.,8.,6.,24.,24.,0.,12.,30.,24.,24.,8.,24.,48.,0.,6.,48.,36.,24.,24.};
   double sex, res=0.;
@@ -41,8 +53,8 @@ int g1array(double * x, double * res, const int n) {
 }
 
 
-void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb4,
-	   double aF0_, double a_fm, int * L, double * ampiV, double *afpiV, const int n,
+static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb4,
+	   double * aF0, double a_fm, int * L, double * ampiV, double *afpiV, const int n,
 	   double * mpiFV, double * fpiFV, const int printit, 
 	   double * rtilde, const int incim6) {
   
@@ -52,11 +64,8 @@ void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
-  double *lb1, *lb2, *lb3, *lb4, *lpi, *M_P, *F_P, *xi_P, *mmB0, *mmB2;
+  double *lb1, *lb2, *lb3, *lb4, *lpi, *xi_P, *mmB0, *mmB2;
   double *S4mpi, *S4fpi, *I4mpi, *I2mpi, *I2fpi, *I4fpi, *I6mpi;
-  double aF0;
-
-  aF0 = aF0_/sqrt(2.);
 
   gg[0] = 2. - pi/2.;
   gg[1] = pi/4. - 0.5;
@@ -64,11 +73,11 @@ void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb
   gg[3] = 3*pi/16. - 0.5;
   N = 16*pi*pi;
   amrho_phys = a_fm * 770.0/197.3;
-  lb1 = (double*) malloc(n*sizeof(double));
-  lb2 = (double*) malloc(n*sizeof(double));
-  lb3 = (double*) malloc(n*sizeof(double));
-  lb4 = (double*) malloc(n*sizeof(double));
-  lpi = (double*) malloc(n*sizeof(double));
+  lb1 = (double*) Calloc(n, double);
+  lb2 = (double*) Calloc(n, double);
+  lb3 = (double*) Calloc(n, double);
+  lb4 = (double*) Calloc(n, double);
+  lpi = (double*) Calloc(n, double);
   for(i = 0; i < n; i++) {
     lb1[i] = log(aLamb1/ampiV[i]*aLamb1/ampiV[i]);
     lb2[i] = log(aLamb2/ampiV[i]*aLamb2/ampiV[i]);
@@ -77,24 +86,18 @@ void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb
     lpi[i] = log(ampiV[i]/amrho_phys*ampiV[i]/amrho_phys);
   }
 
-  M_P = (double*)   malloc(n*sizeof(double));
-  F_P = (double*)   malloc(n*sizeof(double));
-  mmB0 = (double*)  malloc(n*sizeof(double));
-  mmB2 = (double*)  malloc(n*sizeof(double));
-  xi_P = (double*)  malloc(n*sizeof(double));
-  S4mpi = (double*) malloc(n*sizeof(double));
-  S4fpi = (double*) malloc(n*sizeof(double));
-  I2mpi = (double*) malloc(n*sizeof(double));
-  I4mpi = (double*) malloc(n*sizeof(double));
-  I2fpi = (double*) malloc(n*sizeof(double));
-  I4fpi = (double*) malloc(n*sizeof(double));
-  I6mpi = (double*) malloc(n*sizeof(double));
+  mmB0 = (double*)  Calloc(n, double);
+  mmB2 = (double*)  Calloc(n, double);
+  xi_P = (double*)  Calloc(n, double);
+  S4mpi = (double*) Calloc(n, double);
+  S4fpi = (double*) Calloc(n, double);
+  I2mpi = (double*) Calloc(n, double);
+  I4mpi = (double*) Calloc(n, double);
+  I2fpi = (double*) Calloc(n, double);
+  I4fpi = (double*) Calloc(n, double);
+  I6mpi = (double*) Calloc(n, double);
   for(i = 0; i < n; i++) {
-    M_P[i] = ampiV[i];
-    F_P[i] = afpiV[i];
-    xi_P[i] = (M_P[i]/(4*pi*aF0))*(M_P[i]/(4*pi*aF0)); 
-    mmB0[i] = 0.;
-    mmB2[i] = 0.;
+    xi_P[i] = 2.*(ampiV[i]*ampiV[i]/(4*pi*aF0[i])/(4*pi*aF0[i])); 
   }
   for(j = 0; j < n; j++) {
     lambda_pi = ampiV[j]*L[j];
@@ -144,24 +147,24 @@ void fscdh(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb
   if(printit) {
     printf("Rmpi ");
     for(i = 0; i < n; i++) {
-      printf("%f ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i] + xi_P[i]*xi_P[i] * I6mpi[i]));
+      printf("%e ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i] + xi_P[i]*xi_P[i] * I6mpi[i]));
     }
     printf("\nRfpi ");
     for(i = 0; i < n; i++) {
-      printf("%f ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
+      printf("%e ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
     }
     printf("\n");
   }
 
-  free(lb1); free(lb2); free(lb3); free(lb4); free(lpi);
-  free(M_P); free(F_P); free(xi_P); free(mmB0); free(mmB2);
-  free(S4mpi); free(S4fpi); free(I4mpi); free(I2mpi);
-  free(I2fpi); free(I4fpi); free(I6mpi);
+  Free(lb1); Free(lb2); Free(lb3); Free(lb4); Free(lpi);
+  Free(xi_P); Free(mmB0); Free(mmB2);
+  Free(S4mpi); Free(S4fpi); Free(I4mpi); Free(I2mpi);
+  Free(I2fpi); Free(I4fpi); Free(I6mpi);
   return;
 }
 
-void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb4,
-	      double aF0_, int * L, double * ampiV, double *afpiV, double *a2B0mu, 
+static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb4,
+	      double aF0, int * L, double * ampiV, double *afpiV, double *a2B0mu, 
 	      const int n, double * mpiFV, double * fpiFV, const int printit) {
   
   const double pi=3.1415926535897932384626433832;
@@ -170,21 +173,18 @@ void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aL
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
-  double *lb1, *lb2, *lb3, *lb4, *lpi, *DeltaM, *DeltaF, *xi_P, *mmB0, *mmB1, *mmB2;
+  double *lb1, *lb2, *lb3, *lb4, *DeltaM, *DeltaF, *xi_P, *mmB0, *mmB1, *mmB2;
   double *S4mpi, *S4fpi, *I4mpi, *I2mpi, *I2fpi, *I4fpi;
-  double aF0;
-
-  aF0 = aF0_/sqrt(2.);
 
   gg[0] = 2. - pi/2.;
   gg[1] = pi/4. - 0.5;
   gg[2] = 0.5 - pi/8.;
   gg[3] = 3*pi/16. - 0.5;
   N = 16*pi*pi;
-  lb1 = (double*) malloc(n*sizeof(double));
-  lb2 = (double*) malloc(n*sizeof(double));
-  lb3 = (double*) malloc(n*sizeof(double));
-  lb4 = (double*) malloc(n*sizeof(double));
+  lb1 = (double*) Calloc(n, double);
+  lb2 = (double*) Calloc(n, double);
+  lb3 = (double*) Calloc(n, double);
+  lb4 = (double*) Calloc(n, double);
 
   for(i = 0; i < n; i++) {
     lb1[i] = log(aLamb1*aLamb1/a2B0mu[i]);
@@ -193,23 +193,20 @@ void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aL
     lb4[i] = log(aLamb4*aLamb4/a2B0mu[i]);
   }
 
-  DeltaM = (double*)   malloc(n*sizeof(double));
-  DeltaF = (double*)   malloc(n*sizeof(double));
-  mmB0 = (double*)  malloc(n*sizeof(double));
-  mmB1 = (double*)  malloc(n*sizeof(double));
-  mmB2 = (double*)  malloc(n*sizeof(double));
-  xi_P = (double*)  malloc(n*sizeof(double));
-  S4mpi = (double*) malloc(n*sizeof(double));
-  S4fpi = (double*) malloc(n*sizeof(double));
-  I2mpi = (double*) malloc(n*sizeof(double));
-  I4mpi = (double*) malloc(n*sizeof(double));
-  I2fpi = (double*) malloc(n*sizeof(double));
-  I4fpi = (double*) malloc(n*sizeof(double));
+  DeltaM = (double*)   Calloc(n, double);
+  DeltaF = (double*)   Calloc(n, double);
+  mmB0 = (double*)  Calloc(n, double);
+  mmB1 = (double*)  Calloc(n, double);
+  mmB2 = (double*)  Calloc(n, double);
+  xi_P = (double*)  Calloc(n, double);
+  S4mpi = (double*) Calloc(n, double);
+  S4fpi = (double*) Calloc(n, double);
+  I2mpi = (double*) Calloc(n, double);
+  I4mpi = (double*) Calloc(n, double);
+  I2fpi = (double*) Calloc(n, double);
+  I4fpi = (double*) Calloc(n, double);
   for(i = 0; i < n; i++) {
-    xi_P[i] = a2B0mu[i]/(4*pi*aF0)/(4*pi*aF0); 
-    mmB0[i] = 0.;
-    mmB1[i] = 0.;
-    mmB2[i] = 0.;
+    xi_P[i] = 2.*a2B0mu[i]/(4*pi*aF0)/(4*pi*aF0); 
   }
   for(j = 0; j < n; j++) {
     for(i = 0; i < mm1; i++) {
@@ -256,10 +253,10 @@ void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aL
     printf("\n");
   }
 
-  free(lb1); free(lb2); free(lb3); free(lb4); free(lpi);
-  free(DeltaM); free(DeltaF); free(xi_P); free(mmB0); free(mmB1); 
-  free(S4mpi); free(S4fpi); free(I4mpi); free(I2mpi);
-  free(I2fpi); free(I4fpi); free(mmB2);
+  Free(lb1); Free(lb2); Free(lb3); Free(lb4);
+  Free(DeltaM); Free(DeltaF); Free(xi_P); Free(mmB0); Free(mmB1); 
+  Free(S4mpi); Free(S4fpi); Free(I4mpi); Free(I2mpi);
+  Free(I2fpi); Free(I4fpi); Free(mmB2);
   return;
 }
 
@@ -304,18 +301,13 @@ SEXP cdh_c(SEXP rev, SEXP L1, SEXP L2, SEXP L3, SEXP L4, SEXP F0, SEXP a, SEXP L
 
   PROTECT(res = NEW_NUMERIC(2*N));
   resp = NUMERIC_POINTER(res);
-  mpiFV = (double*) malloc(N*sizeof(double));
-  fpiFV = (double*) malloc(N*sizeof(double));
 
-  fscdh(revp[0], L1p[0], L2p[0], L3p[0], L4p[0], F0p[0], ap[0], Lp, 
-	mpip, fpip, N, mpiFV, fpiFV, printitp[0], rtildep, incim6p[0]);
+  old_handler = gsl_set_error_handler(&my_errhandler);
 
-  for(i = 0; i < N; i++) {
-    resp[i] = mpiFV[i];
-    resp[N+i] = fpiFV[i];
-  }
-  free(mpiFV);
-  free(fpiFV);
+  fscdh(revp[0], L1p[0], L2p[0], L3p[0], L4p[0], F0p, ap[0], Lp, 
+	mpip, fpip, N, resp, &resp[N], printitp[0], rtildep, incim6p[0]);
+
+  gsl_set_error_handler(old_handler);
   UNPROTECT(14);
   return(res);
 }
@@ -357,17 +349,14 @@ SEXP cdhnew_c(SEXP rev, SEXP L1, SEXP L2, SEXP L3, SEXP L4, SEXP F0, SEXP a2B0mu
 
   PROTECT(res = NEW_NUMERIC(2*N));
   resp = NUMERIC_POINTER(res);
-  mpiFV = (double*) malloc(N*sizeof(double));
-  fpiFV = (double*) malloc(N*sizeof(double));
 
-  fscdhnew(revp[0], L1p[0], L2p[0], L3p[0], L4p[0], F0p[0], Lp, mpip, fpip, a2B0mup, N, mpiFV, fpiFV, printitp[0]);
+  old_handler = gsl_set_error_handler(&my_errhandler);
 
-  for(i = 0; i < N; i++) {
-    resp[i] = mpiFV[i];
-    resp[N+i] = fpiFV[i];
-  }
-  free(mpiFV);
-  free(fpiFV);
+  fscdhnew(revp[0], L1p[0], L2p[0], L3p[0], L4p[0], F0p[0], Lp, 
+	   mpip, fpip, a2B0mup, N, resp, &resp[N], printitp[0]);
+
+  gsl_set_error_handler(old_handler);
+
   UNPROTECT(12);
   return(res);
 }

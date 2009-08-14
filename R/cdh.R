@@ -2,16 +2,16 @@ cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb
                      ampiV, afpiV, aF0, a_fm, L, printit=FALSE, incim6 = FALSE,
                      rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE) {
 
-  if(!use.cimpl) {
-    return(invisible(cdh.R(parm=parm, rev=rev, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
-                           ampiV=ampiV, afpiV=afpiV, aF0=aF0, a_fm=a_fm, L=L, printit=printit, incim6=incim6,
-                           rtilde=rtilde)))
-  }
   if(any(ampiV <= 0.)) {
     warning("ampiV must not be negative!\n")
     return(invisible(list(mpiFV=rep(NA, times=length(ampiV)), fpiFV=rep(NA, times=length(ampiV)))))
   }
 
+  if(!use.cimpl) {
+    return(invisible(cdh.R(parm=parm, rev=rev, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
+                           ampiV=ampiV, afpiV=afpiV, aF0=aF0, a_fm=a_fm, L=L, printit=printit, incim6=incim6,
+                           rtilde=rtilde)))
+  }
   res <- .Call("cdh_c", rev, aLamb1, aLamb2, aLamb3, aLamb4, aF0, a_fm, L, ampiV, afpiV, as.integer(printit), rtilde, as.integer(incim6))
   return(invisible(list(mpiFV=res[1:length(ampiV)], fpiFV=res[(length(ampiV)+1):(2*length(ampiV))])))
 }
@@ -135,7 +135,7 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     cat("Rmpi:", Rmpi, "\n")
     cat("Rfpi:", Rfpi, "\n")
   }
-
+  
   if(any(is.na(c(mpiFV, fpiFV)))) {
     warning("NaNs produced in: cdh!\n")
     return(invisible(list(mpiFV=ampiV, fpiFV=afpiV)))
