@@ -1,8 +1,15 @@
 ## alpha_s at scale mu to nl's order in PT
 ## input needed is Lambda_QCD, Nc, Nf
 ## original fortran code by Vittorio Lubicz
+alphas <- function(mu, nl=3, lam0=0.250, Nc=3., Nf=2., use.cimpl=TRUE) {
+  if(!use.cimpl) {
+    return(alphas.R( mu, nl, lam0, Nc, Nf))
+  }
+  return(.Call("alphas_c", mu, nl, lam0, Nc, Nf))
+}
 
-alphas <- function(mu, nl, lam0=0.250, Nc=3., Nf=2.) {
+
+alphas.R <- function(mu, nl, lam0, Nc, Nf) {
 
   Cf <- (Nc^2-1.)/2./Nc
   Z3 <- 1.20206
