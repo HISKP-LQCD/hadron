@@ -5,7 +5,7 @@ alphas <- function(mu, nl=3, lam0=0.250, Nc=3., Nf=2., use.cimpl=TRUE) {
   if(!use.cimpl) {
     return(alphas.R( mu, nl, lam0, Nc, Nf))
   }
-  return(.Call("alphas_c", mu, nl, lam0, Nc, Nf))
+  return(.Call("alphas", mu, nl, lam0, as.numeric(Nc), as.numeric(Nf)))
 }
 
 
