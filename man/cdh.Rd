@@ -47,7 +47,7 @@ aLamb2 <- 0.5
 aLamb3 <- 0.38
 aLamb4 <- 0.66
 cdhres <- cdh(rev=+1, aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=aLamb3, aLamb4=aLamb4,
-              ampiV=mps, afpiV=fps, aF0=afpiV, a_fm=0.08, L=L, printit=TRUE,
+              ampiV=mps, afpiV=fps, aF0=fps, a_fm=0.08, L=L, printit=TRUE,
               incim6=FALSE)
 cdhres$mpiFV
 cdhres$fpiFV
