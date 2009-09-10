@@ -40,7 +40,6 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     if there are several operators available (local-local,
     local-smeared, etc.), then this labels these (for cmi format)
   }
-  }
   \item{ind.vec}{
     index vector indexing the column numbers in cmicor to be used
   }
