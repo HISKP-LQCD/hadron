@@ -60,7 +60,7 @@ static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLam
   
   const double pi=3.1415926535897932384626433832;
   int i, j;
-  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi;
+  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi, tmp;
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
@@ -79,10 +79,11 @@ static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLam
   lb4 = (double*) Calloc(n, double);
   lpi = (double*) Calloc(n, double);
   for(i = 0; i < n; i++) {
-    lb1[i] = log(aLamb1/ampiV[i]*aLamb1/ampiV[i]);
-    lb2[i] = log(aLamb2/ampiV[i]*aLamb2/ampiV[i]);
-    lb3[i] = log(aLamb3/ampiV[i]*aLamb3/ampiV[i]);
-    lb4[i] = log(aLamb4/ampiV[i]*aLamb4/ampiV[i]);
+    tmp = 1./ampiV[i]/ampiV[i];
+    lb1[i] = log(aLamb1*aLamb1*tmp);
+    lb2[i] = log(aLamb2*aLamb2*tmp);
+    lb3[i] = log(aLamb3*aLamb3*tmp);
+    lb4[i] = log(aLamb4*aLamb4*tmp);
     lpi[i] = log(ampiV[i]/amrho_phys*ampiV[i]/amrho_phys);
   }
 
@@ -169,7 +170,7 @@ static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double a
   
   const double pi=3.1415926535897932384626433832;
   int i, j;
-  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi;
+  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi, tmp;
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
@@ -187,10 +188,11 @@ static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double a
   lb4 = (double*) Calloc(n, double);
 
   for(i = 0; i < n; i++) {
-    lb1[i] = log(aLamb1*aLamb1/a2B0mu[i]);
-    lb2[i] = log(aLamb2*aLamb2/a2B0mu[i]);
-    lb3[i] = log(aLamb3*aLamb3/a2B0mu[i]);
-    lb4[i] = log(aLamb4*aLamb4/a2B0mu[i]);
+    tmp = 1./a2B0mu[i];
+    lb1[i] = log(aLamb1*aLamb1*tmp);
+    lb2[i] = log(aLamb2*aLamb2*tmp);
+    lb3[i] = log(aLamb3*aLamb3*tmp);
+    lb4[i] = log(aLamb4*aLamb4*tmp);
   }
 
   DeltaM = (double*)   Calloc(n, double);

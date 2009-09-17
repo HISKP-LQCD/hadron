@@ -1,10 +1,12 @@
 fovermps.pion <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.asq=-1.) {
-  r0sqTwoBmu <- par[4]*x
-  mpssq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.asq)
-  if(any(mpssq <= 0) || any(is.nan(mpssq))) return(NaN)
-  fpsV <- getfps.pion(r0sqTwoBmu, par=par, N=N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.asq)
-  mpsV <- sqrt(mpssq)
-  return(fpsV/mpsV - (130.7/135))
+  ##r0sqTwoBmu <- par[4]*x
+  ##mpssq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.asq)
+  ##fpsV <- getfps.pion(r0sqTwoBmu, par=par, N=N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.asq)
+  ##mpsV <- sqrt(mpssq)
+  ##if(any(mpssq <= 0) || any(is.nan(mpssq))) return(NaN)
+  lres <- getfpsmps(par[4]*x, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.asq)
+  return(lres$fps/lres$mps - (130.7/135))
+  ##return(fpsV/mpsV - (130.7/135))
 }
 
 
@@ -142,7 +144,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   chisqr <- mini$value
   par <- mini$par
   
-                                        # compute observables
+  ## compute observables
   mu.phys <- numeric()
   a <- numeric()
   r0 <- numeric()
@@ -158,12 +160,11 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   Sigma <- numeric()
   rssq <- numeric()
   
-  r0mu.phys <- uniroot(fovermps.pion, c(0.00001, 0.050),
+  r0mu.phys <- uniroot(fovermps.pion, c(0.003, 0.012),
                      tol=1.e-12, par=par, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=-1., N=N)$root
   r0TwoB <- par[4]
   r0sqTwoBmu <- r0TwoB*r0mu.phys
   r0F <- par[3]
-  mpisq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf)
   fpi <- getfps.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf)
   lmpssq <-  log( 0.1396^2 )
   l3 <- log((par[1]/fpi*0.1307)^2) - lmpssq
@@ -301,23 +302,26 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
   r0TwoB <- par[4]
   r0F <- par[3]
   fpi <- numeric()
-  if(par[4] <= 0 || any(par[(4+1):(4+N)] <= 0)) {
+  if(any(par[c(4:(4+N), (4+2*N+1):(4+3*N))] <= 0)) {
     return(invisible(NaN))
   }
 
-  ## r0mu.phys is the renormalised quark mass
+  ## r0mu.phys is the renormalised quark mass tol=1.e-12,
   r0mu.phys <- try(uniroot(fovermps.pion,
-                           c(0.0001, 0.030), tol=1.e-12,
+                           interval=c(0.007, 0.01), tol=1.e-8,
                            par=par, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=-1.,
-                           fit.kmf=fit.kmf, N=N)$root, silent=T)
+                           N=N)$root, silent=T)
   if(inherits(r0mu.phys, "try-error") || is.nan(r0mu.phys)) {
-    r0mu.phys <- 0.011
+    ##return(invisible(NaN))
+    r0mu.phys <- 0.009
   }
   r0fm <- getfps.pion(r0sqTwoBmu=r0TwoB*r0mu.phys, par, fit.nnlo=fit.nnlo,
                        fit.kmf=fit.kmf, fit.asq=FALSE)/0.1307*0.1973
   ## r0 Lambda = 0.62 from hep-lat/0411025
   ## alphas at 2 GeV
-  alpha2GeV <- alphas(mu = 2.0, nl = 3, lam0 = 0.62/r0fm*0.1973)
+  ##alpha2GeV <- alphas(mu = 2.0, nl = 3, lam0 = 0.62/r0fm*0.1973)
+  ## with lam0 = 0.2567068 GeV from arXiv:0804.3383 [hep-lat] 
+  alpha2GeV <- 0.01914803
   for( i in 1:N) {
     if(fit.asq) {
       fit.a <- i
@@ -329,20 +333,27 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
     ## r0 <- par[4+i]  + (data[[i]]$mu^r0exp - (par[4+2*N+i]*r0mu.phys/par[4+i])^r0exp)*par[4+N+i]
     r0 <- par[4+i] + par[4+N+i]*data[[i]]$mu^r0exp
     a_fm <- r0fm/par[4+i]
+
     chisum <- chisum + sum(((data[[i]]$r0a-r0)/data[[i]]$dr0)^2, na.rm=TRUE)
 
     ## now the rest
     r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[4+2*N+i]
-    ##mpssq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
-    ##fpsV <- getfps.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)/par[4+i]
-    lres <- getfpsmpssq(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
-    mpssq <- lres$mpssq
+    lres <- getfpsmps.R(r0sqTwoBmu,
+                        par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
+    mpssq <- lres$mps^2
+    mpsV <- lres$mps/par[4+i]
     fpsV <- lres$fps/par[4+i]
-
-    if(any(is.nan(mpssq)) || any(mpssq <= 0)) {
+    if(any(is.nan(mpssq))) {
       return(NaN)
     }
-    mpsV <- sqrt(mpssq)/par[4+i]
+
+    ##mpssq <- getmpssq.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
+    ##fpsV <- getfps.pion(r0sqTwoBmu, par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)/par[4+i]
+    ##mpsV <- sqrt(mpssq)/par[4+i]
+    ##if(any(is.nan(mpssq)) || any(mpssq <= 0)) {
+    ##  return(NaN)
+    ##}
+
 
     if(fsmethod=="cdh" || fsmethod=="cdhnew") {
       if(fit.l12) {
@@ -350,8 +361,8 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
         aLamb2=par[6+3*N]/par[4+i]
       }
       else {
-        aLamb1=sqrt(exp(priors$l1)*(0.1396*a_fm/0.1973)^2)
-        aLamb2=sqrt(exp(priors$l2)*(0.1396*a_fm/0.1973)^2)
+        aLamb1=exp(0.5*priors$l1)*(0.1396*a_fm/0.1973)
+        aLamb2=exp(0.5*priors$l2)*(0.1396*a_fm/0.1973)
       }
 
       if(fsmethod=="cdhnew") {
@@ -370,8 +381,7 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
       fpsV <- res$fpiFV
     }
     else {
-      mpsv <- data[[i]]$L[ij]*mpsV
-      r <-  mpssq/(4.0*pi*par[3])^2*g1(mpsv)/par[4+i]
+      r <-  mpssq/(4.0*pi*par[3])^2*g1( data[[i]]$L[ij]*mpsV )/par[4+i]
 
       mpsV <- mpsV*(1.+0.5*r)
       fpsV <- fpsV*(1.0-2.0*r)
@@ -395,7 +405,8 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
     }
     ## Z_P: data is in RI' scheme at 1/a, fit par in MSbar at 2GeV
     ## alphas at 1/a
-    alpha1ova <- alphas(mu = 1./a_fm*0.1973, nl = 3, lam0 = 0.62/r0fm*0.1973)
+    ##alpha1ova <- alphas(mu = 1./a_fm*0.1973, nl = 3, lam0 = 0.62/r0fm*0.1973)
+    alpha1ova <- alphas(mu = 1./a_fm*0.1973, nl = 3, lam0 = 0.2567068)
     chisum <- chisum + ((ZPdata$ZP[i]-zetazp(0.8178*par[4+2*N+i], alpha2GeV, alpha1ova))/ZPdata$dZP[i])^2
     if(printit) {
       cat("r0chiral", par[4+i], "\n")
@@ -464,7 +475,13 @@ getmpssq.pion <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit
   return(r0sqTwoBmu*(1.0 + asq/par[4+fit.asq]^2*par[npar-1] + r0sqTwoBmu*(rln3/(4.0*pi*par[3])^2 )))
 }
 
-getfpsmpssq <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1.) {
+getfpsmps <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1.) {
+  dl <- length(r0sqTwoBmu)
+  res <- .Call("getbothc", r0sqTwoBmu, par, N, fit.nnlo, fit.kmf, fit.asq)
+  return(invisible(list(mps=res[(dl+1):(2*dl)], fps=res[1:dl])))
+}
+
+getfpsmps.R <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1.) {
 
   npar <- length(par)
   xi <- r0sqTwoBmu/(4.0*pi*par[3])^2
@@ -499,7 +516,7 @@ getfpsmpssq <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.a
     fps <- par[3]*(1.0 + asq/par[4+fit.asq]^2*par[npar]  - 2.0*r0sqTwoBmu*(rln4)/(4.0*pi*par[3])^2 )
     mpssq <- r0sqTwoBmu*(1.0 + asq/par[4+fit.asq]^2*par[npar-1] + r0sqTwoBmu*(rln3/(4.0*pi*par[3])^2 ))
   }
-  return(invisible(list(mpssq=mpssq, fps=fps)))
+  return(invisible(list(mps=sqrt(mpssq), fps=fps)))
 }
 
 getfps.pion <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1.) {
