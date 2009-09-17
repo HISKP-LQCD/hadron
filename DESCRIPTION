@@ -1,6 +1,6 @@
 Package: hadron
-Version: 0.2
-Date: 2008-03-27
+Version: 0.3
+Date: 2009-09-17
 Title: package to extract hadronic quantities
 Author: Carsten Urbach <carsten.urbach@physik.hu-berlin.de>
 Maintainer: Carsten Urbach <carsten.urbach@physik.hu-berlin.de>
