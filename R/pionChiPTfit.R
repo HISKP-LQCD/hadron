@@ -15,7 +15,7 @@ fovermps.pion <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.asq=-1
 # 2:              r0*L4
 # 3:              r0*f0
 # 4:              2*r0*B0
-# 5 to 4+N:       r0
+# 5 to 4+N:       r0/a chiral
 # 5+N to 4+2*N    sr0 (slope of r0 wrt mu^2 )
 # 5+2*N to 4+3*N: ZP
 # 4+3*N+1:        r0*L1
@@ -57,7 +57,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   else {
     N <- length(ii)
   }
-  np <- 4+3*N
+  np <- 6+2*N
   if(fit.l12) np=np+2
   if(fit.asq) np=np+2
   if(fit.nnlo && fit.kmf) np=np+2
@@ -156,7 +156,8 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   B0 <- numeric()
   R0 <- numeric()
   Zp <- numeric()
-  sr0 <- numeric()
+  sr1 <- numeric()
+  sr2 <- numeric()
   Sigma <- numeric()
   rssq <- numeric()
   
@@ -170,8 +171,8 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   l3 <- log((par[1]/fpi*0.1307)^2) - lmpssq
   l4 <- log((par[2]/fpi*0.1307)^2) - lmpssq
   if(fit.l12) {
-    l1 <- log((par[5+3*N]/fpi*0.1307)^2) - lmpssq
-    l2 <- log((par[6+3*N]/fpi*0.1307)^2) - lmpssq
+    l1 <- log((par[7+2*N]/fpi*0.1307)^2) - lmpssq
+    l2 <- log((par[8+2*N]/fpi*0.1307)^2) - lmpssq
   }
   F <- r0F/fpi*0.1307
   B0 <- r0TwoB/fpi*0.1307/2.
@@ -179,10 +180,11 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   mu.phys <-  r0mu.phys/fpi*0.1307
   Sigma <- (B0*F^2/2)^(1/3)
   rssq <- 12./(4*pi*F)^2*(l4-12./13.)*0.1973^2
+  sr1 <- par[5+N]
+  sr2 <- par[6+N]
   for(i in 1:N) {
     a[i] <- fpi/0.1307*0.1973/par[4+i]
-    sr0[i] <- par[4+i+N]
-    Zp[i] <- par[4+i+2*N]
+    Zp[i] <- par[6+i+N]
   }
   
   boot.result <- NULL
@@ -242,8 +244,10 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
         #mu.phys
         boots[s,1] <- boots[s,1]/fpi*0.1307
         for(i in 1:N) {
+          ## a in fm for each beta
           boots[s,(i+N)] <- fpi/0.1307*0.1973/par.boot[4+i]
-          boots[s,(i+2*N)] <- par.boot[4+N+i]
+          ## 
+          boots[s,(i+2*N)] <- -1.
         }
         lmpssqr <- log( 0.1396^2 )
         # l3 and l4
@@ -251,8 +255,8 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
         boots[s,(2+3*N)] <- log((par.boot[2]/fpi*0.1307)^2) - lmpssqr
         if(fit.l12) {
           # l1 and l2
-          boots[s,(3+3*N)] <- log((par.boot[5+3*N]/fpi*0.1307)^2) - lmpssqr
-          boots[s,(4+3*N)] <- log((par.boot[6+3*N]/fpi*0.1307)^2) - lmpssqr
+          boots[s,(3+3*N)] <- log((par.boot[7+2*N]/fpi*0.1307)^2) - lmpssqr
+          boots[s,(4+3*N)] <- log((par.boot[8+2*N]/fpi*0.1307)^2) - lmpssqr
         }
         # f0 and B0
         boots[s,(5+3*N)] <- par.boot[3]/fpi*0.1307
@@ -281,7 +285,7 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   }
   
   result <- list(par=par, result=list(mu.phys=mu.phys, F=F, a=a, l1=l1, l2=l2, l3=l3, l4=l4, r0=r0,
-                            B0=B0, ZP=Zp, Sigma=Sigma, rssq=rssq, sr0=sr0,
+                            B0=B0, ZP=Zp, Sigma=Sigma, rssq=rssq, sr1=sr1, sr2=sr2,
                             chisqr=chisqr, dof=dof), fit=mini,
                  data=data, boot.result=boot.result, boots=boots, ZPdata=ZPdata, seed=seed,
                  fmcorrmatrix=corrmatrix, bootsamples=bootsamples, ZPbootsamples=ZPbootsamples,
@@ -302,7 +306,7 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
   r0TwoB <- par[4]
   r0F <- par[3]
   fpi <- numeric()
-  if(any(par[c(4:(4+N), (4+2*N+1):(4+3*N))] <= 0)) {
+  if(any(par[c(4:(4+N), (6+N+1):(6+2*N))] <= 0)) {
     return(invisible(NaN))
   }
 
@@ -327,17 +331,18 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
       fit.a <- i
     }
     ij <- ii[[i]]
-
+    a_fm <- r0fm/par[4+i]
+    
     ## fit r0/a as a function of (a mu)^2 first
     ## r0 = r0(mu_pi) + Dr0*(mu_q^\gamma - (Z_P*r0mu_pi/r0)^\gamma)
     ## r0 <- par[4+i]  + (data[[i]]$mu^r0exp - (par[4+2*N+i]*r0mu.phys/par[4+i])^r0exp)*par[4+N+i]
-    r0 <- par[4+i] + par[4+N+i]*data[[i]]$mu^r0exp
-    a_fm <- r0fm/par[4+i]
+    ##r0 <- par[4+i] + par[4+N+i]*data[[i]]$mu^r0exp
+    r0 <- par[4+i] *(1 + par[5+N]*data[[i]]$mu*par[4+i]/par[6+N+i] + par[6+N]*(data[[i]]$mu*par[4+i]/par[6+N+i])^2 )
 
     chisum <- chisum + sum(((data[[i]]$r0a-r0)/data[[i]]$dr0)^2, na.rm=TRUE)
 
     ## now the rest
-    r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[4+2*N+i]
+    r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[6+N+i]
     lres <- getfpsmps.R(r0sqTwoBmu,
                         par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
     mpssq <- lres$mps^2
@@ -357,8 +362,8 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
 
     if(fsmethod=="cdh" || fsmethod=="cdhnew") {
       if(fit.l12) {
-        aLamb1=par[5+3*N]/par[4+i]
-        aLamb2=par[6+3*N]/par[4+i]
+        aLamb1=par[7+2*N]/par[4+i]
+        aLamb2=par[8+2*N]/par[4+i]
       }
       else {
         aLamb1=exp(0.5*priors$l1)*(0.1396*a_fm/0.1973)
@@ -407,16 +412,16 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
     ## alphas at 1/a
     ##alpha1ova <- alphas(mu = 1./a_fm*0.1973, nl = 3, lam0 = 0.62/r0fm*0.1973)
     alpha1ova <- alphas(mu = 1./a_fm*0.1973, nl = 3, lam0 = 0.2567068)
-    chisum <- chisum + ((ZPdata$ZP[i]-zetazp(0.8178*par[4+2*N+i], alpha2GeV, alpha1ova))/ZPdata$dZP[i])^2
+    chisum <- chisum + ((ZPdata$ZP[i]-zetazp(0.8178*par[6+N+i], alpha2GeV, alpha1ova))/ZPdata$dZP[i])^2
     if(printit) {
       cat("r0chiral", par[4+i], "\n")
-      cat("datar0  ", data[[i]]$r0a[ij], "\n")
+      cat("datar0  ", data[[i]]$r0a, "\n")
       cat("modelr0 ", r0, "\n")
       cat("chir0   ", ((data[[i]]$r0a-r0)/data[[i]]$dr0), "\n")
       cat("sumr0   ", sum(((data[[i]]$r0a-r0)/data[[i]]$dr0)^2, na.rm=TRUE), "\n")
-      cat("modelZP ", zetazp(0.8178*par[4+2*N+i], alpha2GeV, alpha1ova), "\n")
+      cat("modelZP ", zetazp(0.8178*par[6+N+i], alpha2GeV, alpha1ova), "\n")
       cat("ZPdata  ", ZPdata$ZP[i], "\n")
-      cat("chiZP   ", ((ZPdata$ZP[i]-zetazp(0.8178*par[4+2*N+i], alpha2GeV, alpha1ova))/ZPdata$dZP[i]), "\n")
+      cat("chiZP   ", ((ZPdata$ZP[i]-zetazp(0.8178*par[6+N+i], alpha2GeV, alpha1ova))/ZPdata$dZP[i]), "\n")
       cat("modelm  ", mpsV, "\n")
       cat("datam   ", data[[i]]$mps[ij], "\n")
       cat("errm    ", data[[i]]$dmps[ij], "\n")
@@ -460,11 +465,11 @@ getmpssq.pion <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit
     if(fit.kmf) {
       fit.k <- 1.
     }
-    rln1 <- log(r0sqTwoBmu/par[3*N+5]^2)
-    rln2 <- log(r0sqTwoBmu/par[3*N+6]^2)
+    rln1 <- log(r0sqTwoBmu/par[7+2*N]^2)
+    rln2 <- log(r0sqTwoBmu/par[8+2*N]^2)
     # this line makes it work even if we do not fit k_M,F
     # however, fit.k=0. then...
-    np <- ifelse((3*N+7)<=npar, 3*N+7, npar)
+    np <- ifelse((2*N+9)<=npar, 2*N+9, npar)
     return(r0sqTwoBmu*(1. + xi*rln3 + asq/par[4+fit.asq]^2*par[npar-1] +
                        17./2.*xi^2*(((-28.*rln1 -32.*rln2 + 9.*rln3 + 49.)/51.)^2
                                     +fit.k*8./17.*par[np]
@@ -496,15 +501,15 @@ getfpsmps.R <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.a
     if(fit.kmf) {
       fit.k <- 1.
     }
-    rln1 <- log(r0sqTwoBmu/par[3*N+5]^2)
-    rln2 <- log(r0sqTwoBmu/par[3*N+6]^2)
-    np <- ifelse((3*N+8)<=npar, 3*N+8, npar)
+    rln1 <- log(r0sqTwoBmu/par[2*N+7]^2)
+    rln2 <- log(r0sqTwoBmu/par[2*N+8]^2)
+    np <- ifelse((2*N+10)<=npar, 2*N+10, npar)
     fps <- par[3]*(1. - 2.*xi*rln4 +  asq/par[4+fit.asq]^2*par[npar] -
                    5*xi^2*(((-14*rln1 - 16*rln2 - 6*rln3 + 6*rln4 + 23)/30.)^2
                            + fit.k*4./5.*par[np]
                            )
                    )
-    np <- ifelse((3*N+7)<=npar, 3*N+7, npar)
+    np <- ifelse((2*N+9)<=npar, 2*N+9, npar)
     mpssq <- r0sqTwoBmu*(1. + xi*rln3 + asq/par[4+fit.asq]^2*par[npar-1] +
                          17./2.*xi^2*(((-28.*rln1 -32.*rln2 + 9.*rln3 + 49.)/51.)^2
                                       +fit.k*8./17.*par[np]
@@ -534,9 +539,9 @@ getfps.pion <- function(r0sqTwoBmu, par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.a
     if(fit.kmf) {
       fit.k <- 1.
     }
-    rln1 <- log(r0sqTwoBmu/par[3*N+5]^2)
-    rln2 <- log(r0sqTwoBmu/par[3*N+6]^2)
-    np <- ifelse((3*N+8)<=npar, 3*N+8, npar)
+    rln1 <- log(r0sqTwoBmu/par[2*N+7]^2)
+    rln2 <- log(r0sqTwoBmu/par[2*N+8]^2)
+    np <- ifelse((2*N+10)<=npar, 2*N+10, npar)
     return(par[3]*(1. - 2.*xi*rln4 +  asq/par[4+fit.asq]^2*par[npar] -
                    5*xi^2*(((-14*rln1 - 16*rln2 - 6*rln3 + 6*rln4 + 23)/30.)^2
                            + fit.k*4./5.*par[np]
@@ -622,7 +627,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     }
   }
 
-  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N, (4+2*N+1):(4+2*N+N))
+  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N, (6+N+1):(6+2*N))
   nr <- length(jj)
 
   res <- numeric(nr)

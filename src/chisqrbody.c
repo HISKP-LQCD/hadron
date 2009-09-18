@@ -16,7 +16,7 @@ static R_INLINE void getboth(double * res, double * r0sqTwoBmu, double * par, co
   
   double xi, rln1, rln2, rln3, rln4;
   double asq = 1., fitk = 0.;
-  int i, np = 3*N+6, np2 = 3*N+7;
+  int i, np = 2*N+8, np2 = 2*N+9;
 
   if(fitasq < 0) {
     asq = 0;
@@ -28,7 +28,7 @@ static R_INLINE void getboth(double * res, double * r0sqTwoBmu, double * par, co
   }
   if(fitnnlo) {
     for(i = 0; i < dl; i++) {
-      rln1 = log(r0sqTwoBmu[i]/par[3*N+4]/par[3*N+4]);
+      rln1 = log(r0sqTwoBmu[i]/par[2*N+6]/par[2*N+6]);
       rln2 = log(r0sqTwoBmu[i]/par[3*N+5]/par[3*N+5]);
       rln3 = log(r0sqTwoBmu[i]/par[0]/par[0]);
       rln4 = log(r0sqTwoBmu[i]/par[1]/par[1]);
@@ -66,7 +66,7 @@ void getmpssqpion(double * res, double * r0sqTwoBmu, double * par, const int N,
 
   double xi, rln1, rln2, rln3;
   double asq = 1., fitk = 0.;
-  int i, np = 3*N+6;
+  int i, np = 2*N+8;
 
   if(fitasq < 0) {
     asq = 0;
@@ -77,8 +77,8 @@ void getmpssqpion(double * res, double * r0sqTwoBmu, double * par, const int N,
   }
   if(fitnnlo) {
     for(i = 0; i < dl; i++) {
-      rln1 = log(r0sqTwoBmu[i]/par[3*N+4]/par[3*N+4]);
-      rln2 = log(r0sqTwoBmu[i]/par[3*N+5]/par[3*N+5]);
+      rln1 = log(r0sqTwoBmu[i]/par[2*N+6]/par[2*N+6]);
+      rln2 = log(r0sqTwoBmu[i]/par[2*N+7]/par[2*N+7]);
       rln3 = log(r0sqTwoBmu[i]/par[0]/par[0]);
       xi = r0sqTwoBmu[i]/(4.0*pi*par[2])/(4.0*pi*par[2]);
       res[i] = r0sqTwoBmu[i]*(1. + xi*rln3 + asq/par[3+fitasq]/par[3+fitasq]*par[npar-2] +
@@ -103,7 +103,7 @@ void getfpspion(double * res, double * r0sqTwoBmu, double * par, const int N,
 
   double xi, rln1, rln2, rln3, rln4;
   double asq = 1., fitk = 0.;
-  int i, np = 3*N+7;
+  int i, np = 2*N+9;
 
   if(fitasq < 0) {
     asq = 0;
@@ -114,8 +114,8 @@ void getfpspion(double * res, double * r0sqTwoBmu, double * par, const int N,
   }
   if(fitnnlo) {
     for(i = 0; i < dl; i++) {
-      rln1 = log(r0sqTwoBmu[i]/par[3*N+4]/par[3*N+4]);
-      rln2 = log(r0sqTwoBmu[i]/par[3*N+5]/par[3*N+5]);
+      rln1 = log(r0sqTwoBmu[i]/par[2*N+6]/par[2*N+6]);
+      rln2 = log(r0sqTwoBmu[i]/par[2*N+7]/par[2*N+7]);
       rln3 = log(r0sqTwoBmu[i]/par[0]/par[0]);
       rln4 = log(r0sqTwoBmu[i]/par[1]/par[1]);
       xi = r0sqTwoBmu[i]/(4.0*pi*par[2])/(4.0*pi*par[2]);

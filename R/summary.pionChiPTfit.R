@@ -49,7 +49,7 @@ summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "+-",
           sd(fit$boots[,(N+i)], na.rm=TRUE),"fm \n")
       cat("            fitted r0/a = ", fit$par[4+i], "+-", sd(fit$boots[,(9+3*N+4+i)], na.rm=TRUE), "\n")
-      cat("            fitted ZP   = ", fit$par[4+2*N+i], "+-", sd(fit$boots[,(9+3*N+4+2*N+i)], na.rm=TRUE), "\n")
+      cat("            fitted ZP   = ", fit$par[6+N+i], "+-", sd(fit$boots[,(9+3*N+6+N+i)], na.rm=TRUE), "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -86,7 +86,7 @@ summary.pionChiPTfit <- function(fit, show.input=FALSE, show.chis=FALSE) {
     for(i in 1:N) {
       cat("lattice spacing", i, ":\n")
       cat("lattice spacing at r0/a = ",fit$par[4+i], ": a = ", fit$result$a[i], "fm \n")
-      cat("            fitted ZP   = ", fit$par[4+2*N+i], "\n")
+      cat("            fitted ZP   = ", fit$par[6+N+i], "\n")
       if(show.input) {
         cat("Raw data used:\n")
         print(fit$data[[i]])
@@ -201,8 +201,8 @@ tab <- function(fitlist) {
     }
   }
   # sr0 (slope)
-  for(i in 1:N) {
-    cat("$D_{r_0}$   ", sep="")
+  for(i in 1:2) {
+    cat("$sr_1}$   ", sep="")
     for(k in 1:nl) {
       cat(" & ", sep="")
       printtab(fitlist[[k]]$par[4+N+i], fitlist[[k]]$boot.result[nm+4+N+i,2], endl=(k==nl))
@@ -213,7 +213,7 @@ tab <- function(fitlist) {
     cat("$Z_\\mathrm{P}$   ", sep="")
     for(k in 1:nl) {
       cat(" & ", sep="")
-      printtab(fitlist[[k]]$par[4+2*N+i], fitlist[[k]]$boot.result[nm+4+2*N+i,2], endl=FALSE)
+      printtab(fitlist[[k]]$par[6+N+i], fitlist[[k]]$boot.result[nm+6+N+i,2], endl=FALSE)
     }
     cat(" \\\\\n", sep="")
   }
@@ -222,7 +222,7 @@ tab <- function(fitlist) {
     cat(c("$r_0\\Lambda_1$   ","$r_0\\Lambda_2$   ")[i], sep="")
     for(k in 1:nl) {
       cat(" & ", sep="")
-      if(fitlist[[k]]$fit.l12) printtab(fitlist[[k]]$par[4+3*N+i], fitlist[[k]]$boot.result[nm+4+3*N+i,2], endl=FALSE)
+      if(fitlist[[k]]$fit.l12) printtab(fitlist[[k]]$par[6+2*N+i], fitlist[[k]]$boot.result[nm+6+2*N+i,2], endl=FALSE)
       else cat("$-$")
     }
     if(k==nl)cat(" \\\\\n", sep="")
@@ -240,7 +240,7 @@ tab <- function(fitlist) {
     cat(c("$k_M$   ","$k_F$   ")[i], sep="")
     for(k in 1:nl) {
       cat(" & ", sep="")
-      if(fitlist[[k]]$fit.kmf) printtab(fitlist[[k]]$par[6+3*N+i], fitlist[[k]]$boot.result[nm+6+3*N+i,2], endl=FALSE)
+      if(fitlist[[k]]$fit.kmf) printtab(fitlist[[k]]$par[7+2*N+i], fitlist[[k]]$boot.result[nm+7+2*N+i,2], endl=FALSE)
       else cat("$-$")
       if(k==nl) cat(" \\\\\n", sep="")
     }
