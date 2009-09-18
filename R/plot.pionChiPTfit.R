@@ -19,7 +19,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     r0exp <- fit$r0exp
   }
   fit.a <- -1.
-  par <- fit$par
+  fpar <- fit$par
   if(!plot.file) {
     X11()
     par(list(las=1, tck=0.015, mgp=c(3.,.5,0)))
@@ -85,12 +85,13 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
 
   
   for(i in 1:N) {
-    ur0 <- fit$par[4+i]
+    ur0 <- fpar[4+i]
     dr0 <- dpar[4+i]
     mZP <- fit$ZPdata$ZP[i]
-    fZP <- fit$par[4+2*N+i]
-#    dZP <- fit$ZPdata$dZP[i]
-    dZP <- dpar[4+2*N+i]
+    fZP <- fpar[6+N+i]
+    mZP <- fZP
+                                        #    dZP <- fit$ZPdata$dZP[i]
+    dZP <- dpar[6+N+i]
     if(rawpoints) {
       uZP <- mZP
     }
@@ -106,8 +107,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     }
     if(fit$fsmethod == "cdh" || fit$fsmethod == "cdhnew") {
       if(fit$fit.l12) {
-        aLamb1=par[5+3*N]/ur0
-        aLamb2=par[6+3*N]/ur0
+        aLamb1=fpar[7+2*N]/ur0
+        aLamb2=fpar[8+2*N]/ur0
       }
       else {
         aLamb1=sqrt(exp(-0.4)*(0.1396*fit$result$a[i]/0.1973)^2)
@@ -115,15 +116,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       }
       
       if(fit$fsmethod == "cdhnew") {
-        res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
-                      aLamb4=par[2]/ur0, ampiV=fit$data[[i]]$mps,
-                      afpiV=fit$data[[i]]$fps, aF0=par[3]/ur0,
-                      a2B0mu=par[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
+        res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=fpar[1]/ur0,
+                      aLamb4=fpar[2]/ur0, ampiV=fit$data[[i]]$mps,
+                      afpiV=fit$data[[i]]$fps, aF0=fpar[3]/ur0,
+                      a2B0mu=fpar[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
                       printit=FALSE)
       }
       else {
-        res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=par[1]/ur0,
-                   aLamb4=par[2]/ur0, ampiV=fit$data[[i]]$mps, afpiV=fit$data[[i]]$fps,
+        res <- cdh(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=fpar[1]/ur0,
+                   aLamb4=fpar[2]/ur0, ampiV=fit$data[[i]]$mps, afpiV=fit$data[[i]]$fps,
                    aF0=fit$data[[i]]$fps, a_fm=fit$result$a[i], L=fit$data[[i]]$L, rev=-1,
                    printit=FALSE)
       }
@@ -134,7 +135,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     }
     else {
       mpsv <- fit$data[[i]]$L*fit$data[[i]]$mps
-      r <-  - fit$data[[i]]$mps^2/(4.0*pi*par[3])^2*g1(mpsv)
+      r <-  - fit$data[[i]]$mps^2/(4.0*pi*fpar[3])^2*g1(mpsv)
       
       mpsV <- fit$data[[i]]$mps*(1.+0.5*r)
       fpsV <- fit$data[[i]]$fps*(1.0-2.0*r)
@@ -146,14 +147,14 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                 length.out=500)
 
     
-    r0TwoB <- par[4]
+    r0TwoB <- fpar[4]
     r0sqTwoBmu <- r0TwoB*xfit
-    msq <- getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
-    f <- getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
-    mN <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=fit.a)
+    msq <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    f <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    mN <- getmN(r0sqTwoBmu, fpar, N, fit.asq=fit.a)
     color <- c("red", "blue", "darkseagreen", "darksalmon", "darkviolet")
     xmu <- ur0/uZP*fit$data[[i]]$mu
-    fitr0 <- par[4+i] + par[4+N+i]*(xfit/ur0*fZP)^r0exp
+    fitr0 <- fpar[4+i]*(1+fpar[5+N]*xfit+fpar[6+N]*xfit^2) ## + fpar[4+N+i]*(xfit/ur0*fZP)^r0exp
     pxmu <- split(xmu[ij], fit$data[[i]]$L[ij])
     pxmuall <- split(xmu, fit$data[[i]]$L)
     pdfps <- split(fit$data[[i]]$dfps[ij], fit$data[[i]]$L[ij])
@@ -167,9 +168,9 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     k <- length(pfpsV)
                                         # continuum curves
     if(fit$fit.asq && i == 1) {
-      f2 <- getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
-      mN2 <- getmN(r0sqTwoBmu, fit$par, N, fit.asq=-1.)
-      msq2 <- getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
+      f2 <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
+      mN2 <- getmN(r0sqTwoBmu, fpar, N, fit.asq=-1.)
+      msq2 <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
     }
     if(write.data) {
       file <- paste("curve_",i,".dat", sep="")
@@ -204,8 +205,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       j <- 1
       plotwitherror(pxmu[[j]],
                     ur0*pfpsV[[j]],
-                    sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
-                    ylim=c(0.9*par[3], 1.1*max(ur0*fpsV[ij], na.rm=TRUE)),
+                    sqrt((ur0*pdfps[[j]])^2 + (0*dr0*pfpsV[[j]])^2),
+                    ylim=c(0.9*fpar[3], 1.1*max(ur0*fpsV[ij], na.rm=TRUE)),
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression(r[0]*f[PS]), xlab=expression(r[0]*mu[R]),
                     axes=F, rep=rep)
@@ -213,7 +214,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       while(j <= k) { 
         plotwitherror(pxmu[[j]],
                       ur0*pfpsV[[j]],
-                      sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
+                      sqrt((ur0*pdfps[[j]])^2 + (0*dr0*pfpsV[[j]])^2),
                       col=color[i], bg=color[i],
                       pch=20+(i-1)*2+(j-1), rep=TRUE)
         j <- j+1
@@ -244,7 +245,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       for(j in 1:length(pfpsV)) {
         plotwitherror(pxmu[[j]],
                       ur0*pfpsV[[j]],
-                      sqrt((ur0*pdfps[[j]])^2 + (dr0*pfpsV[[j]])^2),
+                      sqrt((ur0*pdfps[[j]])^2 + (0*dr0*pfpsV[[j]])^2),
                       rep=TRUE, col=color[i], pch=20+(i-1)*2+(j-1), bg=color[i])
       }
       if(fit$fit.asq) {
@@ -262,7 +263,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     }
     dev.set(forderplot)
     if(i == 1) {
-      ff0 <- fit$par[3]
+      ff0 <- fpar[3]
       plot(xfit, rep(1., times=length(xfit)), axes=FALSE,
            ylim=c(0.9, 1.1*max(ur0*fpsV[ij]/ff0, na.rm=TRUE)),
            xlim=c(0.,1.1*max(xmu, na.rm=TRUE)),
@@ -276,15 +277,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       if(fit$fit.nnlo) {
         legend(x="topleft", legend=c("LO", "NLO", "NNLO"),
                inset=.05, lty=c(1, 2, 4))
-        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/ff0
+        lines(xfit, getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/ff0
               , lty=2)
-        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
+        lines(xfit, getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
               lty=4)
       }
       else {
         legend(x="topleft", legend=c("LO", "NLO"),
                inset=.05, lty=c(1, 2))
-        lines(xfit, getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
+        lines(xfit, getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
               lty=2)
       }
     }
@@ -344,7 +345,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                          + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
                     ylim=c(0.95*min((ur0*mpsV[ij])^2/(xmu[ij]),
                       na.rm=TRUE),
-                      1.1*fit$par[4]),
+                      1.1*fpar[4]),
                     xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                     pch=20, ylab=expression((r[0]*m[PS])^2/(r[0]*mu[R])), xlab=expression(r[0]*mu[R]),
                     axes=F)
@@ -369,13 +370,13 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       box()
       if(fit$fit.asq) lines(xfit, msq/xfit, lty="solid", col=color[i])
       else lines(xfit, msq/xfit, lty="solid")
-      points(0., fit$par[4], pch=25, col="sandybrown", bg="sandybrown")
+      points(0., fpar[4], pch=25, col="sandybrown", bg="sandybrown")
       if(fit$method != "no") {
         # 2*r0*B0
         arrows(0,
-               fit$par[4]-fit$boot.result[(3*N+9+4),2],
+               fpar[4]-fit$boot.result[(3*N+9+4),2],
                0,
-               fit$par[4]+fit$boot.result[(3*N+9+4),2],
+               fpar[4]+fit$boot.result[(3*N+9+4),2],
                length=0.01,angle=90,code=3)
       }
     }
@@ -398,15 +399,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     dev.set(r0plot)
     if(i==1) {
       j <- 1
-      plotwitherror(pxmuall[[j]]^r0exp, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
-                    ylim=c(0.85*min(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE),
-                      1.05*max(fit$data[[i]]$r0a/fit$par[4+i], na.rm=TRUE)),
-                    xlim=c(0.,1.1*max(xmu^r0exp, na.rm=TRUE)), col=color[i], bg=color[i],
-                    pch=19, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])^r0exp),
+      plotwitherror(pxmuall[[j]], r0a[[j]]/fpar[4+i], dr0a[[j]]/fpar[4+i],
+                    ylim=c(0.85*min(fit$data[[i]]$r0a/fpar[4+i], na.rm=TRUE),
+                      1.05*max(fit$data[[i]]$r0a/fpar[4+i], na.rm=TRUE)),
+                    xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
+                    pch=19, ylab=expression(r[0]/r[0](mu==0)), xlab=expression((r[0]*mu[R])),
                     axes=F)
       j <- 2
       while(j <= length(pxmuall)) {
-        plotwitherror(pxmuall[[j]]^r0exp, r0a[[j]]/fit$par[4+1], dr0a[[j]]/fit$par[4+1],
+        plotwitherror(pxmuall[[j]], r0a[[j]]/fpar[4+1], dr0a[[j]]/fpar[4+1],
                       col=color[i], bg=color[i],
                       pch=19+(j-1), rep=TRUE)
         j <- j+1
@@ -415,30 +416,30 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       axis(2, lwd=0.5)
       axis(3, lwd=0.5, labels=F)
       axis(4, lwd=0.5, labels=F)
-      legend(x="bottomright", legend=c(leg.text, expression(r[0]/r[0](mu==0)), "Fit"),
-             pch=c(19:(19+N-1), 25, -1), col=c(color[1:N],"sandybrown", "black"),
-             pt.bg=c(color[1:N],"sandybrown", "black"),
-             inset=.05, lty=c(rep(0,times=N+1), 1))      
+      legend(x="bottomright", legend=c(leg.text, "Fit"),
+             pch=c(19:(19+N-1), -1), col=c(color[1:N], "black"),
+             pt.bg=c(color[1:N], "black"),
+             inset=.05, lty=c(rep(0,times=N), 1))      
       box()
-      lines(xfit^r0exp, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
-      points((fit$result$r0*fit$result$mu.phys/0.1973)^r0exp, fit$par[4+i]/fit$par[4+i],
-             pch=25, bg="sandybrown", col="sandybrown")
+      lines(xfit, fitr0/fpar[4+i], lty="solid", col=c(color[i]))
+##      points((fit$result$r0*fit$result$mu.phys/0.1973), fpar[4+i]/fpar[4+i],
+##             pch=25, bg="sandybrown", col="sandybrown")
       if(fit$method != "no") {
 
       }
     }
     else {
       for(j in 1:length(pxmuall)) {
-        plotwitherror(pxmuall[[j]]^2, r0a[[j]]/fit$par[4+i], dr0a[[j]]/fit$par[4+i],
+        plotwitherror(pxmuall[[j]], r0a[[j]]/fpar[4+i], dr0a[[j]]/fpar[4+i],
                       col=color[i], bg=color[i],
                       pch=19+(i-1)*2+(j-1), rep=TRUE)
       }
-      lines(xfit^2, fitr0/fit$par[4+i], lty="solid", col=c(color[i]))
+      lines(xfit, fitr0/fpar[4+i], lty="solid", col=c(color[i]))
     }
     dev.set(morderplot)
     if(i == 1) {
       plot(xfit, rep(1., times=length(xfit)), axes=FALSE,
-           ylim=c(0.95*min(getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4], na.rm=TRUE), 1.1),
+           ylim=c(0.95*min(getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fpar[4], na.rm=TRUE), 1.1),
            xlim=c(0.,1.1*max(xmu, na.rm=TRUE)),
            ylab=expression((m[PS]^2/(2*B[0]))), xlab=expression(r[0]*mu[R]),
            type="l")
@@ -450,15 +451,15 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       if(fit$fit.nnlo) {
         legend(x="topleft", legend=c("LO", "NLO", "NNLO"),
                inset=.05, lty=c(1, 2, 4))
-        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/xfit/fit$par[4]
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/xfit/fpar[4]
               , lty=2)
-        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4],
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fpar[4],
               lty=4)
       }
       else {
         legend(x="topleft", legend=c("LO", "NLO"),
                inset=.05, lty=c(1, 2))
-        lines(xfit, getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4],
+        lines(xfit, getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fpar[4],
               lty=2)
       }
     }
@@ -469,7 +470,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
         plotwitherror(pxmu[[j]],
                       ur0*pmN[[j]],
                       sqrt((ur0*pdmN[[j]])^2 + (dr0*pmN[[j]])^2),
-                      ylim=c(0.90*par[5+2*N],
+                      ylim=c(0.90*fpar[7+N],
                         1.1*max(ur0*fit$data[[i]]$mN[ij], na.rm=TRUE)),
                       xlim=c(0.,1.1*max(xmu, na.rm=TRUE)), col=color[i], bg=color[i],
                       pch=20, ylab=expression(r[0]*m[N]), xlab=expression(r[0]*mu[R]),
