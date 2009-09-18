@@ -319,8 +319,8 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
     ##return(invisible(NaN))
     r0mu.phys <- 0.009
   }
-  r0fm <- getfps.pion(r0sqTwoBmu=r0TwoB*r0mu.phys, par, fit.nnlo=fit.nnlo,
-                       fit.kmf=fit.kmf, fit.asq=FALSE)/0.1307*0.1973
+  r0fm <- getfps.pion(r0sqTwoBmu=r0TwoB*r0mu.phys, par=par, N=N, fit.nnlo=fit.nnlo,
+                      fit.kmf=fit.kmf, fit.asq=FALSE)/0.1307*0.1973
   ## r0 Lambda = 0.62 from hep-lat/0411025
   ## alphas at 2 GeV
   ##alpha2GeV <- alphas(mu = 2.0, nl = 3, lam0 = 0.62/r0fm*0.1973)
