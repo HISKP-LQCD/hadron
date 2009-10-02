@@ -25,13 +25,13 @@ fovermps.pion <- function(x, par, N, fit.nnlo=FALSE, fit.kmf=fit.kmf, fit.asq=-1
 # npar-1:         D_m^0
 # npar:           D_f^0
 
-pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
+pionChiPTfit <- function(data, startvalues_, bootsamples, fsmethod="gl", a.guess,
                          ZPdata, method="no", seed=123456, r0exp=2,
                          priors = list(l1=-0.4, dl1=0.6, l2=4.3, dl2=0.1, kM=0., dkM=10., kF=0., dkF=10.),
                          fit.nnlo=FALSE, fit.l12=FALSE, fit.asq=FALSE, fit.kmf=FALSE,
                          fit.corr=FALSE, ii, boot.R=100, debug=FALSE) {
   
-  if(missing(data) || missing(startvalues) || missing(ZPdata)) {
+  if(missing(data) || missing(startvalues_) || missing(ZPdata)) {
     stop("data and startvalues must be provided!\n")
   }
   if(missing(bootsamples)) {
@@ -61,8 +61,9 @@ pionChiPTfit <- function(data, startvalues, bootsamples, fsmethod="gl", a.guess,
   if(fit.l12) np=np+2
   if(fit.asq) np=np+2
   if(fit.nnlo && fit.kmf) np=np+2
-  if(length(startvalues) != np) stop("length of startvalues", length(startvalues),
-             "must match number of fit parameters ", np, "!\n")
+  if(length(startvalues_) < np) stop("length of startvalues", length(startvalues_),
+             "must be larger than number of fit parameters ", np, "!\n")
+  startvalues <- startvalues_[1:np]
   if(fsmethod=="cdh" || fsmethod=="cdhnew") {
     if(missing(a.guess)) {
       cat("a.guess was missing! Guessing myself!\n")
@@ -343,8 +344,11 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
 
     ## now the rest
     r0sqTwoBmu <- r0TwoB*data[[i]]$mu[ij]*par[4+i]/par[6+N+i]
-    lres <- getfpsmps.R(r0sqTwoBmu,
-                        par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
+    ##lres <- getfpsmps(r0sqTwoBmu,
+    ##                  par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=fit.a)
+    ## in principle first fit.asq=FALSE and do it after FS correction
+    lres <- getfpsmps(r0sqTwoBmu,
+                      par, N, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=FALSE)
     mpssq <- lres$mps^2
     mpsV <- lres$mps/par[4+i]
     fpsV <- lres$fps/par[4+i]
@@ -390,6 +394,12 @@ chisqr.piononly <- function(par, data, ii, ZPdata, fsmethod="gl", a.guess, r0exp
 
       mpsV <- mpsV*(1.+0.5*r)
       fpsV <- fpsV*(1.0-2.0*r)
+    }
+    ## for correct order of FS corrections and a^2 artifacts
+    if(fit.asq) {
+      npar <- length(par)
+      fpsV <- fpsV + par[npar]*par[3]/par[4+i]^3
+      mpsV <- sqrt(mpsV^2 + par[npar-1]*r0sqTwoBmu/par[4+i]^4)
     }
     if(is.null(cm)) {
       chisum <- chisum + (sum(((data[[i]]$mps[ij]-mpsV)/(data[[i]]$dmps[ij]))^2) +
@@ -586,14 +596,30 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
 
   ## here we create the list of variables to be averaged
   ## their indices as well as their names
-  ii <- c(1, (3*N+1):(3*N+8), 2*N+10, 1, (9+3*N+5):(9+3*N+4+N), (N+1):(2*N), (9+3*N+4+2*N+1):(9+3*N+4+2*N+N))
-  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "r^2_s", "sigma", "fpif0", rep("r0/a", times=N), rep("a", times=N), rep("ZP", times=N))
+  ii <- c(1, (3*N+1):(3*N+7), (9+3*N+5+N), (9+3*N+6+N), 3*N+8, 
+	2*N+10, 1, (9+3*N+5):(9+3*N+4+N), (N+1):(2*N), (9+3*N+6+N+1):(9+3*N+6+N+N), 
+	NA, NA )
+  nlist <- c("m_ud", "l3", "l4", "l1", "l2", "f0", "B0", "r0", "C1", "C2", "r^2_s", 
+	"sigma", "fpif0", rep("r0/a", times=N), rep("a", times=N), rep("ZP", times=N), "Dm", "Df")
 
   ## bres will hold the results for each bootstrap sample
   bres <- array(0., dim=c(boot.R, length(ii)))
   tmp <- numeric(nl)
   for(j in 1:length(ii)) {
-    if(nlist[j] == "sigma") {
+    if(nlist[j] == "Dm" || nlist[j] == "Df") {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          pidx <- 9+3*N+length(fitlist[[k]]$par)
+	  if(nlist[j] == "Dm") pidx <- pidx-1
+          tmp[k] <- NA
+          if(fitlist[[k]]$fit.asq) {
+            tmp[k] <- fitlist[[k]]$boots[i, pidx]
+          }
+        }
+        bres[i, j] <- weighted.median(x = tmp, w=weights, na.rm = TRUE)
+      }
+    }
+    else if(nlist[j] == "sigma") {
       for(i in 1:boot.R) {
         for(k in 1:nl) {
           tmp[k] <- ((fitlist[[k]]$boots[i, 6+3*N]*fitlist[[k]]$boots[i, 5+3*N]^2)/2)^(1/3)
@@ -627,7 +653,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     }
   }
 
-  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 12, 11, 2, 5:(4+N), 1:N, (6+N+1):(6+2*N))
+  jj <- c(1, 6, 7, 4, 5, 2, 9, 8, 5+N, 6+N, 12, 11, 2, 5:(4+N), 1:N, (6+N+1):(6+2*N), 2*N+11, 2*N+12)
   nr <- length(jj)
 
   res <- numeric(nr)
@@ -639,9 +665,20 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
         histres[i,j] <- 0.1307/fitlist[[j]]$result[[2]]
       }
     }
-    else if(nlist[i] == "r0/a" || nlist[i] == "ZP") {
+    else if(nlist[i] == "r0/a" || nlist[i] == "ZP" || nlist[i] == "C1" || nlist[i] == "C2") {
       for(j in 1:nl) {
         histres[i,j] <- fitlist[[j]]$par[jj[i]]
+      }
+    }
+    else if(nlist[i] == "Dm" || nlist[i] == "Df") {
+      for(j in 1:nl) {
+        pidx <- length(fitlist[[j]]$par)
+	if(nlist[i] == "Dm") pidx <- pidx-1
+        histres[i,j] <- NA
+        if(fitlist[[j]]$fit.asq) {
+          histres[i,j] <- fitlist[[j]]$par[pidx]
+	  cat(fitlist[[j]]$par[pidx], pidx, "\n")
+        }
       }
     }
     else if(nlist[i] == "a") {
@@ -654,12 +691,12 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
         histres[i,j] <- fitlist[[j]]$result[[jj[i]]]
       }
     }
-    res[i] <- weighted.median(histres[i,], w=weights)
+    res[i] <- weighted.median(histres[i,], w=weights, na.rm=TRUE)
   }
 
   kk <- c(1:length(ii))
   for(i in 1:length(ii)) {
-    cat(nlist[kk[i]], "\t", signif(res[kk[i]], digits=4), "\t+-", signif(sd(bres[,kk[i]], na.rm=TRUE), digits=4), "\t+", signif(weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427))-res[kk[i]], digits=4), "\t-", signif(-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573))+res[kk[i]], digits=4), "\t bias:", res[kk[i]]-mean(bres[,kk[i]], na.rm=TRUE), "\n")
+    cat(nlist[kk[i]], "\t", signif(res[kk[i]], digits=4), "\t+-", signif(sd(bres[,kk[i]], na.rm=TRUE), digits=4), "\t+", signif(weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427), na.rm=TRUE)-res[kk[i]], digits=4), "\t-", signif(-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573), na.rm=TRUE)+res[kk[i]], digits=4), "\t bias:", res[kk[i]]-mean(bres[,kk[i]], na.rm=TRUE), "\n")
     ##cat(nlist[kk[i]], "\t", res[kk[i]], "+-", sd(bres[,kk[i]], na.rm=TRUE), "+-", sqrt(cov.wt(data.frame(histres[kk[i],]), weights)$cov[1]), "bias:", res[kk[i]]-mean(bres[,kk[i]], na.rm=TRUE), "\n")
   }
   for(i in 1:length(ii)) {
@@ -679,7 +716,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     else {
       fac <- 1.
     }
-    printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE) + (weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427))-res[kk[i]])^2 + (-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573))+res[kk[i]])^2), c=fac)
+    printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE) + (weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427), na.rm=TRUE)-res[kk[i]])^2 + (-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573), na.rm=TRUE)+res[kk[i]])^2), c=fac)
   }
   
   return(invisible(list(bootres=bres, res=res, histres=histres, weights=weights)))
