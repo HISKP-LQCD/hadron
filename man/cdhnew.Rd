@@ -11,8 +11,8 @@ cdhnew(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
        ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE, use.cimpl=TRUE)
 }
 \arguments{
-  \item{rev}{\eqn{rev=+1} corrects from \eqn{L} to \eqn{L=\infty}{L =
-      unendlich}, \eqn{rev=-1} the other way around}
+  \item{rev}{\eqn{rev=-1} corrects from \eqn{L} to \eqn{L=\infty}{L =
+      infinity}, \eqn{rev=+1} the other way around}
   \item{aLambn}{The four low energy
     \eqn{\Lambda_{1-4}}{Lambda1-Lambda4}constants in lattice units.}
   \item{ampiV}{pseudo scalar mass values to be corrected}
