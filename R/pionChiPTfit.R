@@ -630,7 +630,7 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     else if(nlist[j] == "r^2_s") {
       for(i in 1:boot.R) {
         for(k in 1:nl) {
-          tmp[k] <- 12./(4*pi*fitlist[[k]]$boots[i, 5+3*N])^2*(fitlist[[k]]$boots[, ii[3]]-13./12.)*0.1973^2
+          tmp[k] <- 12./(4*pi*fitlist[[k]]$boots[i, 5+3*N])^2*(fitlist[[k]]$boots[i, ii[3]]-13./12.)*0.1973^2
         }
         bres[i, j] <- weighted.median(x = tmp, w=weights)
       }
