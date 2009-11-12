@@ -180,7 +180,7 @@ pionChiPTfit <- function(data, startvalues_, bootsamples, fsmethod="gl", a.guess
   r0 <- fpi/0.1307*0.1973
   mu.phys <-  r0mu.phys/fpi*0.1307
   Sigma <- (B0*F^2/2)^(1/3)
-  rssq <- 12./(4*pi*F)^2*(l4-12./13.)*0.1973^2
+  rssq <- 12./(4*pi*F)^2*(l4-13./12.)*0.1973^2
   sr1 <- par[5+N]
   sr2 <- par[6+N]
   for(i in 1:N) {
@@ -627,6 +627,14 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
         bres[i, j] <- weighted.median(x = tmp, w=weights)
       }
     }
+    else if(nlist[j] == "r^2_s") {
+      for(i in 1:boot.R) {
+        for(k in 1:nl) {
+          tmp[k] <- 12./(4*pi*fitlist[[k]]$boots[i, 5+3*N])^2*(fitlist[[k]]$boots[, ii[3]]-13./12.)*0.1973^2
+        }
+        bres[i, j] <- weighted.median(x = tmp, w=weights)
+      }
+    }
     else if(nlist[j] == "B0") {
       for(i in 1:boot.R) {
         for(k in 1:nl) {
@@ -663,6 +671,11 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
     if(nlist[i] == "fpif0") {
       for(j in 1:nl) {
         histres[i,j] <- 0.1307/fitlist[[j]]$result[[2]]
+      }
+    }
+    else if(nlist[i] == "r^2_s") {
+      for(j in 1:nl) {
+        histres[i,j] <- 12./(4*pi*fitlist[[j]]$result[[2]])^2*(fitlist[[j]]$result[[7]]-13./12.)*0.1973^2
       }
     }
     else if(nlist[i] == "r0/a" || nlist[i] == "ZP" || nlist[i] == "C1" || nlist[i] == "C2") {
