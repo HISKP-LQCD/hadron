@@ -50,7 +50,7 @@ pionChiPTfit <- function(data, startvalues_, bootsamples, fsmethod="gl", a.guess
   N <- length(data)
   if(missing(ii)) {
     ii <- list(c(1:length(data[[1]]$mu)))
-    for (i in 2:N) {
+    if(N > 1) for (i in 2:N) {
       ii <- c(ii, list(c(1:length(data[[i]]$mu))))
     }
   }
@@ -162,7 +162,7 @@ pionChiPTfit <- function(data, startvalues_, bootsamples, fsmethod="gl", a.guess
   Sigma <- numeric()
   rssq <- numeric()
   
-  r0mu.phys <- uniroot(fovermps.pion, c(0.003, 0.012),
+  r0mu.phys <- uniroot(fovermps.pion, c(0.001, 0.012),
                      tol=1.e-12, par=par, fit.nnlo=fit.nnlo, fit.kmf=fit.kmf, fit.asq=-1., N=N)$root
   r0TwoB <- par[4]
   r0sqTwoBmu <- r0TwoB*r0mu.phys
@@ -207,7 +207,7 @@ pionChiPTfit <- function(data, startvalues_, bootsamples, fsmethod="gl", a.guess
                             r0a=rnorm(length(data[[1]]$r0a), mean=data[[1]]$r0a, sd=data[[1]]$dr0a),
                             dr0a=data[[1]]$dr0a))
       ZPdf <- data.frame(ZP=ZPbootsamples[s,], dZP=ZPdata$dZP[1:N])
-      for(i in 2:N) {
+      if(N > 1) for(i in 2:N) {
         df[[i]] <- data.frame(mu=data[[i]]$mu, mps=bootsamples[[i]][s,1,],
                               dmps=data[[i]]$dmps,
                               fps=bootsamples[[i]][s,2,],
@@ -722,14 +722,13 @@ average.pionChiPTfit <- function(list.fits, av.weight=TRUE) {
   }
   cat("---\n")
   for(i in 1:length(ii)) {
-    
     if(nlist[kk[i]] == "sigma" || nlist[kk[i]] == "B0" || nlist[kk[i]] == "f0" || nlist[kk[i]] == "m_ud") {
       fac <- 1000.
     }
     else {
       fac <- 1.
     }
-    printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE) + (weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427), na.rm=TRUE)-res[kk[i]])^2 + (-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573), na.rm=TRUE)+res[kk[i]])^2), c=fac)
+    printtab(res[kk[i]], sqrt(var(bres[,kk[i]], na.rm=TRUE) + max((weighted.quantile(histres[kk[i],], w=weights, prob=c(0.8427), na.rm=TRUE)-res[kk[i]]), (-weighted.quantile(histres[kk[i],], w=weights, prob=c(0.1573), na.rm=TRUE)+res[kk[i]]))^2), c=fac)
   }
   
   return(invisible(list(bootres=bres, res=res, histres=histres, weights=weights)))
