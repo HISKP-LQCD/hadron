@@ -102,6 +102,13 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
            (lf$t+0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
     lines(ll$t, rep(m, times=length(ll$t)))
   }
+  else if(!missing(lf)) {
+    plot.massfit(ll, ylab=expression(m[eff]), xlab="t")
+    points((lf$t-0.2), lf$mass, pch=1, col="blue")
+    arrows((lf$t-0.2), lf$mass-lf$dmass,
+           (lf$t-0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
+    lines(ll$t, rep(m, times=length(ll$t)))
+  }
   else {
     plot.massfit(ll, ylab=expression(m[eff]), xlab="t")
     lines(ll$t, rep(m, times=length(ll$t)))

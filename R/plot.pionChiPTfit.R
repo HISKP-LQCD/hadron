@@ -198,6 +198,17 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                              mZP, dZP),
                   row.names=FALSE, col.names=FALSE,
                   file=file)
+      if(i == 1) {
+        file <- "orders.dat"
+        ff0 <- fit$par[3]
+        write.table(data.frame(xfit,
+                               getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/ff0,
+                               getfps.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/ff0,
+                               getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/xfit/fit$par[4],
+                               getmpssq.pion(r0sqTwoBmu, fit$par, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1)/xfit/fit$par[4]),
+                    row.names=FALSE, col.names=FALSE,
+                    file=file)
+      }
     }
     # fps as a function of mu
     dev.set(fplot)
@@ -275,7 +286,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       axis(4, lwd=0.5, labels=F)
       box()
       if(fit$fit.nnlo) {
-        legend(x="topleft", legend=c("LO", "NLO", "NNLO"),
+        legend(x="topleft", legend=c("LO", "LO+NLO", "LO+NLO+NNLO"),
                inset=.05, lty=c(1, 2, 4))
         lines(xfit, getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=FALSE, fit.kmf=FALSE, fit.asq=-1)/ff0
               , lty=2)
