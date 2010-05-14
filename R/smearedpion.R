@@ -70,14 +70,15 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   }
   ## indices in Cor and E for fitting
   ii <- c((t1p1):(t2p1), (t1p1+T1):(t2p1+T1))
+
+  pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=c(1.,1.,1.)), Thalf=Thalf,
+                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   if(fit.routine != "gsl") {
-    pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=c(1.,1.,1.)), Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
     pionfit <- optim(pionfit$par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=1/pionfit$par), Thalf=Thalf,
                      x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   }
   else {
-    pionfit <- gsl_fit_smeared_correlator(par, Thalf=Thalf,
+    pionfit <- gsl_fit_smeared_correlator(pionfit$par, Thalf=Thalf,
                                           x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   }
   
@@ -100,11 +101,11 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   if(method == "uwerr" || method == "all") {
     fit.uwerrm <- uwerr(f=fitmasses.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
-                        fit.routine="optim")
+                        fit.routine=fit.routine)
 
     fit.uwerrf <- uwerr(f=fitf.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
-                        fit.routine="optim")
+                        fit.routine=fit.routine)
   }
   ## or bootstrap
   if(method == "boot" || method == "all") {
@@ -151,9 +152,16 @@ fitmasses.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
-               control=list(trace=0, parscale=1./fit$par),
-               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  if(fit.routine != "gsl") {
+    fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+                 control=list(trace=0, parscale=1./fit$par),
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  }
+  else {
+    fit <- gsl_fit_smeared_correlator(fit$par, Thalf=Thalf,
+                                      x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
+
+  }
 
   return(abs(fit$par[3]))
 }
@@ -169,9 +177,16 @@ fitf.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
-               control=list(trace=0, parscale=1./fit$par),
-               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  if(fit.routine != "gsl") {
+    fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+                 control=list(trace=0, parscale=1./fit$par),
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  }
+  else {
+    fit <- gsl_fit_smeared_correlator(fit$par, Thalf=Thalf,
+                                      x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
+
+  }
 
   return(abs(fit$par[1]/sqrt(abs(fit$par[3]))^3))
 }
@@ -195,13 +210,19 @@ fit.smeared.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
       Cor[i] = mean(Z[,(i)])
     }
   }
-
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
-               control=list(trace=0, parscale=1./fit$par),
-               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  if(fit.routine != "gsl") {
+    fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+                 control=list(trace=0, parscale=1./fit$par),
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+    
+  }
+  else {
+    fit <- gsl_fit_smeared_correlator(fit$par, Thalf=Thalf,
+                                      x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
+  }
 
   fit.fpi <- 2*kappa*2*(mu1+mu2)/2./sqrt(2)*abs(fit$par[1])/sqrt(abs(fit$par[3])^3)
   return(c(abs(fit$par[3]), fit.fpi, fit$par[c(1:2)],

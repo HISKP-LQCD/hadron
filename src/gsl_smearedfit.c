@@ -11,7 +11,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_vector.h>
 
-/* #define _DEBUG */
+/* #define _DEBUG  */
 
 struct data {
   int no_masses;
@@ -224,7 +224,7 @@ SEXP multifit_smearedcor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr
   function_fdf.params = &data_struct;
 
   for(i = 0; i < npar; i++) {
-    data_struct.parscale[i] = 1.;
+    data_struct.parscale[i] = 1./parp[i];
     para_initial[i] = parp[i] * data_struct.parscale[i];
   }
 
@@ -237,7 +237,9 @@ SEXP multifit_smearedcor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr
 #ifdef _DEBUG
   Print_State_Mass_Fit_Helper_1(iter, solver);
 #endif
-  for(i = 0; i < 2; i++) {
+  for(i = 0; i < 1; i++) {
+    if(i == 0) iter_max = 10;
+    else iter_max = 100;
     do {
       iter++;
       
@@ -256,16 +258,18 @@ SEXP multifit_smearedcor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr
 				       precp[0], precp[1]);
       
     }
-    while(status == GSL_CONTINUE && iter < iter_max);
+    while(status == GSL_CONTINUE || iter < iter_max);
 #ifdef _DEBUG
     fprintf(stderr, "\n");
 #endif
-    for(j = 0; j < npar; j++) {
-      data_struct.parscale[j] = gsl_vector_get(solver->x, j);
-      para_initial[j] = 1.;
+    if(i < 0) {
+      for(j = 0; j < npar; j++) {
+	data_struct.parscale[j] /= gsl_vector_get(solver->x, j);
+	para_initial[j] = 1.;
+      }
+      para_initial_ = gsl_vector_view_array(para_initial, npar);
+      gsl_multifit_fdfsolver_set(solver, &function_fdf, &para_initial_.vector);
     }
-    para_initial_ = gsl_vector_view_array(para_initial, npar);
-    gsl_multifit_fdfsolver_set(solver, &function_fdf, &para_initial_.vector);
   }
   // *****
   
