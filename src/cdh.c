@@ -60,7 +60,7 @@ static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLam
   
   const double pi=3.1415926535897932384626433832;
   int i, j;
-  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi, tmp;
+  double N, amrho_phys, z, lambda_pi, tmp;
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
@@ -170,7 +170,7 @@ static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double a
   
   const double pi=3.1415926535897932384626433832;
   int i, j;
-  double N, amrho_phys, z, Rfpi, Rmpi, lambda_pi, tmp;
+  double N, z, tmp;
   double gg[4];
   double mm[] = {6, 12, 8, 6, 24, 24, 0, 12, 30, 24, 24, 8, 24, 48, 0, 6, 48, 36, 24, 24};
   const int mm1 = 20;
@@ -266,10 +266,9 @@ SEXP cdh_c(SEXP rev, SEXP L1, SEXP L2, SEXP L3, SEXP L4, SEXP F0, SEXP a, SEXP L
 	   SEXP mpi, SEXP fpi, SEXP printit, SEXP rtilde, SEXP incim6) {
 
   double *revp, *L1p, *L2p, *L3p, *L4p, *F0p, *ap, *mpip, *fpip, *resp, *rtildep;
-  double *fpiFV, *mpiFV;
   int *Lp, *printitp, *incim6p;
   SEXP res;
-  int N, i;
+  int N;
 
   PROTECT(rev = AS_NUMERIC(rev));
   PROTECT(L1 = AS_NUMERIC(L1));
@@ -318,10 +317,9 @@ SEXP cdhnew_c(SEXP rev, SEXP L1, SEXP L2, SEXP L3, SEXP L4, SEXP F0, SEXP a2B0mu
 	      SEXP L, SEXP mpi, SEXP fpi, SEXP printit) {
 
   double *revp, *L1p, *L2p, *L3p, *L4p, *F0p, *mpip, *fpip, *resp, *a2B0mup;
-  double *fpiFV, *mpiFV;
   int *Lp, *printitp;
   SEXP res;
-  int N, i;
+  int N;
 
   PROTECT(rev = AS_NUMERIC(rev));
   PROTECT(L1 = AS_NUMERIC(L1));

@@ -35,7 +35,7 @@ double exp_fsq(const gsl_vector * x, void *data)
   double p[6][6], m[6];
   double sum = 0.;
 
-  size_t i, j, k=0, id0, id1;
+  size_t i, j, k=0, id0=0, id1=0;
   double Y = 0., sign = 1., c = 0.;
 
   for(i = 0; i < no_masses; i++) {
@@ -200,10 +200,10 @@ void exp_dfsq (const gsl_vector * x, void *data,
   double *t = ((struct data *)data)->x;
   double *y = ((struct data *)data)->y;
   double *err = ((struct data *) data)->err;
-  int npar = N+1, id0, id1;
+  int npar = N+1, id0=0, id1=0;
   double p[6][6], m[6];
-  size_t i, j, k=0, kludge = 0;
-  double Y = 0., dY=0., sign = 1., c;
+  size_t i, j, k=0;
+  double Y = 0., sign = 1., c;
   double *res;
 
   res = (double*)malloc(no_masses*npar*sizeof(double));
@@ -418,10 +418,10 @@ void exp_fdfsq (const gsl_vector * x, void *data, double *f,
   double *t = ((struct data *)data)->x;
   double *y = ((struct data *)data)->y;
   double *err = ((struct data *) data)->err;
-  int npar = N+1, id0, id1;
+  int npar = N+1, id0=0, id1=0;
   double p[6][6], m[6];
-  size_t i, j, k=0, kludge = 0;
-  double Y = 0., dY=0., sign = 1., c, sum=0.;
+  size_t i, j, k=0;
+  double Y = 0., sign = 1., c, sum=0.;
   double *res;
 
   res = (double*)malloc(no_masses*npar*sizeof(double));
@@ -654,8 +654,7 @@ void Print_State_Mass_Fit_Helper_2(int iter, gsl_multimin_fdfminimizer *minimize
 SEXP multimin_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr, 
 		  SEXP prec, SEXP N, SEXP max_iter, SEXP no_masses)
 {
-  int npar, nx, ny, i, j, iter_max;
-  double p1, p2, m;
+  int npar, nx, ny, i, iter_max;
   double *yp, *errp, *parp, *precp, *statep;
   double chi_square, red_chi_square;
   int dof;
@@ -676,8 +675,8 @@ SEXP multimin_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr,
   /*  Initialize the data structure. */
   struct data data_struct;
   gsl_multimin_function_fdf function_fdf;
-  gsl_matrix *covar;
-  double * para_initial, c=1.;
+/*   gsl_matrix *covar; */
+  double * para_initial;
   gsl_vector_view para_initial_;
   int status, iter=0, no_points=0;
 

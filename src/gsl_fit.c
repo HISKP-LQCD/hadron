@@ -23,7 +23,7 @@ struct data {
   double * err;
 };
 
-int exp_f(const gsl_vector * x, void *data, 
+inline static int exp_f(const gsl_vector * x, void *data, 
 	      gsl_vector * f)
 {
   int no_masses = ((struct data *)data)->no_masses;
@@ -35,7 +35,7 @@ int exp_f(const gsl_vector * x, void *data,
   double *err = ((struct data *) data)->err;
   double p[6][6], m[6];
 
-  size_t i, j, k=0, id0, id1, kludge = 0;
+  size_t i, j, k=0, id0 = 0, id1 = 0, kludge = 0;
   double Y = 0., sign = 1., c = 0.;
 
   for(i = 0; i < no_masses; i++) {
@@ -194,7 +194,7 @@ int exp_f(const gsl_vector * x, void *data,
 }
 
 
-int exp_df (const gsl_vector * x, void *data, 
+inline static int exp_df (const gsl_vector * x, void *data, 
 		  gsl_matrix * J)
 {
   int no_masses = ((struct data *)data)->no_masses;
@@ -202,12 +202,10 @@ int exp_df (const gsl_vector * x, void *data,
   int N = ((struct data *)data)->N;
   double Time = 2.*((struct data *)data)->Thalf;
   double *t = ((struct data *)data)->x;
-  double *y = ((struct data *)data)->y;
   double *err = ((struct data *) data)->err;
-  int npar = N+1;
   double p[6][6], m[6];
   size_t i, j, k=0, kludge = 0;
-  double Y = 0., dY=0., sign = 1.;
+  double Y = 0., dY=0.;
 
   for(i = 0; i < no_masses; i++) {
     for(j = 0; j < N; j++) {
@@ -424,7 +422,7 @@ int exp_df (const gsl_vector * x, void *data,
 }
      
      
-int exp_fdf (const gsl_vector * x, void *data,
+inline static int exp_fdf (const gsl_vector * x, void *data,
                gsl_vector * f, gsl_matrix * J)
 {
   exp_f (x, data, f);
@@ -433,7 +431,7 @@ int exp_fdf (const gsl_vector * x, void *data,
   return GSL_SUCCESS;
 }
 
-void Print_State_Mass_Fit_Helper_1(int iter, gsl_multifit_fdfsolver *solver)
+static void Print_State_Mass_Fit_Helper_1(int iter, gsl_multifit_fdfsolver *solver)
 {
   fprintf(stderr, "iter = %4d: p1 = %+9.6lf, p2 = %+9.6lf, m = %+9.6lf (chi_square = %13.6lf).\n", iter, gsl_vector_get(solver->x, 0), gsl_vector_get(solver->x, 1), gsl_vector_get(solver->x, 2), pow(gsl_blas_dnrm2(solver->f), 2.0));
 }
@@ -441,7 +439,7 @@ void Print_State_Mass_Fit_Helper_1(int iter, gsl_multifit_fdfsolver *solver)
 SEXP multifit_cor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr, 
 		  SEXP prec, SEXP N, SEXP max_iter, SEXP no_masses)
 {
-  int npar, nx, ny, i, j, iter_max;
+  int npar, nx, ny, i, iter_max;
   double p1, p2, m;
   double *yp, *errp, *parp, *precp, *statep;
   double chi_square, red_chi_square;

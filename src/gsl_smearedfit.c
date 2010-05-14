@@ -23,7 +23,7 @@ struct data {
   double * parscale;
 };
 
-inline static int exp_f(const gsl_vector * x, void *data, 
+static R_INLINE int exp_f(const gsl_vector * x, void *data, 
 			gsl_vector * f)
 {
   /* int no_masses = ((struct data *)data)->no_masses; */
@@ -37,7 +37,7 @@ inline static int exp_f(const gsl_vector * x, void *data,
   double *pscale = ((struct data*) data)->parscale;
   double p[6][6], m[6];
 
-  size_t i, j, k=0, id0, id1;
+  size_t i, j, k=0, id0 = 0, id1 = 1;
   double Y = 0., sign = 1., c = 0.;
 
   for(i = 0; i < no_masses; i++) {
@@ -69,7 +69,7 @@ inline static int exp_f(const gsl_vector * x, void *data,
 }
 
 
-inline static int exp_df (const gsl_vector * x, void *data, 
+static R_INLINE int exp_df (const gsl_vector * x, void *data, 
 			  gsl_matrix * J)
 {
   int no_masses = 1;
@@ -77,13 +77,12 @@ inline static int exp_df (const gsl_vector * x, void *data,
   int N = 2;
   double Time = 2.*((struct data *)data)->Thalf;
   double *t = ((struct data *)data)->x;
-  double *y = ((struct data *)data)->y;
   double *err = ((struct data *) data)->err;
   double *pscale = ((struct data*) data)->parscale;
-  int npar = N+1;
+/*   int npar = N+1; */
   double p[6][6], m[6];
-  size_t i, j, k=0, kludge = 0;
-  double Y = 0., dY=0., sign = 1.;
+  size_t i, j, k=0;
+  double Y = 0., dY=0.;
 
   for(i = 0; i < no_masses; i++) {
     for(j = 0; j < N; j++) {
@@ -111,7 +110,7 @@ inline static int exp_df (const gsl_vector * x, void *data,
 }
      
      
-inline static int exp_fdf (const gsl_vector * x, void *data,
+static R_INLINE int exp_fdf (const gsl_vector * x, void *data,
 			   gsl_vector * f, gsl_matrix * J)
 {
   exp_f (x, data, f);
@@ -225,7 +224,7 @@ SEXP multifit_smearedcor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr
   function_fdf.params = &data_struct;
 
   for(i = 0; i < npar; i++) {
-    data_struct.parscale[i] = 1./parp[i];
+    data_struct.parscale[i] = 1.;
     para_initial[i] = parp[i] * data_struct.parscale[i];
   }
 
@@ -238,30 +237,36 @@ SEXP multifit_smearedcor(SEXP par, SEXP Thalf, SEXP x, SEXP y, SEXP err, SEXP tr
 #ifdef _DEBUG
   Print_State_Mass_Fit_Helper_1(iter, solver);
 #endif
-
-  do {
-    iter++;
-    
-    /*  Do a solver iteration. */
-    status = gsl_multifit_fdfsolver_iterate(solver);
+  for(i = 0; i < 2; i++) {
+    do {
+      iter++;
+      
+      /*  Do a solver iteration. */
+      status = gsl_multifit_fdfsolver_iterate(solver);
 #ifdef _DEBUG
-    fprintf(stderr, "status = %s.\n", gsl_strerror(status));
-    Print_State_Mass_Fit_Helper_1(iter, solver);
+      fprintf(stderr, "status = %s.\n", gsl_strerror(status));
+      Print_State_Mass_Fit_Helper_1(iter, solver);
 #endif
-    
-    if(status) {
-      break;
+      
+      if(status) {
+	break;
+      }
+      
+      status = gsl_multifit_test_delta(solver->dx, solver->x,
+				       precp[0], precp[1]);
+      
     }
-
-    status = gsl_multifit_test_delta(solver->dx, solver->x,
-				     precp[0], precp[1]);
-
-  }
-  while(status == GSL_CONTINUE && iter < iter_max);
+    while(status == GSL_CONTINUE && iter < iter_max);
 #ifdef _DEBUG
-  fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
 #endif
-  
+    for(j = 0; j < npar; j++) {
+      data_struct.parscale[j] = gsl_vector_get(solver->x, j);
+      para_initial[j] = 1.;
+    }
+    para_initial_ = gsl_vector_view_array(para_initial, npar);
+    gsl_multifit_fdfsolver_set(solver, &function_fdf, &para_initial_.vector);
+  }
   // *****
   
   
