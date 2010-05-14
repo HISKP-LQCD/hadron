@@ -1,6 +1,6 @@
 smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, S=1.5,
                         skip=0, ind.vec=c(1,3,4,5), boot.R=99, boot.l=10, tsboot.sim="geom",
-                        nrep=1, method="uwerr", debug=FALSE) {
+                        nrep=1, method="uwerr", debug=FALSE, par) {
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
   }
@@ -55,24 +55,30 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
       E[i] = sd(W[(i),])/sqrt(length(W[(i),]))
     }
   }
-  par <- numeric(3)
-  par[3] <- 0.5*mass.eff$mlf[1]
-  par[1] <- sqrt(abs(Cor[(t1+1)]*exp(par[3]*(t1+1))))
-    par[1] <- Cor[(t1+1)]*exp(par[3]*(t1+1))
-  par[2] <- par[1]
-  
+  if(missing(par)) {
+    par <- numeric(3)
+    par[3] <- mass.eff$mll[1]
+    par[2] <- sqrt(abs(Cor[(t1+1+T1)]*exp(par[3]*(t1+1))))
+    par[1] <- abs(Cor[(t1+1)]*exp(mass.eff$mll[1]*(t1+1)))/par[2]
+  }
+  if(length(par) != 3) {
+    par <- par[1:3]
+  }
+
   ii <- c((t1p1):(t2p1), (t1p1+T1):(t2p1+T1))
-  pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0), Thalf=Thalf,
+  pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=c(1.,1.,1.)), Thalf=Thalf,
                    x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
+  pionfit <- optim(pionfit$par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=1/pionfit$par), Thalf=Thalf,
+                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
+
   
   fit.mass <- abs(pionfit$par[3])
   fit.f <- 4.*kappa*(mu1+mu2)/2.*pionfit$par[1]/sqrt(fit.mass)^3/sqrt(2)
   fit.dof <- (t2-t1+1)*2-length(pionfit$par)
   fit.chisqr <- pionfit$value
-cat("mass =", pionfit$par[3], "fps =", fit.f, "chisqr/dof =", fit.chisqr,"/",fit.dof, "=", fit.chisqr/fit.dof, "\n")
+  cat("mass =", abs(pionfit$par[3]), "fps =", fit.f, "chisqr/dof =", fit.chisqr,"/",fit.dof, "=", fit.chisqr/fit.dof, "\n")
   if(debug) {
-    plot.effmass(m=fit.mass, ll=eff.sl, lf=eff.ss)
-    
+    plot.effmass(m=fit.mass, ll=eff.ss, lf=eff.sl)
   }
 
   fit.uwerrm <- NULL
@@ -82,20 +88,20 @@ cat("mass =", pionfit$par[3], "fps =", fit.f, "chisqr/dof =", fit.chisqr,"/",fit
 
   if(method == "uwerr" || method == "all") {
     fit.uwerrm <- uwerr(f=fitmasses.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
-                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par,
+                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine="optim")
 
     fit.uwerrf <- uwerr(f=fitf.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
-                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=par,
+                        Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine="optim")
   }  
   if(method == "boot" || method == "all") {
     fit.boot <- boot(data=t(W[ii,]), statistic=fit.smeared.boot, R=boot.R, stype="i",
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par,
+                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                      kappa=kappa, mu1=mu1, mu2=mu2, fit.routine=fit.routine)
     
     fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.smeared.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
-                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par,
+                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                          kappa=kappa, mu1=mu1, mu2=mu2, fit.routine=fit.routine)
   }
 
@@ -105,12 +111,12 @@ cat("mass =", pionfit$par[3], "fps =", fit.f, "chisqr/dof =", fit.chisqr,"/",fit
   Fit <- rep(0., times=nrOp*T1)
 
   jj <-  c(t1p1:t2p1)
-  Fit[jj] <- pionfit$par[1]^2*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
-  Fit[jj+T1] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+  Fit[jj] <- pionfit$par[1]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
+  Fit[jj+T1] <- pionfit$par[2]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
 
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
   
-  res <- list(fitresult=pionfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
+  res <- list(fitresult=pionfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time, dof=fit.dof,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultfps=fit.uwerrf, 
               boot=fit.boot, tsboot=fit.tsboot, method=method,
@@ -132,7 +138,12 @@ fitmasses.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
 
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=1./fit$par),
+               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+
   return(abs(fit$par[3]))
 }
 
@@ -145,7 +156,12 @@ fitf.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
   
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=1./fit$par),
+               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+
   return(abs(fit$par[1]/sqrt(abs(fit$par[3]))^3))
 }
 
@@ -170,7 +186,12 @@ fit.smeared.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   }
 
   fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+  fit <- optim(fit$par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+               control=list(trace=0, parscale=1./fit$par),
+               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
+
   fit.fpi <- 2*kappa*2*(mu1+mu2)/2./sqrt(2)*abs(fit$par[1])/sqrt(abs(fit$par[3])^3)
   return(c(abs(fit$par[3]), fit.fpi, fit$par[c(1:2)],
            fit$value))
