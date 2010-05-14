@@ -1,6 +1,6 @@
 smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, S=1.5,
                         skip=0, ind.vec=c(1,3,4,5), boot.R=99, boot.l=10, tsboot.sim="geom",
-                        nrep=1, method="uwerr", debug=FALSE, par) {
+                        nrep=1, method="uwerr", debug=FALSE, par, fit.routine="optim") {
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
   }
@@ -28,14 +28,16 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   }
   Z <- array(cmicor[((Skip):Length),ind.vec[3]], 
              dim=c(nrObs*(T1)*nrOp,(length(cmicor[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrOp))))
-  # negative times
+  ## negative times
   W <- array(cmicor[((Skip):Length),ind.vec[4]], 
              dim=c(nrObs*(T1)*nrOp,(length(cmicor[((Skip):Length),ind.vec[4]])/(nrObs*(T1)*nrOp))))
 
   rm(cmicor)
+  ## averaged positivie and negative times and store in W
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh", "cosh"))
   rm(Z)
 
+  ## compute effective masses
   eff.sl <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
   eff.ss <- effectivemass(from=(t1+1), to=(t2+1), Time, W[(T1+1):(2*T1),] , pl=FALSE, S=1.5, nrep=nrep)
   options(show.error.messages = TRUE)
@@ -43,6 +45,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   mass.eff <- data.frame(t=eff.sl$t, mll=eff.sl$mass, dmll=eff.sl$dmass,
                          mlf=eff.ss$mass, dmlf=eff.ss$dmass)
 
+  ## generate correlators plus errors
   Cor <- rep(0., times=nrOp*T1)
   E <- rep(0., times=nrOp*T1)
   
@@ -55,6 +58,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
       E[i] = sd(W[(i),])/sqrt(length(W[(i),]))
     }
   }
+  ## initial fit parameters from effective masses
   if(missing(par)) {
     par <- numeric(3)
     par[3] <- mass.eff$mll[1]
@@ -64,13 +68,18 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   if(length(par) != 3) {
     par <- par[1:3]
   }
-
+  ## indices in Cor and E for fitting
   ii <- c((t1p1):(t2p1), (t1p1+T1):(t2p1+T1))
-  pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=c(1.,1.,1.)), Thalf=Thalf,
-                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
-  pionfit <- optim(pionfit$par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=1/pionfit$par), Thalf=Thalf,
-                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
-
+  if(fit.routine != "gsl") {
+    pionfit <- optim(par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=c(1.,1.,1.)), Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
+    pionfit <- optim(pionfit$par, ChiSqr.smeared, method="BFGS", control=list(trace=0, parscale=1/pionfit$par), Thalf=Thalf,
+                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
+  }
+  else {
+    pionfit <- gsl_fit_smeared_correlator(par, Thalf=Thalf,
+                                          x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
+  }
   
   fit.mass <- abs(pionfit$par[3])
   fit.f <- 4.*kappa*(mu1+mu2)/2.*pionfit$par[1]/sqrt(fit.mass)^3/sqrt(2)
@@ -81,11 +90,13 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
     plot.effmass(m=fit.mass, ll=eff.ss, lf=eff.sl)
   }
 
+  ## now do error analysis
   fit.uwerrm <- NULL
   fit.uwerrf <- NULL
   fit.boot <- NULL
   fit.tsboot <- NULL
 
+  ## with UWERR method
   if(method == "uwerr" || method == "all") {
     fit.uwerrm <- uwerr(f=fitmasses.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
@@ -94,7 +105,8 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
     fit.uwerrf <- uwerr(f=fitf.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine="optim")
-  }  
+  }
+  ## or bootstrap
   if(method == "boot" || method == "all") {
     fit.boot <- boot(data=t(W[ii,]), statistic=fit.smeared.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
@@ -105,8 +117,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
                          kappa=kappa, mu1=mu1, mu2=mu2, fit.routine=fit.routine)
   }
 
-
-  
+  ## compute Chi for each t value
   Chi <- rep(0., times=nrOp*T1)
   Fit <- rep(0., times=nrOp*T1)
 
@@ -115,7 +126,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   Fit[jj+T1] <- pionfit$par[2]*pionfit$par[2]*CExp(m=fit.mass[1], Time=2*Thalf, x=jj-1)
 
   Chi[ii] <- (Fit[ii]-Cor[ii])/E[ii]
-  
+  ## return results to caller.
   res <- list(fitresult=pionfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time, dof=fit.dof,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultfps=fit.uwerrf, 
