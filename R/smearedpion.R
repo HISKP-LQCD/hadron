@@ -1,6 +1,6 @@
 smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, S=1.5,
                         skip=0, ind.vec=c(1,3,4,5), boot.R=99, boot.l=10, tsboot.sim="geom",
-                        nrep=1, method="uwerr", debug=FALSE, par, fit.routine="optim") {
+                        nrep=1, method="uwerr", debug=FALSE, par, fit.routine="optim", seed=123456) {
   if(missing(cmicor)) {
     stop("Error! Data is missing!")
   }
@@ -83,10 +83,11 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   }
   
   fit.mass <- abs(pionfit$par[3])
-  fit.f <- 4.*kappa*(mu1+mu2)/2.*pionfit$par[1]/sqrt(fit.mass)^3/sqrt(2)
+  fit.f <- 4.*kappa*(mu1+mu2)/2.*pionfit$par[1]/sqrt(fit.mass)^3/sqrt(2.)
+  fit.sinhf <- 4.*kappa*(mu1+mu2)/2.*pionfit$par[1]/sqrt(fit.mass)/sinh(fit.mass)/sqrt(2.)
   fit.dof <- (t2-t1+1)*2-length(pionfit$par)
   fit.chisqr <- pionfit$value
-  cat("mass =", abs(pionfit$par[3]), "fps =", fit.f, "chisqr/dof =", fit.chisqr,"/",fit.dof, "=", fit.chisqr/fit.dof, "\n")
+  cat("mass =", abs(pionfit$par[3]), "fps =", fit.f, "fps(sinh) =", fit.sinhf, "chisqr/dof =", fit.chisqr,"/",fit.dof, "=", fit.chisqr/fit.dof, "\n")
   if(debug) {
     plot.effmass(m=fit.mass, ll=eff.ss, lf=eff.sl)
   }
@@ -109,6 +110,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
   }
   ## or bootstrap
   if(method == "boot" || method == "all") {
+    set.seed(seed)
     fit.boot <- boot(data=t(W[ii,]), statistic=fit.smeared.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                      kappa=kappa, mu1=mu1, mu2=mu2, fit.routine=fit.routine)
@@ -133,7 +135,7 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
               uwerrresultmps=fit.uwerrm, uwerrresultfps=fit.uwerrf, 
               boot=fit.boot, tsboot=fit.tsboot, method=method,
               boot.R=boot.R, boot.l=boot.l, tsboot.sim=tsboot.sim,
-              effmass=mass.eff, kappa=kappa, mu1=mu1, mu2=mu2,
+              effmass=mass.eff, kappa=kappa, mu1=mu1, mu2=mu2, seed=seed,
               ##fit.routine=fit.routine, variational.masses=variational.masses, no.masses=no.masses, res.var=res.var
               matrix.size = 1, nrep=nrep)
   attr(res, "class") <- c("smearedfit", "list")  
@@ -238,6 +240,7 @@ summary.smearedfit <- function(fit) {
   t2 <- fit$t2
   fit.mass <- abs(fit$fitresult$par[3])
   fit.fpi <- 2*kappa*2*(mu1+mu2)/2/sqrt(2)*abs(fit$fitresult$par[1])/sqrt(fit.mass^3)
+  fit.sinhfpi <- 2*kappa*2*(mu1+mu2)/2/sqrt(2)*abs(fit$fitresult$par[1])/sqrt(fit.mass)/sinh(fit.mass)
   fit.chisqr <- fit$fitresult$value
   fit.dof <- length(fit$fitdata$t)-length(fit$fitresult$par)
   
@@ -254,6 +257,7 @@ summary.smearedfit <- function(fit) {
   
   cat("\nmps    = ", fit.mass, "\n", sep="\t")
   cat("fps    = ", fit.fpi, "\n", sep="\t")
+  cat("fps    = ", fit.sinhfpi, " (from sinh definition)\n", sep="\t")
   cat("P_L    =", fit$fitresult$par[1], "\n", sep="\t")
   cat("P_S    =", fit$fitresult$par[2], "\n", sep="\t")
 
