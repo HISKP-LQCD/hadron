@@ -151,7 +151,7 @@ fitmasses.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   t2p1 <- (t2+1)
   tr <- (t2-t1+1)
 
-  fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+  fit <- optim(par*rnorm(length(par), mean=1., sd=0.001), ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
   if(fit.routine != "gsl") {
@@ -162,7 +162,6 @@ fitmasses.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   else {
     fit <- gsl_fit_smeared_correlator(fit$par, Thalf=Thalf,
                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
-
   }
 
   return(abs(fit$par[3]))
@@ -175,8 +174,8 @@ fitf.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   t1p1 <- (t1+1)
   t2p1 <- (t2+1)
   tr <- (t2-t1+1)
-  
-  fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+
+  fit <- optim(par*rnorm(length(par), mean=1., sd=0.001), ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
   if(fit.routine != "gsl") {
@@ -187,7 +186,6 @@ fitf.smeared <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   else {
     fit <- gsl_fit_smeared_correlator(fit$par, Thalf=Thalf,
                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
-
   }
 
   return(abs(fit$par[1]/sqrt(abs(fit$par[3]))^3))
@@ -212,7 +210,7 @@ fit.smeared.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
       Cor[i] = mean(Z[,(i)])
     }
   }
-  fit <- optim(par, ChiSqr.smeared, method="BFGS", Thalf=Thalf,
+  fit <- optim(par*rnorm(length(par), mean=1., sd=0.001), ChiSqr.smeared, method="BFGS", Thalf=Thalf,
                control=list(trace=0, parscale=c(1,1,1)),
                x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
   if(fit.routine != "gsl") {
