@@ -87,10 +87,15 @@ OSChiPTfit <- function(data, startvalues_, ii, bootsamples=NULL, cmatrix,
   return(invisible(result))
 }
 
-summary.OSChiPTfit <- function(fit) {
+summary.OSChiPTfit <- function(fit, dfit) {
   Nbeta <- length(fit$data)
   par <- fit$mini$par
-  bootres <- array(0, dim=c(fit$boot.R, 4, 2))
+  if(missing(dfit)) nl <- 4
+  else {
+    nl <- 6
+    dpar <- dfit$mini$par
+  }
+  bootres <- array(0, dim=c(fit$boot.R, nl, Nbeta))
   cat("L / dof\t =", fit$mini$value, "/", fit$dof, "\n")
   cat("boot.R =", fit$boot.R, "\n")
   for(i in 1:Nbeta) {
@@ -119,17 +124,37 @@ summary.OSChiPTfit <- function(fit) {
       mKK <- 0.49765*bootres[s, 1, i]/0.135
       ## a fK
       bootres[s, 4, i] <- fit$boots[s, 5+i]*getfK.os(par=fit$boots[s,1:length(par)], mpisq=bootres[s, 1, i]^2, msssq=(2*mKK^2-bootres[s, 1, i]^2), i=i, N=Nbeta, fit.a=FALSE)
+      if(!missing(dfit)) {
+        mDsD <- 1.9685*bootres[s, 3, i]/0.198
+        bootres[s, 5, i] <- fit$boots[s, 5+i]^(3/2) *
+          getfDssqrtmDs.os(par=dfit$boots[s, 1:length(dpar)],
+                           mpisq=bootres[s, 1, i]^2, msssq=(2*mKK^2-bootres[s, 1, i]^2), 
+                           mDs=mDsD, af0=fit$boots[s, 5+i], i=i,
+                           fit.a=FALSE, cont=TRUE) / sqrt(mDsD)
+        bootres[s, 6, i] <- getRatio.os(par=dfit$boots[s, 1:length(dpar)], mpisq=bootres[s, 1, i]^2,
+                                        msssq=(2*mKK^2-bootres[s, 1, i]^2),
+                                        mDs=mDsD, af0=fit$boots[s, 5+i],
+                                        i=i, fit.a=FALSE, cont=TRUE)
+      }
     }
-
+    
     cat("*** beta value", i, "***\n")
     cat("ampi\t =", ampi, "+-", sd( bootres[, 1, i]), "\n")
     cat("amK\t =", amK, "+-", sd(0.49765*bootres[, 1, i]/0.135), "\n")
-    ##cat("amDs\t =", amDs, "\n")
-    ##cat("amD\t =", amD, "\n")
+    cat("amDs\t =", amDs, "+-", sd(1.9685*bootres[, 1, i]/0.135), "\n")
+    cat("amD\t =", amD, "+-", sd(1.8698*bootres[, 1, i]/0.135), "\n")
     cat("af0\t =", par[5+i], "+-", sd(fit$boots[,5+i]), "\n")
     cat("afpi\t =", afpi, "+-", sd(bootres[, 2, i]), "\n")
     cat("afK\t =", afK, "+-", sd(bootres[, 4, i]), "\n")
     cat("a\t =", a, "+-", sd(bootres[, 3, i]), "fm \n")
+    if(!missing(dfit)) {
+      afDs <- par[5+i]^(3/2) * getfDssqrtmDs.os(par=dfit$mini$par, mpisq=ampi^2, msssq=(2*amK^2-ampi^2),
+                                                mDs=amDs, af0=par[5+i], i=i, fit.a=dfit$fit.a) / sqrt(amDs)
+      ratio <- getRatio.os(par=dfit$mini$par, mpisq=ampi^2, msssq=(2*amK^2-ampi^2),
+                           mDs=amDs, af0=par[5+i], i=i, fit.a=dfit$fit.a)
+      cat("afDs\t =", afDs, "+-", sd(bootres[, 5, i]), "\n")
+      cat("afD\t =", afDs*sqrt(amDs)/sqrt(amD)/ratio, "+-", sd(bootres[, 5, i]*sqrt(amDs)/sqrt(amD)/bootres[, 6, i]), "\n")
+    }
   }
   cat("*** independent results ***\n")
   cat("f0\t =", par[5+i]/a*0.198, "+-", sd(fit$boots[,5+i]/bootres[, 3, i])*0.198, "GeV\n")
@@ -138,6 +163,17 @@ summary.OSChiPTfit <- function(fit) {
   cat("|Vus|\t =", Vus, "+-", sd(bootres[, 2, i]/bootres[, 4, i]*0.97422*0.27599), "\n")
   cat("l4\t =", par[3]/2. + 2*log(4*pi*par[5+i]/a*0.198/0.1396), "+-",
       sd(fit$boots[3]/2. + 2*log(4.*pi*fit$boots[5+i]/bootres[, 3, i]*0.198/0.1396)), "\n")
+  if(!missing(dfit)) {
+    afDs <- par[5+i]^(3/2) * getfDssqrtmDs.os(par=dfit$mini$par, mpisq=ampi^2, msssq=(2*amK^2-ampi^2),
+                                              mDs=amDs, af0=par[5+i], i=i, fit.a=FALSE, cont=TRUE) / sqrt(amDs)
+    ratio <- getRatio.os(par=dfit$mini$par, mpisq=ampi^2, msssq=(2*amK^2-ampi^2),
+                         mDs=amDs, af0=par[5+i], i=i, fit.a=FALSE, cont=TRUE)
+    
+    cat("fDs\t =", afDs/a*0.198, "+-", sd(bootres[, 5, i]/bootres[, 3, i]*0.198), "GeV\n")
+    cat("fD\t =", afDs*sqrt(amDs)/sqrt(amD)/ratio/a*0.198, "+-", sd(bootres[, 5, i]*sqrt(amDs)/sqrt(amD)/bootres[, 6, i]/bootres[, 3, i]*0.198), "GeV\n")
+    cat("fDs/fD\t =", ratio/sqrt(amDs)*sqrt(amD), "+-", sd(bootres[, 6, i]/sqrt(amDs)*sqrt(amD)), "\n")
+
+  }
   return(invisible(list(bootres)))
 }
 
@@ -202,9 +238,10 @@ getfK.os <- function(par, mpisq, msssq, i, N, fit.a=TRUE) {
   else return( (par[1] + par[2]*xiss) * (1 - xipi*(3./4.*log(xipi) - (par[4] + par[5]*xiss))))
 }
 
-getfDssqrtmDs.os <- function(par, mpisq, msssq, mDs, af0, i, fit.a=TRUE) {
+getfDssqrtmDs.os <- function(par, mpisq, msssq, mDs, af0, i, fit.a=TRUE, cont=FALSE) {
   xipi <- mpisq/(4.*pi*af0)^2
   xiss <- msssq/(4.*pi*af0)^2
+  if(cont) par[5] <- 0.
   if(fit.a) {
     return( (par[1] + par[2]*xiss) *(1 + xipi*(par[3]+par[4]*xiss) + par[5]*mDs^2) + af0*par[6]/mDs +
            af0^2*(par[13] + par[14]*xiss))
@@ -212,9 +249,10 @@ getfDssqrtmDs.os <- function(par, mpisq, msssq, mDs, af0, i, fit.a=TRUE) {
   return( (par[1] + par[2]*xiss) *(1 + xipi*(par[3]+par[4]*xiss) + par[5]*mDs^2) + af0*par[6]/mDs)
 }
 
-getRatio.os <- function(par, mpisq, msssq, mDs, af0, i, gc=0.61, fit.a=TRUE) {
+getRatio.os <- function(par, mpisq, msssq, mDs, af0, i, gc=0.61, fit.a=TRUE, cont=FALSE) {
   xipi <- mpisq/(4.*pi*af0)^2
   xiss <- msssq/(4.*pi*af0)^2
+  if(cont) par[11] <- 0.
   if(fit.a) {
     return( (par[7] + par[8]*xiss) * (1 + 3*(1+3*gc^2)*xipi*log(xipi)/4. + xipi*(par[9]+par[10]*xiss) +
                                       par[11]*mDs^2 ) +af0*par[12]/mDs +af0^2*(par[15]+par[16]*xiss))
@@ -277,81 +315,116 @@ compindices <- function(Nens, Nstrange, Ncharm, Nlight) {
 }
 
 
-OSChiPTfit2 <- function(data, startvalues_, ii, debug=TRUE, fit.a=FALSE) {
+OSChiPTfitD <- function(startvalues_, kfit, debug=TRUE, fit.a=FALSE) {
   ## number of lattice spacings
-  Nbeta <- length(data)
-  ## number of points with unitary light mu
-  Nens <- c()
-  np <- 5 + Nbeta
-  dof <- -np
-  for(i in 1:Nbeta) {
-##    dof <- dof + length(ii[[uii[[i]]) + length(lsii[[i]])
-    Nens <- c(Nens, length(data[[i]]))
-  }
-
-  mini <- optim(par=startvalues_, fn=chisqr.os2, method="BFGS", hessian=FALSE,
-                control=list(maxit=100, trace=debug, REPORT=50),
-                data=data, ii=ii, Nens=Nens, Nbeta=Nbeta, fit.a=fit.a)
-  mini <- optim(par=mini$par, fn=chisqr.os2, method="BFGS", hessian=FALSE,
-                control=list(maxit=100, trace=debug, parscale=mini$par, REPORT=50),
-                data=data, ii=ii, Nens=Nens, Nbeta=Nbeta, fit.a=fit.a)
-  mini <- optim(par=mini$par, fn=chisqr.os2, method="BFGS", hessian=FALSE,
-                control=list(maxit=500, trace=debug, parscale=mini$par, REPORT=50),
-                data=data, ii=ii, Nens=Nens, Nbeta=Nbeta, fit.a=fit.a)
-
-  ##cat("chisqr", chisqr.os(mini$par, data, uii, lsii, ssii, N, debug=TRUE), "\n")
-
-  print(mini)
-  i <- 1
-
-  ampi.phys <- uniroot(fpsovmps.os, interval = c(0.001, 0.12),
-                       tol=1.e-12, par=mini$par, i=i, N=Nbeta, fit.a=FALSE)$root
-  afpi.phys <- mini$par[5+i] * getfpi.os(par=mini$par, ampi.phys^2, i=i, N=Nbeta, fit.a=FALSE)
-  a <- ampi.phys/0.135*0.198*mini$par[6:(5+Nbeta)]/mini$par[5+i]
-  ## neutral Kaon mass
-  ## charged would be 0.49368 MeV
-  amK.phys <- 0.49765*a/0.198
-  amDs.phys = 1.9685*a/0.198
-  amD.phys = 1.8696*a/0.198
-  afK.phys <- mini$par[5+i]*getfK.os(par=mini$par, mpisq=ampi.phys^2, msssq=(2*amK.phys[i]^2-ampi.phys^2), i=i, N=Nbeta, fit.a=FALSE)
+  Nbeta <- length(kfit$data)
+  boot.R <- kfit$boot.R
   
-  miniD <- NULL
-
-  para2 <- rep(1, times=16)
+  para2 <- rep(1, times=12)
+  if(fit.a) {
+    para2 <- rep(1., times=16)
+  }
   ##chisqrD.os(para2, data, uii, ssii, lcii, scii, N, af0=mini$par[6:(5+N)], debug=TRUE)
   
   miniD <- optim(par=para2, fn=chisqrD.os, method="BFGS", hessian=FALSE,
                  control=list(maxit=150, trace=debug, REPORT=50),
-                 data=data, ii=ii, af0=mini$par[6:(5+Nbeta)], Nbeta=Nbeta, Nens=Nens)
+                 data=kfit$data, ii=kfit$ii, af0=kfit$mini$par[6:(5+Nbeta)], Nbeta=Nbeta, fit.a=fit.a)
   miniD <- optim(par=miniD$par, fn=chisqrD.os, method="BFGS", hessian=FALSE,
                  control=list(maxit=500, trace=debug, parscale=miniD$par, REPORT=50),
-                 data=data, ii=ii, af0=mini$par[6:(5+Nbeta)], Nbeta=Nbeta, Nens=Nens)
+                 data=kfit$data, ii=kfit$ii, af0=kfit$mini$par[6:(5+Nbeta)], Nbeta=Nbeta, fit.a=fit.a)
   print(miniD)
-  afDs.phys <- mini$par[5+i]^(3/2) * getfDssqrtmDs.os(par=miniD$par, mpisq=ampi.phys^2, msssq=(2*amK.phys[i]^2-ampi.phys^2),
-                                                    mDs=amDs.phys[i], af0=mini$par[5+i], i=i, fit.a=FALSE) / sqrt(amDs.phys[i])
-  ratio.phys <- getRatio.os(par=miniD$par, mpisq=ampi.phys^2, msssq=(2*amK.phys[i]^2-ampi.phys^2),
-                            mDs=amDs.phys[i], af0=mini$par[5+i], i=i, fit.a=FALSE)
 
-  cat("ampi\t =", ampi.phys, "\n")
-  cat("amK\t =", amK.phys, "\n")
-  cat("amDs\t =", amDs.phys, "\n")
-  cat("amD\t =", amD.phys, "\n")
-  cat("afpi\t =", afpi.phys, "\n")
-  cat("afK\t =", afK.phys, "\n")
-  cat("a\t =", a, "fm \n")
-  cat("f0\t =", mini$par[5+i]/a[i]*0.198, "GeV\n")
-  cat("fK\t =", afK.phys/a[i]*0.198, "GeV\n")
-  cat("fK/fpi\t =", afK.phys / afpi.phys, "\n")
-  cat("l4\t =", mini$par[3]/2. + 2*log(4*pi*mini$par[5+i]/a[i]*0.198/0.1396), "\n")
-  cat("chisqr/dof\t =", mini$value, "/", 1, "\n")
-  cat("afDs\t =", afDs.phys, "\n")
-  cat("fDs\t =", afDs.phys/a[i]*0.198, "GeV\n")
-  cat("afD\t =", afDs.phys*sqrt(amDs.phys[i])*sqrt(amD.phys[i])/ratio.phys, "\n")
-  cat("fD\t =", afDs.phys*sqrt(amDs.phys[i])*sqrt(amD.phys[i])/ratio.phys/a[i]*0.198, "GeV\n")
-  cat("fDs/fD\t =", ratio.phys/sqrt(amDs.phys[i])/sqrt(amD.phys[i]), "\n")
-  if(Nbeta == 2) {
-    cat("f01/f02\t =", mini$par[6]/mini$par[7], "\n")
+  ## now the bootstrap
+  if(!is.null(kfit$bootsamples)) {
+    boots <- array(0., dim=c(boot.R, length(miniD$par)+1))
+    
+    datan <- kfit$data
+    for(s in 1:boot.R) {
+      for(i in 1:Nbeta) {
+        for(k in 1:length(datan[[i]])) {
+          datan[[i]][[k]]$m <- kfit$bootsamples[[i]][[k]][s,1,]
+          ##datan[[i]][[k]]$f <- bootsamples[[i]][[k]][s,2,]
+          datan[[i]][[k]]$f <- kfit$bootsamples[[i]][[k]][s,2,]*kfit$bootsamples[[i]][[k]][s,1,]/sinh(kfit$bootsamples[[i]][[k]][s,1,])
+        }
+      }
+      ## minimise for each bootstrap sample
+      bminiD <- optim(par=miniD$par, fn=chisqrD.os, method="BFGS", hessian=FALSE,
+                      control=list(maxit=150, trace=debug, REPORT=50),
+                      data=datan, ii=kfit$ii, af0=kfit$boots[s, 6:(5+Nbeta)], Nbeta=Nbeta, fit.a=fit.a)
+      bminiD <- optim(par=bminiD$par, fn=chisqrD.os, method="BFGS", hessian=FALSE,
+                      control=list(maxit=500, trace=debug, parscale=bminiD$par, REPORT=50),
+                      data=datan, ii=kfit$ii, af0=kfit$boots[s, 6:(5+Nbeta)], Nbeta=Nbeta, fit.a=fit.a) 
+      boots[s, 1:length(miniD$par)] <- bminiD$par
+      boots[s, 1+length(miniD$par)] <- bminiD$value
+      if(bminiD$convergence !=0 ) {
+        warning("minimisation during bootstrap for s=", s, "did not converge")
+      }
+    }
   }
+  else {
+    boots <- NULL
+  }
+
+
+  return(invisible(list(mini=miniD, fit.a=fit.a, boots=boots)))
+}
+
+
+
+chisqrD.os <- function(par, data, ii, Nbeta, af0, gc=0.62, debug=FALSE, fit.a=FALSE) {
+  chisum <- 0.
+  for(i in 1:Nbeta) {
+    for(k in 1:length(data[[i]])) {
+      uij <- ii[[i]][[k]]$uii
+      ##lsij <- lsii[[i]]
+      ssij <- ii[[i]][[k]]$ssii
+      lcij <- ii[[i]][[k]]$lcii
+      scij <- ii[[i]][[k]]$scii
+      Nstrange <- length(ssij)
+      Ncharm <- length(scij)/Nstrange
+      ## we do have Nens*Ncharm values for fD amd mD
+      ## and Nens*Ncharm*Nstrange values for fDs and mDs
+      mDDs <- numeric(Ncharm*Nstrange)
+      fDDs <- numeric(Ncharm*Nstrange)
+      mlsqDs <- numeric(Ncharm*Nstrange)
+      msssqDs <- numeric(Ncharm*Nstrange)
+      
+      mpisq <- data[[i]][[k]]$m[uij]^2
+      msssq <- data[[i]][[k]]$m[ssij]^2
+      mDs <- data[[i]][[k]]$m[scij]
+      fDs <- data[[i]][[k]]$fsinh[scij]
+      mD <- data[[i]][[k]]$m[lcij]
+      fD <- data[[i]][[k]]$fsinh[lcij]
+      ## now we construct all vectors of the same length
+      mlsqDs[1:(Ncharm*Nstrange)] <- rep(mpisq[1], times=Ncharm*Nstrange)
+      for(j in 1:(Nstrange)) {
+        msssqDs[((j-1)*Ncharm+1):(j*Ncharm)] <- rep(msssq[j], times=Ncharm)
+      }
+      for(j in 1:(Ncharm)) {
+        mDDs[((j-1)*Nstrange+1):(j*Nstrange)] <- rep(mD[j], times=Nstrange)
+        fDDs[((j-1)*Nstrange+1):(j*Nstrange)] <- rep(fD[j], times=Nstrange)
+      }
+      fDssqrtmDs <- af0[i]^(3/2) * getfDssqrtmDs.os(par, mpisq=mlsqDs, msssq=msssqDs, mDs=mDs, af0=af0[i], i=i, fit.a=fit.a)
+      Ratio <- getRatio.os(par, mpisq=mlsqDs, msssq=msssqDs, mDs=mDs, af0=af0[i], i=i, gc=gc, fit.a=fit.a)
+      if(debug) {
+        cat("Nens", Nens[i], "\n")
+        cat("Nstrange", Nstrange, "Ncharm", Ncharm, "\n")
+        cat("mDs\t", mDs,"\n")
+        cat("fDs\t", fDs,"\n")
+        cat("mD\t", mDDs,"\n")
+        cat("fD\t", fDDs,"\n")
+        cat("mpi^2\t", mlsqDs,"\n")
+        cat("mss^2\t", msssqDs,"\n")
+        cat("fDssqrtmDs", fDssqrtmDs, "\n")
+        cat("data      ", fDs*sqrt(mDs), "\n")
+        cat("Ratio", Ratio, "\n")
+        cat("data ", fDs*sqrt(mDs)/fDDs/sqrt(mDDs), "\n")
+      }
+      chisum <- chisum + sum( (fDs - fDssqrtmDs/sqrt(mDs))^2/data[[i]][[k]]$df[scij]) +
+        sum( (Ratio - fDs*sqrt(mDs)/fDDs/sqrt(mDDs))^2 ) 
+    }
+  }
+  return(chisum)
 }
 
 chisqr.os2 <- function(par, data, ii, Nbeta, Nens, debug=FALSE, fit.a=FALSE) {
@@ -387,63 +460,6 @@ chisqr.os2 <- function(par, data, ii, Nbeta, Nens, debug=FALSE, fit.a=FALSE) {
   }
   if(Nbeta>1) {
     chisum <- chisum + (par[6]/par[7] - 5.71/7.8)^2/(0.1)^2
-  }
-  return(chisum)
-}
-
-
-chisqrD.os <- function(par, data, ii, Nbeta, Nens, af0, gc=0.62, debug=FALSE) {
-  chisum <- 0.
-  for(i in 1:Nbeta) {
-    for(k in 1:Nens[i]) {
-      uij <- ii[[i]][[k]]$uii
-      ##lsij <- lsii[[i]]
-      ssij <- ii[[i]][[k]]$ssii
-      lcij <- ii[[i]][[k]]$lcii
-      scij <- ii[[i]][[k]]$scii
-      Nstrange <- length(ssij)
-      Ncharm <- length(scij)/Nstrange
-      ## we do have Nens*Ncharm values for fD amd mD
-      ## and Nens*Ncharm*Nstrange values for fDs and mDs
-      mDDs <- numeric(Ncharm*Nstrange)
-      fDDs <- numeric(Ncharm*Nstrange)
-      mlsqDs <- numeric(Ncharm*Nstrange)
-      msssqDs <- numeric(Ncharm*Nstrange)
-      
-      mpisq <- data[[i]][[k]]$m[uij]^2
-      msssq <- data[[i]][[k]]$m[ssij]^2
-      mDs <- data[[i]][[k]]$m[scij]
-      fDs <- data[[i]][[k]]$fsinh[scij]
-      mD <- data[[i]][[k]]$m[lcij]
-      fD <- data[[i]][[k]]$fsinh[lcij]
-      ## now we construct all vectors of the same length
-      mlsqDs[1:(Ncharm*Nstrange)] <- rep(mpisq[1], times=Ncharm*Nstrange)
-      for(j in 1:(Nstrange)) {
-        msssqDs[((j-1)*Ncharm+1):(j*Ncharm)] <- rep(msssq[j], times=Ncharm)
-      }
-      for(j in 1:(Ncharm)) {
-        mDDs[((j-1)*Nstrange+1):(j*Nstrange)] <- rep(mD[j], times=Nstrange)
-        fDDs[((j-1)*Nstrange+1):(j*Nstrange)] <- rep(fD[j], times=Nstrange)
-      }
-      fDssqrtmDs <- af0[i]^(3/2) * getfDssqrtmDs.os(par, mpisq=mlsqDs, msssq=msssqDs, mDs=mDs, af0=af0[i], i=i)
-      Ratio <- getRatio.os(par, mpisq=mlsqDs, msssq=msssqDs, mDs=mDs, af0=af0[i], i=i, gc=gc)
-      if(debug) {
-        cat("Nens", Nens[i], "\n")
-        cat("Nstrange", Nstrange, "Ncharm", Ncharm, "\n")
-        cat("mDs\t", mDs,"\n")
-        cat("fDs\t", fDs,"\n")
-        cat("mD\t", mDDs,"\n")
-        cat("fD\t", fDDs,"\n")
-        cat("mpi^2\t", mlsqDs,"\n")
-        cat("mss^2\t", msssqDs,"\n")
-        cat("fDssqrtmDs", fDssqrtmDs, "\n")
-        cat("data      ", fDs*sqrt(mDs), "\n")
-        cat("Ratio", Ratio, "\n")
-        cat("data ", fDs*sqrt(mDs)/fDDs/sqrt(mDDs), "\n")
-      }
-      chisum <- chisum + sum( (fDs - fDssqrtmDs/sqrt(mDs))^2/data[[i]][[k]]$df[scij]) +
-        sum( (Ratio - fDs*sqrt(mDs)/fDDs/sqrt(mDDs))^2 ) 
-    }
   }
   return(chisum)
 }
