@@ -1,7 +1,8 @@
 onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
-                      iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
-                      boot.R=99, boot.l=10, tsboot.sim="geom",
-                      method="uwerr", fit.routine="optim", nrep) {
+                       iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
+                       boot.R=99, boot.l=10, tsboot.sim="geom",
+                       method="uwerr", fit.routine="optim", nrep,
+                       oldnorm = FALSE) {
   
   if(missing(data)) {
     stop("Error! Data is missing!")
@@ -43,7 +44,9 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   rm(data)
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh","sinh"))
-  W <- W*(2*kappa)^2
+  if(oldnorm) {
+    W <- W*(2*kappa)^2
+  }
   rm(Z)
 #  print(t(W))
 
