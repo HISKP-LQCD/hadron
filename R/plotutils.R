@@ -83,6 +83,11 @@ plot.cfit <- function(fit) {
                   main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2.)
   }
+  if(!is.null(fit$MChist.dpaopp)) {
+    plot(fit$MChist.dpaopp, type="l",
+         main=expression(m[PCAC]), xlab=expression(t[HMC]), ylab=expression(m[PCAC]))
+    abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2.)
+  }
 }
 
 plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {

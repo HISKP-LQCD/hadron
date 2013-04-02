@@ -189,12 +189,21 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     dpaopp$dtauint[i] <- mass$dtauint[1]
     i=i+1
   }
+
+  MChist.dpaopp <- rep(0., times=length(W[1,]))
+  for(i in 1:length(W[1,])) {
+    MChist.dpaopp[i] <- 0.
+    for(t in t1p1:t2p1) {
+      MChist.dpaopp[i] <- MChist.dpaopp[i] + pcacsym.online(data=W[,i], t=t, T1=T1)
+    }
+    MChist.dpaopp[i] <- MChist.dpaopp[i]/(t2p1-t1p1)
+  }
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac, uwerrresultfps=fit.uwerrfpi, 
               boot=fit.boot, tsboot=fit.tsboot, method=method,
-              effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp,
+              effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp, MChist.dpaopp=MChist.dpaopp,
               iobs=iobs, mu=mu, kappa=kappa,
               nrep=nrep, matrix.size=2)
   attr(res, "class") <- c("ofit", "list")  
