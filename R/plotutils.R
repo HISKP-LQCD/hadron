@@ -1,4 +1,3 @@
-# $Id$
 plotwitherror <- function(x, y, dy, ylim, rep=FALSE, col="black", ...) {
   if(missing(ylim)) {
     if(rep) {
@@ -81,7 +80,12 @@ plot.cfit <- function(fit) {
     X11()
     plotwitherror(fit$dpaopp$t, fit$dpaopp$mass, fit$dpaopp$dmass,
                   main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
-    abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2.)
+    abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
+  }
+  if(!is.null(fit$MChist.dpaopp)) {
+    plot(seq(1, length(fit$MChist.dpaopp))+fit$skip, fit$MChist.dpaopp, type="l",
+         main=expression(m[PCAC]), xlab=expression(t[HMC]), ylab=expression(m[PCAC]))
+    abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
   }
 }
 

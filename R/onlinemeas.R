@@ -1,7 +1,8 @@
 onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
-                      iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
-                      boot.R=99, boot.l=10, tsboot.sim="geom",
-                      method="uwerr", fit.routine="optim", nrep) {
+                       iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
+                       boot.R=99, boot.l=10, tsboot.sim="geom",
+                       method="uwerr", fit.routine="optim", nrep,
+                       oldnorm = FALSE) {
   
   if(missing(data)) {
     stop("Error! Data is missing!")
@@ -43,7 +44,9 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
   rm(data)
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh","sinh"))
-  W <- W*(2*kappa)^2
+  if(oldnorm) {
+    W <- W*(2*kappa)^2
+  }
   rm(Z)
 #  print(t(W))
 
@@ -186,12 +189,21 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     dpaopp$dtauint[i] <- mass$dtauint[1]
     i=i+1
   }
+
+  MChist.dpaopp <- rep(0., times=length(W[1,]))
+  for(i in 1:length(W[1,])) {
+    MChist.dpaopp[i] <- 0.
+    for(t in t1p1:t2p1) {
+      MChist.dpaopp[i] <- MChist.dpaopp[i] + pcacsym.online(data=W[,i], t=t, T1=T1)
+    }
+    MChist.dpaopp[i] <- MChist.dpaopp[i]/(t2p1-t1p1)
+  }
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac, uwerrresultfps=fit.uwerrfpi, 
-              boot=fit.boot, tsboot=fit.tsboot, method=method,
-              effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp,
+              boot=fit.boot, tsboot=fit.tsboot, method=method, skip=skip,
+              effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp, MChist.dpaopp=MChist.dpaopp,
               iobs=iobs, mu=mu, kappa=kappa,
               nrep=nrep, matrix.size=2)
   attr(res, "class") <- c("ofit", "list")  
