@@ -202,7 +202,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
               uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac, uwerrresultfps=fit.uwerrfpi, 
-              boot=fit.boot, tsboot=fit.tsboot, method=method,
+              boot=fit.boot, tsboot=fit.tsboot, method=method, skip=skip,
               effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp, MChist.dpaopp=MChist.dpaopp,
               iobs=iobs, mu=mu, kappa=kappa,
               nrep=nrep, matrix.size=2)
