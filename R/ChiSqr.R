@@ -13,14 +13,23 @@ ChiSqr.pcac <- function(par, Thalf, x, y, err, tr) {
 
 ChiSqr.smeared <- function(par, Thalf, x, y, err, tr) {
   ii <- c(1:tr)
-  Sumall <- 0.
+  cv1 <- CExp(m = abs(par[3]), Time = 2*Thalf, x=x)
+  Sumall = (sum(((y[ii] - par[1]*par[2]*(cv1))/err[ii])^2)
+            + sum(((y[ii+tr] - par[2]*par[2]*(cv1))/err[ii+tr])^2))
+  return(Sumall)
+}
+
+dChiSqrdpar.smeared <- function(par, Thalf, x, y, err, tr) {
+  ii <- c(1:tr)
+  Sumall <- c(0.,0.,0.)
   m1 <- abs(par[3])
   cv1 <- CExp(m=m1, Time=2*Thalf, x=x)
-  sv1 <- CExp(m=m1, Time=2*Thalf, x=x, sign=-1.)
-  Sumall = Sumall + (sum(((y[ii]
-    - par[1]*par[2]*(cv1))/err[ii])^2)
-    + sum(((y[ii+tr]
-            - par[2]*par[2]*(cv1))/err[ii+tr])^2))
+  dcv1 <- dCExpdm(m=m1, Time=2*Thalf, x=x)
+  Sumall[1] <- sum( 2*(y[ii] - par[1]*par[2]*cv1)*(-par[2]*cv1) / err[ii]^2 )
+  Sumall[2] <- sum( 2*(y[ii] - par[1]*par[2]*cv1)*(-par[1]*cv1) / err[ii]^2 ) +
+    sum( 2*(y[ii+tr] - par[2]^2*cv1)*(-2*par[2]*cv1) / err[ii+tr]^2 )
+  Sumall[3] <- sum( 2*(y[ii] - par[1]*par[2]*cv1)*(-par[1]*par[2]*dcv1) /  err[ii]^2) +
+    sum( 2*(y[ii+tr] - par[2]^2*cv1)*(-par[2]^2*dcv1) /  err[ii+tr]^2)
   return(Sumall)
 }
 

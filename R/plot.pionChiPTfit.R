@@ -83,21 +83,22 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     }
   }
 
+  xfit <- seq(from=0., to=1.05*max(fit$data[[1]]$mu*fpar[5]/fpar[7+N], na.rm=TRUE),
+              length.out=500)
+  r0TwoB <- fpar[4]
+  r0sqTwoBmu <- r0TwoB*xfit
+
+  ## get the continuum curves
+  f2 <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
+  mN2 <- getmN(r0sqTwoBmu, fpar, N, fit.asq=-1.)
+  msq2 <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
   
   for(i in 1:N) {
     ur0 <- fpar[4+i]
     dr0 <- dpar[4+i]
-    mZP <- fit$ZPdata$ZP[i]
     fZP <- fpar[6+N+i]
-    mZP <- fZP
-                                        #    dZP <- fit$ZPdata$dZP[i]
     dZP <- dpar[6+N+i]
-    if(rawpoints) {
-      uZP <- mZP
-    }
-    else {
-      uZP <- fZP
-    }
+
     if(fit$fit.asq) {
       fit.a <- i
     }
@@ -119,7 +120,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
         res <- cdhnew(aLamb1=aLamb1, aLamb2=aLamb2, aLamb3=fpar[1]/ur0,
                       aLamb4=fpar[2]/ur0, ampiV=fit$data[[i]]$mps,
                       afpiV=fit$data[[i]]$fps, aF0=fpar[3]/ur0,
-                      a2B0mu=fpar[4]*fit$data[[i]]$mu/ur0/mZP, L=fit$data[[i]]$L, rev=-1,
+                      a2B0mu=fpar[4]*fit$data[[i]]$mu/ur0/fZP, L=fit$data[[i]]$L, rev=-1,
                       printit=FALSE)
       }
       else {
@@ -141,19 +142,22 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       fpsV <- fit$data[[i]]$fps*(1.0-2.0*r)
     }
     
-#    xfit <- seq(from=0., to=1.05*max(fit$data[[i]]$mu[ij]*ur0/fZP, na.rm=TRUE),
-#                length.out=500)
-    xfit <- seq(from=0., to=1.05*max(fit$data[[i]]$mu*ur0/fZP, na.rm=TRUE),
-                length.out=500)
+    ##msq <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
+    ##f <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
 
-    
-    r0TwoB <- fpar[4]
-    r0sqTwoBmu <- r0TwoB*xfit
-    msq <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
-    f <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=fit.a)
-    mN <- getmN(r0sqTwoBmu, fpar, N, fit.asq=fit.a)
+    ## here we create the finite a curves, if lattice artifacts are fitted
+    if(fit$fit.asq) {
+      npar <- length(fpar)
+      msq <- msq2 + 1.2*fpar[npar-1]*r0sqTwoBmu/fpar[4+i]^2
+      f <- f2 + 1.2*fpar[npar]*fpar[3]/fpar[4+i]^2
+    }
+    else {
+      msq <- msq2
+      f <- f2
+    }
+    mN <- mN2
     color <- c("red", "blue", "darkseagreen", "darksalmon", "darkviolet")
-    xmu <- ur0/uZP*fit$data[[i]]$mu
+    xmu <- ur0/fZP*fit$data[[i]]$mu
     fitr0 <- fpar[4+i]*(1+fpar[5+N]*xfit+fpar[6+N]*xfit^2) ## + fpar[4+N+i]*(xfit/ur0*fZP)^r0exp
     pxmu <- split(xmu[ij], fit$data[[i]]$L[ij])
     pxmuall <- split(xmu, fit$data[[i]]$L)
@@ -167,14 +171,10 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
     dr0a <- split(fit$data[[i]]$dr0a, fit$data[[i]]$L)
     k <- length(pfpsV)
                                         # continuum curves
-    if(fit$fit.asq && i == 1) {
-      f2 <- getfps.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
-      mN2 <- getmN(r0sqTwoBmu, fpar, N, fit.asq=-1.)
-      msq2 <- getmpssq.pion(r0sqTwoBmu, fpar, N, fit.nnlo=fit$fit.nnlo, fit.kmf=fit$fit.kmf, fit.asq=-1.)
-    }
+
     if(write.data) {
       file <- paste("curve_",i,".dat", sep="")
-      #r0*mu*ZP, (r0mps)^2, r0fps, r0mN
+      #r0*mu/ZP, (r0mps)^2, r0fps, r0mN
       write.table(data.frame(xfit, msq, f, mN),
                   row.names=FALSE, col.names=FALSE,
                   file=file)
@@ -185,7 +185,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                              mpsV, fit$data[[i]]$dmps,
                              fit$data[[i]]$mN, fit$data[[i]]$dmN,
                              ur0, dr0,
-                             mZP, dZP),
+                             fZP, dZP,
+                             fit$data[[i]]$r0, fit$data[[i]]$dr0),
                   row.names=FALSE, col.names=FALSE,
                   file=file)
       file <- paste("data_", i,".dat", sep="")
@@ -195,7 +196,8 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
                              fit$data[[i]]$mps, fit$data[[i]]$dmps,
                              fit$data[[i]]$mN, fit$data[[i]]$dmN,
                              ur0, dr0,
-                             mZP, dZP),
+                             fZP, dZP,
+                             fit$data[[i]]$r0, fit$data[[i]]$dr0),
                   row.names=FALSE, col.names=FALSE,
                   file=file)
       if(i == 1) {
@@ -353,7 +355,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
       plotwitherror(pxmu[[j]],
                     (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
                     sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
-                         + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
+                         + (ur0*pmpsV[[j]]^2*dZP/fZP)^2 )*ur0/(pxmu[[j]]),
                     ylim=c(0.95*min((ur0*mpsV[ij])^2/(xmu[ij]),
                       na.rm=TRUE),
                       1.1*fpar[4]),
@@ -365,7 +367,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
         plotwitherror(pxmu[[j]],
                       (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
                       sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
-                           + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
+                           + (ur0*pmpsV[[j]]^2*dZP/fZP)^2 )*ur0/(pxmu[[j]]),
                       col=color[i], bg=color[i],
                       pch=20+(j-1), rep=TRUE)
         j <- j+1
@@ -396,7 +398,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
         plotwitherror(pxmu[[j]],
                       (ur0*pmpsV[[j]])^2/(pxmu[[j]]),
                       sqrt((2*ur0*pmpsV[[j]]*pdmps[[j]])^2 + (dr0*pmpsV[[j]]^2)^2
-                           + (ur0*pmpsV[[j]]^2*dZP/uZP)^2 )*ur0/(pxmu[[j]]),
+                           + (ur0*pmpsV[[j]]^2*dZP/fZP)^2 )*ur0/(pxmu[[j]]),
                       col=color[i], bg=color[i],
                       pch=20+(i-1)*2+(j-1), rep=TRUE)
       }
@@ -537,7 +539,7 @@ plot.pionChiPTfit <- function(fit, write.data=FALSE, plot.file=FALSE, plot.all=F
         lines(xfit, mN2, lty=1)
       }
     }
-    rm(dr0, mZP, fZP, dZP, ur0, uZP)
+    rm(dr0, fZP, dZP, ur0)
   }
   if(plot.file) {
     dev.set(fplot)

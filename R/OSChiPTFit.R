@@ -32,6 +32,7 @@ OSChiPTfit <- function(data, startvalues_, ii, bootsamples=NULL, cmatrix,
     }
   }
   dof <- dof-5-Nbeta
+  cat("Fitting", sum(Nens), "ensembles with", np, "parameters at", Nbeta, "beta values\n")
   
   ## here we minimise chisqr
   mini <- optim(par=par, fn=chisqr.os, method="BFGS", hessian=FALSE,
@@ -48,7 +49,7 @@ OSChiPTfit <- function(data, startvalues_, ii, bootsamples=NULL, cmatrix,
   if(mini$convergence != 0) {
     warning("minimisation did not converge")
   }
-
+  chisqr.os(mini$par, data=data, ii=ii, Nens=Nens, Nbeta=Nbeta, cmatrix=cmatrix, debug=TRUE, fit.a=fit.a)
   ## now the bootstrap
   if(!is.null(bootsamples)) {
     boots <- array(0., dim=c(boot.R, length(mini$par)+1))
@@ -79,7 +80,7 @@ OSChiPTfit <- function(data, startvalues_, ii, bootsamples=NULL, cmatrix,
   else {
     boots <- NULL
   }
-  
+
   result <- list(af0=mini$par[6:(5+Nbeta)], mini=mini, data=data, cmatrix=cmatrix, boot.R=boot.R,
                  bootsamples=bootsamples, boots=boots, 
                  dof=dof, ii=ii, startvalues=startvalues_)
@@ -191,7 +192,7 @@ chisqr.os <- function(par, data, ii, Nbeta, Nens, cmatrix, debug=FALSE, fit.a=FA
       lsij <- ii[[i]][[k]]$lsii
       ssij <- ii[[i]][[k]]$ssii
       ## mpisq <- data[[i]][[k]]$m[uij]^2
-      mpisq <- par[npar+1]^2
+      mpisq <- (par[npar+1])^2
       ##rpi <-  mpisq/(4.0*pi*par[5+i])^2*g1( L*data[[i]][[k]]$m[uij] )
       rpi <-  mpisq/(4.0*pi*par[5+i])^2*g1( L*par[npar+1] )
       ##mpisq <-  par[npar+1]^2*(1.+0.5*rpi)^2
@@ -207,9 +208,16 @@ chisqr.os <- function(par, data, ii, Nbeta, Nens, cmatrix, debug=FALSE, fit.a=FA
       fK <- par[5+i]*getfK.os(par, mlsq, msssq, i, N=Nbeta, fit.a=fit.a)*(1-3*rpi/4.)
 
       x <- (c(fpi, fK, par[(npar+1):(npar+length(uij)+length(ssij))]*(1.+0.5*rpi)) -
-            c(data[[i]][[k]]$f[uij], data[[i]][[k]]$fsinh[lsij], data[[i]][[k]]$m[uij],  data[[i]][[k]]$m[ssij]))
-      chisum <- chisum + t(x) %*% cmatrix[[i]][[k]] %*% x
+            c(data[[i]][[k]]$f[uij], data[[i]][[k]]$f[lsij], data[[i]][[k]]$m[uij],  data[[i]][[k]]$m[ssij]))/c(data[[i]][[k]]$df[uij], data[[i]][[k]]$df[lsij], data[[i]][[k]]$dm[uij],  data[[i]][[k]]$dm[ssij])
+      chisum <- chisum + sum(x^2)
+      ##x <- (c(fpi, fK, par[(npar+1):(npar+length(uij)+length(ssij))]*(1.+0.5*rpi)) -
+      ##      c(data[[i]][[k]]$f[uij], data[[i]][[k]]$fsinh[lsij], data[[i]][[k]]$m[uij],  data[[i]][[k]]$m[ssij]))
+      ##chisum <- chisum + t(x) %*% cmatrix[[i]][[k]] %*% x
 
+      if(debug) {
+        cat(i, " ", k, "\n")
+        cat(x, "\n\n")
+      }
       npar <- npar + length(uij) + length(ssij)
       ##if(debug) {
       ##  cat("fpi:\n", fpi, "\n")

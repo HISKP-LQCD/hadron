@@ -384,7 +384,7 @@ plot.uwerr <- function(uwerr, main="x") {
     X11()
     plotwitherror(c(0:uwerr$Wmax),GammaFbb[1:(uwerr$Wmax+1)],
                   Gamma.err[1:(uwerr$Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
-    abline(v=uwerr$Wopt)
+    abline(v=uwerr$Wopt+1)
   }
   X11()
   tauintplot(uwerr$tauintofW, uwerr$dtauintofW, uwerr$Wmax, uwerr$Wopt, main=main)  
@@ -410,7 +410,7 @@ tauintplot <- function(ti, dti, Wmax, Wopt, ...) {
   plot(ti[1:Wmax], ylim=c(0.,2*ti[Wopt]), xlab="W", ylab="tauint(W)", ...)
 #  plot(ti[1:Wmax], ylim=NULL)
   arrows(c(2:Wmax),ti[2:Wmax]-dti[2:Wmax],c(2:Wmax),ti[2:Wmax]+dti[2:Wmax], length=0.01,angle=90,code=3)
-  abline(v=Wopt)
+  abline(v=Wopt+1)
   abline(h=ti[Wopt+1],col="red")
 }
 

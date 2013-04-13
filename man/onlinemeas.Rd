@@ -10,7 +10,8 @@
 onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
            iobs=1, ind.vec=c(1,3,4,5),
            boot.R=99, boot.l=10, tsboot.sim="geom",
-           method="uwerr", fit.routine="optim", nrep)
+           method="uwerr", fit.routine="optim", nrep,
+           oldnorm = FALSE)
 
 }
 \arguments{
@@ -72,6 +73,11 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     minimise the chisquare. All other values lead to the usage of R's
     \link{optim} function. The latter choice might be significantly
     slower.
+  }
+  \item{oldnorm}{
+    If set to \dQuote{TRUE}, the old online measurement normalisation of
+    \dQuote{tmLQCD} prior to version 5.2.0 is used in order to get correct
+    values for the pion decay constant.
   }
 }
 \value{
