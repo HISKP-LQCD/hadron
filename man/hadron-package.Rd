@@ -1,5 +1,5 @@
-\name{hadron-package}
-\alias{hadron-package}
+\name{hadron}
+\alias{hadron}
 \docType{package}
 \title{The Hadron Package}
 \description{

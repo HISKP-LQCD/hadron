@@ -11,11 +11,10 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
   }
   par <- numeric(2)
 
-  if(!any(data$V1 == itype && data$V2 == iobs)) {
+  if(!any(data$V1 == itype & data$V2 == iobs)) {
     stop("The particular correlation function is missing!")
   }
-  data <- data[data$V1==itype,]
-  data <- data[data$V2==iobs,]
+  data <- data[(data$V1==itype & data$V2==iobs),]
   sign <- +1.
   if(type == "sinh") sign <- -1.
   
@@ -99,11 +98,11 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
                         fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    fit.boot <- boot(data=t(W[ii,]), statistic=fit.boot, R=boot.R, stype="i",
+    fit.boot <- boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                      fit.routine=fit.routine)
 
-    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
                          Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                          fit.routine=fit.routine)
   }
@@ -175,7 +174,7 @@ fitmass <- function(Cor, Err, t1, t2, Time, par=c(1.,0.12), sign,
   return(abs(fit$par[2]))
 }
 
-fit.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.12),
+getfit.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.12),
                      fit.routine="optim", sign) {
   Thalf <- Time/2
   T1 <- Thalf+1
