@@ -68,9 +68,10 @@ computeacf(tseries, W.max, Lambda=100)
   \code{\link{summary.hadronacf}}
 }
 \examples{
-\dontrun{myacf <- computeacf(tsdata, 500)}
-\dontrun{plot(myacf)}
-\dontrun{summary(myacf)}
+data(plaq.sample)
+myacf <- computeacf(tsdata, 300)
+plot(myacf)
+summary(myacf)
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{ts, acf, autocorrelationtime}
