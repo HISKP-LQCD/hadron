@@ -131,6 +131,20 @@ plot.averx <- function(averx, ...) {
   }
 }
 
+plot.outputdata <- function(data, skip=0, ...) {
+  plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])
+  dH.res <- uwerrprimary( exp(-data$V3[skip:length(data$V3)]))
+  plot(data$V1, data$V2, type="l",
+       main="Plaquette", xlab=expression(t[HMC]), ylab="P", col="red", ...)
+  abline(h=plaq.res$value, col="blue")
+  abline(h=plaq.res$value+plaq.res$dvalue)
+  abline(h=plaq.res$value-plaq.res$dvalue)
+  X11()
+  plot(data$V1, data$V3, type="l",
+       main=expression(paste(Delta, "H")), xlab=expression(t[HMC]), ylab=expression(paste(Delta, "H")), ...)
+  return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))
+}
+
 #postscript(file = "test.eps", family="NimbusRom", paper="special", horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
 # linewidth, tick length and direction, margings, orientation
 #opar <- par(lwd=0.5, tck=0.02, mgp=c(2,.5,0), las=1)
