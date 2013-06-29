@@ -35,9 +35,13 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
   from \code{1} until \code{(length(data)-skip)/blocksize < 20}. Note
   that only data is kept in exact multiples of the block length.
 }
-
+\examples{
+data(plaq.sample)
+plaq.boot <- bootstrap.analysis(plaq.sample, pl=T)
+}
 \seealso{
-  for an alternative way to analyse such time series see \code{\link{uwerr}}
+  for an alternative way to analyse such time series see
+  \code{\link{uwerr}} and \code{\link{computeacf}}
 }
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{ts}
