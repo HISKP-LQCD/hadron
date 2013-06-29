@@ -1,6 +1,6 @@
 readcmicor <- function(filename) {
   data <- read.table(filename, header=F,
-                     colClasse=c("integer","integer","integer","numeric","numeric","integer"))
+                     colClasses=c("integer","integer","integer","numeric","numeric","integer"))
   attr(data, "class") <- c("cmicor", "data.frame")  
   return(invisible(data))
 }
@@ -24,14 +24,16 @@ readcmidatafiles <- function(path="./", basename="onlinemeas", skip=1,
     if(verbose) {
       cat("Reading from file", ofiles[i], "\n")
     }
-    cmicor <- rbind(cmicor, read.table(paste(path, ofiles[i], sep=""), skip=skip))
+    cmicor <- rbind(cmicor, read.table(paste(path, ofiles[i], sep=""), skip=skip, header=F,
+                                       colClasses=c("integer", "integer","integer","numeric","numeric")))
     j <- j+1
   }
   attr(cmicor, "class") <- c("cmicor", "data.frame")  
   return(invisible(cmicor))
 }
 
-extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5), sym.vec, verbose=FALSE) {
+extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
+                        sym.vec, sign.vec, verbose=FALSE) {
   if(missing(cmicor)) {
     stop("data missing in extract.obs\n")
   }
@@ -54,25 +56,36 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5), sym.vec, ver
       data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
   ## symmetrise or anti-symmetrise for given observable?
   isym.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
+  isign.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
   if(!missing(sym.vec)) {
     if(length(sym.vec) != nrObs) {
       stop("sym.vec was given, but had not the correct length")
     }
     for(i in c(1:nrObs)) {
-      if(!sym.vec) {
+      if(!sym.vec[i]) {
         isym.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
       }
     }
   }
-  cf <- array((data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
-              dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes)))
+  if(!missing(sign.vec)) {
+    if(length(sign.vec) != nrObs) {
+      stop("sign.vec was given, but does not have the correct length")
+    }
+    for(i in c(1:nrObs)) {
+      if(sign.vec[i] < 0) {
+        isign.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
+      }
+    }
+  }
+  cf <- t(array(isign.vec*(data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
+              dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
 
   return(invisible(list(cf=cf, Time=Time, nrStypes=nrStypes, nrObs=nrObs)))
 }
 
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=F,
-                              colClasse=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
+                              colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
 }
 
 readoutputdata <- function(filename) {

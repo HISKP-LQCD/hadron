@@ -1,4 +1,4 @@
-mean.index <- function(data, indexvector) {
+meanindexed <- function(data, indexvector) {
   return(invisible(mean(data[indexvector])))
 }
 
@@ -15,7 +15,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   cat("mean value = ", data.mean, "\n")
   cat("naive error = ", error.naive, "\n")
   
-  data.boot <- boot(data=data, statistic=mean.index, R=boot.R, stype="i")
+  data.boot <- boot(data=data, statistic=meanindexed, R=boot.R, stype="i")
   data.boot.ci <- boot.ci(data.boot, type = c("norm", "basic", "perc"))
 
   cat("                  mean        -err           +err            stderr        bias\n")
@@ -41,7 +41,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   while((length(data))/boot.l > 20) {
     ndata <- block.ts(data, l=boot.l)
     j <- j+1
-    data.tsboot <- boot(ndata, statistic=mean.index, R=boot.R)
+    data.tsboot <- boot(ndata, statistic=meanindexed, R=boot.R)
     ## use the same seed ...
     set.seed(data.tsboot$seed)
     data.sdboot <- boot(ndata, statistic=sd.index, R=boot.R)
