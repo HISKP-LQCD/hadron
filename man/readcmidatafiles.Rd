@@ -5,8 +5,8 @@
   reads data from single files in Chris Michael format
 }
 \usage{
-readcmidatafiles(path=".", basename="onlinemeas", skip=1, ind.vec=c(1,2,3,4,5),
-                 last.digits=4, verbose=FALSE, sym.vec) 
+readcmidatafiles(path=".", basename="onlinemeas", skip=1,
+                 last.digits=4, verbose=FALSE) 
 }
 \arguments{
   \item{path}{
@@ -38,24 +38,8 @@ readcmidatafiles(path=".", basename="onlinemeas", skip=1, ind.vec=c(1,2,3,4,5),
   }
 }
 \value{
-  returns a list with
-  \item{cf}{
-    array containing the correlation function with dimension number of
-    files times (nrObs*nrStypes*(T/2+1)). C(t) and C(-t) are averaged
-    according to \code{sym.vec}.
-  }
-  \item{gaugeno}{
-    The ordered list of gauge configuration indices.
-  }
-  \item{Time}{
-    The time extend of the correlation functions.
-  }
-  \item{nrStypes}{
-    The number of smearing combinations.
-  }
-  \item{nrObs}{
-    The number of observables.
-  }
+  returns an object of class \code{cmicor}, which is an \code{rbind} of
+  all \code{data.frame}s read from the single files.
 }
 \details{
   This function reads data from single data files. The data in the files is assumed
@@ -66,7 +50,7 @@ readcmidatafiles(path=".", basename="onlinemeas", skip=1, ind.vec=c(1,2,3,4,5),
   time; 5) \eqn{c_2}{c2} correlator value at time value backward in time;
 }
 \seealso{
-  \code{\link{readcmicor}}
+  \code{\link{readcmicor}}, \code{\link{extract.obs}}
 }
 \examples{
 library(hadron)
