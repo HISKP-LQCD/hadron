@@ -33,14 +33,16 @@ readcmidatafiles(path=".", basename="onlinemeas", skip=1, ind.vec=c(1,2,3,4,5),
   }
   \item{sym.vec}{
     a vector of bools of length equal to the number of observables
-    indicating whether C(+t) and C(-t) should be added or subtracted.
+    indicating whether C(+t) and C(-t) should be added or subtracted. If
+    not given C(+t) and C(-t) will be averaged for all observables.
   }
 }
 \value{
   returns a list with
   \item{cf}{
     array containing the correlation function with dimension number of
-    files times (nrObs*nrStypes*(T/2+1)).
+    files times (nrObs*nrStypes*(T/2+1)). C(t) and C(-t) are averaged
+    according to \code{sym.vec}.
   }
   \item{gaugeno}{
     The ordered list of gauge configuration indices.

@@ -15,7 +15,7 @@
   }
 }
 \value{
-  returns a data frame containing the data
+  returns a data frame of class \dQuote{cmicor} containing the data
 }
 \details{
   This function read data from a file. The data in the file is assumed
