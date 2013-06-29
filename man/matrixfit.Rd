@@ -1,4 +1,5 @@
 \name{matrixfit}
+\alias{matrixfit}
 \title{Routine For A Factorising Matrix Fit}
 \description{
   Performs a factorising fit on a correlation matrix
@@ -37,7 +38,7 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   }
 }
 \value{
-  
+  returns an object of class \code{matrixfit}
 }
 \details{
   The inverse covariance matrix is computed using a singular value
