@@ -148,11 +148,11 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   correlation functions summed over spatial x for all t. We analyse
   these correlators in different ways:
 
-  \item only the PP correlator is analysed and fitted by
+  First, only the PP correlator is analysed and fitted by
   \eqn{p_1^2\cosh(-m(t-T/2))}{p1*p1*cosh(-m(t-T/2))} for \eqn{m} and
   \eqn{p_1}{p1}.
   
-  \item PP and PA correlators are fitted together with three parameters
+  Second, PP and PA correlators are fitted together with three parameters
   as \eqn{C_\mathrm{PP} = p_1^2\cosh(-m(t-T/2))}{C_PP =
     p1*p1*cosh(-m(t-T/2))} and \eqn{C_\mathrm{PA} =
     p_1p_2\cosh(-m(t-T/2))}{C_PA = p1*p2*cosh(-m(t-T/2))} in a
@@ -161,7 +161,7 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   \deqn{m_\mathrm{PCAC} = m_\mathrm{PS} \frac{p_2}{2p_1}}{%
     mpcac = mps p_2/(2 p_1)}
 
-  \item the PCAC mass can also be determined computing
+  Finally, the PCAC mass can also be determined computing
   \deqn{m_\mathrm{PCAC}(t) =%
     \frac{C_\mathrm{PA}(t+1)-C_\mathrm{PA}(t-1)}{4C_\mathrm{PP}(t)}}{%
     C_PA(t) = (C_PA(t+1)-C_PA(t-1))/(4 C_PP(t))}
