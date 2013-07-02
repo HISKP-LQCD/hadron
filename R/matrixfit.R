@@ -29,7 +29,7 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
-                      matrix.size=2, useCov=FALSE) {
+                      matrix.size=2, useCov=FALSE, seed=12345) {
   ## some sanity checks
   if(min(parlist) <= 0 || max(parlist) > matrix.size) {
     stop("Elements of parlist must be all > 0 and <= matrix.size\n")
@@ -121,6 +121,8 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   dof <- (length(CF$t[ii])-length(par))
   Qval <- 1-pchisq(opt.res$value, dof)
 
+  ## we set the seed for reproducability and correlation
+  set.seed(seed)
   ## and bootstrap the fit
   opt.tsboot <- tsboot(tseries=cf$cf[,ii], statistic=fit.formatrixboot, R=boot.R, l=boot.l, sim="geom",
                        par=opt.res$par, t=CF$t[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
@@ -128,7 +130,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   res <- list(CF=CF, M=M, parind=parind, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
-              parlist=parlist, sym.vec=sym.vec)
+              parlist=parlist, sym.vec=sym.vec, seed=seed)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }

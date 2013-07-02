@@ -1,4 +1,5 @@
 \name{extract.obs}
+\alias{extract.obs}
 \title{Extract One or More Gamma Combinations from am CMI Correlator}
 \description{
   Extracts one or more gamma matrix combinations (observables) from a
