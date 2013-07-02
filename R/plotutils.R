@@ -10,7 +10,9 @@ plotwitherror <- function(x, y, dy, ylim, rep=FALSE, col="black", ...) {
   else {
     plot(x,y, ylim=ylim, col=col, ...)
   }
+  options(show.error.messages = FALSE)
   arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+  options(show.error.messages = TRUE)
 }
 
 plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {

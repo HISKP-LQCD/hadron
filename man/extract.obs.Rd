@@ -54,7 +54,7 @@ extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5), sym.vec, verbose=FALSE)
 }
 \examples{
 \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}
-\dontrun{cf <- extract.obs(cmicor, vec.obs=c(1,3))
+\dontrun{cf <- extract.obs(cmicor, vec.obs=c(1,3))}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{ts}
