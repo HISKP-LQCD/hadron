@@ -1,6 +1,6 @@
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot(block.ts(data, l=l), meanindexed, R=R)
-  return(sd(bootit$t))
+  return(apply(bootit$t, 2, sd))
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
@@ -62,10 +62,12 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
-  for(j in 2:mSize) {
-    ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
+  if(mSize > 1) {	
+    for(j in 2:mSize) {
+      ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
+    }
   }
-  
+
   ## parind is the index vector for the matrix elements
   ## signvec decides on cosh or sinh
   parind <- array(1, dim=c(length(CF$Cor),2))
