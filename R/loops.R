@@ -45,22 +45,30 @@ loops <- function() {
 
 computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE) {
   T <- cf$Time
+  ## the real part of the correlator matrix
   tcf <- cf$cf
+  ## the imaginary part of the correlator matrix
   if(!real) tcf <- cf$icf
+  ## number of gauges
   N <- dim(tcf)[1]
-
+  ## index array for t
   i <- c(1:T)
+  ## index array for t'
   i2 <- i
-  Cf <- array(0, dim=c(N, T/2+1))
-  
+  ## space for the correlator
+  Cf <- array(0., dim=c(N, T/2+1))
+
+  vev <- 0.
   if(subtract.vev) {
     ## compute vev first
     ## mean over all gauges and times
     vev <- mean(tcf)
   }
+  ## here we compute the actual correlation
   Cf[,1] <- apply((tcf - vev)*(tcf - vev), 1, mean)
   for(dt in c(1:(T/2))) {
-    i2 <- (i2) %% 48 + 1
+    ## shift the index array by 1 to the left
+    i2 <- (i2) %% T + 1
     Cf[,1+dt] <- apply((tcf[,i] - vev)*(tcf[,i2] - vev), 1, mean)
   }
   return(invisible(Cf))
