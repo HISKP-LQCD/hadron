@@ -42,3 +42,26 @@ loops <- function() {
   res <- res/((S-1)*S/2)/ngauge/L^3
   cat(res, "\n")
 }
+
+computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE) {
+  T <- cf$Time
+  tcf <- cf$cf
+  if(!real) tcf <- cf$icf
+  N <- dim(tcf)[1]
+
+  i <- c(1:T)
+  i2 <- i
+  Cf <- array(0, dim=c(N, T/2+1))
+  
+  if(subtract.vev) {
+    ## compute vev first
+    ## mean over all gauges and times
+    vev <- mean(tcf)
+  }
+  Cf[,1] <- apply((tcf - vev)*(tcf - vev), 1, mean)
+  for(dt in c(1:(T/2))) {
+    i2 <- (i2) %% 48 + 1
+    Cf[,1+dt] <- apply((tcf[,i] - vev)*(tcf[,i2] - vev), 1, mean)
+  }
+  return(invisible(Cf))
+}
