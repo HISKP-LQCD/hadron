@@ -64,12 +64,14 @@ computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE) {
     ## mean over all gauges and times
     vev <- mean(tcf)
   }
+  tcf <- tcf - vev
   ## here we compute the actual correlation
-  Cf[,1] <- apply((tcf - vev)*(tcf - vev), 1, mean)
+  Cf[,1] <- apply(tcf*tcf, 1, mean)
   for(dt in c(1:(T/2))) {
     ## shift the index array by 1 to the left
     i2 <- (i2) %% T + 1
-    Cf[,1+dt] <- apply((tcf[,i] - vev)*(tcf[,i2] - vev), 1, mean)
+    Cf[,1+dt] <- apply(tcf[,i]*tcf[,i2], 1, mean)
   }
-  return(invisible(Cf))
+  cf <- list(cf=Cf, icf=NULL, Time=T, nrStypes=1, nrObs=1)
+  return(invisible(cf))
 }
