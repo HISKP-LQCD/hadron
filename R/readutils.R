@@ -94,22 +94,27 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readbinarycf <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="little") {
+readbinarycf <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="little",
+                         excludelist=c(""), sym=TRUE) {
   files <- dir(path=path, paste(basename, "*", sep=""))
 
   ## indices for averaging +-t
   i1 <- c(2:(T/2))+obs*T
   i2 <- c(T:(T/2+2))+obs*T
+  sign <- +1
+  if(!sym) sign <- -1
 
   Cf <- complex()
   for(f in files) {
-    to.read <- file(paste(path, f, sep=""), "rb")
-    tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
-    ## average +-t
-    tmp[i1] <- 0.5*(tmp[i1] + tmp[i2])
-
-    Cf <- cbind(Cf, tmp[c(1:(T/2+1))+obs*T])
-    close(to.read)
+    if( !(f %in% excludelist)) {
+      to.read <- file(paste(path, f, sep=""), "rb")
+      tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
+      ## average +-t
+      tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
+      
+      Cf <- cbind(Cf, tmp[c(1:(T/2+1))+obs*T])
+      close(to.read)
+    }
   }
   cf <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1)
   return(invisible(cf))
