@@ -165,10 +165,10 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
     }
   }
   if(missing(L)) L <- T/2
-  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/sqrt{L^3},
-             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/sqrt{L^3},
-             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/sqrt{L^3},
-             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/sqrt{L^3},
+  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
              Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
   return(invisible(cf))
 }
