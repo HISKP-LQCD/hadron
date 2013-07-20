@@ -18,7 +18,7 @@
   returns a data frame of class \dQuote{cmicor} containing the data
 }
 \details{
-  This function read data from a file. The data in the file is assumed
+  This function reads data from a file. The data in the file is assumed
   to have 6 columns: 1) the observable type number (itype); 2) the operator
   type number (iobs); 3) the time difference from source going from 0 to \eqn{T/2}
   for each operator type; 4) \eqn{c_1}{c1} correlator value at time value forward in
