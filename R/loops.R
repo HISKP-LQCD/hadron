@@ -43,8 +43,9 @@ loops <- function() {
   cat(res, "\n")
 }
 
-computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE, avoid.equal=TRUE) {
+computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE, avoid.equal=TRUE, L) {
   T <- cf$Time
+  if(missing(L)) L <- T/2
   ## the real part of the correlator matrix
   tcf <- cf$cf
   nrSamples <- cf$nrSamples
@@ -85,8 +86,8 @@ computeDisc <- function(cf, real=TRUE, subtract.vev=TRUE, avoid.equal=TRUE) {
       Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,,]*mtcf[i2,,], c(2,3), mean), 2, sum)
       i2 <- (i2) %% T + 1
     }
-    Cf <- Cf/nrSamples/(nrSamples-1)/2
+    Cf <- Cf/nrSamples/(nrSamples-1)/L^3
   }
-  cf <- list(cf=Cf, icf=NULL, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples)
+  cf <- list(cf=Cf, icf=NULL, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, L=L)
   return(invisible(cf))
 }
