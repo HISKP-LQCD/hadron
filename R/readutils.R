@@ -94,9 +94,8 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readbinarycf <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="little",
+readbinarycf <- function(files, T=48, obs=5, endian="little",
                          excludelist=c(""), sym=TRUE) {
-  files <- dir(path=path, paste(basename, "*", sep=""))
 
   ## indices for averaging +-t
   i1 <- c(2:(T/2))+obs*T
@@ -106,8 +105,8 @@ readbinarycf <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="
 
   Cf <- complex()
   for(f in files) {
-    if( !(f %in% excludelist)) {
-      to.read <- file(paste(path, f, sep=""), "rb")
+    if( !(f %in% excludelist) && file.exists(f)) {
+      to.read <- file(f, "rb")
       tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
       ## average +-t
       tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
@@ -120,18 +119,49 @@ readbinarycf <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="
   return(invisible(cf))
 }
 
-readbinarydisc <- function(path="./", basename='C2_pi[[+]]', T=48, obs=5, endian="little",
+readbinarydisc <- function(files, T=48, obs=5, endian="little",
                            excludelist=c("")) {
-  files <- dir(path=path, paste(basename, "*", sep=""))
   Cf <- complex()
+  N <- 0
   for(f in files) {
-    if( !(f %in% excludelist)) {
-      to.read <- file(paste(path, f, sep=""), "rb")
+    if( !(f %in% excludelist) && file.exists(f)) {
+      N <- N+1
+      to.read <- file(f, "rb")
       tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
       Cf <- cbind(Cf, tmp[c((obs*T+1):(obs*T+T))])
       close(to.read)
     }
   }
-  cf <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1)
+  Cf <- array(Cf, dim=c(T, 1, N))
+  cf <- list(cf=Re(Cf), icf=Im(Cf), scf=NULL, sicf=NULL,
+             Time=T, nrStypes=1, nrObs=1, nrSamples=1, obs=obs)
+  return(invisible(cf))
+}
+
+readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8), L,
+                        excludelist=c(""),
+                        colClasses=c("integer", "integer","integer","integer",
+                          "numeric","numeric","numeric","numeric")) {
+  if(missing(files)) {
+    stop("filelist missing, aborting...\n")
+  }
+  if(length(ind.vec) != 7) {
+    stop("ind.vec must have length 7, aborting...\n")
+  }
+  ldata <- data.frame()
+  for(f in files) {
+    if( !(f %in% excludelist) && file.exists(f)) {
+      tmp <- read.table(f, colClasses=colClasses)
+      ldata <- rbind(ldata, tmp[tmp[,ind.vec[1]] %in% obs, ])
+      T <- max(ldata[,ind.vec[2]])
+      nrSamples <- max(ldata[,ind.vec[3]])
+    }
+  }
+  if(missing(L)) L <- T/2
+  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/L^3,
+             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/L^3,
+             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/L^3,
+             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/L^3,
+             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
   return(invisible(cf))
 }
