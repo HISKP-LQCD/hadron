@@ -6,7 +6,7 @@
 }
 \usage{
 cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
-                  excludelist=c(""), skip=0,
+                  excludelist=c(""), skip=0, L,
                   colClasses=c("integer", "integer","integer","integer",
                                "numeric","numeric","numeric","numeric"))
 
@@ -35,6 +35,9 @@ cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   \item{colClasses}{
     The column data type classes, the \code{read.table}.
   }
+  \item{L}{
+    the spatial lattice extend, set to \code{Time/2} if missing.
+  }
 }
 \value{
   returns a list with four arrays \code{cf}, \code{icf} \code{scf} and
@@ -48,6 +51,8 @@ cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   of smearing levels and \code{nrObs} the number of operators, which are
   currently fixed to 1 and 2, respectively. \code{nrSamples} is the number
   of samples.
+
+  Note that the arrays are normalised by \code{1/sqrt(L^2)}.
 }
 \seealso{
   \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
