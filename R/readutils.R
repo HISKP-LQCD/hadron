@@ -1,6 +1,6 @@
-readcmicor <- function(filename) {
+readcmicor <- function(filename, colClasses=c("integer","integer","integer","numeric","numeric","integer")) {
   data <- read.table(filename, header=F,
-                     colClasses=c("integer","integer","integer","numeric","numeric","integer"))
+                     colClasses=colClasses)
   attr(data, "class") <- c("cmicor", "data.frame")  
   return(invisible(data))
 }
@@ -21,13 +21,15 @@ getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) 
   return(invisible(ofiles[ii]))
 }
 
-readcmidatafiles <- function(files, skip=1, verbose=FALSE,
+readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","numeric","numeric")) {
-
+  if(missing(files)) {
+    stop("filelist missing, aborting...\n")
+  }
   cmicor <- data.frame()
   ## read single files
   for(f in files) {
-    if(file.exists(f)) {
+    if( !(f %in% excludelist) && file.exists(f)) {
       if(verbose) {
         cat("Reading from file", f, "\n")
       }
@@ -37,6 +39,26 @@ readcmidatafiles <- function(files, skip=1, verbose=FALSE,
   }
   attr(cmicor, "class") <- c("cmicor", "data.frame")  
   return(invisible(cmicor))
+}
+
+readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
+                             colClasses=c("integer", "integer","integer","integer",
+                               "numeric","numeric","numeric","numeric")) {
+
+  if(missing(files)) {
+    stop("filelist missing, aborting...\n")
+  }
+  ldata <- data.frame()
+  for(f in files) {
+    if( !(f %in% excludelist) && file.exists(f)) {
+      if(verbose) {
+        cat("Reading from file", f, "\n")
+      }
+      ldata <- rbind(ldata,read.table(f, colClasses=colClasses, skip=skip))
+    }
+  }
+  attr(ldata, "class") <- c("cmiloop", "data.frame")  
+  return(invisible(ldata))
 }
 
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
@@ -135,11 +157,11 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
       N <- N+1
       to.read <- file(f, "rb")
       tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
-      Cf <- cbind(Cf, tmp[c((obs*T+1):(obs*T+T))])
+      Cf <- cbind(Cf, tmp[c((obs*T*nrSamples+1):((obs+1)*T*nrSamples))])
       close(to.read)
     }
   }
-  Cf <- array(Cf, dim=c(T, 1, N))
+  Cf <- array(Cf, dim=c(T, nrSamples, N))
   cf <- list(cf=Re(Cf), icf=Im(Cf), scf=NULL, sicf=NULL,
              Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, obs=obs)
   return(invisible(cf))

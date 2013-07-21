@@ -5,7 +5,7 @@
   computes a disconnected correlation function from loops
 }
 \usage{
-cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE)
+cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE, use.samples)
 }
 \arguments{
   \item{cf}{
@@ -19,6 +19,10 @@ cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE)
     subtract a vacuum expectation value. It will be estimated as mean
     over all samples, gauges and times available.
   }
+  \item{use.samples}{
+    If set only the specified number of samples will be used, instead of
+    all samples.
+  }
 }
 \value{
   Returns a list with elements \code{cf}, an array of dimension
@@ -29,6 +33,10 @@ cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE)
   generate \code{cf}. 
 }
 \details{
+  The dimension of \code{cf$cf} and \code{cf$icf} must be \code{dim(T,
+    S, N)}, where \code{T} is the time extend, \code{S} is the number of
+  samples and \code{N} the number of measurements (gauges).
+  
   If \code{subtract.vev=TRUE} the vev is estimated as the mean over all
   gauges, samples and times available and subtracted from the original
   loop data.
