@@ -1,5 +1,6 @@
-readcmicor <- function(filename, colClasses=c("integer","integer","integer","numeric","numeric","integer")) {
-  data <- read.table(filename, header=F,
+readcmicor <- function(filename, colClasses=c("integer","integer","integer","numeric","numeric","integer"),
+                       skip=0) {
+  data <- read.table(filename, header=F, skip=skip,
                      colClasses=colClasses)
   attr(data, "class") <- c("cmicor", "data.frame")  
   return(invisible(data))
@@ -61,15 +62,30 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
   return(invisible(ldata))
 }
 
+extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L) {
+  ldata <- cmiloop[cmiloop[,ind.vec[1]] == obs,] 
+  T <- max(ldata[,ind.vec[2]])
+  nrSamples <- max(ldata[,ind.vec[3]])
+  if(missing(L)) {
+    L <- T/2
+  }
+  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
+  return(invisible(cf))
+}
+
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
                         sym.vec, sign.vec, verbose=FALSE) {
   if(missing(cmicor)) {
     stop("data missing in extract.obs\n")
   }
-  
-  nrObs <- max(cmicor[,ind.vec[1]])
-  if(nrObs != length(unique(cmicor[,ind.vec[1]]))) {
-    stop("extract.obs: data inconsistent, nrObs not equal to input data length\n")
+  ## consistency check for data in file
+  filenrObs <- max(cmicor[,ind.vec[1]])
+  if(filenrObs != length(unique(cmicor[,ind.vec[1]]))) {
+    stop("extract.obs: data inconsistent, nrObs in file not matching to input data length\n")
   }
   nrStypes <- length(unique(cmicor[,ind.vec[2]]))
   Time <-  2*max(cmicor[,ind.vec[3]])
@@ -77,7 +93,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
     stop("extract.obs: data inconsistent, T not equal to input data length\n")
   }
-  if(verbose) cat("nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
+  if(verbose) cat("filenrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
   nrObs <- length(vec.obs)
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
