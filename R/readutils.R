@@ -140,7 +140,7 @@ readoutputdata <- function(filename) {
 }
 
 readbinarycf <- function(files, T=48, obs=5, endian="little",
-                         excludelist=c(""), sym=TRUE) {
+                         excludelist=c(""), sym=TRUE, path="") {
 
   ## indices for averaging +-t
   i1 <- c(2:(T/2))+obs*T
@@ -150,8 +150,9 @@ readbinarycf <- function(files, T=48, obs=5, endian="little",
 
   Cf <- complex()
   for(f in files) {
-    if( !(f %in% excludelist) && file.exists(f)) {
-      to.read <- file(f, "rb")
+    ifs <- paste(path, f, sep="")
+    if( !(ifs %in% excludelist) && file.exists(ifs)) {
+      to.read <- file(ifs, "rb")
       tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
       ## average +-t
       tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
@@ -165,15 +166,19 @@ readbinarycf <- function(files, T=48, obs=5, endian="little",
 }
 
 readbinarydisc <- function(files, T=48, obs=5, endian="little",
-                           excludelist=c(""), nrSamples=1) {
+                           excludelist=c(""), nrSamples=1, path="") {
   Cf <- complex()
-  N <- 0
+
+  N <- length(files)/nrSamples
+  if(nrSamples*N != length(files)) {
+    stop("not the same number of samples per gauge")
+  }
   for(f in files) {
-    if( !(f %in% excludelist) && file.exists(f)) {
-      N <- N+1
-      to.read <- file(f, "rb")
+    ifs <- paste(path,f,sep="")
+    if( !(ifs %in% excludelist) && file.exists(ifs)) {
+      to.read <- file(ifs, "rb")
       tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
-      Cf <- cbind(Cf, tmp[c((obs*T*nrSamples+1):((obs+1)*T*nrSamples))])
+      Cf <- cbind(Cf, tmp[c((obs*T+1):((obs+1)*T))])
       close(to.read)
     }
   }
