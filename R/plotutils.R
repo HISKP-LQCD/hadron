@@ -1,17 +1,46 @@
-plotwitherror <- function(x, y, dy, ylim, rep=FALSE, col="black", ...) {
+plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...) {
+  my.xlim <- NULL
+  my.ylim <- NULL
+  
+  if(missing(xlim)) {
+    if(!missing(dx)) {
+      my.xlim <- c(min(x-2*dx, na.rm = TRUE),max(x+2*dx, na.rm = TRUE))
+    }
+  } else {
+    my.xlim <- xlim
+  }
+
   if(missing(ylim)) {
-    if(rep) {
-      points(x, y, col=col, ...)
+    if(!missing(dy)) {
+      my.ylim <- c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE))
     }
-    else {
-      plot(x,y, ylim=c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE)), col=col, ...)
-    }
+  } else {
+    my.ylim <- ylim
+  }
+
+  if(rep) {
+    points(x, y, col=col, ...)
+  }
+  else if(!is.null(my.xlim) && !is.null(my.ylim)) {
+    plot(x, y, ylim=my.ylim, xlim=my.xlim, col=col, ...)
+  } 
+  else if(is.null(my.xlim) && !is.null(my.ylim)) {
+    plot(x, y, ylim=my.ylim, col=col, ...)
+  }
+  else if(!is.null(my.xlim) && is.null(my.ylim)) {
+    plot(x, y, xlim=my.xlim, col=col, ...)
   }
   else {
-    plot(x,y, ylim=ylim, col=col, ...)
+    plot(x, y, col=col, ...)
   }
+
   options(show.error.messages = FALSE)
-  arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+  if(!missing(dy)) {
+    arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+  }
+  if(!missing(dx)) {
+    arrows(x-dx,y,x+dx,y, length=0.01,angle=90,code=3, col=col)
+  }
   options(show.error.messages = TRUE)
 }
 
