@@ -44,6 +44,9 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
     use correlated or uncorrelated chisquare. Default is
     \code{useCov=FALSE}. 
   }
+  \item{seed}{
+    seed for the random number generation used for boostrapping.
+  }
 }
 \value{
   returns an object of class \code{matrixfit}
