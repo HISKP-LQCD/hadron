@@ -12,7 +12,10 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   par <- numeric(2)
   sign <- +1.
+  # in the data which was read with readcmicor, load only the data
+  # for PP and PA (V1 = 1 or 2)
   data <- data[data$V1<3,]
+  # and gamma matrix combination iobs (by default iobs=1 <-> gamma5)
   data <- data[data$V2==iobs,]
 
   Time <-  2*max(data[,ind.vec[2]])
@@ -20,12 +23,13 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   T1 <- Thalf+1
   t1p1 <- (t1+1)
   t2p1 <- (t2+1)
+  # number of observables in data
   nrObs <- 2
+  # number of instances of certain observables (i.e.: smeared-smeared, local-smeared, smeared-local, local-local would be 4) 
   nrType <- 1
   Skip <- (skip*(T1)*nrType*nrObs+1)
   Length <- length(data[,ind.vec[3]])
   cat("time =", Time, "Thalf =", Thalf, "\n")
-#  Thalf <- Thalf + 1
   if(missing(nrep)) {
     nrep <- c(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))
   }
@@ -36,6 +40,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
 
+  # extract the negative and positive correlators from the data
   Z <- array(data[((Skip):Length),ind.vec[3]], 
              dim=c(nrObs*(T1)*nrType,(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))))
   # negative times
@@ -43,12 +48,13 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
              dim=c(nrObs*(T1)*nrType,(length(data[((Skip):Length),ind.vec[4]])/(nrObs*(T1)*nrType))))
 
   rm(data)
+  # extract the correlator from the data, averaging negative and positive times
+  # and store it back to W
   W <- getCor(T1=T1, W=W, Z=Z, type=c("cosh","sinh"))
   if(oldnorm) {
     W <- W*(2*kappa)^2
   }
   rm(Z)
-#  print(t(W))
 
   # some effective pion masses
   eff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
@@ -59,6 +65,10 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   Cor <- rep(0., times=nrObs*T1)
   E <- rep(0., times=nrObs*T1)
   
+  # W contains length(W[(i),]) samples of the PA and PP correlators
+  # rows correspond to timeslices and columns to samples
+  # Cor will therefore store averages of the two correlators, P from 1 to T1
+  # and A from T1+1 to 2T1 
   for(i in 1:(T1*nrObs)) {
     Cor[i] <- mean(W[(i),])
     tmpe <- try(uwerrprimary(W[(i),], pl=F, nrep=nrep)$dvalue, TRUE)
@@ -69,7 +79,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
 
-  # now the PP correlator first _only_ 
+  # now fit the PP correlator first _only_ 
   par[2] <- eff$mass[1]
   par[1] <- sqrt(abs(Cor[(t1+1)]*exp(par[2]*(t1+1))))
   
@@ -91,7 +101,6 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
   sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
-#    sfit.fpi <- 2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
   cat("mpi =", sfit.mass, " fpi =",sfit.fpi, "\n")
   
   sfit.dof <- (t2-t1+1)-length(massfit$par)
