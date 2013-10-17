@@ -5,11 +5,16 @@
   computes a disconnected correlation function from loops
 }
 \usage{
-cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE, use.samples)
+cf <- computeDisc(cf, cf2, real=TRUE, subtract.vev=TRUE,
+subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
 }
 \arguments{
   \item{cf}{
     loop data as produced by \code{readcmidisc} or \code{readbinarydisc}.
+  }
+  \item{cf}{
+    second set of loop data as produced by \code{readcmidisc} or
+    \code{readbinarydisc}. This is needed for cross-correlators
   }
   \item{real}{
     use the real part \code{cf$cf}, if set to \code{TRUE}, otherwise the
@@ -18,6 +23,16 @@ cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE, use.samples)
   \item{subtract.vev}{
     subtract a vacuum expectation value. It will be estimated as mean
     over all samples, gauges and times available.
+  }
+  \item{subtract.vev2}{
+    subtract a vacuum expectation value for the second set of loops. It will be estimated as mean
+    over all samples, gauges and times available.
+  }
+  \item{subtract.equal}{
+    subtract contributions of products computed on identical
+    samples. This will introduce a bias, if
+    set to FALSE for missing cf2 or if cf and cf2 are computed on the same
+    set of sources.
   }
   \item{use.samples}{
     If set only the specified number of samples will be used, instead of
@@ -30,19 +45,24 @@ cf <- computeDisc(cf, real=TRUE, subtract.vev=TRUE, use.samples)
   the time extend, integers \code{Time} for the time extend,
   \code{nrStypes} and \code{nrObs} for the available smearing types and
   operators, and finally \code{nrSamples}, the number of samples used to
-  generate \code{cf}. 
+  generate the correlation function \code{cf}. 
 }
 \details{
   The dimension of \code{cf$cf} and \code{cf$icf} must be \code{dim(T,
     S, N)}, where \code{T} is the time extend, \code{S} is the number of
-  samples and \code{N} the number of measurements (gauges).
+  samples and \code{N} the number of measurements (gauges). \code{cf2}
+  is the same, but needed only for cross-correlators.
   
   If \code{subtract.vev=TRUE} the vev is estimated as the mean over all
   gauges, samples and times available and subtracted from the original
-  loop data.
+  loop data. (Same for \code{subtrac.vev2}.
 
   The correlation is computed such as to avoid correlation between equal
   samples, unless \code{nrSamples} is equal to 1.
+
+  \code{cf} and \code{cf2} must agree in \code{T}, number of gauges and
+  number of samples. Matching of gauges is assumed. If this is not the
+  case results are wrong.
 }
 \seealso{
   \code{\link{readcmidisc}}, \code{\link{readbinarydisc}}
