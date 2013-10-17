@@ -6,12 +6,14 @@
 }
 \usage{
 cf <- readbinarydisc(files, T=48, obs=5, endian="little",
-                         excludelist=c(""), nrSamples)
+                         excludelist=c(""), nrSamples, path="")
 }
 \arguments{
   \item{files}{
     list of filenames to be read. Can be created for instance using 
-    \code{getorderedfilelist}. 
+    \code{getorderedfilelist}. The filelist is assumed to be ordered
+    with number of samples running fastest, and the next to fastest
+    nubmer of gauges.
   }
   \item{T}{
     time extend of correlation functions.
@@ -29,6 +31,9 @@ cf <- readbinarydisc(files, T=48, obs=5, endian="little",
   \item{nrSamples}{
     the number of samples
   }
+  \item{path}{
+    path to be prepended to every filename.
+  }
 }
 \value{
   returns a list with two arrays \code{cf} and \code{icf} with real and
@@ -45,7 +50,9 @@ cf <- readbinarydisc(files, T=48, obs=5, endian="little",
   It is assumend that each file contains O*T complex doubles,
   where T is the time extend and O the number of observables in the
   file. It is assumed that complex is the fastest running index, next
-  time and then observables.
+  time and then observables. The different samples are assumend to be in
+  different files. The file list is assumed to be ordered with number of
+  samples running fastest, and then number of gauges.
 }
 \seealso{
   \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
