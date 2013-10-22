@@ -6,6 +6,8 @@ computeDisc <- function(cf, cf2,
   T <- cf$Time
   ## the real part of the correlator matrix
   tcf <- cf$cf
+  if(!real) tcf <- cf$icf
+  
   nrSamples <- cf$nrSamples
   if(!missing(use.samples) && !(use.samples > nrSamples) && (use.samples > 0) ) {
     nrSamples <- use.samples
@@ -14,7 +16,7 @@ computeDisc <- function(cf, cf2,
 
   
   ## the imaginary part of the correlator matrix
-  if(!real) tcf <- cf$icf
+
   ## number of gauges
   N <- dim(tcf)[3]
   ## index array for t
@@ -24,6 +26,7 @@ computeDisc <- function(cf, cf2,
   ## space for the correlator
   Cf <- array(0., dim=c(N, T/2+1))
   vev <- 0.
+
   if(subtract.vev) {
     ## compute vev first
     ## mean over all gauges and times
@@ -68,7 +71,8 @@ computeDisc <- function(cf, cf2,
     if(dim(cf2$cf)[3] != N) {
       stop("number of gauges for the two loops does not agree... Aborting...!\n")
     }
-    tcf2 <- cf2$cf
+    if(!real) tcf2 <- cf2$icf
+    else tcf2 <- cf2$cf
     vev2 <- 0.
     if(subtract.vev2) {
       ## compute vev first
