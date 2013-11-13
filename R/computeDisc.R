@@ -1,5 +1,5 @@
 computeDisc <- function(cf, cf2,
-                        real=TRUE,
+                        real=TRUE, real2 = TRUE,
                         subtract.vev=TRUE, subtract.vev2=TRUE,
                         subtract.equal = TRUE,
                         use.samples) {
@@ -71,7 +71,7 @@ computeDisc <- function(cf, cf2,
     if(dim(cf2$cf)[3] != N) {
       stop("number of gauges for the two loops does not agree... Aborting...!\n")
     }
-    if(!real) tcf2 <- cf2$icf
+    if(!real2) tcf2 <- cf2$icf
     else tcf2 <- cf2$cf
     vev2 <- 0.
     if(subtract.vev2) {

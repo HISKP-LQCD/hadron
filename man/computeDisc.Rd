@@ -5,20 +5,24 @@
   computes a disconnected correlation function from loops
 }
 \usage{
-cf <- computeDisc(cf, cf2, real=TRUE, subtract.vev=TRUE,
+cf <- computeDisc(cf, cf2, real=TRUE, real2=TURE, subtract.vev=TRUE,
 subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
 }
 \arguments{
   \item{cf}{
     loop data as produced by \code{readcmidisc} or \code{readbinarydisc}.
   }
-  \item{cf}{
+  \item{cf2}{
     second set of loop data as produced by \code{readcmidisc} or
     \code{readbinarydisc}. This is needed for cross-correlators
   }
   \item{real}{
     use the real part \code{cf$cf}, if set to \code{TRUE}, otherwise the
     imaginary part \code{cf$icf}. 
+  }
+  \item{real2}{
+    use the real part \code{cf2$cf}, if set to \code{TRUE}, otherwise the
+    imaginary part \code{cf2$icf}. 
   }
   \item{subtract.vev}{
     subtract a vacuum expectation value. It will be estimated as mean
@@ -32,11 +36,11 @@ subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
     subtract contributions of products computed on identical
     samples. This will introduce a bias, if
     set to FALSE for missing cf2 or if cf and cf2 are computed on the same
-    set of sources.
+    set of random sources.
   }
   \item{use.samples}{
-    If set only the specified number of samples will be used, instead of
-    all samples.
+    If set to an integer, only the specified number of samples will be
+    used, instead of all samples.
   }
 }
 \value{
@@ -68,7 +72,7 @@ subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
   \code{\link{readcmidisc}}, \code{\link{readbinarydisc}}
 }
 \examples{
-\dontrun{Cpi0v4 <- computeDisc(v4data, real=TRUE, subtract.vev=TRUE)}
+\dontrun{Cpi0v4 <- computeDisc(cf=v4data, real=TRUE, subtract.vev=TRUE)}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{correlator}
