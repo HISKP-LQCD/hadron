@@ -57,6 +57,7 @@ computeDisc <- function(cf, cf2,
         i2 <- (i2) %% T + 1
       }
       Cf <- Cf/nrSamples/(nrSamples-1)
+      if(!subtract.equal) CF <- CF/nrSamples
     }
   }
   ## now the case of cross-correlators
@@ -105,6 +106,7 @@ computeDisc <- function(cf, cf2,
         i2 <- (i2) %% T + 1
       }
       Cf <- Cf/nrSamples/(nrSamples-1)
+      if(!subtract.equal) CF <- CF/nrSamples
     }
 
 
