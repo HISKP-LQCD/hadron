@@ -54,8 +54,8 @@ computeDisc <- function(cf, cf2,
       ## shift the index array by 1 to the left
       i2 <- (i2) %% T + 1
     }
-    Cf <- Cf/nrSamples/(nrSamples-1)
-    if(!subtract.equal) Cf <- Cf/nrSamples
+    Cf <- Cf/nrSamples/(nrSamples)
+    if(subtract.equal) Cf <- Cf*nrSamples
   }
   ## now the more general case case of cross-correlators
   else {
