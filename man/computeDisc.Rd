@@ -6,7 +6,7 @@
 }
 \usage{
 cf <- computeDisc(cf, cf2, real=TRUE, real2=TURE, subtract.vev=TRUE,
-subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
+subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2)
 }
 \arguments{
   \item{cf}{
@@ -40,7 +40,10 @@ subtract.vev2=TRUE, subtract.equal=TRUE, use.samples)
   }
   \item{use.samples}{
     If set to an integer, only the specified number of samples will be
-    used, instead of all samples.
+    used for \code{cf}, instead of all samples.
+  }
+  \item{use.samples2}{
+    Same like \code{use.samples}, but for \code{cf2}.
   }
 }
 \value{
