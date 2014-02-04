@@ -8,7 +8,8 @@
 cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                   excludelist=c(""), skip=0, L,
                   colClasses=c("integer", "integer","integer","integer",
-                               "numeric","numeric","numeric","numeric"))
+                               "numeric","numeric","numeric","numeric"),
+                  debug=FALSE)
 
 }
 \arguments{
@@ -38,6 +39,10 @@ cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   \item{L}{
     the spatial lattice extend, set to \code{Time/2} if missing.
   }
+  \item{debug}{
+    setting debug to TRUE makes the routine more verbose by spilling out
+    separate filenames.
+  }
 }
 \value{
   returns a list with four arrays \code{cf}, \code{icf} \code{scf} and
@@ -53,6 +58,9 @@ cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   of samples.
 
   Note that the arrays are normalised by \code{1/sqrt(L^2)}.
+
+  The routine expects that all files have identical content. Otherwise
+  the routine will stop.
 }
 \seealso{
   \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},

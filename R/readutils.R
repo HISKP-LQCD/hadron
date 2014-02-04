@@ -191,27 +191,45 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                         excludelist=c(""), skip=0, L,
                         colClasses=c("integer", "integer","integer","integer",
-                          "numeric","numeric","numeric","numeric")) {
+                          "numeric","numeric","numeric","numeric"),
+                        debug = FALSE) {
   if(missing(files)) {
     stop("filelist missing, aborting...\n")
   }
   if(length(ind.vec) != 7) {
     stop("ind.vec must have length 7, aborting...\n")
   }
-  ldata <- data.frame()
+  nFiles<-0
   for(f in files) {
     if( !(f %in% excludelist) && file.exists(f)) {
-      tmp <- read.table(f, colClasses=colClasses, skip=skip)
-      ldata <- rbind(ldata, tmp[tmp[,ind.vec[1]] %in% obs, ])
-      T <- max(ldata[,ind.vec[2]])
-      nrSamples <- max(ldata[,ind.vec[3]])
+      nFiles<-nFiles+1
+      lastFile<-f
     }
   }
+  tmp <- read.table(lastFile, colClasses=colClasses, skip=skip)
+  tmp <- tmp[tmp[,ind.vec[1]] %in% obs, ]
+  nRows <- nrow(tmp)
+  nCols <- ncol(tmp)
+  ldata <- matrix(0,nFiles*nRows, nCols)
+
+  n <- 0
+  for(f in files) {
+    if( !(f %in% excludelist) && file.exists(f)) {
+      if(debug) print(f)
+      tmp <- read.table(f, colClasses=colClasses, skip=skip)
+
+      ldata[c((n*nRows+1):((n+1)*nRows)),] <- as.matrix(tmp[tmp[,ind.vec[1]] %in% obs, ])
+      n <- n+1
+    }
+  }
+  T <- max(ldata[,ind.vec[2]])
+  nrSamples <- max(ldata[,ind.vec[3]])
+
   if(missing(L)) L <- T/2
-  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
+  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
              Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
   return(invisible(cf))
 }
