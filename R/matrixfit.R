@@ -26,6 +26,32 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
+matrixeffectivemass <- function(cf, boot.R=400) {
+  N <- length(cf$cf[,1])
+  Thalfp1 <- cf$T/2+1
+  Cor <- apply(cf$cf, 2, mean)
+  EffMass <- rep(0., cf$T/2)
+  i <- c(1:(cf$T/2))
+  i2 <- i+1
+  Ratio <- Cor[i]/Cor[i+1]
+  for(t in c(1:(cf$T/2))) {
+    EffMass[t] <- invcosh(Ratio[t], timeextent=cf$T, t=t-1)
+  }
+  bootemass <- array(0., dim=c(boot.R,  cf$T/2))
+  for(s in 1:boot.R) {
+    ii <- sample.int(n=length(cf$cf[,1]), size=length(cf$cf[,1]), replace=TRUE)
+    Cor <- apply(cf$cf[ii,], 2, mean)
+    Ratio <- Cor[i]/Cor[i+1]
+    for(t in c(1:(cf$T/2))) {
+      bootemass[s,t] <- invcosh(Ratio[t], timeextent=cf$T, t=t-1)
+    }
+  }
+  dEffMass <- apply(bootemass, 2, sd, na.rm=TRUE)
+  res <- data.frame(t=c(0:(cf$T/2-1)), EffMass=EffMass, dEffMass=dEffMass)
+  return(res)
+}
+
+
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
