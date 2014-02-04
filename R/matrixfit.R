@@ -26,29 +26,35 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
-matrixeffectivemass <- function(cf, boot.R=400) {
+bootstrap.effectivemass <- function(cf, Thalf) {
+  Cor <- apply(cf, 2, mean)
+  ii <- c(1:(Thalf-1))
+  iip1 <- ii+1
+  Ratio <- Cor[ii]/Cor[iip1]
+  EffMass <- rep(0., (Thalf-1))
+  for(t in ii) {
+    EffMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=t-1)
+    ##EffMass[t] <- log(Ratio[t])
+  }
+  ##for(t in c(2:(Thalf-1))) {
+  ##  EffMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+  ##}
+  return(invisible(EffMass))
+}
+
+matrixeffectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345) {
   N <- length(cf$cf[,1])
-  Thalfp1 <- cf$T/2+1
-  Cor <- apply(cf$cf, 2, mean)
-  EffMass <- rep(0., cf$T/2)
-  i <- c(1:(cf$T/2))
-  i2 <- i+1
-  Ratio <- Cor[i]/Cor[i+1]
-  for(t in c(1:(cf$T/2))) {
-    EffMass[t] <- invcosh(Ratio[t], timeextent=cf$T, t=t-1)
-  }
-  bootemass <- array(0., dim=c(boot.R,  cf$T/2))
-  for(s in 1:boot.R) {
-    ii <- sample.int(n=length(cf$cf[,1]), size=length(cf$cf[,1]), replace=TRUE)
-    Cor <- apply(cf$cf[ii,], 2, mean)
-    Ratio <- Cor[i]/Cor[i+1]
-    for(t in c(1:(cf$T/2))) {
-      bootemass[s,t] <- invcosh(Ratio[t], timeextent=cf$T, t=t-1)
-    }
-  }
-  dEffMass <- apply(bootemass, 2, sd, na.rm=TRUE)
-  res <- data.frame(t=c(0:(cf$T/2-1)), EffMass=EffMass, dEffMass=dEffMass)
-  return(res)
+  EffMass <- bootstrap.effectivemass(cf$cf, cf$T/2)
+  ## we set the seed for reproducability and correlation
+  set.seed(seed)
+  ## and bootstrap the fit
+  effMass.tsboot <- tsboot(tseries=cf$cf, statistic=bootstrap.effectivemass, R=boot.R, l=boot.l, sim="geom",
+                           Thalf=cf$T/2)
+
+  res <- data.frame(t=c(0:(cf$T/2-2)), EffMass=EffMass, dEffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE))
+  ret <- list(res=res, effMass.tsboot=effMass.tsboot)
+  attr(ret, "class") <- c("effectivemass", "list")
+  return(ret)
 }
 
 
@@ -175,6 +181,10 @@ plot.matrixfit <- function(mfit, ...) {
     col=c("red", "brown", "green", "blue")
     lines(tx, y, col=col[i], lwd=c(3))
   }
+}
+
+plot.effectivemass <- function(effMass, ...) {
+  plotwitherror(effMass$res$t, effMass$res$EffMass, effMass$res$dEffMass, ...)
 }
 
 summary.matrixfit <- function(mfit) {
