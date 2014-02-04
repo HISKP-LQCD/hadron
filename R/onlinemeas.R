@@ -196,7 +196,8 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
     for(t in t1p1:t2p1) {
       MChist.dpaopp[i] <- MChist.dpaopp[i] + pcacsym.online(data=W[,i], t=t, T1=T1)
     }
-    MChist.dpaopp[i] <- MChist.dpaopp[i]/(t2p1-t1p1)
+    # (t2p1-t1p1+1) values for this fitrange!
+    MChist.dpaopp[i] <- MChist.dpaopp[i]/(t2p1-t1p1+1)
   }
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
