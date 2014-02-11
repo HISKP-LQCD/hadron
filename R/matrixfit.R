@@ -26,36 +26,6 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
-bootstrap.effectivemass <- function(cf, Thalf) {
-  Cor <- apply(cf, 2, mean)
-  ii <- c(1:(Thalf-1))
-  iip1 <- ii+1
-  Ratio <- Cor[ii]/Cor[iip1]
-  EffMass <- rep(0., (Thalf-1))
-  for(t in ii) {
-    EffMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=t-1)
-    ##EffMass[t] <- log(Ratio[t])
-  }
-  ##for(t in c(2:(Thalf-1))) {
-  ##  EffMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
-  ##}
-  return(invisible(EffMass))
-}
-
-matrixeffectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345) {
-  N <- length(cf$cf[,1])
-  EffMass <- bootstrap.effectivemass(cf$cf, cf$T/2)
-  ## we set the seed for reproducability and correlation
-  set.seed(seed)
-  ## and bootstrap the fit
-  effMass.tsboot <- tsboot(tseries=cf$cf, statistic=bootstrap.effectivemass, R=boot.R, l=boot.l, sim="geom",
-                           Thalf=cf$T/2)
-
-  res <- data.frame(t=c(0:(cf$T/2-2)), EffMass=EffMass, dEffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE))
-  ret <- list(res=res, effMass.tsboot=effMass.tsboot)
-  attr(ret, "class") <- c("effectivemass", "list")
-  return(ret)
-}
 
 
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
@@ -144,6 +114,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     par[i] <- sqrt(CF$Cor[t1p1+(j-1)*Thalfp1]/0.5/exp(-par[1]*t1))
   }
 
+  ## check out constrOptim
   ## now perform minimisation
   opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
                    method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
@@ -183,12 +154,9 @@ plot.matrixfit <- function(mfit, ...) {
   }
 }
 
-plot.effectivemass <- function(effMass, ...) {
-  plotwitherror(effMass$res$t, effMass$res$EffMass, effMass$res$dEffMass, ...)
-}
 
 summary.matrixfit <- function(mfit) {
-  cat("\n ** Result **\n\n")
+  cat("\n ** Result of one state exponential fit **\n\n")
   cat("based on", length(mfit$cf$cf[,1]), "measurements\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")

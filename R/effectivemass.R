@@ -1,0 +1,113 @@
+cfeffectivemass <- function(cf, Thalf, type="solve") {
+  Cor <- apply(cf, 2, mean)
+  effMass <- rep(0., (Thalf-1))
+  if(type == "acosh") {
+    for(t in c(2:(Thalf-1))) {
+      effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+    }
+  }
+  else {
+    ii <- c(1:(Thalf-1))
+    iip1 <- ii+1
+    Ratio <- Cor[ii]/Cor[iip1]
+    if(type == "log") {
+      effMass <- log(Ratio)
+    }
+    else {
+      for(t in ii) {
+        effMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=t)
+      }
+    }
+  }
+  return(invisible(effMass))
+}
+
+bootstrap.effectivemass <- function(cf, fit=FALSE, t1, t2, useCov=FALSE,
+                                    boot.R=400, boot.l=20, seed=12345, type="solve") {
+  if(fit && (missing(t1) || missing(t1))) {
+    warning("Fort fit=TRUE options a fit-range needs to specified via t1 and t2\nDisabling fit\n")
+    fit=FALSE
+  }
+  N <- length(cf$cf[,1])
+  effMass <- cfeffectivemass(cf$cf, cf$Time/2, type=type)
+  ## we set the seed for reproducability and correlation
+  set.seed(seed)
+  ## and bootstrap the fit
+  effMass.tsboot <- tsboot(tseries=cf$cf, statistic=cfeffectivemass, R=boot.R, l=boot.l, sim="geom",
+                           Thalf=cf$Time/2, type=type)
+  deffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE)
+  ii <- c((t1):(t2))
+  
+  M <- diag(1/deffMass[ii]^2)
+  CovMatrix <- numeric()
+  if(useCov) {
+    ## compute correlation matrix and compute the correctly normalised inverse
+    CovMatrix <- cov(effMass.tsboot$t[,ii])
+    cov.svd <- svd(CovMatrix)
+    ## replace smallest eigenvalues by their mean, if needed
+    if(floor(sqrt(length(cov.svd$d))) < length(effMass.tsboot$t[,1])) {
+      cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)] <-
+        mean(cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)])
+    }
+    D <- diag(1/cov.svd$d)
+    M <- cov.svd$v %*% D %*% t(cov.svd$u)
+  }
+
+  fit.res = NULL
+  massfit.tsboot <- numeric()
+  if(fit) {
+    par <- c(effMass[t1])
+    opt.res <- optim(par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+                     method="BFGS", M=M, y = effMass[ii])
+    par <- opt.res$par
+    massfit.tsboot <- array(0, dim=c(boot.R, 2))
+    for(i in 1:boot.R) {
+      opt <- optim(par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+                       method="BFGS", M=M, y = effMass.tsboot$t[i,ii])
+      massfit.tsboot[i, 1] <- opt$par[1]
+      massfit.tsboot[i, 2] <- opt$value
+    }
+  }
+  ret <- list(t=c(1:(cf$T/2-1)), effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
+              opt.res=opt.res, t1=t1, t2=t2, type=type, useCov=useCov, boot.R=boot.R, boot.l=boot.l,
+              massfit.tsboot=massfit.tsboot)
+  attr(ret, "class") <- c("effectivemass", "list")
+  return(ret)
+}
+
+summary.effectivemass <- function(effMass, verbose=FALSE) {
+  attach(effMass)
+  cat("\n ** Result of effective mass analysis **\n\n")
+  cat("type = ", type, "\n")
+  cat("boot.R\t=\t", boot.R, "\n")
+  cat("boot.l\t=\t", boot.l, "\n")
+  if(verbose) {
+    cat("values with errors:\n\n")
+    print(data.frame(t= t, m = effMass, dm = deffMass))
+  }
+  cat("\nfit to effective masses\n")
+  cat("correlated fit = ", useCov, "\n")
+  cat("time range from", t1, " to ", t2, "\n")
+  cat("chisqr / dof = ", opt.res$value, " / ", t2-t1, " = ",
+      (opt.res$value)/(t2-t1), "\n")
+  cat("Quality of the fit (p-value):",   1-pchisq(opt.res$value, t2-t1), "\n")
+  cat("mass = ", opt.res$par[1], " +- ", sd(massfit.tsboot[,1]), "\n")
+  detach(effMass)
+}
+
+plot.effectivemass <- function(effMass, ref.value, ...) {
+  op <- options()
+  options(warn=-1)
+  plotwitherror(effMass$t, effMass$effMass, effMass$deffMass, ...)
+  options(op)
+  if(!missing(ref.value)) {
+    abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
+  }
+  if(!is.null(effMass$opt.res)) {
+    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1], x1=effMass$t2, y1=effMass$opt.res$par[1], col=c("red"), length=0)
+    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]),
+           x1=effMass$t2, y1=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]), col=c("red"), length=0, lwd=c(1))
+    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]),
+           x1=effMass$t2, y1=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]), col=c("red"), length=0, lwd=c(1))
+  }
+}
