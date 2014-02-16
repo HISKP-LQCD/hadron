@@ -5,23 +5,23 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
-  return( z %*% M %*% z )
+  return( sum(z %*% M %*% z, na.rm=TRUE) )
 }
 
 dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   res <- rep(0., times=length(par))
   z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
   zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-(T-t)*exp(-par[1]*(T-t)) + (-t)*sign.vec*exp(-par[1]*t))
-  res[1] <- zp %*% M %*% z + z %*% M %*% zp
+  res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp, na.rm=TRUE)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
     zp[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*(T-t[j])) + sign.vec[j]*exp(-par[1]*t[j]))
-    res[i] <- zp %*% M %*% z + z %*% M %*% zp
+    res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp, na.rm=TRUE)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
     zp[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*(T-t[j])) + sign.vec[j]*exp(-par[1]*t[j]))
-    res[i] <- zp %*% M %*% z + z %*% M %*% zp
+    res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp, na.rm=TRUE)
   }
   return(res)
 }

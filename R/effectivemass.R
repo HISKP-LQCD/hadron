@@ -78,7 +78,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   ## now we bootstrap the fit
   massfit.tsboot <- array(0, dim=c(boot.R, 2))
   for(i in 1:boot.R) {
-    opt <- optim(par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+    opt <- optim(par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]), na.rm=TRUE)},
                  method="BFGS", M=M, y = effMass.tsboot$t[i,ii])
     massfit.tsboot[i, 1] <- opt$par[1]
     massfit.tsboot[i, 2] <- opt$value
