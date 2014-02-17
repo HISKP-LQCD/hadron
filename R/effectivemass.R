@@ -59,7 +59,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, boot.R=boot.R, boot.l=boot.l,
-              massfit.tsboot=NULL, Time=cf$Time, N=N, nrOps=nrOps)
+              massfit.tsboot=NULL, Time=cf$Time, N=N, nrOps=nrOps, dof=NULL)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -74,6 +74,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   cf$t1 <- t1
   cf$t2 <- t2
   cf$useCov <- useCov
+  cf$dof <-  cf$nrOps*(t2-t1+1)-1
   attach(cf)
   ii <- c()
   for(i in 1:nrOps) {
@@ -150,10 +151,10 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("m\t=\t", opt.res$par[1], "\n")
   cat("dm\t=\t", sd(massfit.tsboot[,1]), "\n")
   cat("chisqr\t=\t", opt.res$value, "\n")
-  cat("dof\t=\t", nrOps*(t2-t1+1)-1, "\n")
+  cat("dof\t=\t", dof, "\n")
   cat("chisqr/dof=\t",
-      opt.res$value/(nrOps*(t2-t1+1)-1), "\n")
-  cat("Quality of the fit (p-value):",   1-pchisq(opt.res$value, nrOps*(t2-t1)-1), "\n")
+      opt.res$value/dof, "\n")
+  cat("Quality of the fit (p-value):",   1-pchisq(opt.res$value, dof), "\n")
 
   detach(effMass)
 }
