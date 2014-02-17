@@ -1,43 +1,65 @@
-cfeffectivemass <- function(cf, Thalf, type="solve") {
+cfeffectivemass <- function(cf, Thalf, type="solve", nrOps=1) {
+  ## cf is supposed to have nrOps*(Thalf+1) elements in time direction
+  if(length(cf[1,]) != nrOps*(Thalf+1)) {
+    stop("cf does not have the correct time extend in cfeffectivemass! Aborting...!\n")
+  }
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
   }
-  else Cor <- cf
-  effMass <- rep(0., (Thalf-1))
-  if(type == "acosh") {
-    for(t in c(2:(Thalf-1))) {
-      effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+  else {
+    Cor <- cf
+  }
+
+  tt <- c(1:(nrOps*(Thalf+1)))
+  cutii <- c()
+  cutii2 <- c()
+  if(nrOps > 1) {
+    for(i in 1:nrOps) {
+      cutii <- c(cutii, (i-1)*(Thalf+1)+1, i*(Thalf+1))
+      cutii2 <- c(cutii2, i*(Thalf+1))
     }
   }
+  t2 <- tt[-cutii2]
+  
+  effMass <- rep(NA, nrOps*(Thalf+1))
+  if(type == "acosh") {
+    t <- tt[-cutii]
+    effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+  }
   else {
-    ii <- c(1:(Thalf-1))
-    iip1 <- ii+1
-    Ratio <- Cor[ii]/Cor[iip1]
+    t <- tt[c(1:(length(tt)-1))]
+    Ratio <- Cor[t]/Cor[t+1]
     if(type == "log") {
-      effMass <- log(Ratio)
+      effMass[t2] <- log(Ratio[t2])
     }
     else {
-      for(t in ii) {
-        effMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=t)
+      for(t in t2) {
+        effMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=(t %% (Thalf+1)))
       }
     }
   }
-  return(invisible(effMass))
+  return(invisible(effMass[t2]))
 }
 
 bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type="solve") {
 
+  ## number of measurements
   N <- length(cf$cf[,1])
-  effMass <- cfeffectivemass(cf$cf, cf$Time/2, type=type)
+  ## number of time slices (hopefully in units of T/2+1)
+  Nt <- length(cf$cf[1,])
+  nrOps <- floor(Nt/(cf$Time/2+0))
+  
+  effMass <- cfeffectivemass(cf$cf, cf$Time/2, type=type, nrOps=nrOps)
   ## we set the seed for reproducability and correlation
   set.seed(seed)
   ## and bootstrap the fit
   effMass.tsboot <- tsboot(tseries=cf$cf, statistic=cfeffectivemass, R=boot.R, l=boot.l, sim="geom",
-                           Thalf=cf$Time/2, type=type)
+                           Thalf=cf$Time/2, type=type, nrOps=nrOps)
   deffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE)
-  ret <- list(t=c(1:(cf$T/2-1)), effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
+  ret <- list(t=c(1:(cf$Time/2)),
+              effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, boot.R=boot.R, boot.l=boot.l,
-              massfit.tsboot=NULL, Time=cf$Time, N=N)
+              massfit.tsboot=NULL, Time=cf$Time, N=N, nrOps=nrOps)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -52,8 +74,11 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   cf$t1 <- t1
   cf$t2 <- t2
   cf$useCov <- useCov
-  ii <- c((t1):(t2))
-  attach(cf) 
+  attach(cf)
+  ii <- c()
+  for(i in 1:nrOps) {
+    ii <- c(ii, ((i-1)*Time/2+t1):((i-1)*Time/2+t2))
+  }
 
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
@@ -112,6 +137,7 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("boot.l\t=\t", boot.l, "\n")
   cat("Time extend\t=\t", Time, "\n")
   cat("time range from", t1, " to ", t2, "\n")
+  cat("No correlation functions", nrOps, "\n")
   if(verbose) {
     cat("values with errors:\n\n")
     print(data.frame(t= t, m = effMass, dm = deffMass))
@@ -132,10 +158,19 @@ print.effectivemassfit <- function(effMass, verbose=FALSE) {
   summary(effMass, verbose=verbose)
 }
 
-plot.effectivemass <- function(effMass, ref.value, ...) {
+plot.effectivemass <- function(effMass, ref.value, col,...) {
+  if(missing(col)) {
+    col <- c("black", palette(rainbow(effMass$nrOps)))
+  }
   op <- options()
   options(warn=-1)
-  plotwitherror(effMass$t, effMass$effMass, effMass$deffMass, ...)
+  t <- effMass$t
+  plotwitherror(t, effMass$effMass[t], effMass$deffMass[t], ...)
+  if(effMass$nrOps > 1) {
+    for(i in 1:(effMass$nrOps-1)) {
+      plotwitherror(t, effMass$effMass[t+i*effMass$Time/2], effMass$deffMass[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
+    }
+  }
   options(op)
   if(!missing(ref.value)) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
