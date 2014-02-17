@@ -99,11 +99,15 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   par <- c(effMass[t1])
   opt.res <- optim(par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
                    method="BFGS", M=M, y = effMass[ii])
+  opt.res <- optim(opt.res$par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+                   control=list(parscale=1/opt.res$par),
+                   method="BFGS", M=M, y = effMass[ii])
   par <- opt.res$par
   ## now we bootstrap the fit
   massfit.tsboot <- array(0, dim=c(boot.R, 2))
   for(i in 1:boot.R) {
     opt <- optim(par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]), na.rm=TRUE)},
+                 control=list(parscale=1/par),
                  method="BFGS", M=M, y = effMass.tsboot$t[i,ii])
     massfit.tsboot[i, 1] <- opt$par[1]
     massfit.tsboot[i, 2] <- opt$value
@@ -146,10 +150,10 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("m\t=\t", opt.res$par[1], "\n")
   cat("dm\t=\t", sd(massfit.tsboot[,1]), "\n")
   cat("chisqr\t=\t", opt.res$value, "\n")
-  cat("dof\t=\t", t2-t1, "\n")
+  cat("dof\t=\t", nrOps*(t2-t1+1)-1, "\n")
   cat("chisqr/dof=\t",
-      opt.res$value/(t2-t1), "\n")
-  cat("Quality of the fit (p-value):",   1-pchisq(opt.res$value, t2-t1), "\n")
+      opt.res$value/(nrOps*(t2-t1+1)-1), "\n")
+  cat("Quality of the fit (p-value):",   1-pchisq(opt.res$value, nrOps*(t2-t1)-1), "\n")
 
   detach(effMass)
 }
