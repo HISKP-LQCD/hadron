@@ -1,23 +1,21 @@
 cfeffectivemass <- function(cf, Thalf, type="solve", nrOps=1) {
   ## cf is supposed to have nrOps*(Thalf+1) elements in time direction
-  if(length(cf[1,]) != nrOps*(Thalf+1)) {
-    stop("cf does not have the correct time extend in cfeffectivemass! Aborting...!\n")
-  }
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
   }
   else {
     Cor <- cf
   }
+  if(length(Cor) != nrOps*(Thalf+1)) {
+    stop("cf does not have the correct time extend in cfeffectivemass! Aborting...!\n")
+  }
 
   tt <- c(1:(nrOps*(Thalf+1)))
   cutii <- c()
   cutii2 <- c()
-  if(nrOps > 1) {
-    for(i in 1:nrOps) {
-      cutii <- c(cutii, (i-1)*(Thalf+1)+1, i*(Thalf+1))
-      cutii2 <- c(cutii2, i*(Thalf+1))
-    }
+  for(i in 1:nrOps) {
+    cutii <- c(cutii, (i-1)*(Thalf+1)+1, i*(Thalf+1))
+    cutii2 <- c(cutii2, i*(Thalf+1))
   }
   t2 <- tt[-cutii2]
   
