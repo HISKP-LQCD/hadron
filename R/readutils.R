@@ -8,7 +8,7 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) {
 
-  ofiles <- dir(path=path, pattern=paste(basename, "*", sep=""))
+  ofiles <- Sys.glob( sprintf( "%s/%s*", path, basename ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
     stop("we need all filenames to have the same length, aborting...\n")
   }
