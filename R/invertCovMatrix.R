@@ -14,12 +14,15 @@ invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
   ## the number of observations
   N <- length(ncf[,1])
   M <- matrix()
-  if(floor(sqrt(n)) < N) {
+
+  if(n > floor(sqrt(N))) {
     ## use singular value decomposition
     cov.svd <- svd(CovMatrix)
     ## replace smallest singular values by their mean, if needed
-    cov.svd$d[floor(sqrt(n)):n] <-
-      mean(cov.svd$d[floor(sqrt(n)):n])
+    ## we keep floor(sqrt(N)) exact eigenvalues and replace all smaller once
+    ## by their average value
+    cov.svd$d[floor(sqrt(N)):n] <-
+      mean(cov.svd$d[floor(sqrt(N)):n])
     ## construct the inverse
     D <- diag(1./cov.svd$d)
     M <- cov.svd$v %*% D %*% t(cov.svd$u)
@@ -28,6 +31,8 @@ invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
     ## use cholesky decomposition for real symmetric matrix
     M <- chol2inv(chol(CovMatrix))
   }
+  ## for bootstrap samples the error is equal to sd
+  ## otherwise to sd/sqrt(N)
   if(!boot.samples) {
     M <- N*M
   }
