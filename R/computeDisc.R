@@ -123,6 +123,7 @@ computeDisc <- function(cf, cf2,
       Cf <- Cf/nrSamples/nrSamples2
     }
   }
-  cf <- list(cf=Cf, icf=NULL, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2)
-  return(invisible(cf))
+  ret <- list(cf=Cf, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE)
+  attr(ret, "class") <- c("cf", class(ret))
+  return(invisible(ret))
 }

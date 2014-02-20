@@ -32,6 +32,9 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
                       matrix.size=2, useCov=FALSE, seed=12345) {
+  if(!any(class(cf) == "cf")) {
+    stop("matrixfit requires the object to be of class cf! Aborting...!\n")
+  }
   ## some sanity checks
   if(min(parlist) <= 0 || max(parlist) > matrix.size) {
     stop("Elements of parlist must be all > 0 and <= matrix.size\n")
@@ -41,17 +44,16 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
       stop("not all parameters are used in the fit\n")
     }
   }
-
-  Cor <- apply(cf$cf, 2, mean)
-  Err <- apply(cf$cf, 2, bootstrap.meanerror, R=boot.R, l=boot.l)
+  if(!cf$boot.samples) {
+    cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
+  }
 
   t1p1 <- t1+1
   t2p1 <- t2+1
   N <- length(cf$cf[,1])
   Thalfp1 <- cf$T/2+1
   t <- c(0:(cf$T/2))
-  CF=data.frame(t=t, Cor=Cor, Err=Err)
-  rm(Cor, Err)
+  CF=data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
 
   ## This is the number of correlators in cf
   mSize <- length(CF$Cor)/Thalfp1
@@ -106,7 +108,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   ## now perform minimisation
   opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
                    method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                   t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
+                   t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
   ##opt.res <- optim(opt.res$par, matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
   ##                 t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
@@ -114,12 +116,8 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   dof <- (length(CF$t[ii])-length(par))
   Qval <- 1-pchisq(opt.res$value, dof)
 
-  ## we set the seed for reproducability and correlation
-  set.seed(seed)
-  ## and bootstrap the fit
-  opt.tsboot <- tsboot(tseries=cf$cf[,ii], statistic=fit.formatrixboot, R=boot.R, l=boot.l, sim="geom",
-                       par=opt.res$par, t=CF$t[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
-  
+  opt.tsboot <- apply(cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
+                      M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
   res <- list(CF=CF, M=M, parind=parind, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
@@ -148,11 +146,11 @@ summary.matrixfit <- function(mfit) {
   cat("based on", length(mfit$cf$cf[,1]), "measurements\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")
-  cat("dm\t=\t", sd(mfit$opt.tsboot$t[,1]), "\n")
+  cat("dm\t=\t", sd(mfit$opt.tsboot[,1]), "\n")
   cat("\nAmplitudes:\n")
   for(i in 2:length(mfit$opt.res$par)) {
     cat("P",i-1,"\t=\t", mfit$opt.res$par[i], "\n")
-    cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot$t[,i]), "\n")
+    cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot[,i]), "\n")
   }
   cat("\n")
   cat("boot.R\t=\t", mfit$boot.R, "\n")
@@ -170,7 +168,7 @@ summary.matrixfit <- function(mfit) {
 fit.formatrixboot <- function(cf, par, t, M, T, parind, sign.vec) {
   opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
                    method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                   t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)
+                   t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec)
   ##opt.res <- optim(opt.res$par, fn = matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
   ##                 t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)

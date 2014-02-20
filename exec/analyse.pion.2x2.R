@@ -7,9 +7,10 @@ cmicor <- readcmicor("pion.dat")
 ## now extract the gamma matrix combination of interest
 pion.cor <- extract.obs(cmicor,  vec.obs=c(1))
 ## which will extract gamma5 from the file for all smearings available
+pion.cor <- bootstrap.cf(pion.cor, boot.R=400, boot.l=1)
 
 ## now we can attempt a constrained fit to the matrix
-pion.cor.matrixfit <- matrixfit(pion.cor, t1=10, t2=23, symmetrise=TRUE, boot.R=400, boot.l=1, useCov=FALSE)
+pion.cor.matrixfit <- matrixfit(pion.cor, t1=10, t2=23, symmetrise=TRUE, useCov=FALSE)
 plot(pion.cor.matrixfit, xlab=c("t/a"), ylab=c("C(t)"))
 summary(pion.cor.matrixfit)
 

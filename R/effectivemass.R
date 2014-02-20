@@ -41,19 +41,25 @@ cfeffectivemass <- function(cf, Thalf, type="solve", nrOps=1) {
 
 bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type="solve") {
 
+  if(!any(class(cf) == "cf")) {
+    stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
+  }
+
+  if(!cf$boot.samples) {
+    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
+  }
   ## number of measurements
   N <- length(cf$cf[,1])
   ## number of time slices (hopefully in units of T/2+1)
   Nt <- length(cf$cf[1,])
   nrOps <- floor(Nt/(cf$Time/2+0))
-  
-  effMass <- cfeffectivemass(cf$cf, cf$Time/2, type=type, nrOps=nrOps)
-  ## we set the seed for reproducability and correlation
-  set.seed(seed)
-  ## and bootstrap the fit
-  effMass.tsboot <- tsboot(tseries=cf$cf, statistic=cfeffectivemass, R=boot.R, l=boot.l, sim="geom",
-                           Thalf=cf$Time/2, type=type, nrOps=nrOps)
-  deffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE)
+
+  ## we run on the original data first
+  effMass <- cfeffectivemass(cf$cf0, cf$Time/2, type=type, nrOps=nrOps)
+  ## now we do the same on all samples
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, cfeffectivemass, cf$Time/2, type=type, nrOps=nrOps))
+
+  deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
@@ -64,7 +70,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
 }
 
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
-  if(missing(cf) || !("effectivemass" %in% class(cf))) {
+  if(missing(cf) || !any(class(cf) == "effectivemass" )) {
     stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
   }
   if(missing(t1) || missing(t2)) {
@@ -86,7 +92,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    M <- invertCovMatrix(effMass.tsboot$t[,ii], boot.samples=TRUE)
+    M <- invertCovMatrix(effMass.tsboot[,ii], boot.samples=TRUE)
   }
 
   cf$invCovMatrix <- M
@@ -102,7 +108,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   for(i in 1:boot.R) {
     opt <- optim(par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]), na.rm=TRUE)},
                  control=list(parscale=1/par),
-                 method="BFGS", M=M, y = effMass.tsboot$t[i,ii])
+                 method="BFGS", M=M, y = effMass.tsboot[i,ii])
     massfit.tsboot[i, 1] <- opt$par[1]
     massfit.tsboot[i, 2] <- opt$value
   }

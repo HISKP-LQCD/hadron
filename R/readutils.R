@@ -124,8 +124,9 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   }
   cf <- t(array(isign.vec*(data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
               dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
-
-  return(invisible(list(cf=cf, Time=Time, nrStypes=nrStypes, nrObs=nrObs)))
+  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE)
+  attr(ret, "class") <- c("cf", class(ret))
+  return(invisible(ret))
 }
 
 readhlcor <- function(filename) {
@@ -161,8 +162,9 @@ readbinarycf <- function(files, T=48, obs=5, endian="little",
       close(to.read)
     }
   }
-  cf <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1)
-  return(invisible(cf))
+  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  attr(ret, "class") <- c("cf", class(ret))
+  return(invisible(ret))
 }
 
 readbinarydisc <- function(files, T=48, obs=5, endian="little",
