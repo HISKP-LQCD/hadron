@@ -14,7 +14,7 @@ invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
   ## the number of observations
   N <- length(ncf[,1])
   M <- matrix()
-  if(floor(sqrt(n)) < 0*N) {
+  if(floor(sqrt(n)) < N) {
     ## use singular value decomposition
     cov.svd <- svd(CovMatrix)
     ## replace smallest singular values by their mean, if needed
