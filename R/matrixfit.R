@@ -81,22 +81,10 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
   M <- diag(1/CF$Err[ii]^2)
-  CovMatrix <- numeric()
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
-    ## block data first
-    ncf <- block.ts(cf$cf, l=boot.l)
-    ## compute covariance matrix and invert
-    CovMatrix <- cov(ncf[,ii])
-    cov.svd <- svd(CovMatrix)
-    ## replace smallest eigenvalues by their mean, if needed
-    if(floor(sqrt(length(cov.svd$d))) < length(cf$cf[,1])) {
-      cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)] <-
-        mean(cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)])
-    }
-    D <- diag(1/cov.svd$d)
-    M <- floor(N/boot.l)*cov.svd$v %*% D %*% t(cov.svd$u)
+    M <- invertCovMatrix(cf$cf[,ii], boot.l)
   }
 
   par <- numeric(max(parind))
@@ -133,7 +121,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                        par=opt.res$par, t=CF$t[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
   
   res <- list(CF=CF, M=M, parind=parind, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
-              boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix,
+              boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed)
   attr(res, "class") <- c("matrixfit", "list")

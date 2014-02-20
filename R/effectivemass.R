@@ -56,7 +56,8 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   deffMass=apply(effMass.tsboot$t, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
-              opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, boot.R=boot.R, boot.l=boot.l,
+              opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
+              boot.R=boot.R, boot.l=boot.l,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrOps=nrOps, dof=NULL)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
@@ -82,23 +83,17 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(1/deffMass[ii]^2)
+  
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    CovMatrix <- cov(effMass.tsboot$t[,ii])
-    cov.svd <- svd(CovMatrix)
-    ## replace smallest eigenvalues by their mean, if needed
-    if(floor(sqrt(length(cov.svd$d))) < length(effMass.tsboot$t[,1])) {
-      cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)] <-
-        mean(cov.svd$d[floor(sqrt(length(cov.svd$d))):length(cov.svd$d)])
-    }
-    D <- diag(1/cov.svd$d)
-    M <- cov.svd$v %*% D %*% t(cov.svd$u)
+    M <- invertCovMatrix(effMass.tsboot$t[,ii], boot.samples=TRUE)
   }
 
+  cf$invCovMatrix <- M
   par <- c(effMass[t1])
-  opt.res <- optim(par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+  opt.res <- optim(par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]), na.rm=TRUE)},
                    method="BFGS", M=M, y = effMass[ii])
-  opt.res <- optim(opt.res$par, fn = function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])},
+  opt.res <- optim(opt.res$par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]), na.rm=TRUE)},
                    control=list(parscale=1/opt.res$par),
                    method="BFGS", M=M, y = effMass[ii])
   par <- opt.res$par
