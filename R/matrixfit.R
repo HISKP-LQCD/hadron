@@ -131,7 +131,13 @@ plot.matrixfit <- function(mfit, ...) {
   parind <-  mfit$parind
   T <- mfit$cf$T
   Thalfp1 <- T/2+1
-  plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ...)
+  
+  # prevent stray negative values from ruining the plot
+  lbound <- mfit$CF$Cor - 2*mfit$CF$Err
+  lbound <- lbound[ lbound > 0 ]
+  ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
+
+  plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
   tx <- seq(mfit$t1, mfit$t2, 0.005)
   for(i in c(1:mfit$mSize)) {
     y <- 0.5*par[parind[(i-1)*Thalfp1+1,1]]*par[parind[(i-1)*Thalfp1+1,2]]*(exp(-par[1]*(T-tx)) + exp(-par[1]*tx))
