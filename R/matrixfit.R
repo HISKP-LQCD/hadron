@@ -150,6 +150,7 @@ plot.matrixfit <- function(mfit, ...) {
 summary.matrixfit <- function(mfit) {
   cat("\n ** Result of one state exponential fit **\n\n")
   cat("based on", length(mfit$cf$cf[,1]), "measurements\n")
+  cat("time range from", mfit$t1, " to ", mfit$t2, "\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")
   cat("dm\t=\t", sd(mfit$opt.tsboot[1,]), "\n")
