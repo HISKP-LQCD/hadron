@@ -116,7 +116,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   dof <- (length(CF$t[ii])-length(par))
   Qval <- 1-pchisq(opt.res$value, dof)
 
-  opt.tsboot <- apply(cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
+  opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
                       M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
   res <- list(CF=CF, M=M, parind=parind, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
@@ -152,11 +152,11 @@ summary.matrixfit <- function(mfit) {
   cat("based on", length(mfit$cf$cf[,1]), "measurements\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")
-  cat("dm\t=\t", sd(mfit$opt.tsboot[,1]), "\n")
+  cat("dm\t=\t", sd(mfit$opt.tsboot[1,]), "\n")
   cat("\nAmplitudes:\n")
   for(i in 2:length(mfit$opt.res$par)) {
     cat("P",i-1,"\t=\t", mfit$opt.res$par[i], "\n")
-    cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot[,i]), "\n")
+    cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot[i,]), "\n")
   }
   cat("\n")
   cat("boot.R\t=\t", mfit$boot.R, "\n")

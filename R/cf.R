@@ -19,6 +19,6 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R, boot.l)
   }
-  Err <- apply(cf$cf.tsboot, 2, sd)
+  Err <- apply(cf$cf.tsboot$t, 2, sd)
   plotwitherror(rep(c(0:(cf$Time/2)), times=cf$nrStypes*cf$nrObs), cf$cf0, Err, ...)
 }
