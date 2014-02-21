@@ -11,11 +11,12 @@ pion.cor <- bootstrap.cf(pion.cor, boot.R=400, boot.l=1)
 
 ## now we can attempt a constrained fit to the matrix
 pion.cor.matrixfit <- matrixfit(pion.cor, t1=10, t2=23, symmetrise=TRUE, useCov=FALSE)
+X11()
 plot(pion.cor.matrixfit, xlab=c("t/a"), ylab=c("C(t)"))
 summary(pion.cor.matrixfit)
 
 ## or an effective mass analysis of the correlators
-pion.cor.effectivemass <- bootstrap.effectivemass(pion.cor, boot.R=400, boot.l=1, type="acosh")
+pion.cor.effectivemass <- bootstrap.effectivemass(pion.cor, type="acosh")
 pion.cor.effectivemass <- fit.effectivemass(pion.cor.effectivemass, t1=10, t2=23, useCov=TRUE)
 X11()
 plot(pion.cor.effectivemass, xlab=c("t/a"), ylab=c("aM"))
@@ -30,4 +31,4 @@ pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")
 pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=10, t2=23, useCov=TRUE)
 summary(pion.pc1.effectivemass)
 X11()
-plot(effectivemass)
+plot(pion.pc1.effectivemass, xlab=c("t/a"), ylab=c("aM"))

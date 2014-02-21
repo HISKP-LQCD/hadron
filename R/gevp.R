@@ -47,7 +47,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
   for(t in (t0+1):(Thalf)) {
     variational.solve <- eigen(t(invL) %*% matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
-    sortindex <- order(variational.solve$values)
+    sortindex <- order(variational.solve$values, decreasing=TRUE)
     evalues[t,] <- variational.solve$values[sortindex]
     evectors[t,,] <- variational.solve$vectors[, sortindex]
   }
@@ -93,7 +93,9 @@ gevp2cf <- function(gevp, id=1) {
   cf$nrOps <- 1
   cf$Time <- gevp$cf$Time
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
-  cf$cf.tsboot <- gevp$gevp.tsboot[,tt]
+  cf$cf.tsboot <- list()
+  cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
+  cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
   attr(cf, "class") <- c("cf", class(cf))
   return(invisible(cf))
 }

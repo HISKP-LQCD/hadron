@@ -56,7 +56,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   ## we run on the original data first
   effMass <- cfeffectivemass(cf$cf0, cf$Time/2, type=type, nrOps=nrOps)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot, 1, cfeffectivemass, cf$Time/2, type=type, nrOps=nrOps))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, cfeffectivemass, cf$Time/2, type=type, nrOps=nrOps))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
