@@ -51,6 +51,8 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
     evalues[t,] <- variational.solve$values[sortindex]
     evectors[t,,] <- variational.solve$vectors[, sortindex]
   }
+  ## in case of bootstrapping everything (eigenvalues and eigenvectors)
+  ## is concatenated into a single vector
   if(for.tsboot) {
     return(c(as.vector(evalues), as.vector(evectors)))
   }
@@ -59,16 +61,39 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
 }
 
 
-bootstrap.gevp <- function(cf, t0, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,3,4), seed=1234) {
+bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,3,4), seed=1234) {
   ## number of measurements
+  if(!any(class(cf) == "cf")) {
+    stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
+  }
   N <- length(cf$cf[,1])
-  res <- gevp(cf$cf, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE)
-  ## we set the seed for reproducability and correlation
-  set.seed(seed)
-  ## and bootstrap the GEVP
-  gevp.tsboot <- tsboot(tseries=cf$cf, statistic=gevp, R=boot.R, l=boot.l, sim="geom",
-                        Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order,
-                        for.tsboot=TRUE)
-  
+  if(!cf$boot.samples) {
+    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
+  }
+  res <- gevp(cf$cf0, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE)
 
+
+  gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
+                         matrix.size=matrix.size, element.order=element.order,
+                         for.tsboot=TRUE))
+
+  ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
+  ## and the the N*N*(Thalf+1) eigenvectors
+  
+  ret <- list(cf=cf, res.gevp=res, gevp.tsboot=gevp.tsboot)
+  class(ret) <- c("gevp", class(ret))
+  return(invisible(ret))
+}
+
+gevp2cf <- function(gevp, id=1) {
+  cf <- list()
+  cf$cf0 <- gevp$res.gevp$evalues[,id]
+  cf$boot.samples <- TRUE
+  cf$nrStypes <- 1
+  cf$nrOps <- 1
+  cf$Time <- gevp$cf$Time
+  tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
+  cf$cf.tsboot <- gevp$gevp.tsboot[,tt]
+  attr(cf, "class") <- c("cf", class(cf))
+  return(invisible(cf))
 }

@@ -6,10 +6,10 @@ cfeffectivemass <- function(cf, Thalf, type="solve", nrOps=1) {
   else {
     Cor <- cf
   }
+
   if(length(Cor) != nrOps*(Thalf+1)) {
     stop("cf does not have the correct time extend in cfeffectivemass! Aborting...!\n")
   }
-
   tt <- c(1:(nrOps*(Thalf+1)))
   cutii <- c()
   cutii2 <- c()
@@ -51,13 +51,12 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   ## number of measurements
   N <- length(cf$cf[,1])
   ## number of time slices (hopefully in units of T/2+1)
-  Nt <- length(cf$cf[1,])
-  nrOps <- floor(Nt/(cf$Time/2+0))
-
+  Nt <- length(cf$cf0)
+  nrOps <- floor(Nt/(cf$Time/2+1))
   ## we run on the original data first
   effMass <- cfeffectivemass(cf$cf0, cf$Time/2, type=type, nrOps=nrOps)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, cfeffectivemass, cf$Time/2, type=type, nrOps=nrOps))
+  effMass.tsboot <- t(apply(cf$cf.tsboot, 1, cfeffectivemass, cf$Time/2, type=type, nrOps=nrOps))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
@@ -164,7 +163,7 @@ print.effectivemassfit <- function(effMass, verbose=FALSE) {
 
 plot.effectivemass <- function(effMass, ref.value, col,...) {
   if(missing(col)) {
-    col <- c("black", palette(rainbow(effMass$nrOps)))
+    col <- c("black", palette(rainbow(max(effMass$nrOps,4))))
   }
   op <- options()
   options(warn=-1)
