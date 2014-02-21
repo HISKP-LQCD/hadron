@@ -1,20 +1,44 @@
 plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...) {
-  my.xlim <- NULL
-  my.ylim <- NULL
+  fcall <- match.call(expand.dots=TRUE)
+  ylog <- FALSE
+  xlog <- FALSE
+  if(any(names(fcall) == "log")) {
+    i <- match(c("log"), names(fcall))
+    ylog <- any(eval(fcall[[i]]) == "y")
+    xlog <- any(eval(fcall[[i]]) == "x")
+  }
+  my.xlim <- c()
+  my.ylim <- c()
   
   if(missing(xlim)) {
+    tmp <- x - 0.1*abs(x)
+    tmpp <- x + 0.1*abs(x)
     if(!missing(dx)) {
-      my.xlim <- c(min(x-2*dx, na.rm = TRUE),max(x+2*dx, na.rm = TRUE))
+      tmp <- x-2*dx
+      tmp <- x+2*dx
     }
-  } else {
+    if(xlog) {
+      tmp <- tmp[ tmp > 0 ]
+    }
+    my.xlim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+  }
+  else {
     my.xlim <- xlim
   }
 
   if(missing(ylim)) {
+    tmp <- y - 0.1*abs(y)
+    tmpp <- y + 0.1*abs(x)
     if(!missing(dy)) {
-      my.ylim <- c(min(y-2*dy, na.rm = TRUE),max(y+2*dy, na.rm = TRUE))
+      tmp <- y-2*dy
+      tmpp <- y+2*dy
     }
-  } else {
+    if(ylog) {
+      tmp <- tmp[ tmp > 0 ]
+    }
+    my.ylim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+  }
+  else {
     my.ylim <- ylim
   }
 
