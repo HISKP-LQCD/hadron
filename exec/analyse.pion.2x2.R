@@ -21,3 +21,13 @@ X11()
 plot(pion.cor.effectivemass, xlab=c("t/a"), ylab=c("aM"))
 summary(pion.cor.effectivemass)
 
+## apply a GEVP analysis
+pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)
+## extract the first principal correlator
+pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)
+## which can now be treated like a bootstrapped correlation function
+pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")
+pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=10, t2=23, useCov=TRUE)
+summary(pion.pc1.effectivemass)
+X11()
+plot(effectivemass)
