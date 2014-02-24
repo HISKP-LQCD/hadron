@@ -80,9 +80,13 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE) {
   cf$useCov <- useCov
   cf$dof <-  cf$nrOps*(t2-t1+1)-1
   attach(cf)
+  
+  ## create an index array for the fit range
+  ## the '+1' for Fortran index convention
+  ## t1 and t2 can be in range 0-T/2
   ii <- c()
   for(i in 1:nrOps) {
-    ii <- c(ii, ((i-1)*Time/2+t1):((i-1)*Time/2+t2))
+    ii <- c(ii, ((i-1)*Time/2+t1+1):((i-1)*Time/2+t2+1))
   }
 
   ## here we generate the inverse covariance matrix, if required
