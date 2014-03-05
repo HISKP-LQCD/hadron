@@ -35,8 +35,8 @@ computeDisc <- function(cf, cf2,
   vev <- 0.
   ## compute vev first
   ## mean over all gauges and times
-  if(nrSamples == 1) vev <- mean(cf$cf)
-  else vev <- mean(cf$cf[,sindex,])
+  if(nrSamples == 1) vev <- mean(tcf)
+  else vev <- mean(tcf[,sindex,])
   if(verbose) cat("vev1 = ", vev, "\n")
 
   if(!subtract.vev) vev <- 0.
@@ -95,7 +95,7 @@ computeDisc <- function(cf, cf2,
     ## compute vev first
     ## mean over all gauges and times
     if(nrSamples2 == 1) vev2 <- mean(tcf2)
-    else vev2 <- mean(cf2$cf[,sindex2,])
+    else vev2 <- mean(tcf2[,sindex2,])
     if(verbose) cat("vev2 = ", vev2, "\n")
     if(!subtract.vev2) vev2 <- 0.
     ## re-order data
