@@ -1,12 +1,19 @@
 computeDisc <- function(cf, cf2,
                         real=TRUE, real2 = TRUE,
+                        smeared=FALSE, smeared2=FALSE,
                         subtract.vev=TRUE, subtract.vev2=TRUE,
                         subtract.equal = TRUE,
-                        use.samples, use.samples2) {
+                        use.samples, use.samples2,
+                        verbose=FALSE) {
   T <- cf$Time
-  ## the real part of the correlator matrix
+  ## extract the corresponding part of the correlation matrix
   tcf <- cf$cf
+  if(smeared) {
+    tcf <- cf$scf
+    cat("here...\n")
+  }
   if(!real) tcf <- cf$icf
+  if(!real && smeared) tcf <- cf$sicf
   
   nrSamples <- cf$nrSamples
   nrSamples2 <- nrSamples
@@ -16,8 +23,6 @@ computeDisc <- function(cf, cf2,
   sindex <- c(1:nrSamples)
   obs2 <- cf$obs
   
-  ## the imaginary part of the correlator matrix
-
   ## number of gauges
   N <- dim(tcf)[3]
   ## index array for t
@@ -26,14 +31,15 @@ computeDisc <- function(cf, cf2,
   i2 <- i
   ## space for the correlator
   Cf <- array(0., dim=c(N, T/2+1))
-  vev <- 0.
 
-  if(subtract.vev) {
-    ## compute vev first
-    ## mean over all gauges and times
-    if(nrSamples == 1) vev <- mean(cf$cf)
-    else vev <- mean(cf$cf[,sindex,])
-  }
+  vev <- 0.
+  ## compute vev first
+  ## mean over all gauges and times
+  if(nrSamples == 1) vev <- mean(cf$cf)
+  else vev <- mean(cf$cf[,sindex,])
+  if(verbose) cat("vev1 = ", vev, "\n")
+
+  if(!subtract.vev) vev <- 0.
 
   if(missing(cf2)) {
     ## here we compute the actual correlation
@@ -81,15 +87,17 @@ computeDisc <- function(cf, cf2,
     if(dim(cf2$cf)[3] != N) {
       stop("number of gauges for the two loops does not agree... Aborting...!\n")
     }
-    if(!real2) tcf2 <- cf2$icf
+    if(!real2 && smeared2) tcf2 <- cf2$sicf
+    else if(!real2) tcf2 <- cf2$icf
+    else if(smeared2) tcf2 <- cf2$scf
     else tcf2 <- cf2$cf
     vev2 <- 0.
-    if(subtract.vev2) {
-      ## compute vev first
-      ## mean over all gauges and times
-      if(nrSamples2 == 1) vev2 <- mean(tcf2)
-      else vev2 <- mean(cf2$cf[,sindex2,])
-    }
+    ## compute vev first
+    ## mean over all gauges and times
+    if(nrSamples2 == 1) vev2 <- mean(tcf2)
+    else vev2 <- mean(cf2$cf[,sindex2,])
+    if(verbose) cat("vev2 = ", vev2, "\n")
+    if(!subtract.vev2) vev2 <- 0.
     ## re-order data
     ## and average over samples, tcf and tcf2 have then dim(T,N)
     if(nrSamples != 1) {
