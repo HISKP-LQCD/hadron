@@ -174,7 +174,7 @@ summary.matrixfit <- function(mfit) {
     cat("\nDecay Constant (derived quantity):\n")
     cat("mu1 \t=\t", mfit$mu1, "\n")
     cat("mu2 \t=\t", mfit$mu2, "\n")
-    if(mfit$normalisation == "cmi")) cat("kappa\t=\t", mfit$kappa,"\n")
+    if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
     cat("fps \t=\t", mfit$fps, "\n")
     cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
   }
