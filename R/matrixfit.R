@@ -170,6 +170,14 @@ summary.matrixfit <- function(mfit) {
   ## given the model is correct
   cat("Quality of the fit (p-value):", mfit$Qval, "\n")
 
+  if(any(names(mfit) == "fps")) {
+    cat("\nDecay Constant (derived quantity):\n")
+    cat("mu1 \t=\t", mfit$mu1, "\n")
+    cat("mu2 \t=\t", mfit$mu2, "\n")
+    if(mfit$normalisation == "cmi")) cat("kappa\t=\t", mfit$kappa,"\n")
+    cat("fps \t=\t", mfit$fps, "\n")
+    cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
+  }
 }
 
 fit.formatrixboot <- function(cf, par, t, M, T, parind, sign.vec) {

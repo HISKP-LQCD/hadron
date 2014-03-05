@@ -11,6 +11,8 @@ pion.cor <- bootstrap.cf(pion.cor, boot.R=400, boot.l=1)
 
 ## now we can attempt a constrained fit to the matrix
 pion.cor.matrixfit <- matrixfit(pion.cor, t1=10, t2=23, symmetrise=TRUE, useCov=FALSE)
+## compute the ps decay constant for the twisted mass case, need mu and kappa
+pion.cor.matrixfit <- computefps(pion.cor.matrixfit, mu1=0.003, kappa=0.13782)
 X11()
 plot(pion.cor.matrixfit, xlab=c("t/a"), ylab=c("C(t)"))
 summary(pion.cor.matrixfit)
