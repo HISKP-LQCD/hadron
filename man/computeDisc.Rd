@@ -6,7 +6,8 @@
 }
 \usage{
 cf <- computeDisc(cf, cf2, real=TRUE, real2=TURE, subtract.vev=TRUE,
-subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2)
+subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2,
+smeared=FALSE, smeared2=FALSE, verbose=FALSE)
 }
 \arguments{
   \item{cf}{
@@ -45,9 +46,19 @@ subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2)
   \item{use.samples2}{
     Same like \code{use.samples}, but for \code{cf2}.
   }
+  \item{smeared}{
+    use the loops instead of the local ones for \code{cf}.
+  }
+  \item{smeared2}{
+    use the loops instead of the local ones for \code{cf2}.
+  }
+  \item{verbose}{
+    Print some debug output, like the VEVs of the loops.
+  }
 }
 \value{
-  Returns a list with elements \code{cf}, an array of dimension
+  Returns an object of type \code{cf} derived from a \code{list}
+  with elements \code{cf}, an array of dimension
   \code{dim(N, T)}, where \code{N} is the number of samples and \code{T}
   the time extend, integers \code{Time} for the time extend,
   \code{nrStypes} and \code{nrObs} for the available smearing types and
@@ -72,10 +83,16 @@ subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2)
   case results are wrong.
 }
 \seealso{
-  \code{\link{readcmidisc}}, \code{\link{readbinarydisc}}
+  \code{\link{readcmidisc}}, \code{\link{readbinarydisc}},
+  \code{\link{bootstrap.cf}}, \code{\link{add.cf}},
+  \code{\link{c.cf}}
 }
 \examples{
-\dontrun{Cpi0v4 <- computeDisc(cf=v4data, real=TRUE, subtract.vev=TRUE)}
+\dontrun{files <- getorderedfilelist(basename="disc.0.13872.0.003.k0v.", last.digits=3)}
+\dontrun{vdata <- readcmiloopfiles(files)}
+\dontrun{loops <- extract.loop(vdata, obs=9)}
+\dontrun{Cpi0v4 <- computeDisc(cf=loops, real=TRUE, subtract.vev=TRUE)}
+\dontrun{Cpi0v4 <- bootstrap.cf(Cpi0v4, boot.R=1000, boot.l=20)}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{correlator}
