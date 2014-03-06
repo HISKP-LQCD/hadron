@@ -90,7 +90,7 @@ gevp2cf <- function(gevp, id=1) {
   cf$cf0 <- gevp$res.gevp$evalues[,id]
   cf$boot.samples <- TRUE
   cf$nrStypes <- 1
-  cf$nrOps <- 1
+  cf$nrObs <- 1
   cf$Time <- gevp$cf$Time
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
   cf$cf.tsboot <- list()
