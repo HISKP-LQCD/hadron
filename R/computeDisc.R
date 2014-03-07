@@ -4,7 +4,7 @@ computeDisc <- function(cf, cf2,
                         subtract.vev=TRUE, subtract.vev2=TRUE,
                         subtract.equal = TRUE,
                         use.samples, use.samples2,
-                        verbose=FALSE) {
+                        type="cosh", verbose=FALSE) {
   T <- cf$Time
   ## extract the corresponding part of the correlation matrix
   tcf <- cf$cf
@@ -52,6 +52,8 @@ computeDisc <- function(cf, cf2,
       subtract.equal <- FALSE
       tcf <- tcf[,1,] - vev
     }
+    ## need to run only to T/2 because source and sink are equal
+    ## only possible type is cosh
     for(dt in c(0:(T/2))) {
       Cf[,1+dt] <- apply(tcf[i,]*tcf[i2,], 2, mean)
       ## subtract product of equal samples
@@ -64,6 +66,9 @@ computeDisc <- function(cf, cf2,
   }
   ## now the more general case case of cross-correlators
   else {
+    sign <- +1
+    if(type != "cosh") sign <- -1
+    
     nrSamples2 <- cf2$nrSamples
     if(!missing(use.samples2) && !(use.samples2 > nrSamples2) && (use.samples2 > 0) ) {
       nrSamples2 <- use.samples2
@@ -115,9 +120,12 @@ computeDisc <- function(cf, cf2,
     }
 
     for(dt in c(0:(T/2))) {
-      Cf[,1+dt] <- apply(tcf[i,]*tcf2[i2,], 2, mean)
+      ## here we do the time average (t and T-1) in the same step
+      Cf[,1+dt] <- apply(0.5*(tcf[i,]*tcf2[i2,] + sign*tcf2[i,]*tcf[i2,]), 2, mean)
       ## subtract product of equal samples
-      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf2[i2,sindex2,], c(2,3), mean), 2, sum)
+      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] -
+        apply(apply(0.5*(mtcf[i,sindex,]*mtcf2[i2,sindex2,] + sign*mtcf2[i,sindex2,]*mtcf[i2,sindex,]),
+                    c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
       i2 <- (i2) %% T + 1
     }
