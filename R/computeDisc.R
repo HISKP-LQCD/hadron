@@ -10,7 +10,6 @@ computeDisc <- function(cf, cf2,
   tcf <- cf$cf
   if(smeared) {
     tcf <- cf$scf
-    cat("here...\n")
   }
   if(!real) tcf <- cf$icf
   if(!real && smeared) tcf <- cf$sicf
@@ -118,7 +117,7 @@ computeDisc <- function(cf, cf2,
     for(dt in c(0:(T/2))) {
       Cf[,1+dt] <- apply(tcf[i,]*tcf2[i2,], 2, mean)
       ## subtract product of equal samples
-      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf2[i2,sindex,], c(2,3), mean), 2, sum)
+      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf2[i2,sindex2,], c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
       i2 <- (i2) %% T + 1
     }
