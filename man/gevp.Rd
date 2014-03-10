@@ -34,8 +34,8 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
     \code{matrix(cf[element.order], nrow=2)}.
   }
   \item{for.tsboot}{
-    for internal use of \code{bootstrap.gevp}. Alters the returned
-    values. 
+    for internal use of \link{\code{bootstrap.gevp}}. Alters the returned
+    values, see details. 
   }
 }
 \value{
@@ -47,7 +47,16 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
   concatenated. 
 }
 \details{
-  
+  The generalised eigenvalue problem\cr
+  \eqn{
+    C(t) v(t,t_0) = C(t_0)\lambda(t,t_0) v(t,t_0)
+  }{
+    C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)    
+  }\cr
+  is solved by performing a Cholesky decomposition of \eqn{C(t_0)=L^t
+    L}{C(t0)=t(L) L} and transforming the GEVP into a standard
+  eigenvalue problem for all values of \eqn{t}. The matrices \eqn{C} are
+  symmetrised for all \eqn{t}.
 }
 \references{
   Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:
