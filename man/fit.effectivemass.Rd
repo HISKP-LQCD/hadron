@@ -1,8 +1,9 @@
 \name{fit.effectivemass}
 \alias{fit.effectivemass}
-\title{Fir a constant to effective mass data}
+\title{Fits a constant to effective mass data}
 \description{
-  Performs a correlated fit to data generated with \code{bootstrap.effectivemass}
+  Performs a correlated fit of a constant to data generated with
+  \code{bootstrap.effectivemass}. 
 }
 \usage{
 fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE) 
@@ -59,7 +60,7 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE)
 }
 \seealso{
   \link{\code{bootstrap.effectivemass}}, \link{\code{boostrap.gevp}},
-  \link{\code{gevp2cf}}
+  \link{\code{gevp2cf}}, \link{\code{invertCovMatrix}}
 }
 \examples{
 \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}

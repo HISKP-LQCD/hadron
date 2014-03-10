@@ -41,16 +41,25 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
 \value{
   Returns a list with the sorted eigenvalues and sorted eigenvectors for
   all t > t0. Currently the eigenvalues are sorted in ascending modulus.
+
+  In case \code{for.tsboot=TRUE} the same is returned as one long vector
+  with first all eigenvalues concatenated and then all eigenvectors
+  concatenated. 
 }
 \details{
-  to be written...
+  
 }
-%\references{
-%}
+\references{
+  Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:
+  10.1016/0550-3213(83)90674-0\cr
+  Blossier, B. et al., JHEP 0904 (2009) 094, DOI:
+  10.1088/1126-6708/2009/04/094, arXiv:0902.1265
+}
 \seealso{
   \code{boostrap.gevp}, \code{extract.obs}
 }
-%\examples{
-%}
+\examples{
+
+}
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}
