@@ -102,12 +102,14 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
     ## compute correlation matrix and compute the correctly normalised inverse
     M <- invertCovMatrix(effMass.tsboot[,ii], boot.samples=TRUE)
   }
-
+  ## the chisqr function
+  fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
+  
   cf$invCovMatrix <- M
   par <- c(effMass[t1])
-  opt.res <- optim(par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))},
+  opt.res <- optim(par, fn = fn,
                    method="BFGS", M=M, y = effMass[ii])
-  opt.res <- optim(opt.res$par, fn = function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))},
+  opt.res <- optim(opt.res$par, fn = fn,
                    control=list(parscale=1/opt.res$par),
                    method="BFGS", M=M, y = effMass[ii])
   par <- opt.res$par
@@ -124,7 +126,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
     }
   }
   for(i in 1:boot.R) {
-    opt <- optim(par, fn = function(par, y, M) { return(sum((y-par[1]) %*% M %*% (y-par[1])))},
+    opt <- optim(par, fn = fn,
                  control=list(parscale=1/par),
                  method="BFGS", M=M, y = effMass.tsboot[i,ii])
     massfit.tsboot[i, 1] <- opt$par[1]
