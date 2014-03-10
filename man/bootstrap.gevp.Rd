@@ -36,18 +36,39 @@ bootstrap.gevp(cf, t0, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,
 
 }
 \value{
-  xxx
+  Returns an object of class \code{gevp} with member objects:
+
+  \code{cf}:\cr
+  The input data, if needed bootstrapped with
+  \link{\code{bootstrap.cf}}.
+
+  \code{res.gevp}:\cr
+  The object returned from the call to \link{\code{gevp}}. For the
+  format see \link{\code{gevp}}. 
+
+  \code{gevp.tsboot}:\cr
+  The bootstrap samples of the GEVP. For the format see
+  \link{\code{gevp}}. 
 }
-\details{
-  xxx
+\references{
+  Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:
+  10.1016/0550-3213(83)90674-0\cr
+  Blossier, B. et al., JHEP 0904 (2009) 094, DOI:
+  10.1088/1126-6708/2009/04/094, arXiv:0902.1265
 }
-%\references{
-%}
 \seealso{
   \code{gevp}, \code{extract.obs}, \code{bootstrap.cf}
 }
-%\examples{
-%}
+\examples{
+\dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
+\dontrun{## extract the first principal correlator}
+\dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
+\dontrun{## which can now be treated like a bootstrapped correlation function}
+\dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
+\dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12, t2=23, useCov=FALSE)}
+\dontrun{summary(pion.pc1.effectivemass)}
+\dontrun{plot(pion.pc1.effectivemass, xlab=c("t/a"), ylab=c("aM"))}
+}
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}
 
