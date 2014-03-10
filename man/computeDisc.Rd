@@ -7,7 +7,7 @@
 \usage{
 cf <- computeDisc(cf, cf2, real=TRUE, real2=TURE, subtract.vev=TRUE,
 subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2,
-smeared=FALSE, smeared2=FALSE, verbose=FALSE)
+smeared=FALSE, smeared2=FALSE, type="cosh", verbose=FALSE)
 }
 \arguments{
   \item{cf}{
@@ -51,6 +51,12 @@ smeared=FALSE, smeared2=FALSE, verbose=FALSE)
   }
   \item{smeared2}{
     use the loops instead of the local ones for \code{cf2}.
+  }
+  \item{type}{
+    The correlation function can either be symmetric or anti-symmetric
+    in time. Anti-symmetric is of course only possible for
+    cross-correlators. In this case with \code{type="cosh"} it is
+    assumed to be symmetric, anti-symmetric otherwise. 
   }
   \item{verbose}{
     Print some debug output, like the VEVs of the loops.
