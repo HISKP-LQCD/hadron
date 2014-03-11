@@ -5,6 +5,12 @@
 
 gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE) {
   
+  if(matrix.size^2 != length(element.order)) {
+    stop("matrix.size^2 must be Aborting...\n")
+  }
+  if(t0 < 0 || t0 > (Time/2-2)) {
+    stop("t0 must be in between 0 and T/2-2. Aborting ...\n")
+  }
   Thalf <- Time/2
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -38,18 +44,18 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
   
   evalues <-  array(NA, dim=c(Thalf+1, matrix.size))
   evectors <- array(NA, dim=c(Thalf+1, matrix.size, matrix.size))
-  ## matrix at t=t0
+  ## matrix at t=t0 (ii takes care of the indices starting at 1 and not 0)
   cM <- matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size)
   L <- chol(cM)
   invL <- solve(L)
   ## now the time dependence
   ## we need to multiply from the left with t(invL) and from the right with invL
-  for(t in (t0+1):(Thalf)) {
+  for(t in (t0):(Thalf)) {
     variational.solve <- eigen(t(invL) %*% matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
     sortindex <- order(variational.solve$values, decreasing=TRUE)
-    evalues[t,] <- variational.solve$values[sortindex]
-    evectors[t,,] <- variational.solve$vectors[, sortindex]
+    evalues[t+1,] <- variational.solve$values[sortindex]
+    evectors[t+1,,] <- variational.solve$vectors[, sortindex]
   }
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
   ## is concatenated into a single vector

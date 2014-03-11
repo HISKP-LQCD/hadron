@@ -22,7 +22,8 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
     time extend of the lattice.
   }
   \item{t0}{
-    initial time value of the GEVP
+    initial time value of the GEVP, must be in between 0 and
+    \code{Time/2-2}. 
   }
   \item{matrix.size}{
     the size of the square matrix
