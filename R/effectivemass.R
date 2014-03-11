@@ -62,7 +62,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
-  ret <- list(t=c(1:(cf$Time/2))-1,
+  ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l,
@@ -78,7 +78,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
   if(missing(t1) || missing(t2)) {
     stop("t1 and t2 must be specified! Aborting...!\n")
   }
-  if((t2 >= t1) || (t1 < 0) || (t2 > cf$Time/2-1)) {
+  if((t2 <= t1) || (t1 < 0) || (t2 > (cf$Time/2-1))) {
     stop("t1 < t2 and both in 0...T/2-1 is required. Aborting...\n")
   }
   cf$t1 <- t1
@@ -205,10 +205,10 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   op <- options()
   options(warn=-1)
   t <- effMass$t
-  plotwitherror(t, effMass$effMass[t], effMass$deffMass[t], ...)
+  plotwitherror(t-1, effMass$effMass[t], effMass$deffMass[t], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      plotwitherror(t, effMass$effMass[t+i*effMass$Time/2], effMass$deffMass[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
+      plotwitherror(t-1, effMass$effMass[t+i*effMass$Time/2], effMass$deffMass[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
     }
   }
   options(op)
