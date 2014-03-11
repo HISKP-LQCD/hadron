@@ -35,9 +35,7 @@ boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve")
   objects:
   \code{effMass}:\cr
   The computed effective mass values as a vector of length
-  \code{Time/2+1}. Note that the value at \code{Time/2+1} is always
-  \code{NA}, because the effective mass needs at least to time slices to
-  be defined. Moreover, for \code{type="acosh"} also the first value is
+  \code{Time/2}. For \code{type="acosh"} also the first value is
   \code{NA}, because this definition requires three time slices.
   
   \code{deffMass}:\cr

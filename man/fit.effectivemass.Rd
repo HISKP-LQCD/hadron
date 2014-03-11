@@ -16,7 +16,8 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE)
   \item{t1, t2}{
     The fit range. If several correlators are fitted, this is
     automatically replicated accordingly. The fit range is adjusted such
-    that \code{NA}s are removed from the fit.
+    that \code{NA}s are removed from the fit. They must fulfill
+    \eqn{t_1<t_2}{t1<t2}, and both run from 0 to \code{T/2-1}.
   }
   \item{useCov}{
     Use the correlated chisquare. This works only for not too noisy data.

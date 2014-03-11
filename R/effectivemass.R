@@ -1,4 +1,4 @@
-cfeffectivemass <- function(cf, Thalf, type="solve", nrObs=1) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE) {
   ## cf is supposed to have nrObs*(Thalf+1) elements in time direction
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -8,8 +8,9 @@ cfeffectivemass <- function(cf, Thalf, type="solve", nrObs=1) {
   }
 
   if(length(Cor) != nrObs*(Thalf+1)) {
-    stop("cf does not have the correct time extend in cfeffectivemass! Aborting...!\n")
+    stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
   }
+  ## here we generate the index arrays
   tt <- c(1:(nrObs*(Thalf+1)))
   cutii <- c()
   cutii2 <- c()
@@ -36,6 +37,8 @@ cfeffectivemass <- function(cf, Thalf, type="solve", nrObs=1) {
       }
     }
   }
+  ## we replace Infs if wanted by NA
+  if(replace.inf) effMass[is.infinite(effMass)] <- NA
   return(invisible(effMass[t2]))
 }
 
@@ -54,12 +57,12 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   Nt <- length(cf$cf0)
   nrObs <- floor(Nt/(cf$Time/2+1))
   ## we run on the original data first
-  effMass <- cfeffectivemass(cf$cf0, cf$Time/2, type=type, nrObs=nrObs)
+  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, cfeffectivemass, cf$Time/2, type=type, nrObs=nrObs))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
-  ret <- list(t=c(1:(cf$Time/2)),
+  ret <- list(t=c(1:(cf$Time/2))-1,
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l,
@@ -75,6 +78,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
   if(missing(t1) || missing(t2)) {
     stop("t1 and t2 must be specified! Aborting...!\n")
   }
+  if((t2 >= t1) || (t1 < 0) || (t2 > cf$Time/2-1)) {
+    stop("t1 < t2 and both in 0...T/2-1 is required. Aborting...\n")
+  }
   cf$t1 <- t1
   cf$t2 <- t2
   cf$useCov <- useCov
@@ -88,9 +94,12 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
   for(i in 1:nrObs) {
     ii <- c(ii, ((i-1)*Time/2+t1+1):((i-1)*Time/2+t2+1))
   }
-  ## get rid of the NAs for the fit
-  ii.na <- which(is.na(effMass[ii]))
-  ii <- ii[-ii.na]
+
+  ## get rid of the NAs for the fit, if there are any
+  if(any(is.na(effMass[ii]))) {
+    ii.na <- which(is.na(effMass[ii]))
+    ii <- ii[-ii.na]
+  }
   cf$ii <- ii
   cf$dof <-  length(ii)-1
 
@@ -118,11 +127,17 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
 
   ## now we replace all NAs by randomly chosen other bootstrap values
   tb.save <-  effMass.tsboot
-  if(replace.na) {
+  if(replace.na && any(is.na(effMass.tsboot))) {
     for(k in ii) {
-      jj <- which(is.na(effMass.tsboot[,k]))
-      rj <- sample.int(n=length(effMass.tsboot[jj, k]), size=length(jj), replace=FALSE)
-      effMass.tsboot[jj, k] <- effMass.tsboot[rj, k]
+      effMass.tsboot[is.nan(effMass.tsboot[,k]),k] <- NA
+      if(any(is.na(effMass.tsboot[,k]))) {
+        ## indices of NA elements
+        jj <- which(is.na(effMass.tsboot[,k]))
+        ## random indices in the non-NA elements of effMass.tsboot
+        rj <- sample.int(n=length(effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+        ## replace
+        effMass.tsboot[jj, k] <- effMass.tsboot[-jj, k][rj]
+      }
     }
   }
   for(i in 1:boot.R) {
@@ -201,10 +216,13 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }
   if(!is.null(effMass$opt.res)) {
-    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1], x1=effMass$t2, y1=effMass$opt.res$par[1], col=c("red"), length=0)
+    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1],
+           x1=effMass$t2, y1=effMass$opt.res$par[1], col=c("red"), length=0)
     arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]),
-           x1=effMass$t2, y1=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]), col=c("red"), length=0, lwd=c(1))
+           x1=effMass$t2, y1=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]),
+           col=c("red"), length=0, lwd=c(1))
     arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]),
-           x1=effMass$t2, y1=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]), col=c("red"), length=0, lwd=c(1))
+           x1=effMass$t2, y1=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]),
+           col=c("red"), length=0, lwd=c(1))
   }
 }
