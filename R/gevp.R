@@ -3,13 +3,17 @@
 ## order c(1,2,3,4) goes to 
 ##                           ( 3 , 4 )
 
-gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE) {
+gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
+                 for.tsboot=TRUE, sort.type="vectors") {
   
   if(matrix.size^2 != length(element.order)) {
     stop("matrix.size^2 must be Aborting...\n")
   }
   if(t0 < 0 || t0 > (Time/2-2)) {
     stop("t0 must be in between 0 and T/2-2. Aborting ...\n")
+  }
+  if(!any(c("values", "vectors") == sort.type)) {
+    stop("possible values for sort.ype are values or vectors. Aborting\n")
   }
   Thalf <- Time/2
   if(length(dim(cf)) == 2) {
@@ -25,7 +29,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
     stop("gevp can only operate on square matrices! Aborting!\n")
   }
 
-  ## symmetrise Cor
+  ## symmetrise correlation matrix
   tt <- c(1:(Thalf+1))
   for(i in 1:matrix.size) {
     for(j in i:matrix.size) {
@@ -50,13 +54,25 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
   invL <- solve(L)
   ## now the time dependence
   ## we need to multiply from the left with t(invL) and from the right with invL
-  for(t in (t0):(Thalf)) {
+  for(t in (t0+1):(Thalf)) {
     variational.solve <- eigen(t(invL) %*% matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
-    sortindex <- order(variational.solve$values, decreasing=TRUE)
+    sortindex <- c()
+    if(sort.type == "values" || (t < t0+2)) {
+      sortindex <- order(variational.solve$values, decreasing=TRUE)
+    }
+    else {
+      ## compute the scalar product of eigenvectors with those at t0+1
+      idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=TRUE)
+      sortindex <- idx[,1]
+      if(!all(order(sortindex) == c(1:matrix.size))) {
+        sortindex <- order(variational.solve$values, decreasing=TRUE)
+      }
+    }
     evalues[t+1,] <- variational.solve$values[sortindex]
-    evectors[t+1,,] <- variational.solve$vectors[, sortindex]
+    evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
   }
+  evalues[t0+1,] <- 1.
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
   ## is concatenated into a single vector
   if(for.tsboot) {
@@ -67,21 +83,25 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.ts
 }
 
 
-bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,3,4), seed=1234) {
+bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
+                           element.order=c(1,2,3,4), seed=1234, sort.type="vectors") {
   ## number of measurements
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
+  }
+  if(!any(c("values", "vectors") == sort.type)) {
+    stop("possible values for sort.ype are values or vectors. Aborting\n")
   }
   N <- length(cf$cf[,1])
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
-  res <- gevp(cf$cf0, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE)
+  res <- gevp(cf$cf0, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE, sort.type=sort.type)
 
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
                          matrix.size=matrix.size, element.order=element.order,
-                         for.tsboot=TRUE))
+                         for.tsboot=TRUE, sort.type=sort.type))
 
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
   ## and the the N*N*(Thalf+1) eigenvectors

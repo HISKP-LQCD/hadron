@@ -5,7 +5,8 @@
   solve GEVP for a real, symmetric correlator matrix
 }
 \usage{
-gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
+gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
+for.tsboot=TRUE, sort.type="values")
 }
 \arguments{
   \item{cf}{
@@ -34,6 +35,11 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
     matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
     \code{matrix(cf[element.order], nrow=2)}.
   }
+  \item{sort.type}{
+    Sort the eigenvalues either in descending order, or by using the
+    scalar product of the eigenvectors with the eigenvectors at
+    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
+  }
   \item{for.tsboot}{
     for internal use of \link{\code{bootstrap.gevp}}. Alters the returned
     values, see details. 
@@ -52,12 +58,15 @@ gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4), for.tsboot=TRUE)
   \eqn{
     C(t) v(t,t_0) = C(t_0)\lambda(t,t_0) v(t,t_0)
   }{
-    C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)    
-  }\cr
+    C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)}\cr
   is solved by performing a Cholesky decomposition of \eqn{C(t_0)=L^t
     L}{C(t0)=t(L) L} and transforming the GEVP into a standard
   eigenvalue problem for all values of \eqn{t}. The matrices \eqn{C} are
-  symmetrised for all \eqn{t}.
+  symmetrised for all \eqn{t}. So we solve for \eqn{\lambda}{lambda}\cr
+  \eqn{(L^t)^{-1} C(t) L^{-1} w = \lambda w}{solve(t(L)) C(t) solve(L) w = lambda w}\cr
+  with\cr
+  \eqn{w = L v}.
+  
 }
 \references{
   Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:

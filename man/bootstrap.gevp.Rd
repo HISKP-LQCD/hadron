@@ -5,7 +5,8 @@
   perform a bootstrap analysis of a GEVP for a real, symmetric correlator matrix
 }
 \usage{
-bootstrap.gevp(cf, t0, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,3,4), seed=1234)
+bootstrap.gevp(cf, t0, boot.R=400, boot.l=2, matrix.size=2,
+element.order=c(1,2,3,4), seed=1234, sort.type="values")
 }
 \arguments{
   \item{cf}{
@@ -33,7 +34,11 @@ bootstrap.gevp(cf, t0, boot.R=400, boot.l=2, matrix.size=2, element.order=c(1,2,
   \item{seed}{
     seed for the random number generation used for boostrapping.
   }
-
+  \item{sort.type}{
+    Sort the eigenvalues either in descending order, or by using the
+    scalar product of the eigenvectors with the eigenvectors at
+    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
+  }
 }
 \value{
   Returns an object of class \code{gevp} with member objects:
