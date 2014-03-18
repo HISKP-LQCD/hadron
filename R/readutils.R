@@ -2,7 +2,7 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
                        skip=0) {
   data <- read.table(filename, header=F, skip=skip,
                      colClasses=colClasses)
-  attr(data, "class") <- c("cmicor", "data.frame")  
+  attr(data, "class") <- c("cmicor", class(data))  
   return(invisible(data))
 }
 
@@ -22,58 +22,77 @@ getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) 
   return(invisible(ofiles[ii]))
 }
 
-readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
-                             colClasses=c("integer", "integer","integer","numeric","numeric")) {
+
+readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
+                         colClasses) {
   if(missing(files)) {
     stop("filelist missing, aborting...\n")
   }
-  cmicor <- data.frame()
-  ## read single files
-  for(f in files) {
-    if( !(f %in% excludelist) && file.exists(f)) {
+  tmpdata <- read.table(files[1], colClasses=colClasses, skip=skip)
+  fLength <- length(tmpdata$V1)
+  nFiles <- length(files)
+  nCols <- length(tmpdata)
+  ## we generate the full size data.frame first
+  tmpdata[,] <- NA
+  ldata <- tmpdata
+  ldata[((nFiles-1)*fLength+1):(nFiles*fLength),] <- tmpdata
+  for(i in c(1:nFiles)) {
+    if( !(files[i] %in% excludelist) && file.exists(files[i])) {
       if(verbose) {
-        cat("Reading from file", f, "\n")
+        cat("Reading from file", files[i], "\n")
       }
-      cmicor <- rbind(cmicor, read.table(f, skip=skip, header=F,
-                                         colClasses=colClasses))
+      ## read the data
+      tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
+      ## sanity checks
+      if(fLength != length(tmpdata$V1)) {
+        warning("file do not all have the same length. We will cut and hope...\n")
+      }
+      if(nCols != length(tmpdata)) {
+        stop("file do not all have the same number of columns. Aborting...\n")
+      }
+      
+      ldata[((i-1)*fLength+1):(i*fLength),] <- tmpdata
+    }
+    else if(verbose) {
+      cat("dropped file", files[i], "\n")
     }
   }
-  attr(cmicor, "class") <- c("cmicor", "data.frame")  
-  return(invisible(cmicor))
+  ## remove NAs from missing files
+  ldata <- na.omit(ldata)
+  return(invisible(ldata))
+}
+
+readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
+                             colClasses=c("integer", "integer","integer","numeric","numeric")) {
+
+  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
+  attr(data, "class") <- c("cmicor", class(data))  
+  return(invisible(data))
 }
 
 readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","integer",
                                "numeric","numeric","numeric","numeric")) {
-
-  if(missing(files)) {
-    stop("filelist missing, aborting...\n")
-  }
-  ldata <- data.frame()
-  for(f in files) {
-    if( !(f %in% excludelist) && file.exists(f)) {
-      if(verbose) {
-        cat("Reading from file", f, "\n")
-      }
-      ldata <- rbind(ldata,read.table(f, colClasses=colClasses, skip=skip))
-    }
-  }
-  attr(ldata, "class") <- c("cmiloop", "data.frame")  
-  return(invisible(ldata))
+  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
+  attr(ldata, "class") <- c("cmiloop", class(ldata))
+  return(invisible(data))
 }
 
-extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L) {
+
+
+
+extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   ldata <- cmiloop[cmiloop[,ind.vec[1]] == obs,] 
   T <- max(ldata[,ind.vec[2]])
   nrSamples <- max(ldata[,ind.vec[3]])
   if(missing(L)) {
     L <- T/2
   }
-  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(files)))/sqrt(L^3),
-             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
+  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(ldata[,ind.vec[4]])/T/nrSamples))/sqrt(L^3),
+             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3),
+             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
+             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
+             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs, conf.index=unique(ldata[,ind.vec[8]]))
   return(invisible(cf))
 }
 

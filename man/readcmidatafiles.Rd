@@ -1,5 +1,6 @@
-\name{readcmidatafiles}
+\name{readcmifiles}
 \alias{readcmiloopfiles}
+\alias{readcmidatafiles}
 \alias{readcmicor}
 \title{Read Single Data Files in Chris Michael Format}
 \description{
@@ -8,6 +9,8 @@
 \usage{
 cmicor <- readcmicor(filename,
                      colClasses=c("integer","integer","integer","numeric","numeric","integer"))
+
+cmicor <- readcmifiles(files, excludelist=c(""), skip, verbose=FALSE, colClasses)
 
 cmicor <- readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
                            colClasses=c("integer","integer","integer","numeric","numeric"))
