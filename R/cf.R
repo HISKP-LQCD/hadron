@@ -29,32 +29,70 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
   }
 }
 
+'+.cf' <- function(cf1, cf2) {
+  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
+    cf <- cf1
+    cf$cf <- cf1$cf + cf2$cf
+    cf$boot.samples <- FALSE
+    return(cf)
+  }
+}
+
+'-.cf' <- function(cf1, cf2) {
+  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
+    cf <- cf1
+    cf$cf <- cf1$cf - cf2$cf
+    cf$boot.samples <- FALSE
+    return(cf)
+  }
+}
+
+mul.cf <- function(cf, a=1.) {
+  if(any(class(cf) == "cf") && is.numeric(a)) {
+    cf$cf <- a*cf$cf
+    return(cf)
+  }
+  else {
+    stop("Wrong classes for input objects, must be cf and numeric. Aborting...!\n")
+  }
+}
+
+as.cf <- function(x){
+  if(!inherits(x, "cf")) class(x) <- c("cf", class(x))
+  x
+}
+
+is.cf <- function(x){
+  inherits(x, "cf")
+}
+
 ## to concatenate objects of type cf
 c.cf <- function(...) {
-  fcall <- match.call(expand.dots=TRUE)
-  fnames <- names(fcall)
+  #fcall <- match.call(expand.dots=TRUE)
+  #fnames <- names(fcall)
   ## first name in fnames is empty/function name
-  if(length(fcall) == 2) {
-    return(eval(fcall[[2]]))
+  fcall <- list(...)
+  if(length(fcall) == 1) {
+    return(eval(fcall[[1]]))
   }
 
-  cf <- eval(fcall[[2]])
+  cf <- fcall[[1]]
   Time <- cf$Time
   cf$nrObs <- 0
   cf$sTypes <- 0
   N <- dim(cf$cf)[1]
-  for(i in 2:length(fcall)) {
-    if(eval(fcall[[i]])$Time != Time) {
+  for(i in 1:length(fcall)) {
+    if(fcall[[i]]$Time != Time) {
       stop("Times must agree for different objects of type cf\n Aborting\n")
     }
-    if(dim(eval(fcall[[i]])$cf)[1] != N) {
+    if(dim(fcall[[i]]$cf)[1] != N) {
       stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
     }
-    cf$nrObs <- cf$nrObs + eval(fcall[[i]])$nrObs
-    cf$sTypes <- cf$sTypes + eval(fcall[[i]])$sTypes
+    cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
+    cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
   }
-  for(i in 3:length(fcall)) {
-    cf$cf <- cbind(cf$cf, eval(fcall[[i]])$cf)
+  for(i in 2:length(fcall)) {
+    cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
   }
   cf$boot.samples <- FALSE
   return(cf)
