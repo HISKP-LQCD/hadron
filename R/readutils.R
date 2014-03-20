@@ -24,11 +24,18 @@ getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) 
 
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
-                         colClasses) {
+                         colClasses, obs=NULL, obs.index) {
   if(missing(files)) {
     stop("filelist missing, aborting...\n")
   }
+  reduce <- FALSE
+  if(!(is.null(obs) || missing(obs.index))) {
+    reduce <- TRUE
+  }
   tmpdata <- read.table(files[1], colClasses=colClasses, skip=skip)
+  if(reduce) {
+    tmpdata <- tmpdata[tmpdata[,obs.index] == obs,]
+  }
   fLength <- length(tmpdata$V1)
   nFiles <- length(files)
   nCols <- length(tmpdata)
@@ -43,6 +50,9 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
       }
       ## read the data
       tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
+      if(reduce) {
+        tmpdata <- tmpdata[tmpdata[,obs.index] == obs,]
+      }
       ## sanity checks
       if(fLength != length(tmpdata$V1)) {
         warning("file do not all have the same length. We will cut and hope...\n")
@@ -63,16 +73,18 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
 }
 
 readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
-                             colClasses=c("integer", "integer","integer","numeric","numeric")) {
+                             colClasses=c("integer", "integer","integer","numeric","numeric"),
+                             obs=NULL, obs.index=1) {
 
-  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
+  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses, obs=obs, obs.index=obs.index)
   attr(data, "class") <- c("cmicor", class(data))  
   return(invisible(data))
 }
 
 readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","integer",
-                               "numeric","numeric","numeric","numeric")) {
+                               "numeric","numeric","numeric","numeric"),
+                             obs=NULL, obs.index=2) {
   data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
   attr(ldata, "class") <- c("cmiloop", class(ldata))
   return(invisible(data))
