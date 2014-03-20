@@ -86,7 +86,7 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                                "numeric","numeric","numeric","numeric"),
                              obs=NULL, obs.index=2) {
   data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
-  attr(ldata, "class") <- c("cmiloop", class(ldata))
+  attr(data, "class") <- c("cmiloop", class(data))
   return(invisible(data))
 }
 
