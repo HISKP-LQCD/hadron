@@ -46,7 +46,7 @@ computeDisc <- function(cf, cf2,
       ## re-order data
       mtcf <- tcf - vev
       ## average over samples, tcf has dim(T,N)
-      tcf <- apply(mtcf[,sindex,], c(1,3), mean)
+      tcf <- apply(mtcf[,sindex,], c(1,3), sum)
     }
     else{
       subtract.equal <- FALSE
@@ -57,15 +57,17 @@ computeDisc <- function(cf, cf2,
     for(dt in c(0:(T/2))) {
       Cf[,1+dt] <- apply(tcf[i,]*tcf[i2,], 2, mean)
       ## subtract product of equal samples
-      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf[i2,sindex,], c(2,3), mean), 2, mean)
+      if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf[i2,sindex,], c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
       i2 <- (i2) %% T + 1
     }
+    if(subtract.equal) Cf <- Cf/nrSamples/(nrSamples-1)
+    else Cf <- Cf/nrSamples/(nrSamples)
   }
   ## now the more general case case of cross-correlators
   else {
-    sign <- +1.
-    if(type != "cosh") sign <- -1.
+    sign <- +1
+    if(type != "cosh") sign <- -1
     
     nrSamples2 <- cf2$nrSamples
     if(!missing(use.samples2) && !(use.samples2 > nrSamples2) && (use.samples2 > 0) ) {
@@ -104,14 +106,14 @@ computeDisc <- function(cf, cf2,
     ## and average over samples, tcf and tcf2 have then dim(T,N)
     if(nrSamples != 1) {
       mtcf <- tcf - vev
-      tcf <- apply(mtcf[,sindex,], c(1,3), mean)
+      tcf <- apply(mtcf[,sindex,], c(1,3), sum)
     }
     else {
       tcf <- tcf[,1,] - vev
     }
     if(nrSamples2 != 1) {
       mtcf2 <- tcf2 - vev2
-      tcf2 <- apply(mtcf2[,sindex2,], c(1,3), mean)
+      tcf2 <- apply(mtcf2[,sindex2,], c(1,3), sum)
     }
     else {
       tcf2 <- tcf2[,1,] - vev2
@@ -123,9 +125,17 @@ computeDisc <- function(cf, cf2,
       ## subtract product of equal samples
       if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] -
         apply(apply(0.5*(mtcf[i,sindex,]*mtcf2[i2,sindex2,] + sign*mtcf2[i,sindex2,]*mtcf[i2,sindex,]),
-                    c(2,3), mean), 2, mean)
+                    c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
       i2 <- (i2) %% T + 1
+    }
+    if(nrSamples2 == nrSamples) {
+      if(subtract.equal) Cf <- Cf/nrSamples/(nrSamples-1)
+      else Cf <- Cf/nrSamples/nrSamples
+    }
+    else {
+      ## subtract.equal must be FALSE here
+      Cf <- Cf/nrSamples/nrSamples2
     }
   }
   ret <- list(cf=Cf, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE)
