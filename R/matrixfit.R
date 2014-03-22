@@ -3,6 +3,10 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
   return(apply(bootit$t, 2, sd))
 }
 
+matrixModel <- function(par, t, T, parind, sign.vec) {
+  return(0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
+}
+
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
   return( sum(z %*% M %*% z) )
@@ -118,7 +122,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 
   opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
                       M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
-  res <- list(CF=CF, M=M, parind=parind, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
+  res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed)
@@ -188,4 +192,46 @@ fit.formatrixboot <- function(cf, par, t, M, T, parind, sign.vec) {
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
   ##                 t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)
   return(c(opt.res$par, opt.res$value))
+}
+
+
+subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
+
+  if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
+    ## we only subtrac for 0 <= t < t1 (mind the +1 for the index convention)
+    t1p1 <- 1
+    t2p1 <- mfit$t1
+    ii <- c(t1p1:t2p1)
+    Thalfp1 <- cf$Time/2+1
+    if(mfit$mSize > 1) {	
+      for(j in 2:mfit$mSize) {
+        ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
+      }
+    }
+
+    tt <- mfit$CF$t[ii]
+    ## compute the difference of mean data to model at times smaller than fit range
+    dz <- mfit$cf$cf0[ii] - matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+    cf$subtracted.values <- dz
+    cf$subtracted.ii <- ii
+    for(i in 1:length(cf$cf[,1])) {
+      cf$cf[i,ii] <- mfit$cf$cf[i,ii]-dz
+    }
+    if(from.samples && cf$boot.samples) {
+      cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+      for(i in 1:cf$boot.R) {
+        cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$opt.tsboot[c(1:length(mfit$opt.res$par)),i],
+                                            tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+      }
+    }
+    else{
+      cf$boot.sample <- FALSE
+      cf$boot.R <- NULL
+      cf$boot.l <- NULL
+    }
+    return(cf)
+  }
+  else {
+    stop("subtract.excitedstates: cf must be of class cf and mfit of class matrixfit. Aborting...\n")
+  }
 }
