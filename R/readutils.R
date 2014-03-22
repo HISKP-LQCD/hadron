@@ -8,9 +8,14 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) {
 
+  ii <- getorderedconfignumbers(path=path, basename=basename, last.digits=last.digits)
+  return(invisible(ofiles[ii]))
+}
+
+getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4) {
   ofiles <- Sys.glob( sprintf( "%s/%s*", path, basename ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
-    stop("we need all filenames to have the same length, aborting...\n")
+    stop("getconfigurationnumbers: all filenames need to have the same length, aborting...\n")
   }
 
   ## sort input files using the last last.digits characters of each filename
@@ -18,15 +23,13 @@ getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) 
   s <- e-last.digits+1
   ## sort-index vector
   gaugeno <- as.integer(substr(ofiles,s,e))
-  ii <- order(gaugeno)
-  return(invisible(ofiles[ii]))
+  return(invisible(order(gaugeno)))
 }
-
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
                          colClasses, obs=NULL, obs.index) {
   if(missing(files)) {
-    stop("filelist missing, aborting...\n")
+    stop("readcmifiles: filelist missing, aborting...\n")
   }
   reduce <- FALSE
   if(!(is.null(obs) || missing(obs.index))) {
@@ -54,17 +57,20 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
         tmpdata <- tmpdata[tmpdata[,obs.index] == obs,]
       }
       ## sanity checks
-      if(fLength != length(tmpdata$V1)) {
-        warning("file do not all have the same length. We will cut and hope...\n")
+      if(fLength < length(tmpdata$V1)) {
+        warning(paste("readcmifiles: file ", files[i], " does not have the same length as the other files. We will cut and hope...\n"))
+      }
+      else if(fLength > length(tmpdata$V1)) {
+
       }
       if(nCols != length(tmpdata)) {
-        stop("file do not all have the same number of columns. Aborting...\n")
+        stop(paste("readcmifiles: file", files[i], "does not have the same number of columns as the other files. Aborting...\n"))
       }
       
       ldata[((i-1)*fLength+1):(i*fLength),] <- tmpdata
     }
-    else if(verbose) {
-      cat("dropped file", files[i], "\n")
+    else if(!file.exists(files[i])) {
+      warning(paste("readcmifiles: dropped file", files[i], "because its missing\n"))
     }
   }
   ## remove NAs from missing files
@@ -90,9 +96,6 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
   return(invisible(data))
 }
 
-
-
-
 extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   ldata <- cmiloop[cmiloop[,ind.vec[1]] == obs,] 
   T <- max(ldata[,ind.vec[2]])
@@ -111,20 +114,20 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
                         sym.vec, sign.vec, verbose=FALSE) {
   if(missing(cmicor)) {
-    stop("data missing in extract.obs\n")
+    stop("extract.obs: data missing in extract.obs\n")
   }
-  ## consistency check for data in file
+  ## consistency check for data in the data
   filenrObs <- max(cmicor[,ind.vec[1]])
   if(filenrObs != length(unique(cmicor[,ind.vec[1]]))) {
-    stop("extract.obs: data inconsistent, nrObs in file not matching to input data length\n")
+    stop("extract.obs: data inconsistent, nrObs in the data does not match to input data length\n")
   }
   nrStypes <- length(unique(cmicor[,ind.vec[2]]))
   Time <-  2*max(cmicor[,ind.vec[3]])
   Thalf <- max(cmicor[,ind.vec[3]])+1
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
-    stop("extract.obs: data inconsistent, T not equal to input data length\n")
+    stop("extract.obs: data inconsistent, T not equal to what was found in the input data\n")
   }
-  if(verbose) cat("filenrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
+  if(verbose) cat("extract.obs: filenrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
   nrObs <- length(vec.obs)
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
@@ -135,7 +138,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   isign.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
   if(!missing(sym.vec)) {
     if(length(sym.vec) != nrObs) {
-      stop("sym.vec was given, but had not the correct length")
+      stop("extract.obs: sym.vec was given, but had not the correct length")
     }
     for(i in c(1:nrObs)) {
       if(!sym.vec[i]) {
@@ -145,7 +148,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   }
   if(!missing(sign.vec)) {
     if(length(sign.vec) != nrObs) {
-      stop("sign.vec was given, but does not have the correct length")
+      stop("extract.obs: sign.vec was given, but does not have the correct length")
     }
     for(i in c(1:nrObs)) {
       if(sign.vec[i] < 0) {
@@ -204,7 +207,7 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
 
   N <- length(files)/nrSamples
   if(nrSamples*N != length(files)) {
-    stop("not the same number of samples per gauge")
+    stop("readbinarydisc: not the same number of samples per gauge")
   }
   for(f in files) {
     ifs <- paste(path,f,sep="")
@@ -227,10 +230,10 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                           "numeric","numeric","numeric","numeric"),
                         debug = FALSE) {
   if(missing(files)) {
-    stop("filelist missing, aborting...\n")
+    stop("readcmidisc: filelist missing, aborting...\n")
   }
   if(length(ind.vec) != 7) {
-    stop("ind.vec must have length 7, aborting...\n")
+    stop("readcmidisc: ind.vec must have length 7, aborting...\n")
   }
   nFiles<-0
   for(f in files) {
