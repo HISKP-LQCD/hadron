@@ -53,7 +53,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   N <- length(cf$cf[,1])
   Thalfp1 <- cf$T/2+1
   t <- c(0:(cf$T/2))
-  CF=data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
+  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
 
   ## This is the number of correlators in cf
   mSize <- length(CF$Cor)/Thalfp1

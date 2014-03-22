@@ -46,12 +46,12 @@ for.tsboot=TRUE, sort.type="values")
   }
 }
 \value{
-  Returns a list with the sorted eigenvalues and sorted eigenvectors for
-  all t > t0. Currently the eigenvalues are sorted in ascending modulus.
+  Returns a list with the sorted eigenvalues, sorted eigenvectors and
+  sorted (reduced) amplitudes for all t > t0.
 
   In case \code{for.tsboot=TRUE} the same is returned as one long vector
-  with first all eigenvalues concatenated and then all eigenvectors
-  concatenated. 
+  with first all eigenvalues concatenated, then all eigenvectors and
+  then all (reduced) amplitudes concatenated. 
 }
 \details{
   The generalised eigenvalue problem\cr
@@ -65,8 +65,17 @@ for.tsboot=TRUE, sort.type="values")
   symmetrised for all \eqn{t}. So we solve for \eqn{\lambda}{lambda}\cr
   \eqn{(L^t)^{-1} C(t) L^{-1} w = \lambda w}{solve(t(L)) C(t) solve(L) w = lambda w}\cr
   with\cr
-  \eqn{w = L v}.
-  
+  \eqn{w = L v} or the wanted \eqn{v = L^{-1} w}.
+
+  The amplitudes can be computed from\cr
+  \eqn{
+    A_i^{(n)}(t) = \sum_{j}C_{ij}(t) v_j^{(n)}(t,t_0)/(\sqrt{(v^{(n)},
+      Cv^{(n)})(\exp(-mt)\pm \exp(-m(t-t)))})
+  }
+  and this is what the code returns up to the factor\cr
+  \eqn{
+    1/\sqrt{\exp(-mt)\pm \exp(-m(t-t))}
+  }
 }
 \references{
   Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:
