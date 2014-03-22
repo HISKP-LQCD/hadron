@@ -15,6 +15,23 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234) {
   return(invisible(cf))
 }
 
+addStat.cf <- function(cf1, cf2) {
+  if(inherits(cf1, "cf") && inherits(cf2, "cf") &&
+     cf1$Time == cf2$Time && dim(cf1$cf)[2] == dim(cf2$cf)[2] &&
+     cf1$nrObs == cf2$nrObs && cf1$nrStypes == cf2$nrStypes
+     ){
+    cf <- cf1
+    cf$boot.samples <- FALSE
+    cf$boot.R <- NULL
+    cf$boot.l <- NULL
+    cf$seed <- NULL
+    cf$cf <- rbind(cf1$cf, cf2$cf)
+  }
+  else {
+    stop("addStat.cf: cf1 and cf2 not compatible. Aborting...\n")
+  }
+}
+
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1., b=1.) {
   if(any(class(cf1) == "cf") && any(class(cf2) == "cf") &&
@@ -34,6 +51,10 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
     cf <- cf1
     cf$cf <- cf1$cf + cf2$cf
     cf$boot.samples <- FALSE
+    cf$boot.R <- NULL
+    cf$boot.l <- NULL
+    cf$seed <- NULL
+
     return(cf)
   }
 }
