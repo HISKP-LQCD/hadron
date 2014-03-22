@@ -3,3 +3,4 @@ config.log
 config.status
 *.o
 *~
+*.so
