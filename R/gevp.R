@@ -143,7 +143,7 @@ gevp2cf <- function(gevp, id=1) {
   return(invisible(cf))
 }
 
-gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t3, useCov=TRUE) {
+gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE) {
   if(id > gevp$matrix.size || id < 1 || op.id > gevp$matrix.size || op.id < 1) {
     stop("gevp2cf: id and op.id must be <= matrix.size and > 0. Aborting...\n")
   }
