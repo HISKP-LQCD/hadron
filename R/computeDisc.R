@@ -21,6 +21,7 @@ computeDisc <- function(cf, cf2,
   }
   sindex <- c(1:nrSamples)
   obs2 <- cf$obs
+  conf.index <- cf$conf.index
   
   ## number of gauges
   N <- dim(tcf)[3]
@@ -29,7 +30,7 @@ computeDisc <- function(cf, cf2,
   ## index array for t'
   i2 <- i
   ## space for the correlator
-  Cf <- array(0., dim=c(N, T/2+1))
+  Cf <- array(NA, dim=c(N, T/2+1))
 
   vev <- 0.
   ## compute vev first
@@ -88,20 +89,41 @@ computeDisc <- function(cf, cf2,
     if(cf2$Time != T) {
       stop("time extend in two loops does not agree... Aborting...!\n")
     }
-    if(dim(cf2$cf)[3] != N) {
-      stop("number of gauges for the two loops does not agree... Aborting...!\n")
-    }
     if(!real2 && smeared2) tcf2 <- cf2$sicf
     else if(!real2) tcf2 <- cf2$icf
     else if(smeared2) tcf2 <- cf2$scf
     else tcf2 <- cf2$cf
-    vev2 <- 0.
-    ## compute vev first
+
+    ## compute vev2 now
     ## mean over all gauges and times
+    vev2 <- 0.
     if(nrSamples2 == 1) vev2 <- mean(tcf2)
     else vev2 <- mean(tcf2[,sindex2,])
     if(verbose) cat("vev2 = ", vev2, "\n")
     if(!subtract.vev2) vev2 <- 0.
+
+    ## now we check using conf.index whether the data sets are matched
+    ## we remove any non matched entries
+    if(any(!(cf$conf.index %in% cf2$conf.index))) {
+      missing.ii <- which(!(cf$conf.index %in% cf2$conf.index))
+      tcf <- tcf[,,-missing.ii]
+      cf$conf.index <- cf$conf.index[-missing.ii]
+      warning(paste("removed config", missing.ii, "from data set cf, it could not be matched\n"))
+    }
+    if(any(!(cf2$conf.index %in% cf$conf.index))) {
+      missing2.ii <- which(!(cf2$conf.index %in% cf$conf.index))
+      tcf2 <- tcf2[,,-missing2.ii]
+      cf2$conf.index <- cf2$conf.index[-missing.ii]
+      warning(paste("removed config", missing.ii, "from data set cf2, it could not be matched\n"))
+    }
+    if(dim(tcf2)[3] != dim(tcf)[3]) {
+      stop("number of gauges for the two loops does not agree... Aborting...!\n")
+    }
+    ## the unique matched configuration number index
+    N <- dim(tcf2)[3]
+    conf.index <- unique(cf2$conf.index, cf$conf.index)
+    Cf <- array(NA, dim=c(N, T/2+1))
+    
     ## re-order data
     ## and average over samples, tcf and tcf2 have then dim(T,N)
     if(nrSamples != 1) {
@@ -119,6 +141,7 @@ computeDisc <- function(cf, cf2,
       tcf2 <- tcf2[,1,] - vev2
     }
 
+    ## finally we correlate
     for(dt in c(0:(T/2))) {
       ## here we do the time average (t and T-1) in the same step
       Cf[,1+dt] <- apply(0.5*(tcf[i,]*tcf2[i2,] + sign*tcf2[i,]*tcf[i2,]), 2, mean)
@@ -138,7 +161,12 @@ computeDisc <- function(cf, cf2,
       Cf <- Cf/nrSamples/nrSamples2
     }
   }
-  ret <- list(cf=Cf, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE)
+  ret <- list(cf=Cf, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE, conf.index=conf.index)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
+
+## finding missing configs
+## if(any(!(cf$conf.index %in% cf2$conf.index)))
+##    missing.ii <- which(!(cf$conf.index %in% cf2$conf.index))
+##    missingcf2 <- cf$conf.index[!(cf$conf.index %in% cf2$conf.index)]
