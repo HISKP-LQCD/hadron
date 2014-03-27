@@ -15,6 +15,13 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234) {
   return(invisible(cf))
 }
 
+addConfIndex2cf <- function(cf, conf.index) {
+  if(is.null(cf$conf.index)) {
+    cf$conf.index <- conf.index
+  }
+  return(cf)
+}
+
 addStat.cf <- function(cf1, cf2) {
   if(inherits(cf1, "cf") && inherits(cf2, "cf") &&
      cf1$Time == cf2$Time && dim(cf1$cf)[2] == dim(cf2$cf)[2] &&
