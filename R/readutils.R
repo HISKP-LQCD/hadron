@@ -7,7 +7,7 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 }
 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4) {
-
+  ofiles <- Sys.glob( sprintf( "%s/%s*", path, basename ) ) 
   ii <- getorderedconfignumbers(path=path, basename=basename, last.digits=last.digits)
   return(invisible(ofiles[ii]))
 }
