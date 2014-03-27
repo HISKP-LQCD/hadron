@@ -17,37 +17,52 @@ flavour.mapping <- function(s) {
 flavour.factors <- array(c(+.25,-.25,-.25,+.25, +.25,+.25,-.25,-.25,
                            -.25,+.25,-.25,+.25, +.25,+.25,+.25,+.25),
                          dim=c(4,2,2))
-
+## the following have to be chosen for the heavyheavy code
 gamma.indices <- array(c(4,4,4,4, 3,3,3,3,
                          2,2,2,2, 1,1,1,1),
                        dim=c(4,2,2))
+## and this here for libcvcpp (might change in the future...)
+##gamma.indices <- array(c(5,5,5,5, 7,7,7,7,
+##                         6,6,6,6, 1,1,1,1),
+##                       dim=c(4,2,2))
 
-for(i in c(1:2)) {
-  for(j in c(1:2)) {
-    for(k in c(1:4)) {
-      files <- getorderedfilelist(basename=paste("outprcvn.", flavour.mapping(flavour.strings[k,i,j]), ".", sep=""))
-      cmicor <- readcmidatafiles(files, skip=0, verbose=TRUE)
-      assign(flavour.strings[k,i,j], extract.obs(cmicor,  vec.obs=c(gamma.indices[k,i,j])))
-      if(k == 1) {
-        assign("tmp", eval(as.name(flavour.strings[k,i,j])))
-        tmp <- mul.cf(tmp, flavour.factors[k,i,j])
+
+# set reread = TRUE when you want to read the data again
+reread <- FALSE
+if(!file.exist("Cmatrix.Rdata") || reread) {
+  for(i in c(1:2)) {
+    for(j in c(1:2)) {
+      for(k in c(1:4)) {
+        files <- getorderedfilelist(basename=paste("outprcvn.", flavour.mapping(flavour.strings[k,i,j]), ".", sep=""))
+        cmicor <- readcmidatafiles(files, skip=0, verbose=TRUE)
+        assign(flavour.strings[k,i,j], extract.obs(cmicor,  vec.obs=c(gamma.indices[k,i,j])))
+        if(k == 1) {
+          assign("tmp", eval(as.name(flavour.strings[k,i,j])))
+          tmp <- mul.cf(tmp, flavour.factors[k,i,j])
+        }
+        else {
+          tmp <- add.cf(tmp, eval(as.name(flavour.strings[k,i,j])), a=1., b=flavour.factors[k,i,j])
+        }
       }
-      else {
-        tmp <- add.cf(tmp, eval(as.name(flavour.strings[k,i,j])), a=1., b=flavour.factors[k,i,j])
-      }
+      assign(elements.strings[i,j], tmp)
+      rm(tmp)
     }
-    assign(elements.strings[i,j], tmp)
-    rm(tmp)
   }
+
+  ## now we coerce to obtain the full matrix
+  ## note that here we have smearing as fastest index
+  Cmatrix <- c(eval(as.name(elements.strings[1,1])), eval(as.name(elements.strings[1,2])),
+               eval(as.name(elements.strings[2,1])), eval(as.name(elements.strings[2,2])))
+  
+  ## we bootstrap the matrix and save
+  Cmatrix <- bootstrap.cf(Cmatrix, boot.R=400, boot.l=2)
+  save(Cmatrix, file="Cmatrix.Rdata")
+}
+else {
+  load("Cmatrix.Rdata")
 }
 
-## now we coerce to obtain the full matrix
-## note that here we have smearing as fastest index
-Cmatrix <- c(eval(as.name(elements.strings[1,1])), eval(as.name(elements.strings[1,2])),
-             eval(as.name(elements.strings[2,1])), eval(as.name(elements.strings[2,2])))
-
-
-Cmatrix <- bootstrap.cf(Cmatrix, boot.R=400, boot.l=2)
+## we use element.order to bring the matrix into the right order
 Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix, matrix.size=4,
                                          element.order=c(
                                            1,2,5,6,
@@ -55,6 +70,7 @@ Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix, matrix.size=4,
                                            9,11,13,14,
                                            10,12,15,16))
 
+## solve the GEVP
 etass.pc1 <- gevp2cf(Cmatrix.bootstrap.gevp, id=1)
 etass.pc1.effectivemass <- bootstrap.effectivemass(cf=etass.pc1, type="acosh")
 etass.pc1.effectivemass <- fit.effectivemass(etass.pc1.effectivemass, t1=12, t2=23, useCov=TRUE)
