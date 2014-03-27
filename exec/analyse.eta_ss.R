@@ -29,11 +29,12 @@ gamma.indices <- array(c(4,4,4,4, 3,3,3,3,
 
 # set reread = TRUE when you want to read the data again
 reread <- FALSE
-if(!file.exist("Cmatrix.Rdata") || reread) {
+if(!file.exists("Cmatrix.Rdata") || reread) {
   for(i in c(1:2)) {
     for(j in c(1:2)) {
       for(k in c(1:4)) {
         files <- getorderedfilelist(basename=paste("outprcvn.", flavour.mapping(flavour.strings[k,i,j]), ".", sep=""))
+        ## set skip to 1 for libcvcpp
         cmicor <- readcmidatafiles(files, skip=0, verbose=TRUE)
         assign(flavour.strings[k,i,j], extract.obs(cmicor,  vec.obs=c(gamma.indices[k,i,j])))
         if(k == 1) {
@@ -58,9 +59,7 @@ if(!file.exist("Cmatrix.Rdata") || reread) {
   Cmatrix <- bootstrap.cf(Cmatrix, boot.R=400, boot.l=2)
   save(Cmatrix, file="Cmatrix.Rdata")
 }
-else {
-  load("Cmatrix.Rdata")
-}
+load("Cmatrix.Rdata")
 
 ## we use element.order to bring the matrix into the right order
 Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix, matrix.size=4,
