@@ -1,3 +1,9 @@
+cf <- function() {
+  cf <- list(cf=NULL)
+  attr(cf, "class") <- c("cf", class(cf))
+  return(cf)
+}
+
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234) {
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
@@ -104,26 +110,40 @@ c.cf <- function(...) {
     return(eval(fcall[[1]]))
   }
 
-  cf <- fcall[[1]]
+  k <- -1
+  for(i in 1:length(fcall)) {
+    if(!is.null(fcall[[i]]$cf)) {
+      k <- i
+      break
+    }
+  }
+  if(k == -1) return(eval(fcall[[1]]))
+  cf <- fcall[[k]]
   Time <- cf$Time
   cf$nrObs <- 0
   cf$sTypes <- 0
   N <- dim(cf$cf)[1]
-  for(i in 1:length(fcall)) {
-    if(fcall[[i]]$Time != Time) {
-      stop("Times must agree for different objects of type cf\n Aborting\n")
+  for(i in k:length(fcall)) {
+    if(!is.null(fcall[[i]]$cf)) {
+      if(fcall[[i]]$Time != Time) {
+        stop("Times must agree for different objects of type cf\n Aborting\n")
+      }
+      if(dim(fcall[[i]]$cf)[1] != N) {
+        stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
+      }
+      cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
+      cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
     }
-    if(dim(fcall[[i]]$cf)[1] != N) {
-      stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
-    }
-    cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
-    cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
   }
-  for(i in 2:length(fcall)) {
-    cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
+  if(k < length(fcall)) {
+    for(i in (k+1):length(fcall)) {
+      if(!is.null(fcall[[i]]$cf)) {
+        cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
+      }
+    }
   }
   cf$boot.samples <- FALSE
-  return(cf)
+  return(invisible(cf))
 }
 
 plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
