@@ -85,19 +85,18 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
   cf$t2 <- t2
   cf$useCov <- useCov
   cf$replace.na <- replace.na
-  attach(cf)
   
   ## create an index array for the fit range
   ## the '+1' for Fortran index convention
   ## t1 and t2 can be in range 0-T/2
   ii <- c()
-  for(i in 1:nrObs) {
-    ii <- c(ii, ((i-1)*Time/2+t1+1):((i-1)*Time/2+t2+1))
+  for(i in 1:cf$nrObs) {
+    ii <- c(ii, ((i-1)*cf$Time/2+t1+1):((i-1)*cf$Time/2+t2+1))
   }
 
   ## get rid of the NAs for the fit, if there are any
-  if(any(is.na(effMass[ii]))) {
-    ii.na <- which(is.na(effMass[ii]))
+  if(any(is.na(cf$effMass[ii]))) {
+    ii.na <- which(is.na(cf$effMass[ii]))
     ii <- ii[-ii.na]
   }
   cf$ii <- ii
@@ -105,51 +104,50 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
 
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
-  M <- diag(1/deffMass[ii]^2)
+  M <- diag(1/cf$deffMass[ii]^2)
   
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    M <- invertCovMatrix(effMass.tsboot[,ii], boot.samples=TRUE)
+    M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
   }
   ## the chisqr function
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
   
   cf$invCovMatrix <- M
-  par <- c(effMass[t1])
+  par <- c(cf$effMass[t1])
   opt.res <- optim(par, fn = fn,
-                   method="BFGS", M=M, y = effMass[ii])
+                   method="BFGS", M=M, y = cf$effMass[ii])
   opt.res <- optim(opt.res$par, fn = fn,
                    control=list(parscale=1/opt.res$par),
-                   method="BFGS", M=M, y = effMass[ii])
+                   method="BFGS", M=M, y = cf$effMass[ii])
   par <- opt.res$par
   ## now we bootstrap the fit
-  massfit.tsboot <- array(0, dim=c(boot.R, 2))
+  massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
 
   ## now we replace all NAs by randomly chosen other bootstrap values
-  tb.save <-  effMass.tsboot
-  if(replace.na && any(is.na(effMass.tsboot))) {
+  tb.save <-  cf$effMass.tsboot
+  if(replace.na && any(is.na(cf$effMass.tsboot))) {
     for(k in ii) {
-      effMass.tsboot[is.nan(effMass.tsboot[,k]),k] <- NA
-      if(any(is.na(effMass.tsboot[,k]))) {
+      cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
+      if(any(is.na(cf$effMass.tsboot[,k]))) {
         ## indices of NA elements
-        jj <- which(is.na(effMass.tsboot[,k]))
+        jj <- which(is.na(cf$effMass.tsboot[,k]))
         ## random indices in the non-NA elements of effMass.tsboot
-        rj <- sample.int(n=length(effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+        rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
         ## replace
-        effMass.tsboot[jj, k] <- effMass.tsboot[-jj, k][rj]
+        cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
       }
     }
   }
-  for(i in 1:boot.R) {
+  for(i in 1:cf$boot.R) {
     opt <- optim(par, fn = fn,
                  control=list(parscale=1/par),
-                 method="BFGS", M=M, y = effMass.tsboot[i,ii])
+                 method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
     massfit.tsboot[i, 1] <- opt$par[1]
     massfit.tsboot[i, 2] <- opt$value
   }
-  effMass.tsboot <- tb.save
+  cf$effMass.tsboot <- tb.save
   rm(tb.save)
-  detach(cf)
   cf$massfit.tsboot <- massfit.tsboot
   cf$opt.res <- opt.res
   attr(cf, "class") <- c("effectivemassfit", class(cf))
