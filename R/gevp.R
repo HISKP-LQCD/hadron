@@ -29,16 +29,6 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
     stop("gevp can only operate on square matrices! Aborting!\n")
   }
 
-  ## symmetrise correlation matrix
-  tt <- c(1:(Thalf+1))
-  for(i in 1:matrix.size) {
-    for(j in i:matrix.size) {
-      Cor[((i-1)*matrix.size + (j-1))*(Thalf+1)+tt] <- 0.5*(Cor[((i-1)*matrix.size + (j-1))*(Thalf+1)+tt]+
-                                                            Cor[((j-1)*matrix.size + (i-1))*(Thalf+1)+tt])
-      Cor[((j-1)*matrix.size + (i-1))*(Thalf+1)+tt] <- Cor[((i-1)*matrix.size + (j-1))*(Thalf+1)+tt]
-    }
-  }
-
   ii <- c()
   for(i in 1:matrix.size^2) {
     ii <- c(ii, (i-1)*(Thalf+1)+1)
@@ -50,13 +40,23 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
   evectors <- array(NA, dim=c(Thalf+1, matrix.size, matrix.size))
   amplitudes <- array(NA, dim=c(Thalf+1, matrix.size, matrix.size))
   ## matrix at t=t0 (ii takes care of the indices starting at 1 and not 0)
-  cM <- matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size)
+  ## and symmetrise
+  cM <- 0.5*(matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size) +
+             matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size, byrow=TRUE))
+  ev.cM <- eigen(cM, symmetric=TRUE, only.values = TRUE)
+  if(any(ev.cM$values < 0)) {
+    print(ev.cM$values)
+    stop("gevp: matrix at t0 is not positive definite. Aborting...\n")
+  }
   L <- chol(cM)
   invL <- solve(L)
   ## now the time dependence
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in (t0+1):(Thalf)) {
-    variational.solve <- eigen(t(invL) %*% matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% invL,
+    ## matrix at t and symmetrise
+    cM <- 0.5*(matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) +
+               matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size, byrow=TRUE))
+    variational.solve <- eigen(t(invL) %*% cM %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
     sortindex <- c()
     if(sort.type == "values" || (t < t0+2)) {
