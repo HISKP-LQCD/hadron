@@ -1,4 +1,4 @@
-## t0 start counting at 0!
+## t0 starts counting at 0!
 ##                           ( 1 , 2 )
 ## order c(1,2,3,4) goes to 
 ##                           ( 3 , 4 )
@@ -29,6 +29,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
     stop("gevp can only operate on square matrices! Aborting!\n")
   }
 
+  ## index array for indexing in the linear data
   ii <- c()
   for(i in 1:matrix.size^2) {
     ii <- c(ii, (i-1)*(Thalf+1)+1)
@@ -41,23 +42,27 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
   amplitudes <- array(NA, dim=c(Thalf+1, matrix.size, matrix.size))
   ## matrix at t=t0 (ii takes care of the indices starting at 1 and not 0)
   ## and symmetrise
-  cM <- 0.5*(matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size) +
-             matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size, byrow=TRUE))
+  cM <- 0.5*matrix(Cor[ii+t0], nrow=matrix.size, ncol=matrix.size)
+  cM <- cM + t(cM)
+  ## check for positive definiteness
   ev.cM <- eigen(cM, symmetric=TRUE, only.values = TRUE)
   if(any(ev.cM$values < 0)) {
-    print(ev.cM$values)
     stop("gevp: matrix at t0 is not positive definite. Aborting...\n")
   }
+  ## compute Cholesky factorisation
   L <- chol(cM)
   invL <- solve(L)
-  ## now the time dependence
+  
+  ## now the time dependence for t > t0
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in (t0+1):(Thalf)) {
     ## matrix at t and symmetrise
-    cM <- 0.5*(matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) +
-               matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size, byrow=TRUE))
+    cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
+    cM <- cM + t(cM)
+    ## determine eigenvalues and vectors
     variational.solve <- eigen(t(invL) %*% cM %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
+    ## sort depending on input by values or vectors
     sortindex <- c()
     if(sort.type == "values" || (t < t0+2)) {
       sortindex <- order(variational.solve$values, decreasing=TRUE)
@@ -89,7 +94,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
     return(c(as.vector(evalues), as.vector(amplitudes), as.vector(evectors)))
   }
   
-  return(list(evalues=evalues, evectors=evectors, amplitudes=amplitudes))
+  return(invisible(list(evalues=evalues, evectors=evectors, amplitudes=amplitudes)))
 }
 
 
