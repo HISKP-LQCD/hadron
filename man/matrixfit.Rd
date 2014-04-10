@@ -49,7 +49,94 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   }
 }
 \value{
-  returns an object of class \code{matrixfit}
+  returns an object of class \code{matrixfit} with entries:
+  \item{CF}{
+    object of class cf which contains the mean correlation functions
+  }
+  \item{M}{
+    weighting matrix for weighted Chi squared minimization
+  }
+  \item{parind}{
+    indices in the parameter vector used for the different matrix combinations
+  }
+  \item{sign.vec}{
+    vector of signs 
+  }
+  \item{ii}{
+    vector of vector indices giving the columns of the correlation function arrays
+    (CF above, say), which are contained in the fit range
+  }
+  \item{opt.res}{
+    return value of the minimization (see ?optim)
+  }
+  \item{opt.tsboot}{
+    bootstrap analysis of Chi squared minimization
+  }
+  \item{useCov}{
+    whether covariances in the data were taken into account
+  }
+  \item{invCovMatrix}{
+    inverse of covariance matrix or inverse variance weighted if useCov=FALSE
+  }
+  \item{Qval}{
+    real number between 0 and 1 giving the "quality" of the fit
+  }
+  \item{chisqr}{
+    total Chi squared of the fit
+  }
+  \item{dof}{
+    fit degrees of freedom
+  }
+  \item{mSize}{
+    integer size of the matrix which was fitted
+  }
+  \item{cf}{
+    concatenated array of raw correlation functions
+    each row is one of N observations and there are mSize*T columns
+  }
+  \item{icf}{
+    to be completed
+  }
+  \item{Time}{
+    Time extent
+  }
+  \item{nrStypes}{
+    number of "smearing" types
+  }
+  \item{nrObs}{
+    integer number of "observables" (in practice source-sink gamma combinations) which were
+    fitted simultaneously
+  }
+  \item{boot.samples}{
+    whether a bootstrap sampling was carried out
+  }
+  \item{boot.R}{
+    number of bootstrap samples
+  }
+  \item{boot.l}{
+    block size for blocked bootstrap
+  }
+  \item{seed}{
+    RNG seed for bootstrap procedure
+  }
+  \item{cf0}{
+    array of mean values of the correlation function(s), where the mean is computed on the original data (not the bootstrap samples)
+  }
+  \item{cf.tsboot}{
+    result of block bootstrap sampling of the correlation function data (see ?tsboot)
+  }
+  \item{t1}{
+    beginning of fit range
+  }
+  \item{t2}{
+    end of fit range
+  }
+  \item{parlist}{
+    array of parameter combinations for the matrix fit
+  }
+  \item{sym.vec}{
+    vector of strings indicating the functional form of correlation functions which were fitted
+  }
 }
 \details{
   The routine expects in \code{cf$cf} a matrix. Every row corresponds to
