@@ -91,39 +91,15 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
     integer size of the matrix which was fitted
   }
   \item{cf}{
-    concatenated array of raw correlation functions
-    each row is one of N observations and there are mSize*T columns
-  }
-  \item{icf}{
-    to be completed
-  }
-  \item{Time}{
-    Time extent
-  }
-  \item{nrStypes}{
-    number of "smearing" types
-  }
-  \item{nrObs}{
-    integer number of "observables" (in practice source-sink gamma combinations) which were
-    fitted simultaneously
-  }
-  \item{boot.samples}{
-    whether a bootstrap sampling was carried out
+    object of type cf which contains, amongst other objects, cf$cf which is a
+    concatenated array of raw correlation functions where each row is one of N 
+    observations and there are mSize*T columns (see ?extract.obs)
   }
   \item{boot.R}{
     number of bootstrap samples
   }
   \item{boot.l}{
     block size for blocked bootstrap
-  }
-  \item{seed}{
-    RNG seed for bootstrap procedure
-  }
-  \item{cf0}{
-    array of mean values of the correlation function(s), where the mean is computed on the original data (not the bootstrap samples)
-  }
-  \item{cf.tsboot}{
-    result of block bootstrap sampling of the correlation function data (see ?tsboot)
   }
   \item{t1}{
     beginning of fit range
@@ -136,6 +112,9 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   }
   \item{sym.vec}{
     vector of strings indicating the functional form of correlation functions which were fitted
+  }
+  \item{seed}{
+    RNG seed for bootstrap procedure
   }
 }
 \details{
