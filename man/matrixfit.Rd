@@ -91,7 +91,7 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
     integer size of the matrix which was fitted
   }
   \item{cf}{
-    object of type cf which contains, amonsgst other objects, cf$cf which is a
+    object of type cf which contains, amongst other objects, cf$cf which is a
     concatenated array of raw correlation functions where each row is one of N 
     observations and there are mSize*T columns (see ?extract.obs)
   }
