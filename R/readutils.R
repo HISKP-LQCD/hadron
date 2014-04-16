@@ -61,13 +61,14 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
         warning(paste("readcmifiles: file ", files[i], " does not have the same length as the other files. We will cut and hope...\n"))
       }
       else if(fLength > length(tmpdata$V1)) {
-
+        stop(paste("readcmifiles: file", files[i], "is too short. Aborting...\n"))
       }
       if(nCols != length(tmpdata)) {
         stop(paste("readcmifiles: file", files[i], "does not have the same number of columns as the other files. Aborting...\n"))
       }
       
       ldata[((i-1)*fLength+1):(i*fLength),] <- tmpdata
+      rm(tmpdata)
     }
     else if(!file.exists(files[i])) {
       warning(paste("readcmifiles: dropped file", files[i], "because its missing\n"))
@@ -82,7 +83,8 @@ readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","numeric","numeric"),
                              obs=NULL, obs.index=1) {
 
-  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses, obs=obs, obs.index=obs.index)
+  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose,
+                       colClasses=colClasses, obs=obs, obs.index=obs.index)
   attr(data, "class") <- c("cmicor", class(data))  
   return(invisible(data))
 }
@@ -91,7 +93,8 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","integer",
                                "numeric","numeric","numeric","numeric"),
                              obs=NULL, obs.index=2) {
-  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose, colClasses=colClasses)
+  data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose,
+                       colClasses=colClasses, obs=obs, obs.index=obs.index)
   attr(data, "class") <- c("cmiloop", class(data))
   return(invisible(data))
 }
