@@ -91,6 +91,21 @@ mul.cf <- function(cf, a=1.) {
   }
 }
 
+extractSingleCor.cf <- function(cf, id=1) {
+  if(!inherits(cf, "cf")) {
+    stop("extractSingleCor.cf: cf must be of class 'cf'. Aborting...\n")
+  }
+  cf$cf0 <- NULL
+  N <- dim(cf$cf)[1]
+  nCors <- N/(cf$Time/2+1)
+  ii <- c(1:(cf$Time/2+1)) + (id-1)*(cf$Time/2+1)
+  cf$cf <- cf$cf[,ii]
+  cf$boot.samples <- FALSE
+  cf$nrObs <- 1
+  cf$nsStypes <- 1
+  return(cf)
+}
+
 as.cf <- function(x){
   if(!inherits(x, "cf")) class(x) <- c("cf", class(x))
   x
@@ -151,5 +166,5 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
     cf <- bootstrap.cf(cf, boot.R, boot.l)
   }
   Err <- apply(cf$cf.tsboot$t, 2, sd)
-  plotwitherror(rep(c(0:(cf$Time/2)), times=cf$nrStypes*cf$nrObs), cf$cf0, Err, ...)
+  plotwitherror(rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), cf$cf0, Err, ...)
 }
