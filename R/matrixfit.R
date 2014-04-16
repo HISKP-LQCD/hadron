@@ -198,7 +198,7 @@ fit.formatrixboot <- function(cf, par, t, M, T, parind, sign.vec) {
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
-    ## we only subtrac for 0 <= t < t1 (mind the +1 for the index convention)
+    ## we only subtract for 0 <= t < t1 (mind the +1 for the index convention)
     t1p1 <- 1
     t2p1 <- mfit$t1
     ii <- c(t1p1:t2p1)
