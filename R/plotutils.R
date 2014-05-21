@@ -175,15 +175,19 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx, ...) {
+plot.averx <- function(averx) {
+  Thalfp1 <- averx$Cf2pt$Time/2+1
+  plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]))
   X11()
-  plotwitherror(c(0:(length(averx$data$Cor)-1)), averx$data$Cor/averx$mps, averx$data$Err/averx$mps, ...)
-  abline(h=averx$averx, col="red")
-  abline(h=averx$averx+averx$daverx, col="blue")
-  abline(h=averx$averx-averx$daverx, col="blue")
-  if(!is.null(averx$fit.uwerr)) {
-    plot(averx$fit.uwerr)
-  }
+  plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau))
+  arrows(x0=averx$t1, y0=averx$plateau,
+         x1=averx$t2, y1=averx$plateau, col=c("red"), length=0)
+  arrows(x0=averx$t1, y0=averx$plateau+sd(averx$plateau.tsboot),
+         x1=averx$t2, y1=averx$plateau+sd(averx$plateau.tsboot),
+         col=c("red"), length=0, lwd=c(1))
+  arrows(x0=averx$t1, y0=averx$plateau-sd(averx$plateau.tsboot),
+         x1=averx$t2, y1=averx$plateau-sd(averx$plateau.tsboot),
+         col=c("red"), length=0, lwd=c(1))
 }
 
 plot.outputdata <- function(data, skip=0, ...) {
