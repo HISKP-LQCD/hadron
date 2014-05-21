@@ -1,8 +1,24 @@
-# $Id$
+convert2cf <- function(data, symmetric=TRUE) {
+  sign <- +1.
+  if(!symmetric) {
+    sign <- -1.
+  }
+  Time <- max(data[[1]])+1
+  Thalf <- Time/2
+  Thalfp1 <- Thalf+1
+  i1 <- seq(2,Time/2)
+  i2 <- seq(Time, Time/2+2)
+  X <- array(data[[2]], dim=c(Time, length(data[[2]])/Time))
+  X[i1,] <- 0.5*(X[i1,] + sign*X[i2,])
+  X <- X[c(1:Thalfp1),]
+  ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  attr(ret, "class") <- c("cf", class(ret))
+  return(invisible(ret))
+}
 
-averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2),
-                  skip=0, t1, t2, mps, par=c(0.6, 0.15), S=1.5,
-                  method="uwerr", nrep) {
+averx <- function(data3pt, data2pt, 
+                  boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE,
+                  t1, t2) {
 
   if(missing(data3pt) || missing(data2pt)) {
     stop("Error! Data is missing!")
@@ -10,124 +26,67 @@ averx <- function(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2),
   if(missing(t1) || missing(t2)) {
     stop("Error! t1 and t2 must be specified!")
   }
-  
-  Time <- max(data3pt[,ind.vec[1]])+1
-  Thalf <- Time/2
-  T1 <- Thalf+1
-  Length <- min(length(data3pt[,ind.vec[1]]), length(data2pt[,ind.vec2pt[1]]))
-  nrObs <- 1
-  Skip <- (skip*(Time)*nrObs+1)
-  
-  if(missing(nrep)) {
-    nrep <- c(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))
-  }
-  else {
-    Skip <- 0
-    if(sum(nrep) != length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time))) {
-      stop("sum of replica differs from total no of measurements!")
-    }
+  if(missing(piont1) || missing(piont2)) {
+    stop("Error! piont1 and piont2 must be specified!")
   }
 
+  ## convert to modern format
+  Cf2pt <- convert2cf(data2pt)
+  Cf3pt <- convert2cf(data3pt)
+  Cf3pt <- mul.cf(Cf3pt, a=-1.)
   
-  W <- -array(data3pt[((Skip):Length),ind.vec[2]], 
-             dim=c(nrObs*(Time),(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))))
-  W2pt <- array(data2pt[((Skip):Length),ind.vec2pt[2]], 
-                dim=c(nrObs*(Time),(length(data2pt[((Skip):Length),ind.vec2pt[2]])/(nrObs*(Time)))))
-
-  Z <- array(0., dim=c(nrObs*(T1),(length(data3pt[((Skip):Length),ind.vec[2]])/(nrObs*(Time)))))
-  Z2pt <- array(0., dim=c(nrObs*(T1),(length(data2pt[((Skip):Length),ind.vec2pt[2]])/(nrObs*(Time)))))
-
-  Cor <- rep(0, times=nrObs*T1)
-  Err <- rep(0, times=nrObs*T1)
-  Cor2pt <- rep(0, times=nrObs*T1)
-  Err2pt <- rep(0, times=nrObs*T1)
+  ## bootstrap the data
+  Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l)
+  Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
   
-  Z[1,] <- W[1,]
-  Z2pt[1,] <- W2pt[1,]
-  for(i in 2:T1) {
-    Z2pt[i,] <- (W2pt[i,] + W2pt[(Time-i+2),])*0.5
-  }
-  for(i in 2:T1) {
-    Z[i,] <- (W[i,] + W[(Time-i+2),])*0.5
-  }
+  
+  ## Determine the pion mass
+  effmass <- bootstrap.effectivemass(Cf2pt, boot.R=boot.R, boot.l=boot.l, type="acosh")
+  effmass <- fit.effectivemass(effmass, t1=piont1, t2=piont2, useCov=useCov)
+
+
+  ## fit interval
   ii <- c((t1+1):(t2+1))
-  Zall <- rbind(Z[ii,], Z2pt[ii,], Z2pt[Thalf,])
+  ## error weights
+  w <- 1/apply(Cf3pt$cf.tsboot$t[,ii], 2, sd)
+  plateau <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
+  plateau.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
+  Thalfp1 <- Cf2pt$Time/2+1
+  averx <- plateau/effmass$opt.res$par[1]/Cf2pt$cf0[Thalfp1]
+  daverx <- sd(plateau.tsboot/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
 
-  for(i in 1:T1) {
-    Cor2pt[i] <- mean(Z2pt[i,])
-    Err2pt[i] <- uwerrprimary(Z2pt[i,])$dvalue
-  }
-  for(i in 1:T1) {
-    Cor[i] <- mean(Z[i,])/Cor2pt[T1]
-    Err[i] <- uwerrderived(f=get.ratio, nrep=nrep, data=rbind(Z[i,],Z2pt[T1,]), S=S)$dvalue
-  }
-  rm(Z, Z2pt, W, W2pt)
-  
-  averx.fit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii], Err=Err[ii])
-  blub <-  get.averx(Cor=c(Cor[ii]*Cor2pt[T1],Cor2pt[ii],Cor2pt[T1]),
-                     Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
-  if(missing(mps)) {
-    mps = averx.fit$minimum/blub
-  }
-  averx.uwerr <- NULL
-  if(method == "uwerr") {
-    averx.uwerr <- uwerrderived(f=get.averx, nrep=nrep, data=Zall, S=S, Err=c(Err[ii], Err2pt[ii]), Time=Time, t1=t1, t2=t2, par=par)
-  }
-  res <- list(averx=averx.fit$minimum/mps, daverx=averx.uwerr$dvalue,
-              data=data.frame(Cor=Cor, Err=Err), fit.uwerr=averx.uwerr,
-              mps=mps, t1=t1, t2=t2, N=averx.uwerr$N, nrep=nrep)
+  res <- list(averx=averx, daverx=daverx, plateau=plateau, plateau.tsboot=plateau.tsboot,
+              effmass=effmass, Cf2pt=Cf2pt, Cf3pt=Cf3pt,
+              t1=t1, t2=t2, piont1=piont1, piont2=piont2,
+              boot.R=boot.R, boot.l=boot.l, ii=ii)
   attr(res, "class") <- c("averx", "list")  
   return(invisible(res))
 }
 
-chisqr.averx <- function(x, Cor, Err) {
-  return( sum(((x-Cor)/Err)^2) )
-}
-
-ChiSqr.mpi <- function(par, Time, x, y, err) {
-  Sumall = sum(((y
-    - par[1]*par[1]*(CExp(m=abs(par[2]), Time=Time, x=x)))/err)^2)
-  return(Sumall)
-}
-
-get.ratio <- function(data) {
-  return(data[1]/data[2])
-}
-
-get.averx <- function(Cor, Err, Time, t1, t2, par) {
-  Half <- (length(Cor)-1)/2
-  ii1 <- c(1:Half)
-  ii2 <- c((Half+1):(2*Half))
-  # 2pt function at T/2
-  ii3 <- c(length(Cor))
-  #fit 3pt function to a constant
-  fitit <- optimise(f=chisqr.averx, c(0.,1.), Cor=Cor[ii1]/Cor[ii3], Err=Err[ii1])
-  #get mpi
-  fit.mpi <- optim(par=par, ChiSqr.mpi, method="BFGS", control=list(trace=0),Time=Time,
-                    x=c((t1):(t2)), y=Cor[ii2], err=Err[ii2])
-  # cat(fitit$minimum, abs(fit.mpi$par[2]), "\n")
-  return(fitit$minimum/abs(fit.mpi$par[2]))
-}
-
 summary.averx <- function(averx) {
+  summary(averx$effmass)
+  cat("\nAnalysis for <x>\n\n")
   cat("<x>      =", averx$averx, "\n")
-  cat("based on", sum(averx$nrep), "measurements\n")
-  if((averx$fit.uwerr$R>1) && (!is.null(averx$fit.uwerr))) {
-    cat("split in", averx$fit.uwerr$R, "replica with (", averx$nrep, ") measurements, respectively\n")
-  }
+  cat("based on", length(averx$Cf3pt$cf[,1]), "measurements\n")
   cat("error    =", averx$daverx, "\n")
-  if(!is.null(averx$fit.uwerr)) {
-    cat("tauint   =", averx$fit.uwerr$tauint, "\n")
-    cat("dtauint  =", averx$fit.uwerr$dtauint, "\n")
-    cat("Wopt     =", averx$fit.uwerr$Wopt, "\n")
-    if(averx$fit.uwerr$R>1) {
-      cat("Qval     =", averx$fit.uwerr$Qval, "\n")
-    }
-  }
 }
 
 print.averx <- function(averx) {
   summary.averx(averx)
 }
 
+plot.averx <- function(averx) {
+  Thalfp1 <- averx$Cf2pt$time/2+1
+  plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]))
+  X11()
+  plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau))
+  arrows(x0=averx$t1, y0=averx$plateau,
+         x1=averx$t2, y1=averx$plateau, col=c("red"), length=0)
+  arrows(x0=averx$t1, y0=averx$plateau+sd(averx$plateau.tsboot),
+         x1=averx$t2, y1=averx$plateau+sd(averx$plateau.tsboot),
+         col=c("red"), length=0, lwd=c(1))
+  arrows(x0=averx$t1, y0=averx$plateau-sd(averx$plateau.tsboot),
+         x1=averx$t2, y1=averx$plateau-sd(averx$plateau.tsboot),
+         col=c("red"), length=0, lwd=c(1))
+}
 
