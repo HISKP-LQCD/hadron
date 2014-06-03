@@ -44,31 +44,48 @@ averx <- function(data3pt, data2pt,
   effmass <- bootstrap.effectivemass(Cf2pt, boot.R=boot.R, boot.l=boot.l, type="acosh")
   effmass <- fit.effectivemass(effmass, t1=piont1, t2=piont2, useCov=useCov)
 
+  ## now a constrained fit to the matrix
+  matrixfit <- matrixfit(Cf2pt, t1=piont1-1, t2=piont2+1, symmetrise=TRUE, useCov=useCov,
+                         matrix.size=1, parlist=array(c(1,1), dim=c(2,1)))
 
+  ## which we can use to determine the 2pt correlator at T/2
+  Thalfp1 <- Cf2pt$Time/2+1
+  Amp <- matrixfit$opt.res$par[2]
+  Mass <- matrixfit$opt.res$par[1]
+  Cf2ptThalf <- 0.5*Amp^2*(exp(-Mass*(Cf2pt$Time-Thalfp1)) + exp(-Mass*Thalfp1))
+  
   ## fit interval
   ii <- c((t1+1):(t2+1))
   ## error weights
   w <- 1/apply(Cf3pt$cf.tsboot$t[,ii], 2, sd)
   plateau <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
   plateau.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
-  Thalfp1 <- Cf2pt$Time/2+1
+
   averx <- plateau/effmass$opt.res$par[1]/Cf2pt$cf0[Thalfp1]
+  averxfit <- plateau/matrixfit$opt.res$par[1]/Cf2ptThalf
   daverx <- sd(plateau.tsboot/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
+  daverxfit <- sd(plateau.tsboot/matrixfit$opt.tsboot[1,]/(0.5*matrixfit$opt.tsboot[2,]^2*(exp(-matrixfit$opt.tsboot[1,]*(Cf2pt$Time-Thalfp1)) + exp(-matrixfit$opt.tsboot[1,]*Thalfp1))))
 
   res <- list(averx=averx, daverx=daverx, plateau=plateau, plateau.tsboot=plateau.tsboot,
-              effmass=effmass, Cf2pt=Cf2pt, Cf3pt=Cf3pt,
+              effmass=effmass, Cf2pt=Cf2pt, Cf3pt=Cf3pt, matrixfit=matrixfit,
               t1=t1, t2=t2, piont1=piont1, piont2=piont2,
-              boot.R=boot.R, boot.l=boot.l, ii=ii)
+              boot.R=boot.R, boot.l=boot.l, ii=ii,
+              averxfit=averxfit, daverxfit=daverxfit)
   attr(res, "class") <- c("averx", "list")  
   return(invisible(res))
 }
 
 summary.averx <- function(averx) {
   summary(averx$effmass)
+  cat("\n")
+  summary(averx$matrixfit)
   cat("\nAnalysis for <x>\n\n")
-  cat("<x>      =", averx$averx, "\n")
   cat("based on", length(averx$Cf3pt$cf[,1]), "measurements\n")
+  cat("<x>      =", averx$averx, "\n")
   cat("error    =", averx$daverx, "\n")
+  cat("Alternative:\n")
+  cat("<x>      =", averx$averxfit, "\n")
+  cat("error    =", averx$daverxfit, "\n")  
 }
 
 print.averx <- function(averx) {
