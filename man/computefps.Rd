@@ -38,6 +38,12 @@ computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
     normalisation of the correlators. If set to "cmi" the
     \eqn{\kappa}{kappa} value must be specified.
   }
+  \item{reduce.latarts}{
+    boolean which when set to \code{TRUE} causes the usage of a definition
+    of the decay constant involving mps*sinh(mps) rather
+    than mps^2 which reduces the effect of lattice artefacts
+    for heavy meson masses
+  }
 }
 \value{
   If \code{mfit} ist missing the value of fps will printed to stdout and
@@ -54,7 +60,14 @@ computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
   for \code{normalisation="cmi"} or
   \deqn{f_\mathrm{PS} = (\mu_1+\mu_2)\frac{PP}{\sqrt{2}\sqrt{m_\mathrm{PS}}^3}}{%
     fps = (mu1+mu2) PP/sqrt(2)/sqrt(mps)^3}
-  expecting physical normalisation of the amplitudes.
+  expecting physical normalisation of the amplitudes.\cr
+  When \code{reduce.latarts=TRUE},\cr
+  \deqn{\sqrt{m_{\mathrm{PS}}^3}}{%
+    sqrt(mps^3)}
+  is replaced with
+  \deqn{\sqrt{m_{\mathrm{PS}}} \sinh{m_{\mathrm{PS}}}}{%
+    sqrt(mps)*sinh(mps))}
+  which reduces lattice artefacts for heavy meson masses.
 }
 \seealso{
   \link{\code{matrixfit}}, \link{\code{gevp2amplitude}}, \link{\code{pion}}
