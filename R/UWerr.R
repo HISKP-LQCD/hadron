@@ -385,6 +385,7 @@ plot.uwerr <- function(uwerr, main="x") {
     plotwitherror(c(0:uwerr$Wmax),GammaFbb[1:(uwerr$Wmax+1)],
                   Gamma.err[1:(uwerr$Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=uwerr$Wopt+1)
+    abline(h=0)
   }
   X11()
   tauintplot(uwerr$tauintofW, uwerr$dtauintofW, uwerr$Wmax, uwerr$Wopt, main=main)  
