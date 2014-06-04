@@ -126,19 +126,36 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
 
   ## now we replace all NAs by randomly chosen other bootstrap values
   tb.save <-  cf$effMass.tsboot
+  ## or remove a given column if there are too many NAs to resample
+  ii.remove <- c()
   if(replace.na && any(is.na(cf$effMass.tsboot))) {
     for(k in ii) {
       cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
       if(any(is.na(cf$effMass.tsboot[,k]))) {
         ## indices of NA elements
         jj <- which(is.na(cf$effMass.tsboot[,k]))
-        ## random indices in the non-NA elements of effMass.tsboot
-        rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
-        ## replace
-        cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
+        ## if there are more NA elements than non-NA elements, the replacement
+        ## below will fail
+        if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
+          ## random indices in the non-NA elements of effMass.tsboot
+          rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+          ## replace
+          cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
+        } else {
+          ## so we remove this column from the analysis below
+          ii.remove <- c( ii.remove, which( ii == k ) )
+        }
       }
     }
   }
+
+  if( length( ii.remove ) > 0 ) {
+    # remove the columns that should be excluded from the fit below
+    ii <- ii[ -ii.remove ]
+    # and restrict the covariance matrix accordingly
+    M <- M[ -ii.remove, -ii.remove]
+  }
+
   for(i in 1:cf$boot.R) {
     opt <- optim(par, fn = fn,
                  control=list(parscale=1/par),
