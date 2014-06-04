@@ -53,6 +53,10 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   }
   ## number of measurements
   N <- length(cf$cf[,1])
+  if(is.null(cf$cf)) {
+    N <- cf$N
+  }
+
   ## number of time slices (hopefully in units of T/2+1)
   Nt <- length(cf$cf0)
   nrObs <- floor(Nt/(cf$Time/2+1))
@@ -173,7 +177,7 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("boot.l\t=\t", effMass$boot.l, "\n")
   cat("Time extend\t=\t", effMass$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$effMass.tsboot[,effMass$ii]))),
-      "(",length(which(is.na(effMass$effMass.tsboot[,effMass$ii])))/ length(effMass$effMass.tsboot[,effMass$ii]), "%)\n")
+      "(",100*length(which(is.na(effMass$effMass.tsboot[,effMass$ii])))/ length(effMass$effMass.tsboot[,effMass$ii]), "%)\n")
   cat("NAs replaced in fit:", effMass$replace.na, "\n")
   cat("time range from", effMass$t1, " to ", effMass$t2, "\n")
   cat("No correlation functions", effMass$nrObs, "\n")

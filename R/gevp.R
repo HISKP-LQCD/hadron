@@ -134,6 +134,7 @@ gevp2cf <- function(gevp, id=1) {
     stop("gevp2cf: id must be <= matrix.size and > 0. Aborting...\n")
   }
   cf <- list()
+  cf$N <- length(gevp$cf$cf[,1])
   cf$cf0 <- gevp$res.gevp$evalues[,id]
   cf$boot.samples <- TRUE
   cf$nrStypes <- 1
