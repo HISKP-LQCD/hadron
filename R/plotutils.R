@@ -182,12 +182,24 @@ plot.averx <- function(averx) {
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau))
   arrows(x0=averx$t1, y0=averx$plateau,
          x1=averx$t2, y1=averx$plateau, col=c("red"), length=0)
-  arrows(x0=averx$t1, y0=averx$plateau+sd(averx$plateau.tsboot),
-         x1=averx$t2, y1=averx$plateau+sd(averx$plateau.tsboot),
+  arrows(x0=averx$t1, y0=averx$plateau+sd(averx$plateau.tsboot[,1]),
+         x1=averx$t2, y1=averx$plateau+sd(averx$plateau.tsboot[,1]),
          col=c("red"), length=0, lwd=c(1))
-  arrows(x0=averx$t1, y0=averx$plateau-sd(averx$plateau.tsboot),
-         x1=averx$t2, y1=averx$plateau-sd(averx$plateau.tsboot),
+  arrows(x0=averx$t1, y0=averx$plateau-sd(averx$plateau.tsboot[,1]),
+         x1=averx$t2, y1=averx$plateau-sd(averx$plateau.tsboot[,1]),
          col=c("red"), length=0, lwd=c(1))
+  X11()
+  plotwitherror(c(0:(averx$Cf2pt$Time/2)),
+                averx$Cf3pt$cf0/averx$effmass$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
+                apply(averx$Cf3pt$cf.tsboot$t/averx$effmass$massfit.tsboot[,1]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
+                ylim=c(0,0.6)
+                )
+  return(invisible(data.frame(t=c(0:(averx$Cf2pt$Time/2)),
+                              averx=averx$Cf3pt$cf0/averx$effmass$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
+                              daverx=apply(averx$Cf3pt$cf.tsboot$t/averx$effmass$massfit.tsboot[,1]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd)
+                              )
+                   )
+         )
 }
 
 plot.outputdata <- function(data, skip=0, ...) {

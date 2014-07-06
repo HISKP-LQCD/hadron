@@ -58,19 +58,49 @@ averx <- function(data3pt, data2pt,
   ii <- c((t1+1):(t2+1))
   ## error weights
   w <- 1/apply(Cf3pt$cf.tsboot$t[,ii], 2, sd)
-  plateau <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
-  plateau.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
+
+
+  ## here we generate the inverse covariance matrix, if required
+  ## otherwise take inverse errors squared
+  M <- diag(w^2)
+
+  if(useCov) {
+    ## compute correlation matrix and compute the correctly normalised inverse
+    ##M <- invertCovMatrix(Cf3pt$cf.tsboot$t[,ii], boot.samples=TRUE)
+    M <- invertCovMatrix(Cf3pt$cf[,ii], boot.samples=FALSE, boot.l=boot.l)
+  }
+  fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
+
+  par <- Cf3pt$cf0[Cf2pt$Time/4]
+  opt.res <- optim(par, fn = fn,
+                   method="BFGS", M=M, y = Cf3pt$cf0[ii])
+  opt.res <- optim(opt.res$par, fn = fn,
+                   control=list(parscale=1/opt.res$par),
+                   method="BFGS", M=M, y = Cf3pt$cf0[ii])
+  par <- opt.res$par
+  plateau <- par[1]
+  plateau.tsboot <- array(NA, dim=c(boot.R,2))
+  for(i in 1:boot.R) {
+    opt <- optim(par, fn = fn,
+                 control=list(parscale=1/par),
+                 method="BFGS", M=M, y = Cf3pt$cf.tsboot$t[i,ii])
+    plateau.tsboot[i,1] <- opt$par[1]
+    plateau.tsboot[i,2] <- opt$value
+  }
+  ##  plateau <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
+  ##  plateau.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
+
 
   averx <- plateau/effmass$opt.res$par[1]/Cf2pt$cf0[Thalfp1]
   averxfit <- plateau/matrixfit$opt.res$par[1]/Cf2ptThalf
-  daverx <- sd(plateau.tsboot/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
-  daverxfit <- sd(plateau.tsboot/matrixfit$opt.tsboot[1,]/(0.5*matrixfit$opt.tsboot[2,]^2*(exp(-matrixfit$opt.tsboot[1,]*(Cf2pt$Time-Thalfp1)) + exp(-matrixfit$opt.tsboot[1,]*Thalfp1))))
+  daverx <- sd(plateau.tsboot[,1]/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
+  daverxfit <- sd(plateau.tsboot[,1]/matrixfit$opt.tsboot[1,]/(0.5*matrixfit$opt.tsboot[2,]^2*(exp(-matrixfit$opt.tsboot[1,]*(Cf2pt$Time-Thalfp1)) + exp(-matrixfit$opt.tsboot[1,]*Thalfp1))))
 
   res <- list(averx=averx, daverx=daverx, plateau=plateau, plateau.tsboot=plateau.tsboot,
               effmass=effmass, Cf2pt=Cf2pt, Cf3pt=Cf3pt, matrixfit=matrixfit,
-              t1=t1, t2=t2, piont1=piont1, piont2=piont2,
-              boot.R=boot.R, boot.l=boot.l, ii=ii,
-              averxfit=averxfit, daverxfit=daverxfit)
+              t1=t1, t2=t2, piont1=piont1, piont2=piont2, chisqr=opt.res$value, dof=length(ii)-1,
+              boot.R=boot.R, boot.l=boot.l, ii=ii, useCov=useCov,
+              averxfit=averxfit, daverxfit=daverxfit, invCovMatrix=M)
   attr(res, "class") <- c("averx", "list")  
   return(invisible(res))
 }
@@ -81,9 +111,17 @@ summary.averx <- function(averx) {
   summary(averx$matrixfit)
   cat("\nAnalysis for <x>\n\n")
   cat("based on", length(averx$Cf3pt$cf[,1]), "measurements\n")
+  cat("correlated fit\t=\t", averx$useCov, "\n")
+  cat("fitrange from", averx$t1, " to ", averx$t2, "\n")
+  cat("chisqr\t=\t", averx$chisqr, "\n")
+  cat("dof\t=\t", averx$dof, "\n")
+  cat("chisqr/dof=\t",
+      averx$chisqr/averx$dof, "\n")
+  cat("Quality of the fit (p-value):",   1-pchisq(averx$chisqr, averx$dof), "\n\n")
+
   cat("<x>      =", averx$averx, "\n")
   cat("error    =", averx$daverx, "\n")
-  cat("Alternative:\n")
+  cat("Alternative (using fitted Cf2pt(t/2) ):\n")
   cat("<x>      =", averx$averxfit, "\n")
   cat("error    =", averx$daverxfit, "\n")  
 }
