@@ -16,6 +16,65 @@ convert2cf <- function(data, symmetric=TRUE) {
   return(invisible(ret))
 }
 
+pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
+                    boot.R=400, boot.l=2, t1.2pt, t2.2pt,
+                    t1, t2, useCov=FALSE) {
+    
+  if(missing(data3ptp0) || missing(data3ptp) || missing(data2ptp0) || missing(data2ptp)) {
+    stop("Error! Data is missing!")
+  }
+  if(missing(t1) || missing(t2)) {
+    stop("Error! t1 and t2 must be specified!")
+  }
+  if(missing(t1.2pt)) {
+    t1.2pt <- t1
+  }
+  if(missing(t2.2pt)) {
+    t2.2pt <- t2
+  }
+  
+  ## convert to cf
+  Cf2ptp0 <- mul.cf(convert2cf(data2ptp0), 0.5)
+  Cf2ptp <- mul.cf(convert2cf(data2ptp), 0.5)
+  Cf3ptp0 <- convert2cf(data3ptp0, symmetric=FALSE)
+  Cf3ptp <- convert2cf(data3ptp, symmetric=FALSE)
+
+  ## we generate the appropriate ratios
+  Cf3pt <- Cf3ptp/Cf3ptp0
+  Cf2pt <- Cf2ptp0/Cf2ptp
+  
+  ## bootstrap the data
+  Cf2ptp0 <- bootstrap.cf(Cf2ptp0, boot.R=boot.R, boot.l=boot.l)
+  Cf3ptp0 <- bootstrap.cf(Cf3ptp0, boot.R=boot.R, boot.l=boot.l)
+  Cf2ptp <- bootstrap.cf(Cf2ptp, boot.R=boot.R, boot.l=boot.l)
+  Cf3ptp <- bootstrap.cf(Cf3ptp, boot.R=boot.R, boot.l=boot.l)
+
+  ## and the ratios as well
+  Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l)
+  Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
+
+  plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
+  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, boot.sample=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
+
+  res <- list(Cf2ptratio=Cf2pt, Cf3ptratio=Cf3pt, Cf2ptp0=Cf2ptp0,
+              Cf2ptp=Cf2ptp, Cf3ptp0=Cf3ptp0, Cf3ptp=Cf3ptp,
+              plateaufitZV=plateaufitZV, plateaufitFF=plateaufitFF,
+              boot.R=boot.R, boot.l=boot.l, t1=t1, t2=t2, useCov=useCov
+              )
+
+  attr(res, "class") <- c("pionff", "list")  
+  return(invisible(res))
+}
+
+summary.pionff <- function(ff) {
+  T <- ff$Cf2ptp0$Time
+  Thalfp1 <- T/2+1
+
+  cat("F(q^2) ", ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], " ", sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), "\n")
+  cat("ZV     ", ff$Cf2ptp0$cf0[Thalfp1]/ff$plateaufitZV$plateau, " ", sd(ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]/ff$plateaufitZV$plateau.tsboot[,1]), "\n")
+}
+
+
 averx <- function(data3pt, data2pt, 
                   boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE,
                   t1, t2) {

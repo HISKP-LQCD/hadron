@@ -68,6 +68,15 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...)
   options(show.error.messages = TRUE)
 }
 
+plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
+  if(missing(dm)) {
+    dm <- dp
+  }
+  arrows(x0=x0, y0=m, x1=x1, y1=m, col=col, length=0)
+  arrows(x0=x0, y0=m+dp, x1=x1, y1=m+dp, col=col, length=0, lwd=c(1))
+  arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
+}
+
 plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
   plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
 }
@@ -180,14 +189,8 @@ plot.averx <- function(averx) {
   plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]))
   X11()
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau))
-  arrows(x0=averx$t1, y0=averx$plateau,
-         x1=averx$t2, y1=averx$plateau, col=c("red"), length=0)
-  arrows(x0=averx$t1, y0=averx$plateau+sd(averx$plateau.tsboot[,1]),
-         x1=averx$t2, y1=averx$plateau+sd(averx$plateau.tsboot[,1]),
-         col=c("red"), length=0, lwd=c(1))
-  arrows(x0=averx$t1, y0=averx$plateau-sd(averx$plateau.tsboot[,1]),
-         x1=averx$t2, y1=averx$plateau-sd(averx$plateau.tsboot[,1]),
-         col=c("red"), length=0, lwd=c(1))
+  plothlinewitherror(m=averx$plateau, dp=sd(averx$plateau.tsboot[,1]), dm=sd(averx$plateau.tsboot[,1]),
+                    x0=averx$t1, x1=averx$t2)
   X11()
   plotwitherror(c(0:(averx$Cf2pt$Time/2)),
                 averx$Cf3pt$cf0/averx$effmass$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
@@ -201,6 +204,20 @@ plot.averx <- function(averx) {
                    )
          )
 }
+
+plot.pionff <- function(ff) {
+  T <- ff$Cf2ptp0$Time
+  Thalfp1 <- T/2+1
+  plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
+  plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
+                    x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)
+
+  X11()
+  plot(mul.cf(ff$Cf3ptratio, ff$Cf2ptratio$cf0[Thalfp1]), ylim=c(0,1.3), main=c("F(q^2)"), xlab=c("t/a"), ylab=c("F(q^2)"))
+  plothlinewitherror(m=ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], dp=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]),
+                    x0=ff$plateaufitFF$t1, x1=ff$plateaufitFF$t2)
+}
+
 
 plot.outputdata <- function(data, skip=0, ...) {
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])

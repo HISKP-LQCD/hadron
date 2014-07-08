@@ -81,9 +81,19 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
   }
 }
 
+'/.cf' <- function(cf1, cf2) {
+  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
+    cf <- cf1
+    cf$cf <- cf1$cf / cf2$cf
+    cf$boot.samples <- FALSE
+    return(cf)
+  }
+}
+
 mul.cf <- function(cf, a=1.) {
   if(any(class(cf) == "cf") && is.numeric(a)) {
     cf$cf <- a*cf$cf
+    cf$boot.samples=FALSE
     return(cf)
   }
   else {
