@@ -177,6 +177,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
       massfit.tsboot[i, 2] <- opt$value
     }
     cf$massfit.tsboot <- massfit.tsboot
+  } else {
+    cf$massfit.tsboot <- NA
   } # if(boot.fit)
 
   if(!any(is.na(tb.save))) {
