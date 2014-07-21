@@ -75,7 +75,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   return(ret)
 }
 
-fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
+fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE) {
   if(missing(cf) || !any(class(cf) == "effectivemass" )) {
     stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
   }
@@ -125,58 +125,64 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
                    control=list(parscale=1/opt.res$par),
                    method="BFGS", M=M, y = cf$effMass[ii])
   par <- opt.res$par
-  ## now we bootstrap the fit
-  massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
 
-  ## now we replace all NAs by randomly chosen other bootstrap values
-  tb.save <-  cf$effMass.tsboot
-  ## or remove a given column if there are too many NAs to resample
-  ii.remove <- c()
-  if(replace.na && any(is.na(cf$effMass.tsboot))) {
-    for(k in ii) {
-      cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
-      if(any(is.na(cf$effMass.tsboot[,k]))) {
-        ## indices of NA elements
-        jj <- which(is.na(cf$effMass.tsboot[,k]))
-        ## if there are more NA elements than non-NA elements, the replacement
-        ## below will fail
-        if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
-          ## random indices in the non-NA elements of effMass.tsboot
-          rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
-          ## replace
-          cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
-        } else {
-          ## so we remove this column from the analysis below
-          ii.remove <- c( ii.remove, which( ii == k ) )
+  tb.save <- NA
+  if( boot.fit ) {
+    ## now we bootstrap the fit
+    massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
+    tb.save <- cf$effMass.tsboot
+    ## now we replace all NAs by randomly chosen other bootstrap values
+    ## or remove a given column if there are too many NAs to resample
+    ii.remove <- c()
+    if(replace.na && any(is.na(cf$effMass.tsboot))) {
+      for(k in ii) {
+        cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
+        if(any(is.na(cf$effMass.tsboot[,k]))) {
+          ## indices of NA elements
+          jj <- which(is.na(cf$effMass.tsboot[,k]))
+          ## if there are more NA elements than non-NA elements, the replacement
+          ## below will fail
+          if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
+            ## random indices in the non-NA elements of effMass.tsboot
+            rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+            ## replace
+            cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
+          } else {
+            ## so we remove this column from the analysis below
+            ii.remove <- c( ii.remove, which( ii == k ) )
+          }
         }
       }
     }
-  }
 
-  if( length( ii.remove ) > 0 ) {
-    # remove the columns that should be excluded from the fit below
-    ii <- ii[ -ii.remove ]
-    # and treat the inverse covariance matrix accordingly
-    if(useCov) {
-      ## recompute covariance matrix and compute the correctly normalised inverse
-      ## note that we DON'T change the return value! (cf$invCovMatrix)
-      M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
-    } else {
-      ## if the matrix is diagonal, we simply restrict it
-      M <- M[ -ii.remove, -ii.remove]
+    if( length( ii.remove ) > 0 ) {
+      # remove the columns that should be excluded from the fit below
+      ii <- ii[ -ii.remove ]
+      # and treat the inverse covariance matrix accordingly
+      if(useCov) {
+        ## recompute covariance matrix and compute the correctly normalised inverse
+        ## note that we DON'T change the return value! (cf$invCovMatrix)
+        M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
+      } else {
+        ## if the matrix is diagonal, we simply restrict it
+        M <- M[ -ii.remove, -ii.remove]
+      }
     }
-  }
 
-  for(i in 1:cf$boot.R) {
-    opt <- optim(par, fn = fn,
-                 control=list(parscale=1/par),
-                 method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
-    massfit.tsboot[i, 1] <- opt$par[1]
-    massfit.tsboot[i, 2] <- opt$value
+    for(i in 1:cf$boot.R) {
+      opt <- optim(par, fn = fn,
+                   control=list(parscale=1/par),
+                   method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
+      massfit.tsboot[i, 1] <- opt$par[1]
+      massfit.tsboot[i, 2] <- opt$value
+    }
+    cf$massfit.tsboot <- massfit.tsboot
+  } # if(boot.fit)
+
+  if(!any(is.na(tb.save))) {
+    cf$effMass.tsboot <- tb.save
   }
-  cf$effMass.tsboot <- tb.save
   rm(tb.save)
-  cf$massfit.tsboot <- massfit.tsboot
   cf$opt.res <- opt.res
   attr(cf, "class") <- c("effectivemassfit", class(cf))
   return(invisible(cf))
