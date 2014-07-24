@@ -25,7 +25,7 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
     zp[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*(T-t[j])) + sign.vec[j]*exp(-par[1]*t[j]))
-    res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
+    res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
 }
