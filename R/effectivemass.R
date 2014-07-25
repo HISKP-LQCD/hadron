@@ -156,8 +156,15 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE) {
   if( length( ii.remove ) > 0 ) {
     # remove the columns that should be excluded from the fit below
     ii <- ii[ -ii.remove ]
-    # and restrict the covariance matrix accordingly
-    M <- M[ -ii.remove, -ii.remove]
+    # and treat the inverse covariance matrix accordingly
+    if(useCov) {
+      ## recompute covariance matrix and compute the correctly normalised inverse
+      ## note that we DON'T change the return value! (cf$invCovMatrix)
+      M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
+    } else {
+      ## if the matrix is diagonal, we simply restrict it
+      M <- M[ -ii.remove, -ii.remove]
+    }
   }
 
   for(i in 1:cf$boot.R) {
