@@ -45,6 +45,29 @@ addStat.cf <- function(cf1, cf2) {
   }
 }
 
+## averages local-smeared and smeared-local correlators in cf and adjusts
+## nrStypes accordingly
+## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
+avg.ls.cf <- function(cf,cols=c(2,3)) {
+  if(!any(class(cf) == "cf")) {
+    stop("Input must be of class 'cf'\n")
+  }
+  if(cf$nrStypes < 2) {
+    stop("There must be at least 2 smearing types in cf!\n")
+  }
+  timeslices <- cf$Time/2+1
+
+  ind.ls <- ( (cols[1]-1)*timeslices+1 ):( cols[1]*timeslices )
+  ind.sl <- ( (cols[2]-1)*timeslices+1 ):( cols[2]*timeslices )
+
+  cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
+
+  cf$cf <- cf$cf[,-ind.sl]
+  cf$nrStypes <- cf$nrStypes-1
+  return(cf)
+}
+
+
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1., b=1.) {
   if(any(class(cf1) == "cf") && any(class(cf2) == "cf") &&
