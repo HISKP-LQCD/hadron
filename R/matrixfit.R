@@ -30,8 +30,6 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
-
-
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
@@ -133,6 +131,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 plot.matrixfit <- function(mfit, ...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
+  sign.vec <- mfit$sign.vec
   T <- mfit$cf$T
   Thalfp1 <- T/2+1
   
@@ -142,10 +141,16 @@ plot.matrixfit <- function(mfit, ...) {
   ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
 
   plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
-  tx <- seq(mfit$t1, mfit$t2, 0.005)
-  for(i in c(1:mfit$mSize)) {
-    y <- 0.5*par[parind[(i-1)*Thalfp1+1,1]]*par[parind[(i-1)*Thalfp1+1,2]]*(exp(-par[1]*(T-tx)) + exp(-par[1]*tx))
-    col=c("red", "brown", "green", "blue")
+  
+  tx <- seq(mfit$t1, mfit$t2, 0.05)
+  col=c("black",rainbow(n=(mfit$mSize-1)))
+  for(i in 1:mfit$mSize ) {
+    par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
+    pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
+    sgn <- sign.vec[(i-1)*Thalfp1+1]
+
+    y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*(T-tx)) + sgn*exp(-pars[1]*tx))
+
     lines(tx, y, col=col[i], lwd=c(3))
   }
 }
