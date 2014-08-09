@@ -261,3 +261,12 @@ weights.");
     c(x[k], x[k+1]);
   }
 }
+
+# routine for computing the unbiased weighted sample variance
+# following GSL implementation 
+weighted.variance <- function(x, w, na.rm=FALSE) {
+  mustar <- weighted.mean(x,w,na.rm)
+  v2 <- sum(w^2)
+  v1 <- sum(w)
+  return ( v1/(v1^2-v2) * sum( w*(x-mustar)^2 ) )
+}
