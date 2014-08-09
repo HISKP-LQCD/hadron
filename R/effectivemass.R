@@ -226,7 +226,7 @@ print.effectivemassfit <- function(effMass, verbose=FALSE) {
 
 plot.effectivemass <- function(effMass, ref.value, col,...) {
   if(missing(col)) {
-    col <- c("black", rainbow(max(effMass$nrObs,4)))
+    col <- c("black", rainbow(n=(effMass$nrObs-1)))
   }
   op <- options()
   options(warn=-1)

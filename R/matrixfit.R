@@ -30,7 +30,16 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
+# the calling code must supply the correct three parameters 
+deriv.CExp <- function(par, t, T, sign) {
+  res <- array(0.,dim=c(length(par),length(t)))
 
+  res[1,] <- 0.5*par[2]*par[3]*(-(T-t)*exp(-par[1]*(T-t)) + (-t)*sign*exp(-par[1]*t))
+  res[2,] <- 0.5*par[3]*(exp(-par[1]*(T-t)) + sign*exp(-par[1]*t))
+  res[3,] <- 0.5*par[2]*(exp(-par[1]*(T-t)) + sign*exp(-par[1]*t))
+
+  return(res)
+}
 
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
@@ -130,9 +139,10 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, ...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
+  sign.vec <- mfit$sign.vec
   T <- mfit$cf$T
   Thalfp1 <- T/2+1
   
@@ -142,12 +152,44 @@ plot.matrixfit <- function(mfit, ...) {
   ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
 
   plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
-  tx <- seq(mfit$t1, mfit$t2, 0.005)
-  for(i in c(1:mfit$mSize)) {
-    y <- 0.5*par[parind[(i-1)*Thalfp1+1,1]]*par[parind[(i-1)*Thalfp1+1,2]]*(exp(-par[1]*(T-tx)) + exp(-par[1]*tx))
-    col=c("red", "brown", "green", "blue")
-    lines(tx, y, col=col[i], lwd=c(3))
-  }
+  tx <- seq(mfit$t1, mfit$t2, 0.05)
+  col=c("black",rainbow(n=(mfit$mSize-1)))
+  for(i in 1:mfit$mSize ) {
+    par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
+    pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
+    sgn <- sign.vec[(i-1)*Thalfp1+1]
+
+    y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*(T-tx)) + sgn*exp(-pars[1]*tx))
+
+    if(plot.errorband) {
+      ## in the following the covariance matrix of the paramters and vectors of derivatives
+      ## of the correlation function with respect to these parameters will be computed
+      ## there is some level of waste because certain combinations of parameters might
+      ## occur multiple times, but the overhead is small and this way is the most convenient
+
+      parCov <- cov(t(mfit$opt.tsboot[par.ind,]))
+
+      ## 3 by length(tx) array of derivatives of the model with respect to the three parameters
+      ## if any parameters are the same, multiplication with the covariance matrix will give
+      ## the correct contributions to the derivative
+      div <- deriv.CExp(par=pars,t=tx,T=T,sign=sgn)
+      yvar <- t(div) %*% parCov %*% div
+
+      ## yvar is a length(tx) by length(tx) matrix of which only the diagonal elements are of
+      ## interest here
+      ysd <- sqrt(diag(yvar))
+
+      polyval <- c( (y + ysd), rev(y - ysd) )
+      polyx <- c(tx,rev(tx))
+      polycol <- col2rgb(col[i],alpha=TRUE)/255
+      polycol[4] <- 0.65
+
+      polygon(x=polyx,y=polyval,col=rgb(red=polycol[1],green=polycol[2],blue=polycol[3],alpha=polycol[4]),border=NA)
+      lines(tx, y, col=col[i], lwd=c(1))
+    } else {
+      lines(tx, y, col=col[i], lwd=c(3))
+    }
+  }  
 }
 
 
