@@ -182,12 +182,29 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readbinarycf <- function(files, T=48, obs=5, endian="little",
-                         excludelist=c(""), sym=TRUE, path="") {
+readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
+                         op="aver", excludelist=c(""), sym=TRUE, path="") {
 
+  if(missing(files)) {
+    stop("files must be given! Aborting...\n")
+  }
+  if(Nop < 1) {
+    stop("Nop must be larger than 0 and integer, aborting...\n")
+  }
+  if(obs < 0) {
+    stop("obs must be a positive integer, aborting...\n")
+  }
+  if(T < 1) {
+    stop("T must be larger than 0 and integer, aborting...\n")
+  }
+  if(endian != "little" && endian != "big") {
+    stop("endian must be either little or big, abroting...\n")
+  }
+  
   ## indices for averaging +-t
-  i1 <- c(2:(T/2))+obs*T
-  i2 <- c(T:(T/2+2))+obs*T
+  i1 <- c(2:(T/2))
+  i2 <- c(T:(T/2+2))
+  ii <- c(1:(Nop*T))+obs*T
   sign <- +1
   if(!sym) sign <- -1
 
@@ -196,11 +213,22 @@ readbinarycf <- function(files, T=48, obs=5, endian="little",
     ifs <- paste(path, f, sep="")
     if( !(ifs %in% excludelist) && file.exists(ifs)) {
       to.read <- file(ifs, "rb")
-      tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
+      tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
+
+      ## we average the replica
+      if(Nop > 1) {
+        if(op == "aver") {
+          tmp <- apply(array(tmp, dim=c(T, Nop)), 1, mean)
+        }
+        else {
+          tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
+        }
+      }
+
       ## average +-t
       tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-      
-      Cf <- cbind(Cf, tmp[c(1:(T/2+1))+obs*T])
+
+      Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
       close(to.read)
     }
   }

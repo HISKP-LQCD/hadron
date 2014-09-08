@@ -5,7 +5,7 @@
   Reads a correlation function from binary files.
 }
 \usage{
-cf <- readbinarycf(files, T=48, obs=5, endian="little",
+cf <- readbinarycf(files, T=48, obs=5, endian="little", op="aver", 
                          excludelist=c(""), sym=TRUE, path="")
 }
 \arguments{
@@ -18,8 +18,13 @@ cf <- readbinarycf(files, T=48, obs=5, endian="little",
     time extend of correlation functions.
   }
   \item{obs}{
-    each file may contain T*obs correlation functions. With
-    \code{obs} one choses which observable to read in.
+    each file may contain many correlation functions. With
+    \code{obs} one choses which observable to read in. To be precise, in
+    each file the reading will start at point
+    T*obs*sizeof(complex<double>) and read Nop*T*sizeof(complex<double>).
+  }
+  \item{Nop}{
+    number of replicas for the correlator to read in.
   }
   \item{endian}{
     the endianess of the binary file.
@@ -29,6 +34,10 @@ cf <- readbinarycf(files, T=48, obs=5, endian="little",
   }
   \item{sym}{
     if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and -C(-t). 
+  }
+  \item{op}{
+    the N replicas can be either averaged (\code{op="aver"}) or summed
+    (\code{op="sum"}).
   }
   \item{path}{
     path to be prepended to every filename.
@@ -44,11 +53,12 @@ cf <- readbinarycf(files, T=48, obs=5, endian="little",
   which are currently fixed to 1.
 }
 \details{
-  It is assumend that each file contains O*T complex doubles,
-  where T is the time extend and O the number of observables in the
-  file. It is assumed that complex is the fastest running index, next
-  time and then observables. The filelist is assumed to be ordered with
-  gauges. 
+  It is assumend that each file contains at least \code{(obs+N)*T} complex
+  doubles, where \code{T} is the time extend, \code{obs} is the number of the
+  observable to read in and \code{Nop} the number of replicas for this
+  observable. It is assumed that complex is the fastest running index,
+  next time and then obs. The filelist is assumed to be ordered according to
+  the gauge configuration MC history. 
 }
 \seealso{
   \code{\link{readcmidatafiles}}, \code{\link{readbinarydisc}},
