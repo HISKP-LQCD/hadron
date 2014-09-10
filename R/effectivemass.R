@@ -1,4 +1,4 @@
-effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.005,2.)) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.)) {
   ## cf is supposed to have nrObs*(Thalf+1) elements in time direction
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -38,6 +38,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
+        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i])*fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i]) > 0) effMass[i] <- NA
         else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i])$root
       }
     }
