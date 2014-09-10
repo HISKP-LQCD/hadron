@@ -35,7 +35,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
         return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - exp(-m*(t+1))-exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - exp(-m*(t))-exp(-m*(T-t))  ) )
       }
       for(i in t) {
-        effMass[i] <- uniroot(fn, interval=c(0, 2.), t=i, T=2*Thalf, Ratio = Ratio[i])
+        effMass[i] <- uniroot(fn, interval=c(0.005, 2.), t=i, T=2*Thalf, Ratio = Ratio[i])
       }
     }
   }
