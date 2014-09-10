@@ -30,7 +30,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
     t <- tt[-cutii]
     if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
     else {
-      Ratio <- (Cor[t]-Cor[t-1]) / (C[t+1]-Cor[t])
+      Ratio <- (Cor[t]-Cor[t-1]) / (Cor[t+1]-Cor[t])
       fn <- function(m, t, T, Ratio) {
         return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - exp(-m*(t+1))-exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - exp(-m*(t))-exp(-m*(T-t))  ) )
       }
