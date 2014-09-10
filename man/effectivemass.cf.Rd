@@ -20,7 +20,11 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
   }
   \item{type}{
     The function to be used to compute the effective mass
-    values. Possibilities are "acosh", "solve" and "log".
+    values. Possibilities are "acosh", "solve", "log" and
+    "temporal". While the first three assume normal cosh behaviour of
+    the correlation function, "temporal" is desigend to remove an
+    additional constant stemming from temporal states in two particle
+    correlation functions. 
   }
   \item{nrObs}{
     The number of "observables" included in the correlator
@@ -51,6 +55,9 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
   \eqn{m(t)=\log(C(t) / C(t+1))}\cr
   which has artifacts of the periodicity at large t-values.
 
+  "temporal": the ratio\cr
+  \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
+  is numerically solved for \eqn{m(t)}.
 }
 \seealso{
   \link{\code{bootstrap.effectivemass}}

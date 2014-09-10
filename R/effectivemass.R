@@ -11,8 +11,13 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
     stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
   }
   ## here we generate the index arrays
+  ## this is the complete index for time
   tt <- c(1:(nrObs*(Thalf+1)))
+  ## depending on the type, the result is not defined on all t
+  ## so we have to cut
+  ## this is for type "acosh" and "temporal" where we loose t=0 and t=T/2
   cutii <- c()
+  ## this is for "log" and "solve" where t=T/2 is not defined
   cutii2 <- c()
   for(i in 1:nrObs) {
     cutii <- c(cutii, (i-1)*(Thalf+1)+1, i*(Thalf+1))
@@ -21,9 +26,18 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE)
   t2 <- tt[-cutii2]
   
   effMass <- rep(NA, nrObs*(Thalf+1))
-  if(type == "acosh") {
+  if(type == "acosh" || type == "temporal") {
     t <- tt[-cutii]
-    effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+    if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
+    else {
+      Ratio <- (Cor[t]-Cor[t-1]) / (C[t+1]-Cor[t])
+      fn <- function(m, t, T, Ratio) {
+        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - exp(-m*(t+1))-exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - exp(-m*(t))-exp(-m*(T-t))  ) )
+      }
+      for(i in t) {
+        effMass[i] <- uniroot(fn, interval=c(0, 2.), t=i, T=2*Thalf, Ratio = Ratio[i])
+      }
+    }
   }
   else {
     t <- tt[c(1:(length(tt)-1))]
