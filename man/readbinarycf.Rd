@@ -5,7 +5,7 @@
   Reads a correlation function from binary files.
 }
 \usage{
-cf <- readbinarycf(files, T=48, obs=5, endian="little", op="aver", 
+cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
                          excludelist=c(""), sym=TRUE, path="")
 }
 \arguments{
