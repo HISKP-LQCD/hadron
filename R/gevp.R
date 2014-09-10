@@ -25,13 +25,18 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
 
   ## need to check consistency of cf here!
   ## can only operate on a square matrix
-  if(length(Cor)/(Thalf+1) != matrix.size^2) {
-    stop("gevp can only operate on square matrices! Aborting!\n")
-  }
 
-  ## index array for indexing in the linear data
+  ## number of correlators in cf
+  Ncor <- length(Cor)/(Thalf+1)
+  if(length(element.order) != matrix.size^2) {
+    stop("gevp can only operate on square matrices, please adjust element.order! Aborting!\n")
+  }
+  if(max(element.order) > Ncor) {
+    stop("element.order tries to index beyond the available correlators in cf! Aborting...\n")
+  }
+  ## index array for indexing the linear data
   ii <- c()
-  for(i in 1:matrix.size^2) {
+  for(i in 1:Ncor) {
     ii <- c(ii, (i-1)*(Thalf+1)+1)
   }
   ## re-order as to match the input order

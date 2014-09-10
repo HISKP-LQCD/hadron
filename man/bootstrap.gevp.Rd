@@ -23,6 +23,7 @@ element.order=c(1,2,3,4), seed=1234, sort.type="values")
     correlators into the correlator
     matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
     \code{matrix(cf[element.order], nrow=2)}.
+    Double indexing is allowed.
   }
   \item{boot.R}{
     number of bootstrap samples. Used only if cf was not yet
