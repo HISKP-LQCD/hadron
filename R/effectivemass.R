@@ -70,7 +70,9 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l,
-              massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL)
+              massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
+              chisqr=NULL, Qval=NULL
+             )
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -105,6 +107,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   }
   cf$ii <- ii
   cf$dof <-  length(ii)-1
+  
 
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
@@ -126,6 +129,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
                    method="BFGS", M=M, y = cf$effMass[ii])
   par <- opt.res$par
 
+  cf$chisqr <- opt.res$value
+  cf$Qval <- 1-pchisq(cf$chisqr, cf$dof)
+  
   tb.save <- NA
   if( boot.fit ) {
     ## now we bootstrap the fit
@@ -220,11 +226,11 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("correlated fit\t=\t", effMass$useCov, "\n")
   cat("m\t=\t", effMass$opt.res$par[1], "\n")
   cat("dm\t=\t", sd(effMass$massfit.tsboot[,1]), "\n")
-  cat("chisqr\t=\t", effMass$opt.res$value, "\n")
+  cat("chisqr\t=\t", effMass$chisqr, "\n")
   cat("dof\t=\t", effMass$dof, "\n")
   cat("chisqr/dof=\t",
       effMass$opt.res$value/effMass$dof, "\n")
-  cat("Quality of the fit (p-value):",   1-pchisq(effMass$opt.res$value, effMass$dof), "\n")
+  cat("Quality of the fit (p-value):",   effMass$Qval, "\n")
 
 }
 
