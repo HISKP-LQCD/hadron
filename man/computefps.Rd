@@ -44,6 +44,13 @@ computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
     dispersion relation for the meson. Theoretically this can reduce
     lattice artefacts for heavy mesons.
   }
+  \item{boot.fit}{
+    If set to \code{FALSE}, the computation is not bootstrapped, even if the 
+    \code{matrixfit} or \code{gevp.amplitude} contain bootstrap samples.
+    This is a useful time-saver if error information is not strictly necessary.                                                                                                                                 
+    Of course, this affects the return values related to the bootstrap, which are
+    set to \code{NA}.    
+  }
 }
 \value{
   If \code{mfit} ist missing the value of fps will printed to stdout and

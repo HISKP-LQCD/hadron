@@ -47,6 +47,14 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   \item{seed}{
     seed for the random number generation used for boostrapping.
   }
+  \item{boot.fit}{
+    If set to \code{FALSE}, the fit is not bootstrapped, even if the bootstrapping 
+    parameters have been set and the correlation function has been bootstrapped.
+    This is a useful time-saver if error information is not strictly necessary. 
+    Of course, this affects the return values related to the bootstrap, which are
+    set to \code{NA}.
+  }
+
 }
 \value{
   returns an object of class \code{matrixfit} with entries:
