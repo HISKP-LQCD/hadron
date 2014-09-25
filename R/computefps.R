@@ -1,4 +1,4 @@
-computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", disprel="continuum") {
+computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", disprel="continuum", boot.fit=TRUE) {
   if(missing(mu1)) {
     stop("computefps: mu1  must be specified! Aborting...\n")
   }
@@ -22,9 +22,13 @@ computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", dis
     if(disprel == "lattice") denominator <- sinh(mfit$opt.res$par[1])*sqrt(mfit$opt.res$par[1])
     mfit$fps <- 2*k*(mu1+mu2)/sqrt(2)*abs(mfit$opt.res$par[2])/denominator
 
-    denominator <- sqrt(mfit$opt.tsboot[1,]^3)
-    if(disprel == "lattice") denominator <- sinh(mfit$opt.tsboot[1,])*sqrt(mfit$opt.tsboot[1,])
-    mfit$fps.tsboot <- sqrt(2.)*k*(mu1+mu2)*abs(mfit$opt.tsboot[2,])/denominator
+    if(boot.fit) {
+      denominator <- sqrt(mfit$opt.tsboot[1,]^3)
+      if(disprel == "lattice") denominator <- sinh(mfit$opt.tsboot[1,])*sqrt(mfit$opt.tsboot[1,])
+      mfit$fps.tsboot <- sqrt(2.)*k*(mu1+mu2)*abs(mfit$opt.tsboot[2,])/denominator
+    } else {
+      mfit$fps.tsboot <- NA
+    }
 
     mfit$mu1 <- mu1
     mfit$mu2 <- mu2
@@ -41,9 +45,13 @@ computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", dis
     if(disprel == "lattice") denominator <- sinh(mfit$m0)*sqrt(mfit$m0)
     mfit$fps <- sqrt(2)*k*(mu1+mu2)*abs(mfit$meanAmplitude)/denominator
 
-    denominator <- sqrt(mfit$m0.tsboot^3)
-    if(disprel == "lattice") denominator <- sinh(mfit$m0.tsboot)*sqrt(mfit$m0.tsboot)
-    mfit$fps.tsboot <- sqrt(2)*k*(mu1+mu2)*abs(mfit$meanAmplitude.tsboot[,1])/denominator
+    if(boot.fit) {
+      denominator <- sqrt(mfit$m0.tsboot^3)
+      if(disprel == "lattice") denominator <- sinh(mfit$m0.tsboot)*sqrt(mfit$m0.tsboot)
+      mfit$fps.tsboot <- sqrt(2)*k*(mu1+mu2)*abs(mfit$meanAmplitude.tsboot[,1])/denominator
+    } else {
+      mfit$fps.tsboot <- NA
+    }
     
     mfit$mu1 <- mu1
     mfit$mu2 <- mu2

@@ -44,7 +44,8 @@ deriv.CExp <- function(par, t, T, sign) {
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
-                      matrix.size=2, useCov=FALSE, seed=12345) {
+                      matrix.size=2, useCov=FALSE, seed=12345,
+                      boot.fit=TRUE) {
   if(!any(class(cf) == "cf")) {
     stop("matrixfit requires the object to be of class cf! Aborting...!\n")
   }
@@ -129,8 +130,11 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   dof <- (length(CF$t[ii])-length(par))
   Qval <- 1-pchisq(opt.res$value, dof)
 
-  opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
-                      M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+  opt.tsboot <- NA
+  if(boot.fit) {
+    opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+  }
   res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,

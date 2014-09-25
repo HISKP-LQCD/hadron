@@ -6,7 +6,7 @@
   \code{bootstrap.effectivemass}. 
 }
 \usage{
-fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE) 
+fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE, boot.fit=TRUE) 
 }
 \arguments{
   \item{effMass}{
@@ -28,6 +28,14 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE)
     these are reaplaced in the bootstrap samples by randomly chosen
     values from the distribution that are not \code{NA}. Otherwise the
     fits in which the \code{NA} values occur will fail.
+  }
+  \item{boot.fit}{
+    If set to \code{FALSE}, the effective mass fit is not bootstrapped, 
+    even though bootstrap samples are still used to estimate the 
+    variance-covariance matrix for the correlated fit. This is a useful 
+    time-saver if error information is not strictly necessary. Of course,
+    this affects the return values related to the bootstrap, which are
+    set to \code{NA}.
   }
 }
 \value{
