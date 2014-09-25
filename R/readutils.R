@@ -231,6 +231,9 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
       Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
       close(to.read)
     }
+    else if(!file.exists(ifs)) {
+      cat("file ", ifs, "does not exist...\n")
+    }
   }
   ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
