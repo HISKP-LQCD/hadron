@@ -263,7 +263,7 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   op <- options()
   options(warn=-1)
   t <- effMass$t
-  plotwitherror(t-1, effMass$effMass[t], effMass$deffMass[t], ...)
+  plotwitherror(t-1, effMass$effMass[t], effMass$deffMass[t], col=col[1], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
       plotwitherror(t-1, effMass$effMass[t+i*effMass$Time/2], effMass$deffMass[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
