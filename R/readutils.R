@@ -47,10 +47,16 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   ldata <- tmpdata
   ldata[((nFiles-1)*fLength+1):(nFiles*fLength),] <- tmpdata
   # create a progress bar
-  pb <- txtProgressBar(min = 1, max = nFiles, style = 3)
+  
+  pb <- NULL
+  if(!verbose) {
+    pb <- txtProgressBar(min = 1, max = nFiles, style = 3)
+  }
   for(i in c(1:nFiles)) {
     # update progress bar
-    setTxtProgressBar(pb, i)
+    if(!verbose) {
+      setTxtProgressBar(pb, i)
+    }
     if( !(files[i] %in% excludelist) && file.exists(files[i])) {
       if(verbose) {
         cat("Reading from file", files[i], "\n")
@@ -78,7 +84,9 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
       warning(paste("readcmifiles: dropped file", files[i], "because its missing\n"))
     }
   }
-  close(pb)
+  if(!verbose) {
+    close(pb)
+  }
   ## remove NAs from missing files
   ldata <- na.omit(ldata)
   return(invisible(ldata))
