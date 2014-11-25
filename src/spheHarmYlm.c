@@ -14,17 +14,15 @@ complex spheHarm(int l, int m, double x, double phi)
 {
   gsl_sf_result result;
   double complex Ylm;
-
   int status = gsl_sf_legendre_sphPlm_e(l, m, x, &result);
   if(status == 0){
     Ylm = pow(-1,m)*result.val*cos(m*phi) + I*pow(-1,m)*result.val*sin(m*phi);
-    
+
     //printf("Y_%d%d = %.12f\n", l, m, result.val);
     return Ylm;
   }
   else 
-    {
-      printf("Spherical Harmonics calculating wrong!");
+    {printf("Spherical Harmonics calculating wrong!");
       exit(1);
     }
 }

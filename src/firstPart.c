@@ -62,7 +62,7 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
               rVecMod = sqrt( (pow(nDotd,2)/dModSqur + dModSqur/4.0 - nDotd)/pow(gamma,2)
                               + nSqur + pow(nDotd,2)/dModSqur - 2*pow(nDotd,2)/dModSqur);
               cosPolarAngle = ((nDotd*dVec[2]/dModSqur-dVec[2]/2.0)/gamma + (n3-nDotd*dVec[2]/dModSqur))
-                     / rVecMod;
+                / rVecMod;
               azAngle=azimutalAngle((nDotd*dVec[0]/dModSqur-dVec[0]/2.0)/gamma+(n1-nDotd*dVec[0]/dModSqur),
                                     (nDotd*dVec[1]/dModSqur-dVec[1]/2.0)/gamma + (n2-nDotd*dVec[1]/dModSqur));
             }
@@ -70,7 +70,7 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
             if(fabs(cosPolarAngle) > 1) {
               // cosPolarAngle must not become larger than 1 
               // we check for this here and drop a warning if unexpectedly large
-              if(fabs(1-cosPolarAngle) > DBL_EPSILON) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-cosPolarAngle);
+              if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-fabs(cosPolarAngle));
               cosPolarAngle /= fabs(cosPolarAngle);
             }
 
