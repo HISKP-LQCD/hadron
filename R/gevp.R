@@ -142,6 +142,8 @@ gevp2cf <- function(gevp, id=1) {
   cf$N <- length(gevp$cf$cf[,1])
   cf$cf0 <- gevp$res.gevp$evalues[,id]
   cf$boot.samples <- TRUE
+  cf$boot.R <- gevp$boot.R
+  cf$boot.l <- gevp$boot.l
   cf$nrStypes <- 1
   cf$nrObs <- 1
   cf$Time <- gevp$cf$Time
