@@ -69,6 +69,10 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
+  else {
+    boot.R <- cf$boot.R
+    boot.l <- cf$boot.l
+  }
   ## number of measurements
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
