@@ -200,4 +200,5 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   }
   Err <- apply(cf$cf.tsboot$t, 2, sd)
   plotwitherror(rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), cf$cf0, Err, ...)
+  return(invisible(data.frame(t=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), CF=cf$cf0, Err=Err)))
 }
