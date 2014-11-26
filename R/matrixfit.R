@@ -61,6 +61,10 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
   }
+  else {
+    boot.R <- cf$boot.R
+    boot.l <- cf$boot.l
+  }
 
   t1p1 <- t1+1
   t2p1 <- t2+1
@@ -100,7 +104,10 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
-    M <- invertCovMatrix(cf$cf[,ii], boot.l)
+    if(is.null(cf$cf)) {
+      M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE)
+    }
+    else M <- invertCovMatrix(cf$cf[,ii], boot.l=boot.l)
   }
 
   par <- numeric(max(parind))
