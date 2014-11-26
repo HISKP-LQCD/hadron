@@ -4,7 +4,7 @@
 \description{
 }
 \usage{
-  LuescherZeta(qsq, l=0, m=0, dvec=c(0,0,0), gamma=1., lambda=1., N=10)
+  LuescherZeta(qsq, l=0, m=0, dvec=c(0,0,0), gamma=1., lambda=1., N=8)
 }
 \arguments{
   \item{qsq}{
