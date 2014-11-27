@@ -211,7 +211,12 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   M <- diag(1/damplitude[ii]^2)
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    M <- invertCovMatrix(amplitude.tsboot[,ii], boot.samples=TRUE)
+    M <- try(invertCovMatrix(amplitude.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
+    if(inherits(M, "try-error")) {
+      warning("inversion of variance covariance matrix failed in gevp2amplitude, continuing with uncorrelated chi^2\n")
+      M <- diag(1/damplitude[ii]^2)
+      useCov <- FALSE
+    }
   }
   ## the chisqr function
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}

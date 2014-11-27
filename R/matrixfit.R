@@ -105,9 +105,16 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
     if(is.null(cf$cf)) {
-      M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE)
+      M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
     }
-    else M <- invertCovMatrix(cf$cf[,ii], boot.l=boot.l)
+    else {
+      M <- try(invertCovMatrix(cf$cf[,ii], boot.l=boot.l), silent=TRUE)
+    }
+    if(inherits(M, "try-error")) {
+      M <- diag(1/CF$Err[ii]^2)
+      warning("inversion of variance covariance matrix failed in matrixfit, continuing with uncorrelated chi^2\n")
+      useCov <- FALSE
+    }
   }
 
   par <- numeric(max(parind))

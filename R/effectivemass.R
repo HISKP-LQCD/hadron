@@ -137,7 +137,12 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
+    M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
+    if(inherits(M, "try-error")) {
+      M <- diag(1/cf$deffMass[ii]^2)
+      warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses, continuing with uncorrelated chi^2\n")
+      useCov <- FALSE
+    }
   }
   ## the chisqr function
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
@@ -190,8 +195,14 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
       if(useCov) {
         ## recompute covariance matrix and compute the correctly normalised inverse
         ## note that we DON'T change the return value! (cf$invCovMatrix)
-        M <- invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE)
-      } else {
+        M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
+        if(inherits(M, "try-error")) {
+          M <- M[ -ii.remove, -ii.remove]
+          warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
+          useCov <- FALSE
+        }
+      }
+      else {
         ## if the matrix is diagonal, we simply restrict it
         M <- M[ -ii.remove, -ii.remove]
       }
