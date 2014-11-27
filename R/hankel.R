@@ -4,7 +4,8 @@ hankel.matrix <- function(n, seq){
         function(x,y) seq[x+y-1])
 }
 
-gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1), range=c(0.,1.), eps=0.001, debug=FALSE, cor.id=1) {
+gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
+                            range=c(0.,1.), eps=0.001, debug=FALSE, cor.id=1) {
   if(t0+2*n+deltat+1 > N) {
     stop("t0+n+deltat > N\n")
   }
@@ -69,8 +70,12 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   if(inherits(M.eigen, "try-error")) {
     return(NA)
   }
-  ii <- which(abs(Im(M.eigen$values)) < eps & Re(M.eigen$values) > range[1] & Re(M.eigen$values) < range[2])
-  return(invisible(Re(M.eigen$values[ii])))
+  ii <- which(abs(Im(M.eigen$values)) < eps & Re(M.eigen$values) > range[1]
+              & Re(M.eigen$values) < range[2])
+  if(id == "all") {
+    return(invisible(Re(M.eigen$values[ii])))
+  }
+  return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
 bootstrap.hankel <- function(cf, t0, deltat=1, n, N, id=c(1), range=c(0,1), eps=0.001,
@@ -93,16 +98,17 @@ bootstrap.hankel <- function(cf, t0, deltat=1, n, N, id=c(1), range=c(0,1), eps=
 }
 
 
-analyse.hankel <- function(cf, t0=1, range=c(1./exp(1),1.), n=5, element.order=c(1,2,3,4), submatrix.size=1,
-                           deltat) {
+analyse.hankel <- function(cf, t0=1, range=c(1./exp(1),1.), n=5,
+                           element.order=c(1,2,3,4), submatrix.size=1,
+                           deltat, id="all") {
 
   ##def.par <- par(no.readonly = TRUE) # save default, for resetting...
   N=cf$Time/2+1
   if(missing(deltat)) {
     ##par(mfrow=c(length( c(1:(N-2*n-1-t0)) ), 1))
     for(deltat in c(1:(N-2*n-1-t0))) {
-      bla <- bootstrap.hankel(cf, t0=t0, n=n, N=N, range=c(1./exp(2*deltat),1), id=c(1), deltat=deltat,
-                              submatrix.size=submatrix.size, element.order=element.order)
+      bla <- bootstrap.hankel(cf, t0=t0, n=n, N=N, range=c(1./exp(2*deltat),1), deltat=deltat,
+                              submatrix.size=submatrix.size, element.order=element.order, id=id)
       ##cat(bla$evs, "\n")
       ##cat("n=", n, -log(bla$evs), apply(-log(bla$evs.tsboot), 1, sd, na.rm=TRUE), "\n")
       X11()
@@ -110,8 +116,8 @@ analyse.hankel <- function(cf, t0=1, range=c(1./exp(1),1.), n=5, element.order=c
     }
   }
   else {
-    bla <- bootstrap.hankel(cf, t0=t0, n=n, N=N, range=c(1./exp(2*deltat),1), id=c(1), deltat=deltat,
-                            submatrix.size=submatrix.size, element.order=element.order)
+    bla <- bootstrap.hankel(cf, t0=t0, n=n, N=N, range=c(1./exp(2*deltat),1), deltat=deltat,
+                            submatrix.size=submatrix.size, element.order=element.order, id=id)
     ##cat(bla$evs, "\n")
     ##cat("n=", n, -log(bla$evs), apply(-log(bla$evs.tsboot), 1, sd, na.rm=TRUE), "\n")
     X11()
