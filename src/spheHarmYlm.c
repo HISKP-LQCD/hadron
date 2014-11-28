@@ -10,7 +10,7 @@
 //Calculating the spherical harmonics Y_lm(theta,phi).
 //x=cos(theta);
 //theta is the polar angle, phi is the azimuthal angle.
-complex spheHarm(int l, int m, double x, double phi, int * rstatus)
+complex spheHarm(const int l, const int m, const double x, const double phi, int * const rstatus)
 {
   gsl_sf_result result;
   double complex Ylm;
@@ -30,7 +30,7 @@ complex spheHarm(int l, int m, double x, double phi, int * rstatus)
 
 //Calculating the azimutal ANGLE with in the sperical coordinate
 //system from the Descartes coordiante x and y.
-double azimutalAngle(double x, double y)
+double azimutalAngle(const double x, const double y)
 {
   double phi = 0.;
   if(x==0 && y==0) {

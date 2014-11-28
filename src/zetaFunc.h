@@ -5,29 +5,29 @@
 
 int read_i(char *src,int *data);
 int read_d(char *src,double *data);
-int read_a(char *src,int *data);
+int read_a(char *src,double *data);
 
 
 //First part:
 
-double azimutalAngle(double x, double y);
+double azimutalAngle(const double x, const double y);
 
-double spheHarm(int l, int m, double x, double phi, int * rstatus);
+double spheHarm(const int l, const int m, const double x, const double phi, int * const rstatus);
 
-double complex firstPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur, int * rstatus);
+double complex firstPart(int N, int l, int m, double * dVec, double gamma, double Lamda, double qSqur, int * rstatus);
 //Second part:
 
-double integrandPart2(double t, void * params);
+double integrandPart2(const double t, void * const params);
 
-double sndInteFunc(double Lamda, double qSqur, int * rstatus);
+double sndInteFunc(const double Lamda, const double qSqur, int * const rstatus);
 
-double complex secondPart(int l, double gamma, double Lamda, double qSqur, int * rstatus);
+double complex secondPart(const int l, const double gamma, const double Lamda, const double qSqur, int * const rstatus);
 //Third part:
 
-double integrandPart3(double t, void * params);
+double integrandPart3(const double t, void * const params);
 
-double trdInteFunc(double Lamda, int * dVec, int l, double qSqur, int *nVec, double gamma, int * rstatus);
+double trdInteFunc(const double Lamda, double * const dVec, const int l, const double qSqur, int * const nVec, const double gamma, int * const rstatus);
 
-double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur, int * rstatus);
+double complex thirdPart(const int N, const int l, const int m, double * const dVec, const double gamma, const double Lamda, const double qSqur, int * const rstatus);
 
 #endif

@@ -15,7 +15,7 @@
  ***************************************************/
 
 //int main(void)
-double complex secondPart(int l, double gamma, double Lamda, double qSqur, int * rstatus)
+double complex secondPart(const int l, const double gamma, const double Lamda, const double qSqur, int * const rstatus)
 {
   //	double Lamda = 1;
   //	double gamma = 1;

@@ -6,7 +6,7 @@
 #include "zetaFunc.h"
 
 
-complex double firstPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur, int * rstatus)
+complex double firstPart(int N, int l, int m, double * dVec, double gamma, double Lamda, double qSqur, int * rstatus)
 {
   //	double qSqur;
   //	int	N;
@@ -18,7 +18,7 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
   //	printf("Please input the l and m:\n");
   //	scanf("%d %d", &l, &m);
   //d is the boost-vector,0 for cubic group.
-  //	int dVec[3]={0,0,0};
+  //	double dVec[3]={0,0,0};
   //Lorenz factor
   //	double gamma=1;
   //Lamda is the partition point of integration range (0, Inf).
@@ -35,7 +35,7 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
   //	FILE * fp=NULL;
   //	fp=fopen("coordinate.txt","w");
 
-  int	dModSqur=dVec[0]*dVec[0]+dVec[1]*dVec[1]+dVec[2]*dVec[2];
+  double dModSqur=dVec[0]*dVec[0]+dVec[1]*dVec[1]+dVec[2]*dVec[2];
   for(n1=-N; n1<=N; n1++)
     for(n2=-N; n2<=N; n2++)
       for(n3=-N; n3<=N; n3++)

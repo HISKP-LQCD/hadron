@@ -52,6 +52,18 @@
   cat("delta = ", delta, "to compare with 137\n")
 
   ## moving frame example
+  Pcm <- c(0, 0, 1)
+  L <- 32
+  q <- 0.161*L/(2.*pi)
+  E <- 0.440
+  Ecm <- 0.396
+  gamma <- E/Ecm
+  Z00 = Re(LuescherZeta(q^2, gamma=gamma, dvec = Pcm))
+  Z20 = Re(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2))
+  delta = atan2(gamma*pi**(3./2.) * q , (Z00 + (2./(q*q*sqrt(5)))*Z20))*180./pi
+  cat("delta = ", delta, "to compare with 116\n")
+
+  ## moving frame 2
   Pcm <- c(1, 1, 0)
   L <- 32
   q <- 0.167*L/(2.*pi)
@@ -64,18 +76,6 @@
   Z2_2 <- Im(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2, m = -2))
   delta <- atan2(gamma*pi^(3./2.) * q , (Z00 - (1./(q^2*sqrt(5)))*Z20 + ((sqrt(3./10.)/(q^2))*(Z22-Z2_2))))*180./pi
   cat("delta = ", delta, "to compare with 128\n")
-
-  ## moving frame 2
-  Pcm <- c(0, 0, 1)
-  L <- 32
-  q <- 0.161*L/(2.*pi)
-  E <- 0.440
-  Ecm <- 0.396
-  gamma <- E/Ecm
-  Z00 = Re(LuescherZeta(q^2, gamma=gamma, dvec = Pcm))
-  Z20 = Re(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2))
-  delta = atan2(gamma*pi**(3./2.) * q , (Z00 + (2./(q*q*sqrt(5)))*Z20))*180./pi
-  cat("delta = ", delta, "to compare with 116\n")
 
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}, Zahnlin Wang, \email{wangzhanlin@hiskp.uni-bonn.de}}
