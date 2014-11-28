@@ -22,7 +22,7 @@ complex spheHarm(const int l, const int m, const double x, const double phi, int
     return Ylm;
   }
   else {
-    fprintf(stderr,"Spherical Harmonics not calculated, GSL error code %d!\n", status);
+    fprintf(stderr,"Spherical Harmonics not calculated, GSL error code %d corresponding to \"%s\"!\n", status, gsl_strerror(status));
     (*rstatus) = status;
     return(0.);
   }
