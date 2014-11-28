@@ -59,8 +59,8 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
             }
             else{
               double nDotd = n1*dVec[0]+n2*dVec[1]+n3*dVec[2];
-              rVecMod = sqrt( (pow(nDotd,2)/dModSqur + dModSqur/4.0 - nDotd)/pow(gamma,2)
-                              + nSqur + pow(nDotd,2)/dModSqur - 2*pow(nDotd,2)/dModSqur);
+              rVecMod = sqrt( (pow(nDotd,2.0)/dModSqur + dModSqur/4.0 - nDotd)/pow(gamma,2.0)
+                              + nSqur  - pow(nDotd,2.0)/dModSqur);
               cosPolarAngle = ((nDotd*dVec[2]/dModSqur-dVec[2]/2.0)/gamma + (n3-nDotd*dVec[2]/dModSqur))
                 / rVecMod;
               azAngle=azimutalAngle((nDotd*dVec[0]/dModSqur-dVec[0]/2.0)/gamma+(n1-nDotd*dVec[0]/dModSqur),
@@ -74,12 +74,12 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
               cosPolarAngle /= fabs(cosPolarAngle);
             }
 
-            firstTerms = exp(-Lamda*(pow(rVecMod,2)-qSqur)) * pow(rVecMod,l)
+            firstTerms = exp(-Lamda*(pow(rVecMod,2.0)-qSqur)) * pow(rVecMod,l)
               * spheHarm(l, m, cosPolarAngle, azAngle)
-              / (pow(rVecMod,2) - qSqur);
+              / (pow(rVecMod,2.0) - qSqur);
             //fprintf(fp,"n1=%d,n2=%d,n3=%d:  firstTerm=  %.24f %+.24fI\n",n1,n2,n3,creal(firstTerms), cimag(firstTerms));
+            firstPartSum += firstTerms;
           }
-          firstPartSum += firstTerms;
         }
   //fclose(fp);
   //fp=NULL;

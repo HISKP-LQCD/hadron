@@ -16,7 +16,7 @@ complex spheHarm(int l, int m, double x, double phi)
   double complex Ylm;
   int status = gsl_sf_legendre_sphPlm_e(l, m, x, &result);
   if(status == 0){
-    Ylm = pow(-1,m)*result.val*cos(m*phi) + I*pow(-1,m)*result.val*sin(m*phi);
+    Ylm = pow(-1.0,m)*result.val*cos(m*phi*M_PI/180.0) + I*pow(-1.0,m)*result.val*sin(m*phi*M_PI/180.0);
 
     //printf("Y_%d%d = %.12f\n", l, m, result.val);
     return Ylm;
@@ -27,7 +27,7 @@ complex spheHarm(int l, int m, double x, double phi)
     }
 }
 
-//Calculating the azimutal angle with in the sperical coordinate
+//Calculating the azimutal ANGLE with in the sperical coordinate
 //system from the Descartes coordiante x and y.
 double azimutalAngle(double x, double y)
 {
