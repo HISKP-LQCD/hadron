@@ -10,21 +10,22 @@
 //Calculating the spherical harmonics Y_lm(theta,phi).
 //x=cos(theta);
 //theta is the polar angle, phi is the azimuthal angle.
-complex spheHarm(int l, int m, double x, double phi)
+complex spheHarm(int l, int m, double x, double phi, int * rstatus)
 {
   gsl_sf_result result;
   double complex Ylm;
   int status = gsl_sf_legendre_sphPlm_e(l, m, x, &result);
-  if(status == 0){
+  if(status == 0) {
     Ylm = pow(-1.0,m)*result.val*cos(m*phi*M_PI/180.0) + I*pow(-1.0,m)*result.val*sin(m*phi*M_PI/180.0);
 
     //printf("Y_%d%d = %.12f\n", l, m, result.val);
     return Ylm;
   }
-  else 
-    {printf("Spherical Harmonics calculating wrong!");
-      exit(1);
-    }
+  else {
+    fprintf(stderr,"Spherical Harmonics not calculated, GSL error code %d!\n", status);
+    (*rstatus) = status;
+    return(0.);
+  }
 }
 
 //Calculating the azimutal ANGLE with in the sperical coordinate

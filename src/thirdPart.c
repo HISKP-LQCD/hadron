@@ -5,7 +5,7 @@
 #include <gsl/gsl_math.h>
 #include "zetaFunc.h"
 
-double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur)
+double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur, int * rstatus)
 {
   //	double qSqur;
   //	int N;
@@ -28,7 +28,7 @@ double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double L
   double complex thirdTerms = 0+I*0, thirdPartSum = 0+I*0;
   double cosPolarAngle=0,azAngle=0;
   double wVecMod=0;
-
+  int s1=0, s2=0;
 
   for(n1=-N; n1<=N; n1++)
     for(n2=-N; n2<=N; n2++)
@@ -42,8 +42,8 @@ double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double L
             cosPolarAngle =  n3/wVecMod ;
             azAngle = azimutalAngle(n1,n2) ;
             thirdTerms = gamma * pow(wVecMod, l)
-              * spheHarm(l, m, cosPolarAngle, azAngle)
-              * trdInteFunc(Lamda, dVec, l, qSqur, nVec, gamma);
+              * spheHarm(l, m, cosPolarAngle, azAngle, &s1)
+              * trdInteFunc(Lamda, dVec, l, qSqur, nVec, gamma, &s2);
           }
           else{
             double wDotd = n1*dVec[0]+n2*dVec[1]+n3*dVec[2];
@@ -54,12 +54,18 @@ double complex thirdPart(int N, int l, int m, int * dVec, double gamma, double L
             azAngle = azimutalAngle((gamma-1)*wDotd*dVec[0]/dModSqur + n1 ,
                                     (gamma-1)*wDotd*dVec[1]/dModSqur + n2);
             thirdTerms = gamma * (cos(M_PI*wDotd) - I*sin(M_PI*wDotd))
-              * pow(wVecMod, l) *spheHarm(l, m, cosPolarAngle, azAngle)
-              * trdInteFunc(Lamda, dVec, l, qSqur, nVec, gamma);
+              * pow(wVecMod, l) *spheHarm(l, m, cosPolarAngle, azAngle, &s1)
+              * trdInteFunc(Lamda, dVec, l, qSqur, nVec, gamma, &s2);
+          }
+          if(s1 != 0 || s2 != 0) {
+            *rstatus = s1 + s2;
+            return(thirdPartSum);
           }
           thirdPartSum += thirdTerms;
         }
       }
+
+  *rstatus = s1 + s2;
   //printf("SumN=%d,qSqur=%.4f,  thirdPartSum=%.24lf %+.24lfI.\n", N, qSqur, creal(thirdPartSum),cimag(thirdPartSum));
   return thirdPartSum;
 }

@@ -33,7 +33,7 @@ double integrandPart2(double t, void * params){
  * GSL_INTEG_GAUSS61  (key = 6)
  *
  ***************************************/
-double sndInteFunc(double Lamda, double qSqur)
+double sndInteFunc(double Lamda, double qSqur, int * rstatus)
 {
   gsl_integration_workspace * w =gsl_integration_workspace_alloc(WSNUM);
   double result, error;
@@ -42,7 +42,7 @@ double sndInteFunc(double Lamda, double qSqur)
   FuncPart2.function = &integrandPart2;
   FuncPart2.params   = &qSqur;
 
-  gsl_integration_qags(&FuncPart2, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
+  *rstatus = gsl_integration_qags(&FuncPart2, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
   //gsl_integration_qag(&FuncPart2, 0, Lamda, 0, EPSREL, WSNUM, 2, w, &result, &error);
 	
   gsl_integration_workspace_free (w);
@@ -78,7 +78,7 @@ double integrandPart3(double t, void * params){
   return f3;
 }
 
-double trdInteFunc(double Lamda, int * dVec, int l, double qSqur, int *nVec, double gamma)
+double trdInteFunc(double Lamda, int * dVec, int l, double qSqur, int *nVec, double gamma, int * rstatus)
 {
   gsl_integration_workspace * w =gsl_integration_workspace_alloc(WSNUM);
   double result, error;
@@ -99,7 +99,7 @@ double trdInteFunc(double Lamda, int * dVec, int l, double qSqur, int *nVec, dou
   FuncPart3.function = &integrandPart3;
   FuncPart3.params = paraArray;
 
-  gsl_integration_qags(&FuncPart3, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
+  *rstatus = gsl_integration_qags(&FuncPart3, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
   gsl_integration_workspace_free (w);
 
   return result;

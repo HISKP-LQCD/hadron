@@ -6,7 +6,7 @@
 #include "zetaFunc.h"
 
 
-complex double firstPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur)
+complex double firstPart(int N, int l, int m, int * dVec, double gamma, double Lamda, double qSqur, int * rstatus)
 {
   //	double qSqur;
   //	int	N;
@@ -75,9 +75,12 @@ complex double firstPart(int N, int l, int m, int * dVec, double gamma, double L
             }
 
             firstTerms = exp(-Lamda*(pow(rVecMod,2.0)-qSqur)) * pow(rVecMod,l)
-              * spheHarm(l, m, cosPolarAngle, azAngle)
+              * spheHarm(l, m, cosPolarAngle, azAngle, rstatus)
               / (pow(rVecMod,2.0) - qSqur);
             //fprintf(fp,"n1=%d,n2=%d,n3=%d:  firstTerm=  %.24f %+.24fI\n",n1,n2,n3,creal(firstTerms), cimag(firstTerms));
+            if(*rstatus != 0) {
+              return(firstPartSum);
+            }
             firstPartSum += firstTerms;
           }
         }

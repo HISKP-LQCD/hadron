@@ -28,9 +28,19 @@ SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lamb
   
   SEXP res;
   Rcomplex * resp;
-  double ires[2];
+  double ires[2] = {0.,0.};
+  int rstatus[3];
+  luscherZeta(ires, qsq, l, m, gamma, lambda, dvec, N, rstatus);
 
-  luscherZeta(ires, qsq, l, m, gamma, lambda, dvec, N);
+  if(rstatus[0]!=0) {
+    error("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d\n", rstatus[0]);
+  }
+  if(rstatus[1]!=0) {
+    error("GSL error in evaluation of second contribution to Luescher Zeta function, status code %d\n", rstatus[1]);
+  }
+  if(rstatus[2]!=0) {
+    error("GSL error in evaluation of third contribution to Luescher Zeta function, status code %d\n", rstatus[2]);
+  }
 
   PROTECT(res = NEW_COMPLEX(1));
   resp = COMPLEX_POINTER(res);
@@ -60,7 +70,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   const int n = INTEGER_POINTER(n_)[0];
   const int N = INTEGER_POINTER(N_)[0];
   int * dvec = INTEGER_POINTER(dvec_);
-  
+  int rstatus[3];
   SEXP res;
   Rcomplex * resp;
   double ires[2];
@@ -68,9 +78,22 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   resp = COMPLEX_POINTER(res);
 
   for(int i = 0; i < n; i ++) {
-    luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, N);
+    luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, N, rstatus);
     resp[i].r = ires[0];
     resp[i].i = ires[1];
+    if(rstatus[0]!=0) {
+      error("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d\n", rstatus[0]);
+      break;
+    }
+    if(rstatus[1]!=0) {
+      error("GSL error in evaluation of second contribution to Luescher Zeta function, status code %d\n", rstatus[1]);
+      break;
+    }
+    if(rstatus[2]!=0) {
+      error("GSL error in evaluation of third contribution to Luescher Zeta function, status code %d\n", rstatus[2]);
+      break;
+    }
+
   }
 
 
