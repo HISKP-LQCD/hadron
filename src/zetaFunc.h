@@ -12,7 +12,7 @@ int read_a(char *src,double *data);
 
 double azimutalAngle(const double x, const double y);
 
-double spheHarm(const int l, const int m, const double x, const double phi, int * const rstatus);
+complex double spheHarm(const int l, const int m, const double x, const double phi, int * const rstatus);
 
 double complex firstPart(int N, int l, int m, double * dVec, double gamma, double Lamda, double qSqur, int * rstatus);
 //Second part:
