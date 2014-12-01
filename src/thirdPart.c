@@ -58,7 +58,7 @@ double complex thirdPart(const int N, const int l, const int m, double * const d
             if(fabs(cosPolarAngle) > 1) {
               // cosPolarAngle must not become larger than 1 
               // we check for this here and drop a warning if unexpectedly large
-              if(fabs(1-cosPolarAngle) > DBL_EPSILON) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-cosPolarAngle);
+              if(fabs(1-fabs(cosPolarAngle)) > 5*DBL_EPSILON) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-fabs(cosPolarAngle));
               cosPolarAngle /= fabs(cosPolarAngle);
             }
             
