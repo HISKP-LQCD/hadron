@@ -16,3 +16,5 @@ pc <- "pc3"
 
 source("phaseshift.CM.R")
 
+pc <- "pc1"
+TP <- "TP0"
