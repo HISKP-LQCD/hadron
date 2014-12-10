@@ -8,7 +8,7 @@
 
 #include "luscherZeta.h"
 
-SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lambda_, SEXP N_) {
+SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lambda_, SEXP N_, SEXP N2_) {
 
   PROTECT(qsq_ = AS_NUMERIC(qsq_));
   PROTECT(l_ = AS_INTEGER(l_));
@@ -17,6 +17,7 @@ SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lamb
   PROTECT(lambda_ = AS_NUMERIC(lambda_));
   PROTECT(dvec_ = AS_NUMERIC(dvec_));
   PROTECT(N_ = AS_INTEGER(N_));
+  PROTECT(N2_ = AS_INTEGER(N2_));
 
   const double qsq = NUMERIC_POINTER(qsq_)[0];
   const int l = INTEGER_POINTER(l_)[0];
@@ -24,13 +25,14 @@ SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lamb
   const double gamma = NUMERIC_POINTER(gamma_)[0];
   const double lambda = NUMERIC_POINTER(lambda_)[0];
   const int N = INTEGER_POINTER(N_)[0];
+  const int N2 = INTEGER_POINTER(N2_)[0];
   double * dvec = NUMERIC_POINTER(dvec_);
   
   SEXP res;
   Rcomplex * resp;
   double ires[2] = {0.,0.};
   int rstatus[3];
-  luscherZeta(ires, qsq, l, m, gamma, lambda, dvec, N, rstatus);
+  luscherZeta(ires, qsq, l, m, gamma, lambda, dvec, N, N2, rstatus);
 
   if(rstatus[0]!=0) {
     error("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d\n", rstatus[0]);
@@ -47,11 +49,11 @@ SEXP LuscherZeta(SEXP qsq_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lamb
   resp[0].r = ires[0];
   resp[0].i = ires[1];
 
-  UNPROTECT(8);
+  UNPROTECT(9);
   return(res);
 }
 
-SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lambda_, SEXP N_) {
+SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lambda_, SEXP N_, SEXP N2_) {
 
   PROTECT(qsq_ = AS_NUMERIC(qsq_));
   PROTECT(l_ = AS_INTEGER(l_));
@@ -61,6 +63,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   PROTECT(dvec_ = AS_NUMERIC(dvec_));
   PROTECT(n_ = AS_INTEGER(n_));
   PROTECT(N_ = AS_INTEGER(N_));
+  PROTECT(N2_ = AS_INTEGER(N2_));
 
   double * qsq = NUMERIC_POINTER(qsq_);
   const int l = INTEGER_POINTER(l_)[0];
@@ -69,6 +72,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   const double lambda = NUMERIC_POINTER(lambda_)[0];
   const int n = INTEGER_POINTER(n_)[0];
   const int N = INTEGER_POINTER(N_)[0];
+  const int N2 = INTEGER_POINTER(N2_)[0];
   double * dvec = NUMERIC_POINTER(dvec_);
   int rstatus[3];
   SEXP res;
@@ -78,7 +82,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   resp = COMPLEX_POINTER(res);
 
   for(int i = 0; i < n; i ++) {
-    luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, N, rstatus);
+    luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, N, N2, rstatus);
     resp[i].r = ires[0];
     resp[i].i = ires[1];
     if(rstatus[0]!=0) {
@@ -97,7 +101,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   }
 
 
-  UNPROTECT(9);
+  UNPROTECT(10);
   return(res);
 
 }
