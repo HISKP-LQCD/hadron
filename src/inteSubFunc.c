@@ -12,8 +12,8 @@
  *
  *  **************************************/
 
-#define  WSNUM  1500
-#define  EPSREL  1e-6
+#define  WSNUM  1000
+#define  EPSREL  1e-8
 
 double integrandPart2(const double t, void * const params){
   double alpha = * (double *)params;

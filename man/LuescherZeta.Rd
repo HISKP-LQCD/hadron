@@ -4,7 +4,8 @@
 \description{
 }
 \usage{
-  LuescherZeta(qsq, l=0, m=0, dvec=c(0,0,0), gamma=1., lambda=1., N=8)
+  LuescherZeta(qsq, l=0, m=0, dvec=c(0,0,0), gamma=1., lambda=1.,
+tol=0.000001, verbose=FALSE)
 }
 \arguments{
   \item{qsq}{
@@ -26,8 +27,11 @@
   \item{lambda}{
     cut-off parameter for the integration
   }
-  \item{N}{
-    cut-off parameter in the series
+  \item{tol}{
+    error tolerance in numerical integrations
+  }
+  \item{verbose}{
+    makes the function (very much) more verbose
   }
 }
 \value{
