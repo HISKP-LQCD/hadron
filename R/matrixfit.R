@@ -64,6 +64,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   else {
     boot.R <- cf$boot.R
     boot.l <- cf$boot.l
+    seed <- cf$seed
   }
 
   t1p1 <- t1+1
@@ -150,7 +151,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                         M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
   }
   res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
-              boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M,
+              boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed)
   attr(res, "class") <- c("matrixfit", "list")

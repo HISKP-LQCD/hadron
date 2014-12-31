@@ -116,6 +116,11 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
+  else {
+    seed <- cf$seed
+    boot.R <- cf$boot.R
+    boot.l <- cf$boot.l
+  }
   res <- gevp(cf$cf0, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE, sort.type=sort.type)
 
 
@@ -126,7 +131,7 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
   ## and the the N*N*(Thalf+1) eigenvectors
   
-  ret <- list(cf=cf, res.gevp=res, gevp.tsboot=gevp.tsboot, boot.R=cf$boot.R, boot.l=cf$boot.l, matrix.size=matrix.size)
+  ret <- list(cf=cf, res.gevp=res, gevp.tsboot=gevp.tsboot, boot.R=boot.R, boot.l=boot.l, seed=seed, matrix.size=matrix.size)
   class(ret) <- c("gevp", class(ret))
   return(invisible(ret))
 }
@@ -144,6 +149,7 @@ gevp2cf <- function(gevp, id=1) {
   cf$boot.samples <- TRUE
   cf$boot.R <- gevp$boot.R
   cf$boot.l <- gevp$boot.l
+  cf$seed <- gevp$seed
   cf$nrStypes <- 1
   cf$nrObs <- 1
   cf$Time <- gevp$cf$Time
@@ -247,6 +253,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
               chisqr = opt.res$value,
               dof=t2-t1, t1=t1, t2=t2,
               mass=mass, gevp=gevp,
+              boot.R=gevp$boot.R, boot.l=gevp$boot.l, seed=gevp$seed,
               id=id, op.id=op.id,
               Time=T, m0=m0, m0.tsboot=m, useCov=useCov,
               Qval=1-pchisq(opt.res$value, t2-t1)

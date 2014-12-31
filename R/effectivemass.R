@@ -32,7 +32,9 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
     t <- tt[-cutii]
     if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
     else {
+      ## we take differences to remove constant contributions from temporal states
       Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
+      ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio) {
         return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - exp(-m*(t+1))-exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - exp(-m*(t))-exp(-m*(T-t))  ) )
       }
@@ -72,6 +74,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   else {
     boot.R <- cf$boot.R
     boot.l <- cf$boot.l
+    seed <- cf$seed
   }
   ## number of measurements
   N <- length(cf$cf[,1])
@@ -91,7 +94,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
-              boot.R=boot.R, boot.l=boot.l,
+              boot.R=boot.R, boot.l=boot.l, seed = seed,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
@@ -180,7 +183,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
             rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
             ## replace
             cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
-          } else {
+          }
+          else {
             ## so we remove this column from the analysis below
             ii.remove <- c( ii.remove, which( ii == k ) )
           }
@@ -216,7 +220,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
       massfit.tsboot[i, 2] <- opt$value
     }
     cf$massfit.tsboot <- massfit.tsboot
-  } else {
+  }
+  else {
     cf$massfit.tsboot <- NA
   } # if(boot.fit)
 
