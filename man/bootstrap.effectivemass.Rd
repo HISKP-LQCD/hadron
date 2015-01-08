@@ -6,7 +6,8 @@
   object of class \code{cf} (a correlation function)
 }
 \usage{
-boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve")
+boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456,
+type="solve", weight.factor=1)
 }
 \arguments{
   \item{cf}{
@@ -27,7 +28,19 @@ boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve")
   }
   \item{type}{
     The function to be used to compute the effective mass
-    values. Possibilities are "acosh", "solve" and "log".
+    values. Possibilities are "acosh", "solve", "log", "temporal",
+    "subtracted" and "weighted". While the first three assume normal
+    cosh behaviour of 
+    the correlation function, "temporal" is desigend to remove an
+    additional constant stemming from temporal states in two particle
+    correlation functions. The same for "subtracted" and "weighted", the
+    latter for the case of two particle energies with the two particle
+    having different energies. In the latter case only the leading
+    polution is removed by \code{removeTemporal.cf} and taken into
+    account here.
+  }
+  \item{weight.factor}{
+    relative weight for type "weighted" only, see details
   }
 }
 \value{
@@ -51,7 +64,7 @@ boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve")
   \code{boot.l}, \code{Time}
 }
 \details{
-  Three functions are implemented to compute effective mass values from
+  A number of types is implemented to compute effective mass values from
   the correlation function:
 
   "solve": the ratio\cr
@@ -65,9 +78,32 @@ boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve")
   "log": the effective mass is defined via\cr
   \eqn{m=\log(C(t) / C(t+1))}\cr
   which has artifacts of the periodicity at large t-values.
+
+  "temporal": the ratio\cr
+  \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
+  is numerically solved for \eqn{m(t)}.
+
+  "subtracted": like "temporal", but the differences \eqn{C(t)-C(t+1)}
+  are assumed to be taken already at the correlator matrix level using
+  \code{removeTemporal.cf} and hence the ratio\cr
+  \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] /
+    [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
+  is numerically solved for \eqn{m(t)}.
+
+  "weighted": like "subtracted", but now there is an additional weight
+  factor \eqn{w} from \code{removeTemporal.cf} to be taken into account,
+  such that the ratio\cr
+  \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-w*\cosh(-m*(t+1))] /
+    [\cosh(-m*(t-1))-w*\cosh(-m(t))]}\cr
+  is numerically solved for \eqn{m(t)} with \eqn{w} as input.
+  
+}
+\references{
+  arXiv:1203.6041
 }
 \seealso{
-  \link{\code{fit.effectivemass}}, \link{\code{bootstrap.cf}}
+  \link{\code{fit.effectivemass}}, \link{\code{bootstrap.cf}},
+  \link{\code{removeTemporal.cf}}
 }
 \examples{
 \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
