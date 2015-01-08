@@ -1,4 +1,4 @@
-effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.)) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1.) {
   ## cf is supposed to have nrObs*(Thalf+1) elements in time direction
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -16,7 +16,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 
   ## depending on the type, the result is not defined on all t
   ## so we have to cut
-  ## this is for type "acosh" and "temporal" where we loose t=0 and t=T/2
+  ## this is for type "acosh", "temporal" and "shifted" where we loose t=0 and t=T/2
   cutii <- c()
   ## this is for "log" and "solve" where t=T/2 is not defined
   cutii2 <- c()
@@ -28,20 +28,23 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   t2 <- tt[-cutii2]
   
   effMass <- rep(NA, nrObs*(Thalf+1))
-  if(type == "acosh" || type == "temporal") {
+  if(type == "acosh" || type == "temporal" || type == "shifted" || type == "weighted") {
     t <- tt[-cutii]
     if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
     else {
       ## we take differences to remove constant contributions from temporal states
-      Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
+      if(type == "shifted" || type == "weighted") Ratio <- Cor[t+1]/Cor[t]
+      else Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
+      w <- 1
+      if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
-      fn <- function(m, t, T, Ratio) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - exp(-m*(t+1))-exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - exp(-m*(t))-exp(-m*(T-t))  ) )
+      fn <- function(m, t, T, Ratio, w) {
+        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+1))-w*exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
-        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i])*fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i]) > 0) effMass[i] <- NA
-        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i])$root
+        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
       }
     }
   }
@@ -62,7 +65,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type="solve") {
+bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type="solve", weight.factor = 1.) {
 
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
@@ -86,15 +89,15 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   Nt <- length(cf$cf0)
   nrObs <- floor(Nt/(cf$Time/2+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs)
+  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
-              boot.R=boot.R, boot.l=boot.l, seed = seed,
+              boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
