@@ -90,7 +90,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
-  
+
   ## multiply with the exponetial inverse
   Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1)))
   if(!is.null(cf$cf)) {
@@ -104,7 +104,8 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   ## store masses in cf
   cf$mass1 <- mass1
   cf$mass2 <- mass2
-  cf$mulexp <- TRUE
+  cf$weighted <- TRUE
+  cf$weight.factor <- 1.
   return(invisible(cf))
 }
 
@@ -138,7 +139,7 @@ takeTimeDiff.cf <- function(cf) {
     cf$cf.tsboot$t[,-tt1] <- NA
   }
   ## save info
-  cf$subtracted <- TRUE
+  cf$shifted <- TRUE
   ## return subtracted cf
   return(invisible(cf))
 }
