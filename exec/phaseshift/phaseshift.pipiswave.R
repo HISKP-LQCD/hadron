@@ -118,11 +118,17 @@ phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpol
       else Z <- Re(LuescherZeta(qtsq$qtsq, l=l, m=m, gamma=qtsq$gammaboost, dvec=dvec))
       res[c(2:(boot.R+1)), i, j, 1] <- qtsq$q^2
       res[c(2:(boot.R+1)), i, j, 2] <- qtsq$qtsq
+      ## q cot(delta)
       res[c(2:(boot.R+1)), i, j, 3] <- 2.*Z/(qtsq$gammaboost*L*sqrt(pi))
+      ## delta
       res[c(2:(boot.R+1)), i, j, 4] <- atan(qtsq$q/res[c(2:(boot.R+1)), i, j, 3])*180/pi
+      ## Epi
       res[c(2:(boot.R+1)), i, j, 5] <- pion.effectivemass$massfit.tsboot[,1]
+      ## Epipi
       res[c(2:(boot.R+1)), i, j, 6] <- pc.effectivemass$massfit.tsboot[,1]
+      ## p-value pion effective mass fit
       res[c(2:(boot.R+1)), i, j, 7] <- 1-pchisq(pion.effectivemass$massfit.tsboot[,2], pion.effectivemass$dof)
+      ## p-value pipi effective mass fit
       res[c(2:(boot.R+1)), i, j, 8] <- 1-pchisq(pc.effectivemass$massfit.tsboot[,2], pc.effectivemass$dof)
       if(debug) cat("qcotdelta = ", qcotdelta, "; delta = ", delta, "\n")
     }

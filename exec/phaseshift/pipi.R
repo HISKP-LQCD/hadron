@@ -3,7 +3,7 @@
 energies.pipi <- function(N=5, tp="TP0", basename="pipi_pipi_A1_corr_", redofit=TRUE, N.ids=3,
                           t1 = c(10, 8, 5), t2 = c(31, 15, 13), seed=12345,
                           boot.R=400, boot.l=1, T=64,
-                          srcpath="./", path="./") {
+                          srcpath="./", path="./", ens, ind.vector=c(2,3)) {
   
   
   ## read data into Cmatrix
@@ -13,7 +13,7 @@ energies.pipi <- function(N=5, tp="TP0", basename="pipi_pipi_A1_corr_", redofit=
     for(i in c(1:N)) {
       for(j in c(1:N)) {
         filename <- paste(basename, tp, "_", i-1, j-1, ".dat", sep="")
-        tmp <- readtextcf(filename, T=T, check.t=1, path=srcpath)
+        tmp <- readtextcf(filename, T=T, check.t=1, path=srcpath, ind.vector=ind.vector)
         Cmatrix <- c(Cmatrix, tmp)
       }
     }
@@ -41,7 +41,10 @@ energies.pipi <- function(N=5, tp="TP0", basename="pipi_pipi_A1_corr_", redofit=
         pc.effectivemass <- fit.effectivemass(bootstrap.effectivemass(cf=pc, type="temporal"), t1=ta, t2=t2[i], useCov=TRUE)
         summary(pc.effectivemass)
         ## lets save all of them
-        save(pc.effectivemass, file=paste(path, "pc", i, ".", tp, ".effectivemass.", ta, ".", t2[i], ".Rdata", sep=""))
+        meta.data <- list(ens=ens, T=T, srcpath=srcpath, t1=ta, t2=t2[i], tp=tp, i=i)
+        save(pc.effectivemass, meta.data, file=paste(path, "pc", i, ".", tp, ".effectivemass.", ta, ".", t2[i], ".Rdata", sep=""))
+
+	plot(pc.effectivemass, xlab=c("t/a"), ylab=c("Meff"), main=paste("pc", i, ".", tp, ".effectivemass.", ta, ".", t2[i], "p=", pc.effectivemass$Qval, sep=""))
       }
     }
   }
