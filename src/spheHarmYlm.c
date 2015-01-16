@@ -15,9 +15,10 @@ complex double spheHarm(const int l, const int m, const double x, const double p
   gsl_sf_result result;
   double complex Ylm;
   int status = gsl_sf_legendre_sphPlm_e(l, abs(m), x, &result);
+
   if(status == 0) {
     Ylm = pow(-1.0,m)*result.val*cos(m*phi*M_PI/180.0) + I*pow(-1.0,m)*result.val*sin(m*phi*M_PI/180.0);
-
+    (*rstatus) = 0;
     //printf("Y_%d%d = %.12f\n", l, m, result.val);
     return Ylm;
   }

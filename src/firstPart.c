@@ -3,6 +3,7 @@
 #include <float.h>
 #include <complex.h>
 #include <stdlib.h>
+#include <gsl/gsl_errno.h>
 
 #include "zetaFunc.h"
 
@@ -35,7 +36,7 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
   
   int genReturn;
   genReturn = gen_points_array(&degnrtDOF, &arrayPmode, NPmode, DimMAX);
-  
+
   if(genReturn != 0){
     printf("Generating the points wrong!");
     exit(-1);
@@ -68,6 +69,7 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
     }
     
     for(int i=0; i<degnrtDOF[pmodeSqur]; i++){
+
       n1=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 0];
       n2=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 1];
       n3=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 2];
@@ -97,7 +99,7 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
         azAngle=azimutalAngle((nDotd*dVec[0]/dModSqur-dVec[0]/2.0)/gamma+(n1-nDotd*dVec[0]/dModSqur),
                               (nDotd*dVec[1]/dModSqur-dVec[1]/2.0)/gamma + (n2-nDotd*dVec[1]/dModSqur));
       }
-      
+
       if(fabs(cosPolarAngle) > 1) {
         // cosPolarAngle must not become larger than 1 
         // we check for this here and drop a warning if unexpectedly large
@@ -108,29 +110,30 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
       firstTerms = exp(-Lamda*(pow(rVecMod,2.0)-qSqur)) * pow(rVecMod,l)
         * spheHarm(l, m, cosPolarAngle, azAngle, rstatus)
         / (pow(rVecMod,2.0) - qSqur);
-      
-			if(*rstatus != 0) {
-        return(firstPartSum);
+
+      if(*rstatus != 0) {
+	fprintf(stderr, "spheHarm produced error code \"%s\"\n", gsl_strerror(*rstatus)); 
+	return(firstPartSum);
       }
-			
-			//Add every term within the same pmode into pmodeSum
-			pmodeSum += firstTerms;
 
-		}//end of pmode loop
+      //Add every term within the same pmode into pmodeSum
+      pmodeSum += firstTerms;
 
-		firstPartSum += pmodeSum;
-		//Both pmodeSum and firstPartSum are complex numbers,
-		//cabs take the mode of these variables.
-		error = cabs(pmodeSum) / cabs(firstPartSum);
-		
-		if(verbose)
-			printf("pmode%d error: %.16f\n\n",pmodeSqur , error);
-		
-		pmodeSqur += 1;
-
-	}//end of while.
-
-	return firstPartSum;
+    }//end of pmode loop
+    
+    firstPartSum += pmodeSum;
+    //Both pmodeSum and firstPartSum are complex numbers,
+    //cabs take the mode of these variables.
+    error = cabs(pmodeSum) / cabs(firstPartSum);
+    
+    if(verbose)
+      printf("pmode%d error: %.16f\n\n",pmodeSqur , error);
+    
+    pmodeSqur += 1;
+    
+  }//end of while.
+  
+  return firstPartSum;
 }
 				
 
