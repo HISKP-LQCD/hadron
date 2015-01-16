@@ -138,7 +138,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
     stop("extract.obs: data inconsistent, nrObs in the data does not match to input data length\n")
   }
   nrStypes <- length(unique(cmicor[,ind.vec[2]]))
-  cat(nrStypes, "\n")
+
   Time <-  2*max(cmicor[,ind.vec[3]])
   Thalf <- max(cmicor[,ind.vec[3]])+1
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
@@ -173,8 +173,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  cat(length(isym.vec), length(data[,ind.vec[4]]), length(data[,ind.vec[5]]), Thalf, nrObs, nrStypes, "\n")
-  cat(data[,ind.vec[4]], "\n")
+
   cf <- t(array(isign.vec*(data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
               dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
   ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE)
@@ -202,7 +201,10 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
 
   tmp <- read.table(paste(path, file, sep=""), skip=skip)
-
+  if((length(ind.vector) < length(tmp)-1) || (max(ind.vector) > length(tmp))){
+    stop("index vector too long or out of range\n")
+  }
+  
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
     stop("T in function call does not match the one in the file, aborting...\n")
   }
@@ -212,7 +214,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ii <- c(1:(T/2+1))
   sign <- +1
   if(!sym) sign <- -1
-  
+
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   ## average +-t
   tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
