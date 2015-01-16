@@ -17,7 +17,7 @@ compute.gamma.free <- function(mpisq, p1, p2, L, dvec) {
 compute.qtildesq2 <- function(E, dvec, mpi, L) {
   Ecmsq <- E^2 - sum((2*pi*dvec/L)^2)
   qsq <- Ecmsq/4.-mpi^2
-  return(data.frame(gammaboost=E/sqrt(Ecmsq), qtsq=qsq*(L/2./pi)^2, qsq=qsq))
+  return(data.frame(gammaboost=E/sqrt(Ecmsq), qtsq=qsq*(L/2./pi)^2, q=sqrt(qsq)))
 }
 
 ## version with lattice dispersion relation
@@ -26,7 +26,7 @@ compute.qtildesq <- function(E, dvec, mpi, L) {
   Ecm <- acosh(cosh(E) - 2*sum(sin(pi*dvec/L)^2))
   ## cosh(Ecm/2) = 2 sin^2(q*/2) + cosh(mpi)
   qs = 2*asin(sqrt( (cosh(Ecm/2) - cosh(mpi))/2. ))
-  ## qs = 2 pi q / L
+  ## qtilde = 2 pi q / L
   return(data.frame(gammaboost=E/Ecm, qtsq=(L*qs/2./pi)^2, q=qs))
 }
 
@@ -93,7 +93,6 @@ phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpol
       if(pc.effectivemass$boot.R != pion.effectivemass$boot.R) stop("number of boostrap samples does not match. Aborting ...\n")
 
       qtsq <- compute.qtildesq(pc.effectivemass$opt.res$par[1], dvec=dvec, L=L, mpi=pion.effectivemass$opt.res$par[1])
-      qsq <- qtsq$qsq
 
       Z <- try(LuescherZeta(qtsq$qtsq, l=l, m=m, gamma=qtsq$gammaboost, dvec=dvec))
       if(inherits(Z, "try-error")) Z <- SplineReZ(qtsq$qtsq)
