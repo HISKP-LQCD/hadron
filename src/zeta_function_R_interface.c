@@ -41,17 +41,21 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
     luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, tol, verbose, rstatus);
     resp[i].r = ires[0];
     resp[i].i = ires[1];
+
     if(rstatus[0]!=0) {
-      error("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d\n", rstatus[0]);
-      break;
+      warning("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d for element %d\n", rstatus[0], i+1);
+      resp[i].r = NA_REAL;
+      resp[i].i = NA_REAL;
     }
-    if(rstatus[1]!=0) {
-      error("GSL error in evaluation of second contribution to Luescher Zeta function, status code %d\n", rstatus[1]);
-      break;
+    else if(rstatus[1]!=0) {
+      warning("GSL error in evaluation of second contribution to Luescher Zeta function, status code %d for element %d\n", rstatus[1], i+1);
+      resp[i].r = NA_REAL;
+      resp[i].i = NA_REAL;
     }
-    if(rstatus[2]!=0) {
-      error("GSL error in evaluation of third contribution to Luescher Zeta function, status code %d\n", rstatus[2]);
-      break;
+    else if(rstatus[2]!=0) {
+      warning("GSL error in evaluation of third contribution to Luescher Zeta function, status code %d for element %d\n", rstatus[2], i+1);
+      resp[i].r = NA_REAL;
+      resp[i].i = NA_REAL;
     }
   }
 
