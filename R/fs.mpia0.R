@@ -16,6 +16,13 @@ fs.qcotdelta <- function(mps, L) {
   return(-mps/sqrt(2*pi)*sum( cn*exp(-n*mps*L)/sqrt(n*mps*L)*(1-227/(24*n*mps*L)) ))
 }
 
+## use effective range expansion to correct the scattering length a0
+## directly
+fs.a0 <- function(a0, mps, L) {
+  delta <- fs.qcotdelta(mps, L)
+  return(1./(1./a0 + delta))
+}
+
 ## this is the formula from
 ## arXiv:0909.3255
 ## directly for mpi*a0

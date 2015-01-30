@@ -11,6 +11,7 @@
 \usage{
   fs.qcotdelta(L, mps)
   fs.mpia0(fps, mps, L)
+  fs.a0(a0, mps, L)
 }
 \arguments{
   \item{L}{
@@ -22,9 +23,13 @@
   \item{fps}{
     pion decay constant as a scalar variable (must not be a vector)
   }
+  \item{a0}{
+    scattering length at finite L
+  }
 }
 \value{
-  returns a numeric value representing the finite size correction
+  returns a numeric value representing the finite size correction or in
+  case of \code{fs.a0} the corrected value for a0.
 }
 \references{
   For the original formula see Eq. (31) from hep-lat/0601033
