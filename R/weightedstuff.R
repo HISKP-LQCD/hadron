@@ -293,6 +293,9 @@ get.breaks<-function(x,breaks) {
   return(breaks)
 }
 
+
+## this function is taken from the plotrix package
+## and extended to be able to deal with NA
 weighted.hist<-function(x, w, breaks="Sturges",col=NULL,plot=TRUE,
                         freq=TRUE,ylim=NA,ylab=NULL,xaxis=TRUE,na.rm=FALSE,...) {
   
