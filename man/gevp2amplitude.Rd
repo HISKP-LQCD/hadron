@@ -17,8 +17,8 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov)
   }
   \item{mass}{
     Optimally, this is an object either of class \code{effectivemassfit}
-    generated using \link{\code{fit.effectivemass}} or of class
-    \code{matrixfit} generated with \link{\code{matrixfit}} to the
+    generated using \code{\link{fit.effectivemass}} or of class
+    \code{matrixfit} generated with \code{\link{matrixfit}} to the
     principal correlator extracted using \code{\link{gevp2cf}} applied
     to \code{gevp} using the same value of \code{id}.
 
@@ -53,8 +53,8 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov)
 \details{
 }
 \seealso{
-  \link{\code{matrixfit}}, \link{\code{fit.effectivemass}},
-  \link{\code{gevp}}, \link{\code{gevp2cf}}, \link{\code{computefps}}
+  \code{\link{matrixfit}}, \code{\link{fit.effectivemass}},
+  \code{\link{gevp}}, \code{\link{gevp2cf}}, \code{\link{computefps}}
 }
 \examples{
 \dontrun{## apply a GEVP analysis}

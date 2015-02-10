@@ -31,7 +31,7 @@ invertCovMatrix(cf, boot.l=1, boot.samples=FALSE)
 }
 \value{
   Returns the inverse covariance matrix as an object of class
-  \link{\code{matrix}}. 
+  \code{\link{matrix}}. 
 }
 \details{
   The inverse covariance matrix is estimated. If the number of
@@ -45,7 +45,7 @@ invertCovMatrix(cf, boot.l=1, boot.samples=FALSE)
   C.Michael, A.McKerrell,  Phys.Rev. D51 (1995) 3745-3750, hep-lat/9412087
 }
 \seealso{
-  \link{\code{cov}}, \link{\code{matrix}}
+  \code{\link{cov}}, \code{\link{matrix}}
 }
 \examples{
 \dontrun{M <- invertCovMatrix(effMass.tsboot, boot.samples=TRUE)}

@@ -68,8 +68,8 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE, boot.fit=
   C.Michael, A.McKerrell,  Phys.Rev. D51 (1995) 3745-3750, hep-lat/9412087
 }
 \seealso{
-  \link{\code{bootstrap.effectivemass}}, \link{\code{boostrap.gevp}},
-  \link{\code{gevp2cf}}, \link{\code{invertCovMatrix}}
+  \code{\link{bootstrap.effectivemass}}, \code{\link{boostrap.gevp}},
+  \code{\link{gevp2cf}}, \code{\link{invertCovMatrix}}
 }
 \examples{
 \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}

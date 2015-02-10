@@ -4,7 +4,7 @@
 \description{
   Computes effective mass values for a correlation function using
   different type of definitions for the effective mass. This function is
-  mainly indented for internal usage by \link{\code{bootstrap.effectivmass}}.
+  mainly indented for internal usage by \code{\link{bootstrap.effectivmass}}.
 }
 \usage{
 effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
@@ -36,12 +36,12 @@ interval=c(0.000001,2.), weight.factor=1)
     The number of "observables" included in the correlator
   }
   \item{replace.inf}{
-    If set to \code{TRUE}, all \link{\code{Inf}} values will be replaced
-    by \link{\code{NA}}. This is needed for instance for
-    \link{\code{bootstrap.effectivemass}}. 
+    If set to \code{TRUE}, all \code{\link{Inf}} values will be replaced
+    by \code{\link{NA}}. This is needed for instance for
+    \code{\link{bootstrap.effectivemass}}. 
   }
   \item{interval}{
-    initial interval for the \link{\code{root}} function when
+    initial interval for the \code{\link{root}} function when
     numerically solving for the effective mass.
   }
   \item{weight.factor}{
@@ -92,6 +92,6 @@ interval=c(0.000001,2.), weight.factor=1)
   arXiv:1203.6041
 }
 \seealso{
-  \link{\code{bootstrap.effectivemass}}
+  \code{\link{bootstrap.effectivemass}}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}

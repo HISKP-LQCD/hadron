@@ -47,6 +47,6 @@ extract.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L)
 
 }
 \seealso{
-  \link{\code{readcmiloopfiles}}
+  \code{\link{readcmiloopfiles}}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
