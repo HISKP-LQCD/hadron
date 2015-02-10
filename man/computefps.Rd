@@ -3,9 +3,9 @@
 \title{Computes the pseudoscalar decay constant for the twisted mass
   case from the pseudoscalar amplitude and mass}
 \description{
-  From a mass and amplitude determination (using \link{\code{matrixfit}}
-  or \link{\code{fit.effectivemass}}, \link{\code{bootstrap.gevp}} and
-  \link{\code{gevp2amplitude}} the pseudoscalar decay constant is
+  From a mass and amplitude determination (using \code{\link{matrixfit}}
+  or \code{\link{fit.effectivemass}}, \code{\link{bootstrap.gevp}} and
+  \code{\link{gevp2amplitude}} the pseudoscalar decay constant is
   determined for the case of Wilson twisted mass fermions from the
   pseudoscalar amplitude and mass
 }
@@ -15,8 +15,8 @@ computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
 \arguments{
   \item{mfit}{
     An object of type \code{matrixfit} or \code{gevp.amplitude}
-    generated with \link{\code{matrixfit}} or
-    \link{\code{gevp2amplitude}}, respectively.
+    generated with \code{\link{matrixfit}} or
+    \code{\link{gevp2amplitude}}, respectively.
   }
   \item{PP}{
     If \code{mfit} is missing this must contain the value for the
@@ -77,7 +77,7 @@ computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
   which can reduce lattice artefacts for heavy meson masses.
 }
 \seealso{
-  \link{\code{matrixfit}}, \link{\code{gevp2amplitude}}, \link{\code{pion}}
+  \code{\link{matrixfit}}, \code{\link{gevp2amplitude}}, \code{\link{pion}}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}

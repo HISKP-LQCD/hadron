@@ -41,7 +41,7 @@ for.tsboot=TRUE, sort.type="values")
     \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
   }
   \item{for.tsboot}{
-    for internal use of \link{\code{bootstrap.gevp}}. Alters the returned
+    for internal use of \code{\link{bootstrap.gevp}}. Alters the returned
     values, see details. 
   }
 }

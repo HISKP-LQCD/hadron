@@ -12,15 +12,15 @@ type="solve", weight.factor=1)
 \arguments{
   \item{cf}{
     a correlation function as an object of type \code{cf}, preferably
-    after a call to \link{\code{bootstrap.cf}}. If the latter has not
+    after a call to \code{\link{bootstrap.cf}}. If the latter has not
     been called yet, it will be called in this function.
   }
   \item{boot.R}{
-    only used if no preceeding call to \link{\code{bootstrap.cf}} has
+    only used if no preceeding call to \code{\link{bootstrap.cf}} has
     happened and it counts the number of bootstrap samples.
   }
   \item{boot.l}{
-    only used if no preceeding call to \link{\code{bootstrap.cf}} has
+    only used if no preceeding call to \code{\link{bootstrap.cf}} has
     happened and it counts the bootstrap block length.
   }
   \item{seed}{
@@ -102,8 +102,8 @@ type="solve", weight.factor=1)
   arXiv:1203.6041
 }
 \seealso{
-  \link{\code{fit.effectivemass}}, \link{\code{bootstrap.cf}},
-  \link{\code{removeTemporal.cf}}
+  \code{\link{fit.effectivemass}}, \code{\link{bootstrap.cf}},
+  \code{\link{removeTemporal.cf}}
 }
 \examples{
 \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}

@@ -46,15 +46,15 @@ element.order=c(1,2,3,4), seed=1234, sort.type="values")
 
   \code{cf}:\cr
   The input data, if needed bootstrapped with
-  \link{\code{bootstrap.cf}}.
+  \code{\link{bootstrap.cf}}.
 
   \code{res.gevp}:\cr
-  The object returned from the call to \link{\code{gevp}}. For the
-  format see \link{\code{gevp}}. 
+  The object returned from the call to \code{\link{gevp}}. For the
+  format see \code{\link{gevp}}. 
 
   \code{gevp.tsboot}:\cr
   The bootstrap samples of the GEVP. For the format see
-  \link{\code{gevp}}. 
+  \code{\link{gevp}}. 
 }
 \references{
   Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983) 433, DOI:
