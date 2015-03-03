@@ -13,23 +13,6 @@ compute.gamma.free <- function(mpisq, p1, p2, L, dvec) {
   return(E/Ecm)
 }
 
-## version with continuums dispersion relation
-compute.qtildesq2 <- function(E, dvec, mpi, L) {
-  Ecmsq <- E^2 - sum((2*pi*dvec/L)^2)
-  qsq <- Ecmsq/4.-mpi^2
-  return(data.frame(gammaboost=E/sqrt(Ecmsq), qtsq=qsq*(L/2./pi)^2, q=sqrt(qsq)))
-}
-
-## version with lattice dispersion relation
-compute.qtildesq <- function(E, dvec, mpi, L) {
-  ## cosh(Ecm) = cosh(E) - 2 sum sin^2(Pi/2)
-  Ecm <- acosh(cosh(E) - 2*sum(sin(pi*dvec/L)^2))
-  ## cosh(Ecm/2) = 2 sin^2(q*/2) + cosh(mpi)
-  qs = 2*asin(sqrt( (cosh(Ecm/2) - cosh(mpi))/2. ))
-  ## qtilde = 2 pi q / L
-  return(data.frame(gammaboost=E/Ecm, qtsq=(L*qs/2./pi)^2, q=qs))
-}
-
 phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpolation.n=100,
                                   p1=c(0,0,0), p2=c(0,0,0), dr=c(-1, 1),
                                   boot.R=400, boot.l=1, L=32, T=64, dvec=c(0,0,0), debug=FALSE
