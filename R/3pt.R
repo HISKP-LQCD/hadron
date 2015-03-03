@@ -77,7 +77,7 @@ summary.pionff <- function(ff) {
 
 averx <- function(data3pt, data2pt, 
                   boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE,
-                  t1, t2) {
+                  t1, t2, seed=123456, type="solve") {
 
   if(missing(data3pt) || missing(data2pt)) {
     stop("Error! Data is missing!")
@@ -95,15 +95,14 @@ averx <- function(data3pt, data2pt,
   Cf3pt <- mul.cf(Cf3pt, a=-1.)
   
   ## bootstrap the data
-  Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l)
-  Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
+  Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l, seed=seed)
+  Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l, seed=seed)
   
   
   ## Determine the pion mass
-  effmass <- bootstrap.effectivemass(Cf2pt, boot.R=boot.R, boot.l=boot.l, type="acosh")
-  effmass <- fit.effectivemass(effmass, t1=piont1, t2=piont2, useCov=useCov)
+  effmass <- fit.effectivemass( bootstrap.effectivemass(Cf2pt, boot.R=boot.R, boot.l=boot.l, type=type), t1=piont1, t2=piont2, useCov=useCov)
 
-  ## now a constrained fit to the matrix
+  ## now a cosh fit to the 2pt correlator
   matrixfit <- matrixfit(Cf2pt, t1=piont1-1, t2=piont2+1, symmetrise=TRUE, useCov=useCov,
                          matrix.size=1, parlist=array(c(1,1), dim=c(2,1)))
 
@@ -125,10 +124,9 @@ averx <- function(data3pt, data2pt,
 
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    ##M <- invertCovMatrix(Cf3pt$cf.tsboot$t[,ii], boot.samples=TRUE)
     M <- invertCovMatrix(Cf3pt$cf[,ii], boot.samples=FALSE, boot.l=boot.l)
   }
-  fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
+  fn <- function(par, y, M) { (y-par[1]) %*% M %*% (y-par[1])}
 
   par <- Cf3pt$cf0[Cf2pt$Time/4]
   opt.res <- optim(par, fn = fn,
@@ -146,20 +144,24 @@ averx <- function(data3pt, data2pt,
     plateau.tsboot[i,1] <- opt$par[1]
     plateau.tsboot[i,2] <- opt$value
   }
-  ##  plateau <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
-  ##  plateau.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
+  plateau.wm <- weighted.mean(x=Cf3pt$cf0[ii], w=w)
+  plateau.wm.tsboot <- apply(Cf3pt$cf.tsboot$t[,ii], 1, weighted.mean, w=w)
 
 
   averx <- plateau/effmass$opt.res$par[1]/Cf2pt$cf0[Thalfp1]
   averxfit <- plateau/matrixfit$opt.res$par[1]/Cf2ptThalf
   daverx <- sd(plateau.tsboot[,1]/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
   daverxfit <- sd(plateau.tsboot[,1]/matrixfit$opt.tsboot[1,]/(0.5*matrixfit$opt.tsboot[2,]^2*(exp(-matrixfit$opt.tsboot[1,]*(Cf2pt$Time-Thalfp1)) + exp(-matrixfit$opt.tsboot[1,]*Thalfp1))))
-
+  averx.wm <- plateau.wm/effmass$opt.res$par[1]/Cf2pt$cf0[Thalfp1]
+  daverx.wm <- sd(plateau.wm.tsboot/effmass$massfit.tsboot[,1]/Cf2pt$cf.tsboot$t[,Thalfp1])
+  
   res <- list(averx=averx, daverx=daverx, plateau=plateau, plateau.tsboot=plateau.tsboot,
               effmass=effmass, Cf2pt=Cf2pt, Cf3pt=Cf3pt, matrixfit=matrixfit,
               t1=t1, t2=t2, piont1=piont1, piont2=piont2, chisqr=opt.res$value, dof=length(ii)-1,
               boot.R=boot.R, boot.l=boot.l, ii=ii, useCov=useCov,
-              averxfit=averxfit, daverxfit=daverxfit, invCovMatrix=M)
+              averxfit=averxfit, daverxfit=daverxfit, invCovMatrix=M,
+              plateau.wm=plateau.wm, plateau.wm.tsboot=plateau.wm.tsboot,
+              averx.wm=averx.wm, daverx.wm=daverx.wm)
   attr(res, "class") <- c("averx", "list")  
   return(invisible(res))
 }
@@ -183,6 +185,10 @@ summary.averx <- function(averx) {
   cat("Alternative (using fitted Cf2pt(t/2) ):\n")
   cat("<x>      =", averx$averxfit, "\n")
   cat("error    =", averx$daverxfit, "\n")  
+  cat("Alternative (using weighted average over plateau)\n")
+  cat("<x>      =", averx$averx.wm, "\n")
+  cat("error    =", averx$daverx.wm, "\n")  
+  
 }
 
 print.averx <- function(averx) {
