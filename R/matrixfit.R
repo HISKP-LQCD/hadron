@@ -158,7 +158,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -168,7 +168,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ...) {
   # prevent stray negative values from ruining the plot
   lbound <- mfit$CF$Cor - 2*mfit$CF$Err
   lbound <- lbound[ lbound > 0 ]
-  ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
+  if(missing(ylim)) ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
+  else ylims <- ylim
 
   plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
   tx <- seq(mfit$t1, mfit$t2, 0.05)
