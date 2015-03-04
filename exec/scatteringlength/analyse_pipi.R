@@ -139,8 +139,11 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
   a0 <- uniroot(deltaEvL, c(0.,-6.), deltaE=opt.res$par[2], L=L, m=pion.effmass$opt.res$par[1])$root
   mpia0 <- pion.effmass$opt.res$par[1]*a0
 
+  qtilde <- compute.qtildesq(E=opt.res$par[2]+2*pion.effmass$opt.res$par[1], L=L, dvec=c(0,0,0), mpi=pion.effmass$opt.res$par[1])
+  qcotdelta <- 2.*Re( LuescherZeta(qtilde$qtsq, l=0, m=0, gamma=qtilde$gammaboost, dvec=c(0,0,0)) )/(qtilde$gammaboost*L*sqrt(pi))
+
   par <- opt.res$par
-  opt.tsboot <- array(NA, dim=c(boot.R, 5))
+  opt.tsboot <- array(NA, dim=c(boot.R, 7))
   for(i in 1:boot.R) {
     if(lm.avail) {
       opt <- nls.lm(par, fn=fitfn2,  L=ML, Thalf=Thalf, t=tphys, y=Rpipi.tsboot[i,tt], m=pion.effmass$massfit.tsboot[i,1])
@@ -150,6 +153,7 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
                    t=tphys, Thalf=Thalf, control=list(ndeps=rep(1.e-6, times=length(par)), parscale=1/par),
                    method="BFGS", M=M, y = Rpipi.tsboot[i,tt], m=pion.effmass$massfit.tsboot[i,1])
     }
+
     opt.tsboot[i, c(1,2)] <- opt$par
     opt.tsboot[i, 3] <- fitfn(opt$par, t=tphys, Thalf=Thalf, M=M, y = Rpipi.tsboot[i,tt], m=pion.effmass$massfit.tsboot[i,1])
                
@@ -157,7 +161,9 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
     else opt.tsboot[i, 5] <- uniroot(deltaEvL, c(0.,-6.), deltaE=opt$par[2], L=L, m=pion.effmass$massfit.tsboot[i,1])$root
     opt.tsboot[i, 4] <- pion.effmass$massfit.tsboot[i,1]*opt.tsboot[i, 5]
   }
-
+  qtildeboot <- compute.qtildesq(E=opt.tsboot[,2]+2*pion.effmass$massfit.tsboot[,1], L=L, dvec=c(0,0,0), mpi=pion.effmass$massfit.tsboot[,1])
+  qcotdeltaboot <- 2.*Re( LuescherZeta(qtildeboot$qtsq, l=0, m=0, gamma=qtildeboot$gammaboost, dvec=c(0,0,0)) )/(qtildeboot$gammaboost*L*sqrt(pi))
+  
   ## this is deltaE as a function of a0, m and L
   lfn2 <- function(a0, L, m, debug=FALSE) {
     if(debug) cat("1/L^4:", -2.837297*a0/L, " 1/L^5:", 6.375183*a0^2/L^2, "\n")
@@ -183,7 +189,11 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
   data$L <- L
   data$T <- pion.cor$Time
   data$ens <- ens
-#  data$chisq <- opt.res$value
+  data$Ecm <- qtilde$Ecm
+  data$Ecmboot <- qtildeboot$Ecm
+  data$qcotdelta <- qcotdelta
+  data$qcotdeltaboot <- qcotdeltaboot
+  ##  data$chisq <- opt.res$value
   data$dof <- length(tt)-2
   data$Qval <- 1-pchisq(data$chisq, data$dof)
   data$pionQval <- pion.effmass$Qval
@@ -218,6 +228,8 @@ summary.pipi <- function(pipi) {
   cat("deltaE = ", pipi$opt.res$par[2], "+-", sd(pipi$opt.tsboot[,2]), "(", 100*sd(pipi$opt.tsboot[,2])/pipi$opt.res$par[2], "%)", "\n")
   cat("a_0    = ", pipi$a0, "+-", sd(pipi$opt.tsboot[, 5], na.rm=TRUE), "(", 100*sd(pipi$opt.tsboot[, 5], na.rm=TRUE)/abs(pipi$a0), "%)\n")
   cat("mpi*a_0 = ", pipi$mpia0, "+-", sd(pipi$opt.tsboot[, 4], na.rm=TRUE), "(", 100*sd(pipi$opt.tsboot[, 4], na.rm=TRUE)/abs(pipi$mpia0), "%)\n")
+  cat("qcotdelta = ", pipi$qcotdelta, "+-", sd(pipi$qcotdeltaboot, na.rm=TRUE), "(", 100*sd(pipi$qcotdeltaboot, na.rm=TRUE)/abs(pipi$qcotdelta), "%)\n")
+  cat("Ecm = ", pipi$Ecm, "+-", sd(pipi$Ecmboot, na.rm=TRUE), "(", 100*sd(pipi$Ecmboot, na.rm=TRUE)/abs(pipi$Ecm), "%)\n")
 }
 
 plot.pipi <- function(pipi, ylim, ...) {
