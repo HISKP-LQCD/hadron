@@ -150,10 +150,15 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
                         M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
   }
+  N <- length(cf$cf[,1])
+  if(is.null(cf$cf)) {
+    N <- cf$N
+  }
+
   res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
-              parlist=parlist, sym.vec=sym.vec, seed=seed)
+              parlist=parlist, sym.vec=sym.vec, seed=seed, N=N)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }
@@ -215,7 +220,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
 
 summary.matrixfit <- function(mfit) {
   cat("\n ** Result of one state exponential fit **\n\n")
-  cat("based on", length(mfit$cf$cf[,1]), "measurements\n")
+  cat("based on", mfit$N, "measurements\n")
   cat("time range from", mfit$t1, " to ", mfit$t2, "\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")
@@ -226,8 +231,8 @@ summary.matrixfit <- function(mfit) {
     cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot[i,]), "\n")
   }
   cat("\n")
-  cat("boot.R\t=\t", mfit$boot.R, "\n")
-  cat("boot.l\t=\t", mfit$boot.l, "\n")
+  cat("boot.R\t=\t", mfit$boot.R, " (bootstrap samples)\n")
+  cat("boot.l\t=\t", mfit$boot.l, " (block length)\n")
   cat("useCov\t=\t", mfit$useCov, "\n")
   cat("chisqr\t=\t", mfit$opt.res$value, "\ndof\t=\t", mfit$dof, "\nchisqr/dof=\t",
       mfit$opt.res$value/mfit$dof, "\n")
