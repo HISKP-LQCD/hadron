@@ -24,7 +24,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   double * qsq = NUMERIC_POINTER(qsq_);
   const int l = INTEGER_POINTER(l_)[0];
   const int m = INTEGER_POINTER(m_)[0];
-  const double gamma = NUMERIC_POINTER(gamma_)[0];
+  double * gamma = NUMERIC_POINTER(gamma_);
   const double lambda = NUMERIC_POINTER(lambda_)[0];
   const int n = INTEGER_POINTER(n_)[0];
   const double tol = NUMERIC_POINTER(tol_)[0];
@@ -39,7 +39,7 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   for(int i = 0; i < n; i ++) {
     int rstatus[3] = {0,0,0};
 
-    luscherZeta(ires, qsq[i], l, m, gamma, lambda, dvec, tol, verbose, rstatus);
+    luscherZeta(ires, qsq[i], l, m, gamma[i], lambda, dvec, tol, verbose, rstatus);
 
     resp[i].r = ires[0];
     resp[i].i = ires[1];
