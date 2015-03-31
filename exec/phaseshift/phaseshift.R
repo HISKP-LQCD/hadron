@@ -63,8 +63,10 @@ prepdetEqMF1scan <- function(q, Mpi, L) {
 }
 
 detEqMF1scan <- function(par, W) {
-  return( (par[1] +par[2]*W$q^2 - W$q*W$w00)*
-         (par[3] - W$q^5*(W$w00 + 10/7*W$w20 + 18/7*W$w40))
+  cd0 <- par[1] +par[2]*W$q^2
+  cd2 <- par[3]
+  return( (cd0 - W$q*W$w00)*
+         (cd2 - W$q^5*(W$w00 + 10/7*W$w20 + 18/7*W$w40))
          -W$q^6*5*W$w20^2
          )
 }
@@ -78,8 +80,11 @@ detEqMF1 <- function(q, par, Mpi, L) {
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
   w20 <- Re(omegalm(l=2, m=0, q=qt, gamma=gamma, dvec=dvec))
   w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
-  return( (par[1] +par[2]*q^2 - q*w00)*
-         (par[3] - q^5*(w00 + 10/7*w20 + 18/7*w40))
+
+  cd0 <- par[1] +par[2]*q^2
+  cd2 <- par[3]
+  return( (cd0 - q*w00)*
+         (cd2 - q^5*(w00 + 10/7*w20 + 18/7*w40))
          -q^6*5*w20^2
          )
 }
@@ -104,7 +109,15 @@ prepdetEqMF2scan <- function(q, Mpi, L) {
 }
 
 detEqMF2scan <- function(par, W) {
-  return(1)
+  cd0 <- (par[1] + par[2]*W$q^2)/W$q
+  cd2 <- par[3]/W$q^5
+
+  return(q^11*(10/49*(10*(-2*cd0 + 2*W$w00 + 7*W$w20)*W$w22^2 +
+                      3*sqrt(15)*(4*cd0 - 4*W$w00 - 7*W$w20)*W$w22*W$w42 + 27*(W$w00 - cd0)*W$w42^2)
+               +(-cd2 + W$w00 + 2/7*(5*W$w20 + 9*W$w40))*(10*W$w22^2 + 1/7*(cd0 - W$w00)*(7*cd2 - 7*W$w00 + 10*W$w20 - 3*W$w40 + 3*sqrt(70)*W$w44)) +
+               5/7*W$w20*(20*W$w22^2 - 6*sqrt(15)*W$w22*W$w42 + W$w20*(7*cd2 - 7*W$w00 + 10*W$w20 - 3*W$w40 + 3*sqrt(70)*W$w44))
+               )
+         )
 }
 
 detEqMF2 <- function(q, par, Mpi, L) {
@@ -118,10 +131,64 @@ detEqMF2 <- function(q, par, Mpi, L) {
   w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
   w44 <- Re(omegalm(l=4, m=4, q=qt, gamma=gamma, dvec=dvec))
   w42 <- Re(omegalm(l=4, m=2, q=qt, gamma=gamma, dvec=dvec))
-  return(1)
+
+  cd0 <- (par[1] + par[2]*q^2)/q
+  cd2 <- par[3]/q^5
+  
+  return(q^11*(10/49*(10*(-2*cd0 + 2*w00 + 7*w20)*w22^2 +
+                      3*sqrt(15)*(4*cd0 - 4*w00 - 7*w20)*w22*w42 + 27*(w00 - cd0)*w42^2)
+               +(-cd2 + w00 + 2/7*(5*w20 + 9*w40))*(10*w22^2 + 1/7*(cd0 - w00)*(7*cd2 - 7*w00 + 10*w20 - 3*w40 + 3*sqrt(70)*w44)) +
+               5/7*w20*(20*w22^2 - 6*sqrt(15)*w22*w42 + w20*(7*cd2 - 7*w00 + 10*w20 - 3*w40 + 3*sqrt(70)*w44))
+               )
+         )
 }
 
-findSignChanges <- function(fn, makeplot=FALSE, par, W, no=3) {
+prepdetEqMF3scan <- function(q, Mpi, L) {
+  W <- list()
+  W$dvec <- c(1,1,1)
+  W$gamma <- gammaofqsq(q^2, dvec=W$dvec, Mpi=Mpi, L=L)
+  W$qt <- L*q/2/pi
+  W$L <- L
+  W$Mpi <- Mpi
+  W$q <- q
+
+  W$w00 <- Re(omegalm(l=0, m=0, q=W$qt, gamma=W$gamma, dvec=W$dvec))
+  W$w40 <- Re(omegalm(l=4, m=0, q=W$qt, gamma=W$gamma, dvec=W$dvec))
+  W$w22 <- (omegalm(l=2, m=2, q=W$qt, gamma=W$gamma, dvec=W$dvec))
+  W$w42 <- -Im(omegalm(l=4, m=2, q=W$qt, gamma=W$gamma, dvec=W$dvec))
+
+  return(W)
+}
+
+detEqMF3scan <- function(par, W) {
+  cd0 <- (par[1] + par[2]*W$q^2)
+  cd2 <- par[3]
+
+  return(( cd0 - W$q*W$w00 )*
+         ( cd2 - W$q^5*(W$w00 - 12/7*W$w40 - 12*sqrt(10)/7*W$w42 + 10*sqrt(6)/7*Im(W$w22))) +
+         W$q^6*30*Re(W$w22)^2
+         )
+}
+
+detEqMF3 <- function(q, par, Mpi, L) {
+  dvec=c(1,1,1)
+  gamma <- gammaofqsq(q^2, dvec=dvec, Mpi=Mpi, L=L)
+
+  qt <- L*q/2/pi
+  w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
+  w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
+  w22 <- (omegalm(l=2, m=2, q=qt, gamma=gamma, dvec=dvec))
+  w42 <- -Im(omegalm(l=4, m=2, q=qt, gamma=gamma, dvec=dvec))
+
+  cd0 <- (par[1] + par[2]*q^2)
+  cd2 <- par[3]
+  return(( cd0 - q*w00 )*
+         ( cd2 - q^5*(w00 - 12/7*w40 - 12*sqrt(10)/7*w42 + 10*sqrt(6)/7*Im(w22))) +
+         q^6*30*Re(w22)^2
+         )
+}
+
+findSignChanges <- function(fn, makeplot=FALSE, par, W, no=3, threshold=100) {
   res <- fn(par=par, W=W)
   if(makeplot) {
     if(interactive()) X11()
@@ -154,7 +221,7 @@ findZeros <- function(fn, q, ii, makeplot=FALSE, tol=1.e-12, ...) {
     z <- uniroot(fn, interval=c(q[ii[j]], q[ii[j]+1]), tol = tol, ...)
     if(z$f.root < 1) {
       zeros[j] <- z$root
-      ##cat(z$f.root, z$estim.prec, "\n")
+      cat("root", j, ":", z$root, z$f.root, z$estim.prec, "\n")
     }
   }
   if(makeplot) {
