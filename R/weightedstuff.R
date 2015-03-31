@@ -338,7 +338,7 @@ weighted.hist<-function(x, w, breaks="Sturges",col=NULL,plot=TRUE,
       heights<-density*mean(width)/width
       heights<-heights/sum(heights)
     }
-    else heights<-density
+    else heights<-density/width
     if(is.null(ylab)) ylab<-"Density"
   }
   if(plot) {
