@@ -103,7 +103,7 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
       if(fabs(cosPolarAngle) > 1) {
         // cosPolarAngle must not become larger than 1 
         // we check for this here and drop a warning if unexpectedly large
-        if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-fabs(cosPolarAngle));
+        if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON*10) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-fabs(cosPolarAngle));
         cosPolarAngle /= fabs(cosPolarAngle);
       }
       
