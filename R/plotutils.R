@@ -1,4 +1,4 @@
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...) {
+plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, rep=FALSE, col="black", ...) {
   fcall <- match.call(expand.dots=TRUE)
   ylog <- FALSE
   xlog <- FALSE
@@ -14,7 +14,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...)
     tmp <- x - 0.1*abs(x)
     tmpp <- x + 0.1*abs(x)
     if(!missing(dx)) {
-      tmp <- x-2*dx
+      if(missing(mdx)) { mdx <- dx } 
+      tmp <- x-2*mdx
       tmp <- x+2*dx
     }
     if(xlog) {
@@ -28,9 +29,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...)
 
   if(missing(ylim)) {
     tmp <- y - 0.1*abs(y)
-    tmpp <- y + 0.1*abs(x)
+    tmpp <- y + 0.1*abs(y)
     if(!missing(dy)) {
-      tmp <- y-2*dy
+      if(missing(mdy)) { mdy <- dy }
+      tmp <- y-2*mdy
       tmpp <- y+2*dy
     }
     if(ylog) {
@@ -60,10 +62,12 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...)
 
   options(show.error.messages = FALSE)
   if(!missing(dy)) {
-    arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+    if(missing(mdy)){ mdy <- dy }
+    arrows(x, y-mdy, x, y+dy, length=0.01,angle=90,code=3, col=col)
   }
   if(!missing(dx)) {
-    arrows(x-dx,y,x+dx,y, length=0.01,angle=90,code=3, col=col)
+    if(missing(mdx)){ mdx <- dx }
+    arrows(x-mdx,y,x+dx,y, length=0.01,angle=90,code=3, col=col)
   }
   options(show.error.messages = TRUE)
 }
