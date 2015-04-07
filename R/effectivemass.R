@@ -96,7 +96,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
-              opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, invCovMatrix=NULL,
+              opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
@@ -137,10 +137,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   cf$dof <-  length(ii)-1
   
 
+  CovMatrix <- cov(cf$effMass.tsboot[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(1/cf$deffMass[ii]^2)
-  
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
@@ -154,6 +154,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
   
   cf$invCovMatrix <- M
+  cf$CovMatrix <- CovMatrix
   par <- c(cf$effMass[t1])
   opt.res <- optim(par, fn = fn,
                    method="BFGS", M=M, y = cf$effMass[ii])
