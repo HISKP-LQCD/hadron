@@ -1,4 +1,40 @@
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, rep=FALSE, col="black", ...) {
+sumerror <- function(dx,errsum.method="quadrature") {
+  rval <- NULL
+  # if dx is a simple vector rather than a matrix/data.frame/array, we just need to return 0 and dx
+  if(is.null(ncol(dx))){
+    rval <- array(dim=c(length(dx),2))
+  } else {
+    rval <- array(dim=c(nrow(dx),(ncol(dx)+1)))
+  }
+  
+  rval[,1] <- 0
+  if(is.null(ncol(dx))) {
+    rval[,2] <- dx
+  } else {
+    rval[,2] <- dx[,1]
+  }
+  
+  # compute cumulative sums of the columns of dx, so for the "quadrature" method we will have
+  # rval[j,] == c(0,dx[j,1],sqrt(dx[j,1]^2+dx[j,2]^2),sqrt(dx[j,1]^2+dx[j,2]^2+dx[j,3]^2),..)
+  if(!is.null(ncol(dx))){  
+    for( i in 2:ncol(dx) ){
+      rval[,(i+1)] <- apply(X=dx[,1:i],MARGIN=1,
+                            FUN=function(x){
+                                  if(errsum.method=="quadrature") return( sqrt(sum(x^2)) )
+                                  else return( sum(x) )
+                                } )
+    }
+  }
+  rval
+}
+
+plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="quadrature", rep=FALSE, col="black", ...) {
+  if(!missing(mdy) && missing(dy)){
+    stop("plotwitherror: if 'mdy' is provided, 'dy' must be too (it can be 0)")
+  }
+  if(!missing(mdx) && missing(dx)){
+    stop("plotwitherror: if 'mdx' is provided, 'dx' must be too (it can be 0)")
+  }
   fcall <- match.call(expand.dots=TRUE)
   ylog <- FALSE
   xlog <- FALSE
@@ -9,14 +45,39 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, rep=FALSE, col="bl
   }
   my.xlim <- c()
   my.ylim <- c()
+ 
+  # cumulative errors as computed with errsum.method 
+  cumul.dx <- NULL
+  cumul.mdx <- NULL
+  cumul.dy <- NULL
+  cumul.mdy <- NULL
+
+  # see above for description of what sumerror does
+  if(!missing(dx)){
+    cumul.dx <- sumerror(dx,errsum.method)
+    if(missing(mdx)){
+      cumul.mdx <- -sumerror(dx,errsum.method)
+    } else {
+      cumul.mdx <- -sumerror(mdx,errsum.method)
+    }  
+  }
   
+  if(!missing(dy)){
+    cumul.dy <- sumerror(dy,errsum.method)
+    if(missing(mdy)){
+      cumul.mdy <- -sumerror(dy,errsum.method)
+    } else {
+      cumul.mdy <- -sumerror(mdy,errsum.method)
+    }
+  }
+
   if(missing(xlim)) {
     tmp <- x - 0.1*abs(x)
     tmpp <- x + 0.1*abs(x)
-    if(!missing(dx)) {
-      if(missing(mdx)) { mdx <- dx } 
-      tmp <- x-2*mdx
-      tmp <- x+2*dx
+    if(!is.null(cumul.dx)) {
+      # cumul.mdx is implicitly negative
+      tmp <- x+2*cumul.mdx[,ncol(cumul.mdx)]
+      tmpp <- x+2*cumul.dx[,ncol(cumul.dx)]
     }
     if(xlog) {
       tmp <- tmp[ tmp > 0 ]
@@ -30,10 +91,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, rep=FALSE, col="bl
   if(missing(ylim)) {
     tmp <- y - 0.1*abs(y)
     tmpp <- y + 0.1*abs(y)
-    if(!missing(dy)) {
-      if(missing(mdy)) { mdy <- dy }
-      tmp <- y-2*mdy
-      tmpp <- y+2*dy
+    if(!is.null(cumul.dy)) {
+      # cumul.mdy is implicitly negative
+      tmp <- y+2*cumul.mdy[,ncol(cumul.mdy)]
+      tmpp <- y+2*cumul.dy[,ncol(cumul.dy)]
     }
     if(ylog) {
       tmp <- tmp[ tmp > 0 ]
@@ -61,13 +122,23 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, rep=FALSE, col="bl
   }
 
   options(show.error.messages = FALSE)
-  if(!missing(dy)) {
-    if(missing(mdy)){ mdy <- dy }
-    arrows(x, y-mdy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+  if(!is.null(cumul.dy)) {
+    for(cumul.err in list(cumul.dy,cumul.mdy)){
+      for(level in 2:ncol(cumul.err)){
+        start <- y+cumul.err[,(level-1)]
+        end <- y+cumul.err[,level]
+        arrows(x, start, x, end, length=level*0.01, angle=90, code=2, col=col)
+      }
+    } 
   }
-  if(!missing(dx)) {
-    if(missing(mdx)){ mdx <- dx }
-    arrows(x-mdx,y,x+dx,y, length=0.01,angle=90,code=3, col=col)
+  if(!is.null(cumul.dx)) {
+    for(cumul.err in list(cumul.dx,cumul.mdx)){
+      for(level in 2:ncol(cumul.err)){
+        start <- x+cumul.err[,(level-1)]
+        end <- x+cumul.err[,level]
+        arrows(start, y, end, y, length=level*0.01, angle=90, code=2, col=col)
+      }
+    } 
   }
   options(show.error.messages = TRUE)
 }
