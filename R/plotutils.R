@@ -1,4 +1,9 @@
 sumerror <- function(dx,errsum.method="quadrature") {
+  norm <- 1
+  if(!is.null(ncol(dx)) && errsum.method=="quadrature"){
+    norm <- apply(X=dx,MARGIN=1,FUN=function(x){sqrt(sum(x^2))})
+  }
+
   rval <- NULL
   # if dx is a simple vector rather than a matrix/data.frame/array, we just need to return 0 and dx
   if(is.null(ncol(dx))){
@@ -11,20 +16,22 @@ sumerror <- function(dx,errsum.method="quadrature") {
   if(is.null(ncol(dx))) {
     rval[,2] <- dx
   } else {
-    rval[,2] <- dx[,1]
+    rval[,2] <- dx[,1]^2
   }
   
   # compute cumulative sums of the columns of dx, so for the "quadrature" method we will have
-  # rval[j,] == c(0,dx[j,1],sqrt(dx[j,1]^2+dx[j,2]^2),sqrt(dx[j,1]^2+dx[j,2]^2+dx[j,3]^2),..)
+  # norm[j] <- sqrt(sum(dx[j,]^2))
+  # rval[j,] == c(0,dx[j,1]^2/norm[j],(dx[j,1]^2+dx[j,2]^2)/norm[j],(dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
   if(!is.null(ncol(dx))){  
     for( i in 2:ncol(dx) ){
       rval[,(i+1)] <- apply(X=dx[,1:i],MARGIN=1,
                             FUN=function(x){
-                                  if(errsum.method=="quadrature") return( sqrt(sum(x^2)) )
+                                  if(errsum.method=="quadrature") return( sum(x^2) )
                                   else return( sum(x) )
                                 } )
     }
   }
+  rval <- rval/norm
   rval
 }
 
