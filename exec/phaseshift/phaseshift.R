@@ -15,7 +15,7 @@ EofEcm <- function(Ecm, dvec, L) {
 }
 
 ## computes the boost factor as a function of q^2
-gammaofqsq <- function(q, dvec, Mpi, L) {
+gammaofq <- function(q, dvec, Mpi, L) {
   Ecm <- Ecmofqsq(q, Mpi)
   ## E/Ecm
   return(EofEcm(Ecm, dvec, L)/Ecm)
@@ -27,33 +27,72 @@ Eofqsq <- function(q, dvec, Mpi, L) {
   return(EofEcm(Ecm, dvec, L))
 }
 
+## center of mass frame formulae
+
+## this function is indendet for a rough scan in q
+## and it is independent of the irrep
 prepdetEqCMscan <- function(q, Mpi, L) {
   W <- list()
   W$dvec <- c(0,0,0)
-  W$gamma <- gammaofqsq(q, dvec=W$dvec, Mpi=Mpi, L=L)
+  W$gamma <- gammaofq(q, dvec=W$dvec, Mpi=Mpi, L=L)
   W$qt <- L*q/2/pi
   W$L <- L
   W$Mpi <- Mpi
   W$q <- q
 
   W$w00 <- Re(omegalm(l=0, m=0, q=W$qt, gamma=W$gamma))
+  W$w40 <- Re(omegalm(l=4, m=0, q=W$qt, gamma=W$gamma))
   return(W)
 }
 
-detEqCMscan <- function(par, W) {
-  return(par[1] + 0.5*par[2]*W$q^2 - W$q*W$w00)
+## A1 irrep
+detEqCMA1scan <- function(par, W) {
+  cd0 <- par[1] + 0.5*par[2]*W$q^2
+  return(cd0 - W$q*W$w00)
 }
 
-detEqCM <- function(q, par, Mpi, L) {
+detEqCMA1 <- function(q, par, Mpi, L) {
   gamma <- rep(1., times=(length(q)))
   qt <- L*q/2/pi
-  return(par[1] + 0.5*par[2]*q^2 - q*Re(omegalm(l=0, m=0, q=qt, gamma=gamma)))
+  cd0 <- par[1] + 0.5*par[2]*q^2
+  return(cd0 - q*Re(omegalm(l=0, m=0, q=qt, gamma=gamma)))
 }
 
+## E irrep
+detEqCMEscan <- function(par, W) {
+  cd2 <- par[3]
+  return(cd2 - W$q^5*(W$w00 + 18/7*W$w40))
+}
+
+detEqCME <- function(q, par, Mpi, L) {
+  gamma <- rep(1., times=(length(q)))
+  qt <- L*q/2/pi
+  w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma))
+  w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma))
+  cd2 <- par[3]
+  return(cd2 - q^5*(w00 + 18/7*w40))
+}
+
+## T2 irrep
+detEqCMT2scan <- function(par, W) {
+  cd2 <- par[3]
+  return(cd2 - W$q^5*(W$w00 - 12/7*W$w40))
+}
+
+detEqCMT2 <- function(q, par, Mpi, L) {
+  gamma <- rep(1., times=(length(q)))
+  qt <- L*q/2/pi
+  w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma))
+  w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma))
+  cd2 <- par[3]
+  return(cd2 - q^5*(w00 - 12/7*w40))
+}
+
+## moving frame with d=(0,0,1)
 prepdetEqMF1scan <- function(q, Mpi, L) {
   W <- list()
   W$dvec <- c(0,0,1)
-  W$gamma <- gammaofqsq(q, dvec=W$dvec, Mpi=Mpi, L=L)
+  W$gamma <- gammaofq(q, dvec=W$dvec, Mpi=Mpi, L=L)
   W$qt <- L*q/2/pi
   W$L <- L
   W$Mpi <- Mpi
@@ -66,7 +105,8 @@ prepdetEqMF1scan <- function(q, Mpi, L) {
   return(W)
 }
 
-detEqMF1scan <- function(par, W) {
+## A1 irrep
+detEqMF1A1scan <- function(par, W) {
   cd0 <- par[1] + 0.5*par[2]*W$q^2
   cd2 <- par[3]
   return( (cd0 - W$q*W$w00)*
@@ -75,10 +115,10 @@ detEqMF1scan <- function(par, W) {
          )
 }
 
-detEqMF1 <- function(q, par, Mpi, L) {
+detEqMF1A1 <- function(q, par, Mpi, L) {
   dvec <- c(0,0,1)
 
-  gamma <- gammaofqsq(q, dvec=dvec, Mpi=Mpi, L=L)
+  gamma <- gammaofq(q, dvec=dvec, Mpi=Mpi, L=L)
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
@@ -93,10 +133,11 @@ detEqMF1 <- function(q, par, Mpi, L) {
          )
 }
 
+## moving frame with d=(1,1,0)
 prepdetEqMF2scan <- function(q, Mpi, L) {
   W <- list()
   W$dvec <- c(1,1,0)
-  W$gamma <- gammaofqsq(q, dvec=W$dvec, Mpi=Mpi, L=L)
+  W$gamma <- gammaofq(q, dvec=W$dvec, Mpi=Mpi, L=L)
   W$qt <- L*q/2/pi
   W$L <- L
   W$Mpi <- Mpi
@@ -112,7 +153,8 @@ prepdetEqMF2scan <- function(q, Mpi, L) {
   return(W)
 }
 
-detEqMF2scan <- function(par, W) {
+## A1 irrep
+detEqMF2A1scan <- function(par, W) {
   cd0 <- (par[1] + 0.5*par[2]*W$q^2)/W$q
   cd2 <- par[3]/W$q^5
 
@@ -124,9 +166,9 @@ detEqMF2scan <- function(par, W) {
             ))
 }
 
-detEqMF2 <- function(q, par, Mpi, L) {
+detEqMF2A1 <- function(q, par, Mpi, L) {
   dvec=c(1,1,0)
-  gamma <- gammaofqsq(q, dvec=dvec, Mpi=Mpi, L=L)
+  gamma <- gammaofq(q, dvec=dvec, Mpi=Mpi, L=L)
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
@@ -147,10 +189,11 @@ detEqMF2 <- function(q, par, Mpi, L) {
          ))
 }
 
+## moving frame with d=(1,1,1)
 prepdetEqMF3scan <- function(q, Mpi, L) {
   W <- list()
   W$dvec <- c(1,1,1)
-  W$gamma <- gammaofqsq(q, dvec=W$dvec, Mpi=Mpi, L=L)
+  W$gamma <- gammaofq(q, dvec=W$dvec, Mpi=Mpi, L=L)
   W$qt <- L*q/2/pi
   W$L <- L
   W$Mpi <- Mpi
@@ -164,7 +207,8 @@ prepdetEqMF3scan <- function(q, Mpi, L) {
   return(W)
 }
 
-detEqMF3scan <- function(par, W) {
+## A1 irrep
+detEqMF3A1scan <- function(par, W) {
   cd0 <- (par[1] + 0.5*par[2]*W$q^2)
   cd2 <- par[3]
 
@@ -175,9 +219,9 @@ detEqMF3scan <- function(par, W) {
          )
 }
 
-detEqMF3 <- function(q, par, Mpi, L) {
+detEqMF3A1 <- function(q, par, Mpi, L) {
   dvec=c(1,1,1)
-  gamma <- gammaofqsq(q, dvec=dvec, Mpi=Mpi, L=L)
+  gamma <- gammaofq(q, dvec=dvec, Mpi=Mpi, L=L)
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
@@ -206,13 +250,16 @@ findSignChanges <- function(fn, makeplot=FALSE, par, W, no=3, threshold=100) {
   j <- 1
   for(i in c(1:(length(W$q)-1))) {
     ## find all sign-changes 
-    if(res[i]/abs(res[i]) != res[i+1]/abs(res[i+1])) {
-      ## remove the poles
-      if((res[i] < 0 && res[i-1] < res[i]) ||
-         (res[i] > 0 && res[i-1] > res[i])) {
-        ii[j] <- i
-        j <- j+1
-        if(j == no+1) break
+    ##cat(res[i], res[i+1], "\n")
+    if(!is.na(res[i]) && !is.na(res[i+1])) {
+      if(res[i]/abs(res[i]) != res[i+1]/abs(res[i+1])) {
+        ## remove the poles
+        if((res[i] < 0 && res[i-1] < res[i]) ||
+           (res[i] > 0 && res[i-1] > res[i])) {
+          ii[j] <- i
+          if(j == no) break
+          j <- j+1
+        }
       }
     }
   }
@@ -227,7 +274,7 @@ findZeros <- function(fn, q, ii, makeplot=FALSE, tol=1.e-12, ...) {
     z <- uniroot(fn, interval=c(q[ii[j]], q[ii[j]+1]), tol = tol, ...)
     if(z$f.root < 1) {
       zeros[j] <- z$root
-##      cat("root", j, ":", z$root, z$f.root, z$estim.prec, "\n")
+      ##cat("root", j, ":", z$root, z$f.root, z$estim.prec, "\n")
     }
   }
   if(makeplot) {
