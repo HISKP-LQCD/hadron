@@ -1,15 +1,4 @@
-
-compRpipi <- function(c4, c2, Thalf) {
-  tt <- c(1:Thalf)
-  return((c4[tt] - c4[tt+1])/(c2[tt]^2 - c2[tt+1]^2))
-}
-
-## fit formel: R(t+1/2) = A*(cosh(dE*t') +sinh(dE*t')*coth(2*Mpi*t'))
-## t' = t+1/2-T/2
-Rfn <- function(par, tp, m) {
-  return(par[1]*(cosh(par[2]*tp) + sinh(par[2]*tp)/tanh(2*m*tp)))
-}
-
+source("ratio.R")
 
 read.pipidata <- function(path="./", T, Rformat=FALSE, Tformat=FALSE) {
   pion.cor <- cf()
@@ -57,6 +46,7 @@ deltaEvL <- function(a0, deltaE, L, m, debug=FALSE) {
 }
 
 
+
 ## extrac scattering length Luescher formula using
 ## the ratio to determine energy shift values
 run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
@@ -87,6 +77,7 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
 
   pipi.cor <- bootstrap.cf(pipi.cor, boot.R=boot.R, boot.l=boot.l)
 
+  pion.effmass <- pion.cor
   if(!inherits(pion.cor, "effectivemassfit")) {
     pion.cor <- bootstrap.cf(pion.cor, boot.R=boot.R, boot.l=boot.l)
     pion.effmass <- bootstrap.effectivemass(pion.cor, boot.R=boot.R, boot.l=boot.l, type="solve")
@@ -103,12 +94,13 @@ run.pipi.analysis.ratio <- function(data, boot.R=999, boot.l=1, useCov=TRUE,
   ## error of the ratio
   dRpipi <- apply(Rpipi.tsboot, 2, sd)
 
-  ## fit function includes covariance matrix M
+  ## chi^2 function includes covariance matrix M
   fitfn <- function(par, y, t, m, Thalf, M) {
     tp <- t - Thalf 
     z <- Rfn(par, tp, m)
     return((z-y) %*% M %*% (z-y))
   }
+  ## the same, but in the format for nls.lm
   fitfn2 <- function(par, y, t, m, Thalf, L) {
     z <- Rfn(par, t-Thalf, m)
     return(L %*% (z-y))
