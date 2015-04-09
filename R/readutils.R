@@ -350,3 +350,33 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
              Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
   return(invisible(cf))
 }
+
+readgradflow <- function(path) {
+  files <- getorderedfilelist(path=path, basename="gradflow", last.digits=6)
+
+  if(length(files)==0) stop(sprintf("readgradflow: no tmlqcd gradient flow files found in path %s",path))
+  
+  tmpdata <- read.table(file=files[1],colClasses="numeric",header=T)
+  
+  fLength <- length(tmpdata$t)
+  nFiles <- length(files)
+  nCols <- ncol(tmpdata)
+  ## we generate the full size data.frame first
+  tmpdata[,] <- NA
+  ldata <- tmpdata
+  ldata[((nFiles-1)*fLength+1):(nFiles*fLength),] <- tmpdata
+  rm(tmpdata)
+  
+  pb <- NULL
+  pb <- txtProgressBar(min = 1, max = length(files), style = 3)
+  for( i in 1:length(files) ){
+    setTxtProgressBar(pb, i) 
+    ldata[((i-1)*fLength+1):(i*fLength),] <- read.table(file=files[i],header=T)
+  }
+  close(pb)
+  # order by t as outermost index
+  ldata <- ldata[order(ldata$t,ldata$traj),]
+  rownames(ldata) <- NULL
+  return(invisible(ldata))
+}
+
