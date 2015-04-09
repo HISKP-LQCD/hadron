@@ -85,7 +85,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
-  if(mSize > 1) {	
+  if(mSize > 1) {
     for(j in 2:mSize) {
       ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
     }
@@ -214,7 +214,14 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     } else {
       lines(tx, y, col=col[i], lwd=c(3))
     }
-  }  
+  }
+
+  if(interactive()) {
+    X11()
+  }
+  s <- seq(0,1,1./length(mfit$opt.tsboot[1,]))
+  x <- qchisq(p=s, df=mfit$dof)
+  qqplot(x=x, y=mfit$opt.tsboot[length(mfit$opt.tsboot[,1]), ], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot Chi^2 Values")
 }
 
 
