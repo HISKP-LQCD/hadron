@@ -7,7 +7,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
                  for.tsboot=TRUE, sort.type="vectors") {
   
   if(matrix.size^2 != length(element.order)) {
-    stop("matrix.size^2 must be Aborting...\n")
+    stop("matrix.size^2 must be equal to length of element.order. Aborting...\n")
   }
   if(t0 < 0 || t0 > (Time/2-2)) {
     stop("t0 must be in between 0 and T/2-2. Aborting ...\n")
