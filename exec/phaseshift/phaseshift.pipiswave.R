@@ -13,7 +13,7 @@ compute.gamma.free <- function(mpisq, p1, p2, L, dvec) {
   return(E/Ecm)
 }
 
-phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpolation.n=100,
+phaseshift.pipi.swave <- function(PC="pc1", tp="TP0",
                                   p1=c(0,0,0), p2=c(0,0,0), dr=c(-1, 1),
                                   boot.R=400, boot.l=1, L=32, T=64, dvec=c(0,0,0), debug=FALSE
                                   ) {
@@ -27,45 +27,6 @@ phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpol
   
   res <- array(0., dim=c(boot.R+1, length(pionfilelist), length(pipifilelist), 8))
   
-  ## interpolate Zeta function based on first available fits for pi and pipi
-  if(interpolate) {
-    cat("...computing spline interpolation for Zeta function\n")
-    load(pionfilelist[1])
-    load(pipifilelist[1])
-
-    ## \tilde q^2    
-    qtsq <- compute.qtildesq(E=pc.effectivemass$massfit.tsboot[,1], dvec=dvec, mpi=pion.effectivemass$massfit.tsboot[,1], L=L)
-    cat("E:", pc.effectivemass$opt.res$par[1], "mpi:", pion.effectivemass$opt.res$par[1], "gamma:", qtsq$gammaboost[1], "\n")
-    
-    rg <- range(qtsq$qtsq)
-    d <- rg[2]-rg[1]
-    rg[1] <- rg[1] + dr[1]*d
-    rg[2] <- rg[2] + dr[2]*d
-    if(rg[1] < 0) rg[1] <- 0.0001
-    ## Zeta function has poles for q^2=0,1,2,3,4...
-    ## we don't want to interpolate over a pole
-    if(rg[1] > 0 && ceiling(rg[1]) < rg[2]) {
-      if(ceiling(rg[1])-rg[1] > rg[2] - ceiling(rg[1])) {
-        rg[2] <- ceiling(rg[1])-0.0001
-      }
-      else {
-        rg[1] <- ceiling(rg[1])+0.0001
-      }
-    }
-    else if(rg[1] < 0 && rg[2] > 0) {
-      if(abs(rg[1]) > abs(rg[2])) {
-        rg[2] <- -0.0001
-      }
-      else {
-        rg[1] <- 0.0001
-      }
-    }
-    cat("range chosen to be from", rg[1], "to", rg[2], "with spacing", d/interpolation.n, "\n")
-    x <- seq(rg[1], rg[2], d/interpolation.n)
-    y <- Re(LuescherZeta(x, l=l, m=m, gamma=qtsq$gammaboost, dvec=dvec))
-    SplineReZ <- splinefun(x,y)
-    cat("...done\n")
-  }
   cat("\n...determining shifts for", length(pionfilelist), "x", length(pipifilelist), "combinations\n")
   for(i in c(1:length(pionfilelist))) {
     load(pionfilelist[i])
@@ -88,16 +49,7 @@ phaseshift.pipi.swave <- function(PC="pc1", tp="TP0", interpolate=TRUE, interpol
       ## now we bootstrap
       qtsq <- compute.qtildesq(pc.effectivemass$massfit.tsboot[,1], dvec=dvec, L=L, mpi=pion.effectivemass$massfit.tsboot[,1])
 
-      if(interpolate) {
-        Z <- SplineReZ(qtsq$qtsq)
-        if(rg[1] > min(qtsq$qtsq, na.rm=TRUE) && rg[2] < max(qtsq$qtsq, na.rm=TRUE)) {
-          ii <- which(qtsq$qtsq < rg[1])
-          jj <- which(qtsq$qtsq > rg[2])
-          warning(paste("approximation range of spline exceeded", i, j, min(qtsq$qtsq, na.rm=TRUE), max(qtsq$qtsq, na.rm=TRUE), ", using Zeta function itself for", length(c(ii,jj)), "points \n"))
-          Z[c(ii,jj)] <- Re(LuescherZeta(qtsq$qtsq[c(ii,jj)], l=l, m=m, gamma=qtsq$gammaboost[c(ii,jj)], dvec=dvec))
-        }
-      }
-      else Z <- Re(LuescherZeta(qtsq$qtsq, l=l, m=m, gamma=qtsq$gammaboost, dvec=dvec))
+      Z <- Re(LuescherZeta(qtsq$qtsq, l=l, m=m, gamma=qtsq$gammaboost, dvec=dvec))
       res[c(2:(boot.R+1)), i, j, 1] <- qtsq$q^2
       res[c(2:(boot.R+1)), i, j, 2] <- qtsq$qtsq
       ## q cot(delta)
