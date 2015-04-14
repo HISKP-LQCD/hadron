@@ -1,4 +1,7 @@
-sumerror <- function(dx,errsum.method="quadrature") {
+errorpos <- function(dx,errsum.method="linear.quadrature") {
+  if( !any(errsum.method==c("linear","linear.quadrature","quadrature")) ){
+    stop(sprintf("errorpos: called with unknown errsum.method %s",errsum.method))
+  }
   norm <- 1
   if(!is.null(ncol(dx)) && errsum.method=="quadrature"){
     norm <- apply(X=dx,MARGIN=1,FUN=function(x){sqrt(sum(x^2))})
@@ -8,34 +11,42 @@ sumerror <- function(dx,errsum.method="quadrature") {
   # if dx is a simple vector rather than a matrix/data.frame/array, we just need to return 0 and dx
   if(is.null(ncol(dx))){
     rval <- array(dim=c(length(dx),2))
+  } else if ( errsum.method=="linear.quadrature" ) {
+    rval <- array(dim=c(nrow(dx),(ncol(dx)+2)))
   } else {
     rval <- array(dim=c(nrow(dx),(ncol(dx)+1)))
   }
   
   rval[,1] <- 0
-  if(is.null(ncol(dx))) {
+  if(is.null(ncol(dx))){
     rval[,2] <- dx
-  } else {
+  } else if (errsum.method=="linear.quadrature" || errsum.method=="linear") {
+    rval[,2] <- dx[,1]
+  } else if (errsum.method=="quadrature"){
     rval[,2] <- dx[,1]^2
   }
   
-  # compute cumulative sums of the columns of dx, so for the "quadrature" method we will have
+  # compute error bar deviations from the columns of dx depending on the errsum.method
+  # so for the "quadrature" method we will have
   # norm[j] <- sqrt(sum(dx[j,]^2))
-  # rval[j,] == c(0,dx[j,1]^2/norm[j],(dx[j,1]^2+dx[j,2]^2)/norm[j],(dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
-  if(!is.null(ncol(dx))){  
+  # rval[j,] == c(0, dx[j,1]^2/norm[j], (dx[j,1]^2+dx[j,2]^2)/norm[j], (dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
+  if(!is.null(ncol(dx))){ 
     for( i in 2:ncol(dx) ){
-      rval[,(i+1)] <- apply(X=dx[,1:i],MARGIN=1,
-                            FUN=function(x){
-                                  if(errsum.method=="quadrature") return( sum(x^2) )
-                                  else return( sum(x) )
-                                } )
+      rval[,(i+1)] <- apply( X=dx[,1:i],MARGIN=1,
+                           FUN=function(x){
+                                 if(errsum.method=="quadrature") return( sum(x^2) )
+                                 else return( sum(x) )
+                               } )
     }
+  }
+  if(!is.null(ncol(dx)) && errsum.method=="linear.quadrature"){
+    rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
   rval <- rval/norm
   rval
 }
 
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="quadrature", rep=FALSE, col="black", ...) {
+plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
   if(!missing(mdy) && missing(dy)){
     stop("plotwitherror: if 'mdy' is provided, 'dy' must be too (it can be 0)")
   }
@@ -59,22 +70,22 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="qua
   cumul.dy <- NULL
   cumul.mdy <- NULL
 
-  # see above for description of what sumerror does
+  # see above for description of what errorpos does
   if(!missing(dx)){
-    cumul.dx <- sumerror(dx,errsum.method)
+    cumul.dx <- errorpos(dx,errsum.method)
     if(missing(mdx)){
-      cumul.mdx <- -sumerror(dx,errsum.method)
+      cumul.mdx <- -errorpos(dx,errsum.method)
     } else {
-      cumul.mdx <- -sumerror(mdx,errsum.method)
+      cumul.mdx <- -errorpos(mdx,errsum.method)
     }  
   }
   
   if(!missing(dy)){
-    cumul.dy <- sumerror(dy,errsum.method)
+    cumul.dy <- errorpos(dy,errsum.method)
     if(missing(mdy)){
-      cumul.mdy <- -sumerror(dy,errsum.method)
+      cumul.mdy <- -errorpos(dy,errsum.method)
     } else {
-      cumul.mdy <- -sumerror(mdy,errsum.method)
+      cumul.mdy <- -errorpos(mdy,errsum.method)
     }
   }
 
@@ -83,8 +94,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="qua
     tmpp <- x + 0.1*abs(x)
     if(!is.null(cumul.dx)) {
       # cumul.mdx is implicitly negative
-      tmp <- x+2*cumul.mdx[,ncol(cumul.mdx)]
-      tmpp <- x+2*cumul.dx[,ncol(cumul.dx)]
+      tmp <- x+2*min(cumul.mdx,na.rm=TRUE)
+      tmpp <- x+2*max(cumul.dx,na.rm=TRUE)
     }
     if(xlog) {
       tmp <- tmp[ tmp > 0 ]
@@ -100,8 +111,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="qua
     tmpp <- y + 0.1*abs(y)
     if(!is.null(cumul.dy)) {
       # cumul.mdy is implicitly negative
-      tmp <- y+2*cumul.mdy[,ncol(cumul.mdy)]
-      tmpp <- y+2*cumul.dy[,ncol(cumul.dy)]
+      tmp <- y+2*min(cumul.mdy,na.rm=TRUE)
+      tmpp <- y+2*max(cumul.dy,na.rm=TRUE)
     }
     if(ylog) {
       tmp <- tmp[ tmp > 0 ]
@@ -131,22 +142,38 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="qua
   options(show.error.messages = FALSE)
   if(!is.null(cumul.dy)) {
     for(cumul.err in list(cumul.dy,cumul.mdy)){
-      for(level in 2:ncol(cumul.err)){
+      rng <- 2:ncol(cumul.err)
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
+      for(level in rng){
         start <- y+cumul.err[,(level-1)]
         end <- y+cumul.err[,level]
         arrows(x, start, x, end, length=level*0.01, angle=90, code=2, col=col)
+      } 
+      # for the linear.quadrature method, show the total error as a line of triple thickness
+      # without drawing any "arrowstems"
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
+        # width of the error bar is specified in inches, like for "arrows" 
+        barwidth <- (max(rng)+1)*0.01
+        drawYbars(x=x,y=y,dy=cumul.err[,ncol(cumul.err)],length=barwidth,lwd=3)
       }
-    } 
+    }
   }
   if(!is.null(cumul.dx)) {
     for(cumul.err in list(cumul.dx,cumul.mdx)){
-      for(level in 2:ncol(cumul.err)){
+      rng <- 2:ncol(cumul.err)
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
+      for(level in rng){
         start <- x+cumul.err[,(level-1)]
         end <- x+cumul.err[,level]
         arrows(start, y, end, y, length=level*0.01, angle=90, code=2, col=col)
       }
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
+        barwidth <- (max(rng)+1)*0.01
+        drawXbars(x=x,y=y,dx=cumul.err[,ncol(cumul.err)],length=barwidth,lwd=3)
+      }
     } 
   }
+  
   options(show.error.messages = TRUE)
 }
 
@@ -316,6 +343,31 @@ plot.outputdata <- function(data, skip=0, ...) {
        main=expression(paste(Delta, "H")), xlab=expression(t[HMC]), ylab=expression(paste(Delta, "H")), ...)
   return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))
 }
+
+# draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
+# like for arrows, the bar width is specified in inches
+# and additonal parameters (like lwd and col) can be passed
+# to segments
+drawYbars <- function(x,y,dy,length=0.01,...) {
+  x.inch <- grconvertX(x=x,from="user",to="inches")
+  xp.inch <- x.inch+length
+  xm.inch <- x.inch-length
+  xp <- grconvertX(x=xp.inch,from="inches",to="user")
+  xm <- grconvertX(x=xm.inch,from="inches",to="user")
+  segments(xp, y+dy,
+           xm, y+dy, ...)
+}
+
+drawXbars <- function(x,y,dx,length=0.01,...) {
+  y.inch <- grconvertY(y=y,from="user",to="inches")
+  yp.inch <- y.inch+length
+  ym.inch <- y.inch-length
+  yp <- grconvertY(y=yp.inch,from="inches",to="user")
+  ym <- grconvertY(y=ym.inch,from="inches",to="user")
+  segments(x+dx, ym,
+           x+dx, yp, ...)
+}
+
 
 #postscript(file = "test.eps", family="NimbusRom", paper="special", horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
 # linewidth, tick length and direction, margings, orientation
