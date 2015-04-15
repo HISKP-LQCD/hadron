@@ -3,24 +3,20 @@ errorpos <- function(dx,errsum.method="linear.quadrature") {
     stop(sprintf("errorpos: called with unknown errsum.method %s",errsum.method))
   }
   norm <- 1
-  if(!is.null(ncol(dx)) && errsum.method=="quadrature"){
+
+  if(errsum.method=="quadrature"){
     norm <- apply(X=dx,MARGIN=1,FUN=function(x){sqrt(sum(x^2))})
   }
 
   rval <- NULL
-  # if dx is a simple vector rather than a matrix/data.frame/array, we just need to return 0 and dx
-  if(is.null(ncol(dx))){
-    rval <- array(dim=c(length(dx),2))
-  } else if ( errsum.method=="linear.quadrature" ) {
+  if ( errsum.method=="linear.quadrature" ) {
     rval <- array(dim=c(nrow(dx),(ncol(dx)+2)))
   } else {
     rval <- array(dim=c(nrow(dx),(ncol(dx)+1)))
   }
   
   rval[,1] <- 0
-  if(is.null(ncol(dx))){
-    rval[,2] <- dx
-  } else if (errsum.method=="linear.quadrature" || errsum.method=="linear") {
+  if (errsum.method=="linear.quadrature" || errsum.method=="linear") {
     rval[,2] <- dx[,1]
   } else if (errsum.method=="quadrature"){
     rval[,2] <- dx[,1]^2
@@ -30,16 +26,26 @@ errorpos <- function(dx,errsum.method="linear.quadrature") {
   # so for the "quadrature" method we will have
   # norm[j] <- sqrt(sum(dx[j,]^2))
   # rval[j,] == c(0, dx[j,1]^2/norm[j], (dx[j,1]^2+dx[j,2]^2)/norm[j], (dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
-  if(!is.null(ncol(dx))){ 
+  if(ncol(dx)>1){ 
     for( i in 2:ncol(dx) ){
-      rval[,(i+1)] <- apply( X=dx[,1:i],MARGIN=1,
-                           FUN=function(x){
-                                 if(errsum.method=="quadrature") return( sum(x^2) )
-                                 else return( sum(x) )
-                               } )
+      # when dx has only one row, dx[,1:i] is returned as a vector, making apply fail....
+      if(nrow(dx)>1){
+        rval[,(i+1)] <- apply( X=dx[,1:i],MARGIN=1,
+                             FUN=function(x){
+                                   if(errsum.method=="quadrature") return( sum(x^2) )
+                                   else return( sum(x) )
+                                 } )
+      } else {
+        if(errsum.method=="quadrature"){
+          rval[,(i+1)] <- sum(dx[,1:i]^2)
+        } else {
+          rval[,(i+1)] <- sum(dx[,1:i])
+        }
+      }
     }
   }
-  if(!is.null(ncol(dx)) && errsum.method=="linear.quadrature"){
+  if(ncol(dx)>1 && errsum.method=="linear.quadrature"){
+    # unlike above, even if dx has only one row, this works fine
     rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
   rval <- rval/norm
@@ -53,6 +59,11 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   if(!missing(mdx) && missing(dx)){
     stop("plotwitherror: if 'mdx' is provided, 'dx' must be too (it can be 0)")
   }
+  if( (!missing(dx) && is.null(ncol(dx)) && length(dx)>length(x) ) || ( !missing(mdx) && is.null(ncol(mdx)) && length(mdx)>length(x) ) ||
+      (!missing(dy) && is.null(ncol(dy)) && length(dy)>length(y) ) || ( !missing(mdy) && is.null(ncol(dy)) && length(dy)>length(y) ) ) {
+    stop("plotwitherror: if any dx, mdx, dy or mdy is a simple vector, it must be of the same length as the corresponing x/y, multiple errors must ALWAYS be specified in the form of arrays/data frames/matrices")
+  }
+
   fcall <- match.call(expand.dots=TRUE)
   ylog <- FALSE
   xlog <- FALSE
@@ -69,24 +80,40 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   cumul.mdx <- NULL
   cumul.dy <- NULL
   cumul.mdy <- NULL
-
+  
+  # compute cumulative error bar positions, first convert vectorial dx, dy into arrays 
   # see above for description of what errorpos does
   if(!missing(dx)){
+    # if dx is a simple vector, convert into an appropriately sized array
+    if(is.null(ncol(dx))){
+      dx <- array(data=dx,dim=c(length(dx),1))
+    }
     cumul.dx <- errorpos(dx,errsum.method)
+    
     if(missing(mdx)){
       cumul.mdx <- -errorpos(dx,errsum.method)
     } else {
+      if(is.null(ncol(mdx))){
+          mdx <- array(data=mdx,dim=c(length(mdx),1))
+        }
       cumul.mdx <- -errorpos(mdx,errsum.method)
     }  
   }
   
   if(!missing(dy)){
+    if(is.null(ncol(dy))){
+      dy <- array(data=dy,dim=c(length(dy),1))
+    }
     cumul.dy <- errorpos(dy,errsum.method)
+    
     if(missing(mdy)){
       cumul.mdy <- -errorpos(dy,errsum.method)
     } else {
+      if(is.null(ncol(mdy))){
+        mdy <- array(data=mdy,dim=c(length(mdy),1))
+      }
       cumul.mdy <- -errorpos(mdy,errsum.method)
-    }
+    }  
   }
 
   if(missing(xlim)) {
@@ -94,15 +121,14 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     tmpp <- x + 0.1*abs(x)
     if(!is.null(cumul.dx)) {
       # cumul.mdx is implicitly negative
-      tmp <- x+2*min(cumul.mdx,na.rm=TRUE)
-      tmpp <- x+2*max(cumul.dx,na.rm=TRUE)
+      tmp <- x+2*apply(X=cumul.mdx,MARGIN=1,FUN=min,na.rm=TRUE)
+      tmpp <- x+2*apply(X=cumul.dx,MARGIN=1,FUN=max,na.rm=TRUE)
     }
     if(xlog) {
       tmp <- tmp[ tmp > 0 ]
     }
     my.xlim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
-  }
-  else {
+  } else {
     my.xlim <- xlim
   }
 
@@ -111,8 +137,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     tmpp <- y + 0.1*abs(y)
     if(!is.null(cumul.dy)) {
       # cumul.mdy is implicitly negative
-      tmp <- y+2*min(cumul.mdy,na.rm=TRUE)
-      tmpp <- y+2*max(cumul.dy,na.rm=TRUE)
+      tmp <- y+2*apply(X=cumul.mdy,MARGIN=1,FUN=min,na.rm=TRUE)
+      tmpp <- y+2*apply(X=cumul.dy,MARGIN=1,FUN=max,na.rm=TRUE)
     }
     if(ylog) {
       tmp <- tmp[ tmp > 0 ]
