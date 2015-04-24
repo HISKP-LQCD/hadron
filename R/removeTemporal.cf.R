@@ -68,7 +68,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   }
   if(any(p2 != 0)) {
     if(lat.disp) {
-      pshift <- sum((2*pi*p2/L)^2)
+      pshift <- 2*sum(sin(pi*p2/L)^2)
       mass2$t0 <- acosh( cosh(mass2$t0) + pshift )
       mass2$t <- acosh( cosh(mass2$t) + pshift )
     }
