@@ -92,14 +92,14 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-c(0:(T/2))))
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1)))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp(-(mass2$t[i]-mass1$t[i])*c(-c(0:(T/2))))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp(-(mass2$t[i]-mass1$t[i])*c(-1:(T/2-1)))
   }
   ## store masses in cf
   cf$mass1 <- mass1
@@ -125,18 +125,18 @@ takeTimeDiff.cf <- function(cf) {
   tt1 <- tt0+1
 
   ## take the differences, set the remaining points to NA
-  cf$cf0[tt0] <- cf$cf0[tt0]-cf$cf0[tt1]
-  cf$cf0[-tt0] <- NA
+  cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
+  cf$cf0[-tt1] <- NA
   if(!is.null(cf$cf)) {
-    cf$cf[,tt0] <- cf$cf[,tt0]-cf$cf[,tt1]
-    cf$cf[,-tt0] <- NA
+    cf$cf[,tt1] <- cf$cf[,tt0]-cf$cf[,tt1]
+    cf$cf[,-tt1] <- NA
   }
   ## now the bootstrap samples
   if(cf$boot.samples) {
-    cf$cf.tsboot$t0[tt0] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
-    cf$cf.tsboot$t0[-tt0] <- NA
-    cf$cf.tsboot$t[,tt0] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
-    cf$cf.tsboot$t[,-tt0] <- NA
+    cf$cf.tsboot$t0[tt1] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
+    cf$cf.tsboot$t0[-tt1] <- NA
+    cf$cf.tsboot$t[,tt1] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
+    cf$cf.tsboot$t[,-tt1] <- NA
   }
   ## save info
   cf$shifted <- TRUE
