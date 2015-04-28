@@ -128,8 +128,9 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   par <- numeric(max(parind))
   ## we get initial guesses for fit parameters from effective masses
   ## first is the mass
+  ## (we currently allow for only one)
   j <- which(parlist[1,]==1 & parlist[2,]==1)
-  par[1] <- -log(CF$Cor[t1p1+(j-1)*Thalfp1+1]/CF$Cor[t1p1+(j-1)*Thalfp1])
+  par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$T)
   ## the amplitudes we estimate from diagonal elements
   for(i in 2:length(par)) {
     j <- which(parlist[1,]==(i-1) & parlist[2,]==(i-1))
