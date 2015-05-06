@@ -186,22 +186,22 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 
 plot.averx <- function(averx) {
   Thalfp1 <- averx$Cf2pt$Time/2+1
-  plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
+  ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   if(interactive()) X11()
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau), main=c("3pt ov 2pt"))
   plothlinewitherror(m=averx$plateau, dp=sd(averx$plateau.tsboot[,1]), dm=sd(averx$plateau.tsboot[,1]),
                     x0=averx$t1, x1=averx$t2)
   if(interactive()) X11()
   plotwitherror(c(0:(averx$Cf2pt$Time/2)),
-                averx$Cf3pt$cf0/averx$effmass$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
-                apply(averx$Cf3pt$cf.tsboot$t/averx$effmass$massfit.tsboot[,1]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
+                averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
+                apply(averx$Cf3pt$cf.tsboot$t/averx$matrixfit$opt.tsboot[1,]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
                 ylim=c(0,0.6), xlab=c("t/a"), ylab=c("C3pt"), main=c("<x>")
                 )
   if(interactive()) X11()
   qqplot(averx$plateau.tsboot[,2], rchisq(n=averx$boot.R, df=averx$dof), main=paste("qqplot chisq"))
   return(invisible(data.frame(t=c(0:(averx$Cf2pt$Time/2)),
-                              averx=averx$Cf3pt$cf0/averx$effmass$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
-                              daverx=apply(averx$Cf3pt$cf.tsboot$t/averx$effmass$massfit.tsboot[,1]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd)
+                              averx=averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
+                              daverx=apply(averx$Cf3pt$cf.tsboot$t/averx$matrixfit$opt.tsboot[1,]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd)
                               )
                    )
          )

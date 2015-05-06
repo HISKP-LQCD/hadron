@@ -234,6 +234,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   }
   rm(tb.save)
   cf$opt.res <- opt.res
+  cf$useCov <- useCov
   attr(cf, "class") <- c("effectivemassfit", class(cf))
   return(invisible(cf))
 }
