@@ -133,10 +133,10 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
     stop("extract.obs: data missing in extract.obs\n")
   }
   ## consistency check for data in the data
-  filenrObs <- max(cmicor[,ind.vec[1]])
-  if(filenrObs != length(unique(cmicor[,ind.vec[1]]))) {
-    stop("extract.obs: data inconsistent, nrObs in the data does not match to input data length\n")
+  if( !all( unique(vec.obs) %in% unique(cmicor[,ind.vec[1]]) )) {
+    stop("extract.obs: vec.obs does not match or is not fully included in the observable list in the data\n")
   }
+  nrObs <- length(vec.obs)
   nrStypes <- length(unique(cmicor[,ind.vec[2]]))
 
   Time <-  2*max(cmicor[,ind.vec[3]])
@@ -144,9 +144,8 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
     stop("extract.obs: data inconsistent, T not equal to what was found in the input data\n")
   }
-  if(verbose) cat("extract.obs: filenrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
+  if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
-  nrObs <- length(vec.obs)
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
   data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
       data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
