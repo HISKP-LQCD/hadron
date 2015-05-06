@@ -52,6 +52,7 @@ for(j in c(1:length(types))) {
   ## in correct order
   L <- c()
   x <- c()
+  xfs <- c()
   xboot <- array(0, dim=c(R, length(jj)))
   fsM <- c()
   fsMboot <- array(0, dim=c(R, length(jj)))
@@ -63,6 +64,7 @@ for(j in c(1:length(types))) {
     L[k] <- extdata[extdata$V1 == enslist[jj[k]],12]
     ## Mpi/fpi*Dfs
     x[k] <- extdata[extdata$V1 == enslist[jj[k]],6] / extdata[extdata$V1 == enslist[jj[k]],8] * extdata[extdata$V1 == enslist[jj[k]],10]
+    xfs[k] <- extdata[extdata$V1 == enslist[jj[k]],6]
     xboot[,k] <- rnorm(R, mean=extdata[extdata$V1 == enslist[jj[k]],6], sd=extdata[extdata$V1 == enslist[jj[k]],7])/rnorm(R, mean=extdata[extdata$V1 == enslist[jj[k]],8], sd=extdata[extdata$V1 == enslist[jj[k]],9])*rnorm(R, mean=extdata[extdata$V1 == enslist[jj[k]],10], sd= extdata[extdata$V1 == enslist[jj[k]],11])
     xboot[1,k] <- x[k]
     fsM[k] <- 1./extdata[extdata$V1 == enslist[jj[k]],8]
@@ -81,6 +83,7 @@ for(j in c(1:length(types))) {
     a0[i] <- fs.a0(a0=res[i,5], L=L[i], mps=Mps[i])
   }
   ## finite size correct for Mps
+  mpia0fs <- res[,9]
   res[,9] <- res[,9]*fsM/res[,5]*a0
 
   ## error on Mpia0
@@ -144,12 +147,30 @@ for(j in c(1:length(types))) {
               sep=" & ", quote=FALSE, row.names=FALSE, 
               col.names=c('$M_{\\pi}a_0$', '$dM_{\\pi}a_0$', '$\\ell_{\\pi\\pi}$', '$d\\ell_{\\pi\\pi}$', '$\\chi^2$', '$\\mathrm{dof}$', 'Qval', 'xcut'),
               file=paste("chpt-res-", xcut, ".dat", sep=""), eol=" \\\\ \n")
-  
+
   ## now prepare some plots
+  tikz(paste("mpia0-fs", types[j], ".tex", sep=""), standAlone = TRUE, width=5, height=5)
+  par(cex=1.3)
+  plot(NA, type="n", xlim=c(1.6,3), ylim=c(-0.35,-0.1), xlab=c("$M_{\\pi}/f_{\\pi}$"), ylab=c("$M_{\\pi}a_0$"))
+  
+  plotwitherror(x=x[jjA], dx=dx[jjA], y=res[jjA,9], dy=dmpia0[jjA], col=c("red"), bg=c("red"), pch=21, rep=TRUE)
+  plotwitherror(x=xfs[jjA], dx=dx[jjA], y=mpia0fs[jjA], dy=res[jjA,10], col=c("red"), pch=21, rep=TRUE)
+  
+  plotwitherror(x=x[jjB], dx=dx[jjB], y=res[jjB,9], dy=dmpia0[jjB], col=c("blue"), bg=c("blue"), pch=22, rep=TRUE)
+  plotwitherror(x=xfs[jjB], dx=dx[jjB], y=mpia0fs[jjB], dy=res[jjB,10], col=c("blue"), pch=22, rep=TRUE)
+  
+  plotwitherror(x=x[jjD], dx=dx[jjD], y=res[jjD,9], dy=dmpia0[jjD], col=c("darkgreen"), bg=c("darkgreen"), pch=23, rep=TRUE)
+  plotwitherror(x=xfs[jjD], dx=dx[jjD], y=mpia0fs[jjD], dy=res[jjD,10], col=c("darkgreen"), pch=23, rep=TRUE)
+  legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45"), pt.bg=c("red", "blue", "darkgreen"), col=c("red", "blue", "darkgreen"), pch=c(21:23), bty="n", cex=1.)
+  
+  dev.off()
+  tools::texi2dvi(paste("mpia0-fs", types[j], ".tex", sep=""), pdf=T)
+
+  ## now including chipt
   for(p in c(1:3)) {
     tikz(paste("mpia0-fs-cpt", types[j], "-", p, "xcut", xcut, ".tex", sep=""), standAlone = TRUE, width=5, height=5)
     par(cex=1.3)
-    plot(x=x, y=res[,9], type="n", xlim=c(0.9,3), ylim=c(-0.35,0), xlab=c("$M_{\\pi}/f_{\\pi}$"), ylab=c("$M_{\\pi}a_0$"))
+    plot(NA, type="n", xlim=c(0.9,3), ylim=c(-0.35,0), xlab=c("$M_{\\pi}/f_{\\pi}$"), ylab=c("$M_{\\pi}a_0$"))
     
     if(p==3) {
       polygon(x=c(xs, rev(xs)), y=c(y[1,]+dy, rev(y[1,]-dy)), col="gray", lty=0, lwd=0.001, border="gray")
@@ -178,13 +199,13 @@ for(j in c(1:length(types))) {
     
 
     if(p==3) {
-      legend("topright", legend=c("LO ChiPT", "NLO ChiPT"), lty=c(2,1), bty="n", cex=1.3)
-      legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "extrapolated"), pt.bg=c("red", "blue", "darkgreen", "orangered"), col=c("red", "blue", "darkgreen", "orangered"), pch=c(21:24), bty="n", cex=1.3)
+      legend("topright", legend=c("LO ChiPT", "NLO ChiPT"), lty=c(2,1), bty="n", cex=1.)
+      legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "extrapolated"), pt.bg=c("red", "blue", "darkgreen", "orangered"), col=c("red", "blue", "darkgreen", "orangered"), pch=c(21:24), bty="n", cex=1.)
     }
     else {
-      if(p==1) legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "NA48/2 + Roy"), pt.bg=c("red", "blue", "darkgreen", "navy"), col=c("red", "blue", "darkgreen", "navy"), pch=c(21:24), bty="n", cex=1.3)
-      else legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "Nf=2", "NA48/2 + Roy"), pt.bg=c("red", "blue", "darkgreen", "white", "navy"), col=c("red", "blue", "darkgreen", "black", "navy"), pch=c(21:23,25,24), bty="n", cex=1.3)
-      legend("topright", legend=c("LO ChiPT"), lty=c(2), bty="n", cex=1.3)
+      if(p==1) legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "NA48/2 + Roy"), pt.bg=c("red", "blue", "darkgreen", "navy"), col=c("red", "blue", "darkgreen", "navy"), pch=c(21:24), bty="n", cex=1.)
+      else legend("bottomleft", legend=c("A ensembles", "B ensembles", "D45", "Nf=2", "NA48/2 + Roy"), pt.bg=c("red", "blue", "darkgreen", "white", "navy"), col=c("red", "blue", "darkgreen", "black", "navy"), pch=c(21:23,25,24), bty="n", cex=1.)
+      legend("topright", legend=c("LO ChiPT"), lty=c(2), bty="n", cex=1.)
     }
     
     dev.off()

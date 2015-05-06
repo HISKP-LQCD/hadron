@@ -1,18 +1,24 @@
 require(tikzDevice)
 
+## deltaE as an expansion in 1/L
+## with parameters a0 and r
+fn <- function(par, L, m) {
+  return( -4*pi*par[1]/(m*L^3)*(1 - 2.837297*par[1]/L + 6.375183*par[1]^2/L^2 - 8.311951*par[1]^3/L^3) - (8*pi^2*par[1]^3*par[2])/(m*L^6) )
+}
+
+## chi for minimisation with nls.lm
+## deltaE as an expansion in 1/L
+## with parameters a0 and r
 ERchi <- function(par, L, m, x, err) {
   return((-x-4*pi*par[1]/(m*L^3)*(1 - 2.837297*par[1]/L + 6.375183*par[1]^2/L^2 - 8.311951*par[1]^3/L^3) - (8*pi^2*par[1]^3*par[2])/(m*L^6))/err)
 }
 
-ERchi.qcotdelta <- function(par, x, y, xerr, yerr) {
-  ii <- c((length(par)-length(x)+1):length(par))
-  return(c((x-par[ii])/xerr, (y-par[1]-par[2]*par[ii])/yerr))
-}
-
+## the corresponding chi^2
 ERchisqr <- function(par, L, m, x, err) {
   return(sum((-x-4*pi*par[1]/(m*L^3)*(1 - 2.837297*par[1]/L + 6.375183*par[1]^2/L^2 - 8.311951*par[1]^3/L^3) - (8*pi^2*par[1]^3*par[2])/(m*L^6))^2/err^2))
 }
 
+## and the derivative
 dERchisqr <- function(par, L, m, x, err) {
   res <- rep(0., times=length(par))
   z <- (-x-4*pi*par[1]/(m*L^3)*(1 - 2.837297*par[1]/L + 6.375183*par[1]^2/L^2 - 8.311951*par[1]^3/L^3) - (8*pi^2*par[1]^3*par[2])/(m*L^6))
@@ -25,8 +31,16 @@ dERchisqr <- function(par, L, m, x, err) {
   return(res)
 }
 
-fn <- function(par, L, m) {
-  return( -4*pi*par[1]/(m*L^3)*(1 - 2.837297*par[1]/L + 6.375183*par[1]^2/L^2 - 8.311951*par[1]^3/L^3) - (8*pi^2*par[1]^3*par[2])/(m*L^6) )
+## chi for minimisation with nls.lm
+## qcotdelta effective range expansion up to q^2
+ERchi.qcotdelta <- function(par, x, y, xerr, yerr) {
+  ii <- c((length(par)-length(x)+1):length(par))
+  return(c((x-par[ii])/xerr, (y-par[1]-par[2]*par[ii])/yerr))
+}
+
+ERchisq.qcotdelta <- function(par, x, y, xerr, yerr) {
+  ii <- c((length(par)-length(x)+1):length(par))
+  return(sum(c((x-par[ii])/xerr, (y-par[1]-par[2]*par[ii])/yerr)^2))  
 }
 
 compute.weights <- function(err, pvalues) {
@@ -83,45 +97,51 @@ fit.finite.range.qcotdelta <- function(path="./", type="") {
   opt.tsboot <- array(0, dim=c(R, length(par)+1))
   for(i in c(1:R)) {
     if(!lm.avail) {
-      ##opt.res <- optim(par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[i,4], err=x[jj,2], x=bs[i,jj], method="BFGS")#, control=list(ndeps=c(1.e-8, 1.e-8)))
-      ##opt.res <- optim(opt.res$par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[i,4], err=x[jj,2], x=bs[i,jj], method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-8, times=length(par))))
-      ##opt.res <- optim(opt.res$par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[i,4], err=x[jj,2], x=bs[i,jj], method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-10, times=length(par))))
+      opt.res <- optim(par, fn=ERchisq.qcotdelta, y=bs[i,jj1], yerr=err[jj1], x=bs[i,jj2], xerr=err[jj2], method="BFGS")#, control=list(ndeps=c(1.e-8, 1.e-8)))
+      opt.res <- optim(opt.res$par, fn=ERchisq.qcotdelta, y=bs[i,jj1], yerr=err[jj1], x=bs[i,jj2], xerr=err[jj2], method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-8, times=length(par))))
+      opt.res <- optim(opt.res$par, fn=ERchisq.qcotdelta, y=bs[i,jj1], yerr=err[jj1], x=bs[i,jj2], xerr=err[jj2], method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-10, times=length(par))))
+      opt.tsboot[i,length(par)+1] <- opt.res$value
     }
     else {
       opt.res <- nls.lm(par, fn=ERchi.qcotdelta, y=bs[i,jj1], yerr=err[jj1], x=bs[i,jj2], xerr=err[jj2])
+      opt.tsboot[i,length(par)+1] <- opt.res$rsstrace[length(opt.res$rsstrace)]
     }
     opt.tsboot[i,c(1:length(par))] <- opt.res$par
-    t <- ERchi.qcotdelta(par=opt.res$par, y=bs[i,jj1], yerr=err[jj1], x=bs[i,jj2], xerr=err[jj2])
-    opt.tsboot[i,length(par)+1] <- sum(t^2)
   }
 
   ## now estimate the systematic uncertainty
-  Ns <- 500
+  Ns <- 2500
   il <- array(0, dim=c(Ns, 3))
   il[,1] <- sample.int(length(resL32[1,,1]), Ns, replace=TRUE)
   il[,2] <- sample.int(length(resL24[1,,1]), Ns, replace=TRUE)
   il[,3] <- sample.int(length(resL20[1,,1]), Ns, replace=TRUE)
   opt.sys <- array(0, dim=c(Ns, length(par)+1))
+
   for(i in c(1:Ns)) {
+    ## combine the data in a single vector
     tmp <- c(resL32[1,il[i,1],7], resL24[1,il[i,2],7], resL20[1,il[i,3],7], resL32[1,il[i,1],9], resL24[1,il[i,2],9], resL20[1,il[i,3],9])
     if(!lm.avail) {
-
+      ## add an optim version...
+      opt.res <- optim(par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[i,4], err=x[jj,2], x=bs[i,jj], method="BFGS")#, control=list(ndeps=c(1.e-8, 1.e-8)))
+      opt.res <- optim(opt.res$par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[i,4], err=x[jj,2], x=bs[i,jj], method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-8, times=length(par))))
     }
     else {
       opt.res <- nls.lm(par, fn=ERchi.qcotdelta, y=tmp[jj1], yerr=err[jj1], x=tmp[jj2], xerr=err[jj2])
     }
     opt.sys[i,c(1:length(par))] <- opt.res$par
-    t <- ERchi.qcotdelta(par=opt.res$par, y=tmp[jj1], yerr=err[jj1], x=tmp[jj2], xerr=err[jj2])
-    opt.sys[i,length(par)+1] <- sum(t^2)
-
+                                        # chi^2
+    if(lm.avail) opt.sys[i,length(par)+1] <- opt.res$rsstrace[length(opt.res$rsstrace)]
+    else opt.sys[i,length(par)+1] <- 0
   }
-
-  cat("a0 =", 1./opt.tsboot[1,1], "+-", sd(1./opt.tsboot[,1]), "sys", abs(1./opt.tsboot[1,1])-abs(quantile(1./opt.sys[,1], probs=c(0.1573, 0.8427))), "\n")
-  cat("Mpi a0 =", Mpi[1]/opt.tsboot[1,1], "+-", sd(Mpi/opt.tsboot[,1]), "sys", Mpi[1]*(abs(1./opt.tsboot[1,1])-abs(quantile(1./opt.sys[,1], probs=c(0.1573, 0.8427)))), "\n")
-  cat("r =", 2*opt.tsboot[1,2], "+-", 2*sd(opt.tsboot[,2]), "sys", 2*(abs(opt.tsboot[1,2]) - abs(quantile(opt.sys[,2], probs=c(0.1573, 0.8427)))),"\n")
-  cat("Mpi r =", 2*Mpi[1]*opt.tsboot[1,2], "+-", 2*sd(Mpi*opt.tsboot[,2]), "sys", 2*Mpi[1]*(abs(opt.tsboot[1,2]) - abs(quantile(opt.sys[,2], probs=c(0.1573, 0.8427)))),"\n")
-  cat("Mpi^2 a0 r =", 2*Mpi[1]^2*opt.tsboot[1,2]/opt.tsboot[1,1], "+-", 2*sd(Mpi^2*opt.tsboot[,2]/opt.tsboot[,1]), "sys", 2*Mpi[1]^2*(abs(opt.tsboot[1,2]/opt.tsboot[1,1])-abs(quantile(opt.sys[,2]/opt.sys[,1], probs=c(0.1573, 0.8427)))), "\n")
+  w <- (1-2*abs(1-pchisq(opt.sys[,length(par)+1], 1)))^2
+  
+  cat("a0 =", 1./opt.tsboot[1,1], "+-", sd(1./opt.tsboot[,1]), "sys", abs(1./opt.tsboot[1,1])-abs(weighted.quantile(1./opt.sys[,1], probs=c(0.1573, 0.8427), w=w)), "\n")
+  cat("Mpi a0 =", Mpi[1]/opt.tsboot[1,1], "+-", sd(Mpi/opt.tsboot[,1]), "sys", Mpi[1]*(abs(1./opt.tsboot[1,1])-abs(weighted.quantile(1./opt.sys[,1], probs=c(0.1573, 0.8427), w=w))), "\n")
+  cat("r =", 2*opt.tsboot[1,2], "+-", 2*sd(opt.tsboot[,2]), "sys", 2*(abs(opt.tsboot[1,2]) - abs(weighted.quantile(opt.sys[,2], probs=c(0.1573, 0.8427), w=w))),"\n")
+  cat("Mpi r =", 2*Mpi[1]*opt.tsboot[1,2], "+-", 2*sd(Mpi*opt.tsboot[,2]), "sys", 2*Mpi[1]*(abs(opt.tsboot[1,2]) - abs(weighted.quantile(opt.sys[,2], probs=c(0.1573, 0.8427), w=w))),"\n")
+  cat("Mpi^2 a0 r =", 2*Mpi[1]^2*opt.tsboot[1,2]/opt.tsboot[1,1], "+-", 2*sd(Mpi^2*opt.tsboot[,2]/opt.tsboot[,1]), "sys", 2*Mpi[1]^2*(abs(opt.tsboot[1,2]/opt.tsboot[1,1])-abs(weighted.quantile(opt.sys[,2]/opt.sys[,1], probs=c(0.1573, 0.8427),w=w))), "\n")
   cat("chisq =", opt.tsboot[1,length(par)+1], "\n")
+  cat("p-value =", 1-pchisq(opt.tsboot[1,length(par)+1], 1), "\n")
   
   tikz(paste("qcotdeltavqsq", type,".tex", sep=""), standAlone = TRUE, width=5, height=5)
   par(cex=1.3)
@@ -192,7 +212,7 @@ fit.finite.range <- function(path="./", type="") {
   }
 
   ## now estimate the systematic uncertainty
-  Ns <- 500
+  Ns <- 2500
   il <- array(0, dim=c(Ns, 3))
   il[,1] <- sample.int(length(resL32[1,,1]), Ns, replace=TRUE)
   il[,2] <- sample.int(length(resL24[1,,1]), Ns, replace=TRUE)
@@ -204,20 +224,23 @@ fit.finite.range <- function(path="./", type="") {
       opt.res <- optim(par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[1,4], err=x[jj,2], x=tmp, method="BFGS")#, control=list(ndeps=c(1.e-8, 1.e-8)))
       opt.res <- optim(opt.res$par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[1,4], err=x[jj,2], x=tmp, method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-8, times=length(par))))
       opt.res <- optim(opt.res$par, fn=ERchisqr, gr=dERchisqr, L=x[jj,5], m=bs[1,4], err=x[jj,2], x=tmp, method="BFGS", control=list(parscale=1./opt.res$par, ndeps=rep(1.e-10, times=length(par))))
+      opt.sys[i,3] <- opt.res$value
     }
     else {
       opt.res <- nls.lm(par, fn=ERchi, L=x[jj,5], m=bs[1,4], err=x[jj,2], x=tmp)
+      opt.sys[i,3] <- opt.res$rsstrace[length(opt.res$rsstrace)]
     }
     opt.sys[i,c(1:2)] <- opt.res$par
-    opt.sys[i,3] <- ERchisqr(opt.res$par, L=x[jj,5], m=bs[1,4], err=x[jj,2], x=tmp)
   }  
+  w <- (1-2*abs(1-pchisq(opt.sys[,3], 1)))^2
   
-  cat("a0 =", opt.tsboot[1,1], "+-", sd(opt.tsboot[,1]), "sys", abs(opt.tsboot[1,1])-abs(quantile(opt.sys[,1], probs=c(0.1573, 0.8427))), "\n")
-  cat("mpia0 =", opt.tsboot[1,1]*bs[1,4], "+-", sd(opt.tsboot[,1]*bs[,4]), "sys", bs[1,4]*(abs(opt.tsboot[1,1])-abs(quantile(opt.sys[,1], probs=c(0.1573, 0.8427)))), "\n")
+  cat("a0 =", opt.tsboot[1,1], "+-", sd(opt.tsboot[,1]), "sys", abs(opt.tsboot[1,1])-abs(weighted.quantile(opt.sys[,1], probs=c(0.1573, 0.8427), w=w)), "\n")
+  cat("mpia0 =", opt.tsboot[1,1]*bs[1,4], "+-", sd(opt.tsboot[,1]*bs[,4]), "sys", bs[1,4]*(abs(opt.tsboot[1,1])-abs(weighted.quantile(opt.sys[,1], probs=c(0.1573, 0.8427), w=w))), "\n")
   cat("r =", opt.tsboot[1,2], "+-", sd(opt.tsboot[,2]), "\n")
   cat("mpi r =", opt.tsboot[1,2]*bs[1,4], "+-", sd(opt.tsboot[,2]*bs[,4]), "\n")
   cat("mpi^2 a0 r =", opt.tsboot[1,1]*opt.tsboot[1,2]*bs[1,4], "+-", sd(opt.tsboot[,1]*opt.tsboot[,2]*bs[,4]), "\n")
   cat("chisq =", opt.tsboot[1,3], "\n")
+  cat("p-value =", 1-pchisq(opt.tsboot[1,3], 1), "\n")
   
   tikz(paste("deltaEovL", type,".tex", sep=""), standAlone = TRUE, width=5, height=5)
   par(cex=1.3)

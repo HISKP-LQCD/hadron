@@ -4,22 +4,35 @@ compute.weights <- function(err, pvalues) {
   return(pvalues^2 * min(err, na.rm=TRUE)^2/err^2)
 }
 
-compute.boots <- function(res, index=1, piononly=FALSE) {
-  pvalues <- (1-2*abs(res[1,,5]-0.5)) * (1-2*abs(res[1,,6]-0.5))
-  if(piononly) pvalues <- (1-2*abs(res[1,,6]-0.5))
+compute.boots <- function(res, index=1, piononly=FALSE, Qval) {
+  if(missing(Qval)) {
+    pvalues <- (1-2*abs(res[1,,5]-0.5)) * (1-2*abs(res[1,,6]-0.5))
+    if(piononly) pvalues <- (1-2*abs(res[1,,6]-0.5))
+  }
+  else {
+    pvalues <- (1-2*abs(Qval[,1]-0.5)) * (1-2*abs(Qval[,2]-0.5))
+    if(piononly) pvalues <- (1-2*abs(Qval[,2]-0.5))
+  }
   err <- apply(res[,,index], 2, sd, na.rm=TRUE)
   w <- compute.weights(err, pvalues)
   return(apply(res[,,index], 1, weighted.quantile, prob=c(0.5), w=w, na.rm=TRUE))
 }
 
 
-estimate.error <- function(res, index=1, prob=c(0.1573, 0.8427), main) {
-  pvalues <- as.vector((1-2*abs(res[1,,5]-0.5)) * (1-2*abs(res[1,,6]-0.5)))
+estimate.error <- function(res, index=1, prob=c(0.1573, 0.8427), main, Qval, piononly=FALSE) {
+  if(missing(Qval)) {
+    if(piononly) pvalues <- (1-2*abs(res[1,,6]-0.5))
+    else pvalues <- as.vector((1-2*abs(res[1,,5]-0.5)) * (1-2*abs(res[1,,6]-0.5)))
+  }
+  else {
+    if(piononly) pvalues <- (1-2*abs(Qval[,2]-0.5))
+    else pvalues <- as.vector((1-2*abs(Qval[,1]-0.5)) * (1-2*abs(Qval[,2]-0.5)))
+  }
 
   err <- apply(res[,,index], 2, sd, na.rm=TRUE)
   w <- compute.weights(err, pvalues)
   x <- weighted.quantile(as.vector(res[1,,index]), prob=c(0.5), w=w, na.rm=TRUE)
-
+  if(interactive()) X11()
   weighted.hist(x=as.vector(res[1,,index]), w=w, main=main, na.rm=TRUE)
   ## statistical
   x[2] <- sd(apply(res[,,index], 1, weighted.quantile, prob=c(0.5), w=w, na.rm=TRUE), na.rm=TRUE)
@@ -27,6 +40,35 @@ estimate.error <- function(res, index=1, prob=c(0.1573, 0.8427), main) {
   ## lower and upper
   x[c(3:4)] <- weighted.quantile(as.vector(res[1,,index]), w=w, prob=prob, na.rm=TRUE)-x[1]
   return(x)
+}
+
+compile.averxdata <- function(ens, path="./") {
+  filelist <- Sys.glob(paste(path, "res.averx.t1", "*.", ens, ".Rdata", sep=""))
+  N <- length(filelist)
+  cat("processing", N, "data files for ensemble", ens, "\n")
+  load(filelist[1])
+  R <- res.averx$boot.R
+  Thalfp1 <- res.averx$Cf2pt$Time/2+1
+  rr <- c(2:(R+1))
+  res <- array(NA, dim=c(R+1, N, 5))
+  for(i in c(1:N)) {
+    load(filelist[i])
+    
+    res[1,i,1] <- res.averx$averx
+    res[rr,i,1] <- res.averx$plateau.tsboot[,1]/res.averx$matrixfit$opt.tsboot[1,]/res.averx$Cf2pt$cf.tsboot$t[,Thalfp1]
+
+    res[1,i,2] <- res.averx$averxfit
+    res[rr,i,2] <- res.averx$plateau.tsboot[,1]/res.averx$matrixfit$opt.tsboot[1,]/
+      (0.5*res.averx$matrixfit$opt.tsboot[2,]^2*
+       (exp(-res.averx$matrixfit$opt.tsboot[1,]*(res.averx$Cf2pt$Time-Thalfp1)) + exp(-res.averx$matrixfit$opt.tsboot[1,]*Thalfp1)))
+
+    res[1,i,3] <- res.averx$matrixfit$opt.res$par[1]
+    res[rr,i,3] <- res.averx$matrixfit$opt.tsboot[1,]
+    
+    res[1,i,4] <- res.averx$Qval
+    res[1,i,5] <- res.averx$pionQval
+  }
+  return(invisible(res))
 }
 
 compile.ratio.sldata <- function(ens, path="./") {
