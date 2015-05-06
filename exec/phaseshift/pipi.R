@@ -51,20 +51,3 @@ energies.pipi <- function(N=5, tp="TP0", irrep="A1", basename="pipi_pipi_", redo
   return(invisible(Cmatrix))
 }
 
-getMatrix.pipi <- function(N=5, tp="TP0", irrep="A1", basename="pipi_pipi_",
-                      T=64,
-                      path="./", ens, ind.vector=c(2,3)) {
-  
-  
-  ## read data into Cmatrix
-  Cmatrix <- cf()
-  
-  for(i in c(1:N)) {
-    for(j in c(1:N)) {
-      filename <- paste(basename, irrep, "_corr_", tp, "_", i-1, j-1, ".dat", sep="")
-      tmp <- readtextcf(filename, T=T, check.t=1, path=path, ind.vector=ind.vector)
-      Cmatrix <- c(Cmatrix, tmp)
-    }
-  }
-  return(invisible(Cmatrix))
-}

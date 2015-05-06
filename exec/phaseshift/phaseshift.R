@@ -8,23 +8,39 @@ omegalm <- function(l=0, m=0, q, gamma=1, dvec=c(0,0,0)) {
 Ecmofqsq <- function(q, Mpi) {
   return(2*acosh(cosh(Mpi) +  2*sin(q/2)^2 ))
 }
+Ecmofqsq.cont <- function(q, Mpi) {
+  return(2*sqrt(Mpi^2 + q^2))
+}
+
 
 ## energy level in MF from Ecm
 EofEcm <- function(Ecm, dvec, L) {
   return(acosh( cosh(Ecm) + 2*sum(sin(pi*dvec/L)^2) ))
 }
+EofEcm.cont <- function(Ecm, dvec, L) {
+  return(sqrt(Ecm^2 + sum((2*pi*dvec/L)^2)))
+}
+
 
 ## computes the boost factor as a function of q^2
 gammaofq <- function(q, dvec, Mpi, L) {
-  Ecm <- Ecmofqsq(q, Mpi)
+  if(lat.disp) {
+    Ecm <- Ecmofqsq(q, Mpi)
+    return(EofEcm(Ecm, dvec, L)/Ecm)
+  }
+  Ecm <- Ecmofqsq.cont(q, Mpi)
   ## E/Ecm
-  return(EofEcm(Ecm, dvec, L)/Ecm)
+  return(EofEcm.cont(Ecm, dvec, L)/Ecm)
 }
 
 ## computes the energy level given q^2
 Eofqsq <- function(q, dvec, Mpi, L) {
-  Ecm <- Ecmofqsq(q, Mpi)
-  return(EofEcm(Ecm, dvec, L))
+  if(lat.disp) {
+    Ecm <- Ecmofqsq(q, Mpi)
+    return(EofEcm(Ecm, dvec, L))
+  }
+  Ecm <- Ecmofqsq.cont(q, Mpi)
+  return(EofEcm.cont(Ecm, dvec, L))
 }
 
 ## center of mass frame formulae
@@ -108,6 +124,9 @@ prepdetEqMF1scan <- function(q, Mpi, L) {
 ## A1 irrep
 detEqMF1A1scan <- function(par, W) {
   cd0 <- par[1] + 0.5*par[2]*W$q^2
+  if(length(par) < 3) {
+    return(cd0 - W$q*W$w00)
+  }
   cd2 <- par[3]
   return( (cd0 - W$q*W$w00)*
          (cd2 - W$q^5*(W$w00 + 10/7*W$w20 + 18/7*W$w40))
@@ -122,10 +141,13 @@ detEqMF1A1 <- function(q, par, Mpi, L) {
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
+  cd0 <- par[1] + 0.5*par[2]*q^2
+  if(length(par)<3) {
+    return(cd0 - q*w00)
+  }
   w20 <- Re(omegalm(l=2, m=0, q=qt, gamma=gamma, dvec=dvec))
   w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
 
-  cd0 <- par[1] + 0.5*par[2]*q^2
   cd2 <- par[3]
   return( (cd0 - q*w00)*
          (cd2 - q^5*(w00 + 10/7*w20 + 18/7*w40))
@@ -155,10 +177,14 @@ prepdetEqMF2scan <- function(q, Mpi, L) {
 
 ## A1 irrep
 detEqMF2A1scan <- function(par, W) {
-  cd0 <- (par[1] + 0.5*par[2]*W$q^2)/W$q
+  cd0 <- (par[1]/W$q + 0.5*par[2]*W$q)
+  if(length(par) < 3 ) {
+    return(cd0 - W$q*W$w00)
+  }
+
   cd2 <- par[3]/W$q^5
 
-  return(Re(q^11*(10/49*(10*(-2*cd0 + 2*W$w00 + 7*W$w20)*W$w22^2 +
+  return(Re(W$q^11*(10/49*(10*(-2*cd0 + 2*W$w00 + 7*W$w20)*W$w22^2 +
                          3*sqrt(15)*(4*cd0 - 4*W$w00 - 7*W$w20)*W$w22*W$w42 + 27*(W$w00 - cd0)*W$w42^2)
                   +(-cd2 + W$w00 + 2/7*(5*W$w20 + 9*W$w40))*(10*W$w22^2 + 1/7*(cd0 - W$w00)*(7*cd2 - 7*W$w00 + 10*W$w20 - 3*W$w40 + 3*sqrt(70)*W$w44)) +
                   5/7*W$w20*(20*W$w22^2 - 6*sqrt(15)*W$w22*W$w42 + W$w20*(7*cd2 - 7*W$w00 + 10*W$w20 - 3*W$w40 + 3*sqrt(70)*W$w44))
@@ -172,13 +198,16 @@ detEqMF2A1 <- function(q, par, Mpi, L) {
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
+  cd0 <- (par[1]/q + 0.5*par[2]*q)
+  if(length(par) < 3) {
+    return(cd0 - q*w00)
+  }
   w20 <- Re(omegalm(l=2, m=0, q=qt, gamma=gamma, dvec=dvec))
   w22 <- omegalm(l=2, m=2, q=qt, gamma=gamma, dvec=dvec)
   w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
   w44 <- Re(omegalm(l=4, m=4, q=qt, gamma=gamma, dvec=dvec))
   w42 <- omegalm(l=4, m=2, q=qt, gamma=gamma, dvec=dvec)
 
-  cd0 <- (par[1] + 0.5*par[2]*q^2)/q
   cd2 <- par[3]/q^5
   
   return(Re(q^11*(10/49*(10*(-2*cd0 + 2*w00 + 7*w20)*w22^2 +
@@ -210,6 +239,9 @@ prepdetEqMF3scan <- function(q, Mpi, L) {
 ## A1 irrep
 detEqMF3A1scan <- function(par, W) {
   cd0 <- (par[1] + 0.5*par[2]*W$q^2)
+  if(length(par) < 3) {
+    return(cd0 - W$q*W$w00)
+  }
   cd2 <- par[3]
 
   return(Re(( cd0 - W$q*W$w00 )*
@@ -225,11 +257,15 @@ detEqMF3A1 <- function(q, par, Mpi, L) {
 
   qt <- L*q/2/pi
   w00 <- Re(omegalm(l=0, m=0, q=qt, gamma=gamma, dvec=dvec))
+  cd0 <- (par[1] + 0.5*par[2]*q^2)
+  
+  if(length(par) < 3) {
+    return(cd0 - q*w00)
+  }
   w40 <- Re(omegalm(l=4, m=0, q=qt, gamma=gamma, dvec=dvec))
   w22 <- omegalm(l=2, m=2, q=qt, gamma=gamma, dvec=dvec)
   w42 <- omegalm(l=4, m=2, q=qt, gamma=gamma, dvec=dvec)
 
-  cd0 <- (par[1] + 0.5*par[2]*q^2)
   cd2 <- par[3]
   return(Re(( cd0 - q*w00 )*
             ( cd2 - q^5*(w00 - 12/7*w40 - 12*sqrt(10)/7*1i*w42 - 10*sqrt(6)/7*1i*w22)) +
@@ -248,7 +284,7 @@ findSignChanges <- function(fn, makeplot=FALSE, par, W, no=3, threshold=100) {
   
   ii <- integer(0)
   j <- 1
-  for(i in c(1:(length(W$q)-1))) {
+  for(i in c(2:(length(W$q)-1))) {
     ## find all sign-changes 
     ##cat(res[i], res[i+1], "\n")
     if(!is.na(res[i]) && !is.na(res[i+1])) {
@@ -266,7 +302,7 @@ findSignChanges <- function(fn, makeplot=FALSE, par, W, no=3, threshold=100) {
   return(ii)
 }
 
-findZeros <- function(fn, q, ii, makeplot=FALSE, tol=1.e-12, ...) {
+findZeros <- function(fn, q, ii, makeplot=FALSE, tol=1.e-14, ...) {
 
   ## now determine the root more precisely
   zeros <- numeric(0.)
@@ -284,3 +320,66 @@ findZeros <- function(fn, q, ii, makeplot=FALSE, tol=1.e-12, ...) {
   return(zeros)
 }
 
+getEvalues <- function(par, Wlist, Lvalues, nolist, framelist, scanfnlist, fnlist, irreplist) {
+  evalues <- c()
+  j <- 1
+  k <- 1
+  for(L in Lvalues) {
+    for(f in framelist) {
+      for(i in irreplist) {
+        if(nolist[[k]] > 0) {
+          ii <- findSignChanges(fn=scanfnlist[[i]][[f]], par=par, makeplot=FALSE, W=Wlist[[j]], no=nolist[[k]])
+          
+          if(length(ii) != nolist[[k]]) return(NA)
+          zeros <- findZeros(fn=fnlist[[i]][[f]], q=Wlist[[j]]$q, ii=ii, L=L, Mpi=Wlist[[j]]$Mpi, par=par, makeplot=FALSE)
+          if(length(zeros) != nolist[[k]]) return(NA)
+          evalues <- c(evalues, Eofqsq(zeros, dvec=Wlist[[j]]$dvec, Mpi=Wlist[[j]]$Mpi, L=L))
+        }
+        k <- k+1
+      }
+      j <- j+1
+    }
+  }
+  return(evalues)
+}
+
+getEDiff <- function(x, par, index, level, scanfn, dfn, W, E) {
+  par[index] <- x
+  ii <- findSignChanges(fn=scanfn, par=par, makeplot=FALSE, W=W, no=level)
+  if(length(ii) != level) return(NA)
+  zero <- findZeros(fn=dfn, q=W$q, ii=ii[level], L=W$L, Mpi=W$Mpi, par=par, makeplot=FALSE)
+  if(length(zero) != 1) return(NA)
+  return(Eofqsq(zero, dvec=W$dvec, Mpi=W$Mpi, L=W$L)-E)
+}
+
+getq <- function(par, level, scanfn, dfn, W, E) {
+  ii <- findSignChanges(fn=scanfn, par=par, makeplot=FALSE, W=W, no=level)
+  if(length(ii) != level) return(NA)
+  zero <- findZeros(fn=dfn, q=W$q, ii=ii[level], L=W$L, Mpi=W$Mpi, par=par, makeplot=FALSE)
+  if(length(zero) != 1) return(NA)
+  return(zero)  
+}
+
+solveforCotDelta <- function(par, index, level, scanfn, fn, W, E, interval) {
+  n <- 0
+  if(missing(interval)) {
+    interval <- c(-pi/2.,-0.1)
+    if(index == 3) interval <- c(-0.025,-0.001)
+  }
+  l <- getEDiff(x=interval[1], par, index=index, level=level, scanfn=scanfn, dfn=fn, W=W, E=E)
+  r <- getEDiff(x=interval[2], par, index=index, level=level, scanfn=scanfn, dfn=fn, W=W, E=E)
+  while(is.na(l) || is.na(r) || l/abs(l) == r/abs(r)) {
+    if(n > 50*index) {
+      cat("NA\n")
+      return(NA)
+    }
+    if(index == 1)  interval[1] <- interval[1]*9/10.
+    if(index == 3)  interval[1] <- interval[1]*1.1
+    l <- getEDiff(x=interval[1], par, index=index, level=level, scanfn=scanfn, dfn=fn, W=W, E=E)
+    r <- getEDiff(x=interval[2], par, index=index, level=level, scanfn=scanfn, dfn=fn, W=W, E=E)
+    n <- n+1
+  }
+  qcotdelta <- uniroot(f = getEDiff, interval=interval, tol = 1.e-14, par=par, index=index, level=level, scanfn=scanfn, dfn=fn, W=W, E=E)
+  cat("level", level, qcotdelta$root, qcotdelta$f.root, qcotdelta$estim.prec, "\n")
+  return(qcotdelta$root)
+}
