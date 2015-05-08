@@ -1,4 +1,4 @@
-errorpos <- function(dx,errsum.method="linear.quadrature") {
+errorpos <- function(dx,errsum.method="linear") {
   if( !any(errsum.method==c("linear","linear.quadrature","quadrature")) ){
     stop(sprintf("errorpos: called with unknown errsum.method %s",errsum.method))
   }
@@ -44,7 +44,7 @@ errorpos <- function(dx,errsum.method="linear.quadrature") {
       }
     }
   }
-  if(ncol(dx)>1 && errsum.method=="linear.quadrature"){
+  if(ncol(dx)>1 && errsum.method=="linear"){
     # unlike above, even if dx has only one row, this works fine
     rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
