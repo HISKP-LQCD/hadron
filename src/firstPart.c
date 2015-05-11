@@ -34,6 +34,7 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
   int * degnrtDOF = NULL;
   int * arrayPmode= NULL;
   
+  int niter = 0;
   int genReturn;
   genReturn = gen_points_array(&degnrtDOF, &arrayPmode, NPmode, DimMAX);
 
@@ -124,12 +125,18 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
     firstPartSum += pmodeSum;
     //Both pmodeSum and firstPartSum are complex numbers,
     //cabs take the mode of these variables.
-    error = cabs(pmodeSum) / cabs(firstPartSum);
+    // only calculate new error if firstPartSum != 0.
+    if (cabs(firstPartSum) > DBL_EPSILON)
+      error = cabs(pmodeSum) / cabs(firstPartSum);
     
     if(verbose)
       printf("pmode%d error: %.16f\n\n",pmodeSqur , error);
     
+    // if the result is still zero after 4 iterations it is assumed to stay zero
+    if (cabs(firstPartSum) < DBL_EPSILON && niter > 4)
+      break;
     pmodeSqur += 1;
+    ++niter;
     
   }//end of while.
   
