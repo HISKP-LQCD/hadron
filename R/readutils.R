@@ -64,7 +64,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
       ## read the data
       tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
       if(reduce) {
-        tmpdata <- tmpdata[tmpdata[,obs.index] == obs,]
+        tmpdata <- tmpdata[tmpdata[,obs.index] %in% obs,]
       }
       ## sanity checks
       if(fLength < length(tmpdata$V1)) {
