@@ -44,7 +44,7 @@ errorpos <- function(dx,errsum.method="linear") {
       }
     }
   }
-  if(ncol(dx)>1 && errsum.method=="linear"){
+  if(ncol(dx)>1 && errsum.method=="linear.quadrature"){
     # unlike above, even if dx has only one row, this works fine
     rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
