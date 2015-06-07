@@ -1,3 +1,8 @@
+# there are two possibilities for one-dimensional vectors: the vector class or the array class
+is.vectorial <- function(x) {
+  ( is.vector(x) || length(dim(x))==1 )
+}
+
 errorpos <- function(dx,errsum.method="linear") {
   if( !any(errsum.method==c("linear","linear.quadrature","quadrature")) ){
     stop(sprintf("errorpos: called with unknown errsum.method %s",errsum.method))
@@ -85,15 +90,16 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   # see above for description of what errorpos does
   if(!missing(dx)){
     # if dx is a simple vector, convert into an appropriately sized array
-    if(is.null(ncol(dx))){
+    if(is.vectorial(dx)){
       dx <- array(data=dx,dim=c(length(dx),1))
     }
+
     cumul.dx <- errorpos(dx,errsum.method)
     
     if(missing(mdx)){
       cumul.mdx <- -errorpos(dx,errsum.method)
     } else {
-      if(is.null(ncol(mdx))){
+      if(is.vectorial(mdx)){
           mdx <- array(data=mdx,dim=c(length(mdx),1))
         }
       cumul.mdx <- -errorpos(mdx,errsum.method)
@@ -101,7 +107,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   
   if(!missing(dy)){
-    if(is.null(ncol(dy))){
+    if(is.vectorial(dy)){
       dy <- array(data=dy,dim=c(length(dy),1))
     }
     cumul.dy <- errorpos(dy,errsum.method)
@@ -109,7 +115,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     if(missing(mdy)){
       cumul.mdy <- -errorpos(dy,errsum.method)
     } else {
-      if(is.null(ncol(mdy))){
+      if(is.vectorial(mdy)){
         mdy <- array(data=mdy,dim=c(length(mdy),1))
       }
       cumul.mdy <- -errorpos(mdy,errsum.method)
