@@ -182,6 +182,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
       for(rw in 1:length(y)){
         # the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
         arwhd.len <- 0.02
+        clr <- col
+        if(length(col)>1) clr <- col[rw]
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
@@ -190,7 +192,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
           # by supplying 0 errors for those points with fewer error bars
           # In order to accomodate this, we don't increase
           # the arrowhead line length in this case to prevent crazy looking error bars.
-          arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=col)
+          arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
           arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
         } 
         # for the linear.quadrature method, show the total error as a line of triple thickness
@@ -198,7 +200,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           # to be consistent, drawX/Ybars uses inches just like arrows
           arwhd.len <- arwhd.len + 0.02
-          drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3)
+          drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
         }
       }
     }
@@ -209,15 +211,17 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
       for(rw in 1:length(x)){
         arwhd.len <- 0.02
+        clr <- col
+        if(length(col)>1) clr <- col[rw]
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
-          arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=col)
+          arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
           arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           arwhd.len <- arwhd.len + 0.02
-          drawXbars(x=x[rw],y=y[rw],dx=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3)
+          drawXbars(x=x[rw],y=y[rw],dx=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
         }
       }
     } 
