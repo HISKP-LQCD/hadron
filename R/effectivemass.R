@@ -71,7 +71,8 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
     stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
   }
 
-  if(!cf$boot.samples) {
+  if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
+    
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
   else {
@@ -166,7 +167,6 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   cf$chisqr <- opt.res$value
   cf$Qval <- 1-pchisq(cf$chisqr, cf$dof)
   
-  tb.save <- NA
   if( boot.fit ) {
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
@@ -224,15 +224,12 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
       massfit.tsboot[i, 2] <- opt$value
     }
     cf$massfit.tsboot <- massfit.tsboot
+    cf$effMass.tsboot <- tb.save
   }
   else {
     cf$massfit.tsboot <- NA
   } # if(boot.fit)
 
-  if(!any(is.na(tb.save))) {
-    cf$effMass.tsboot <- tb.save
-  }
-  rm(tb.save)
   cf$opt.res <- opt.res
   cf$useCov <- useCov
   attr(cf, "class") <- c("effectivemassfit", class(cf))
