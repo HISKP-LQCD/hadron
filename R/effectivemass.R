@@ -193,8 +193,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ## if the matrix is diagonal, we simply restrict it
     M <- M[ -ii.remove, -ii.remove]
   }
-  cf$effMass.tsboot <- tb.save
-  
+
   par <- c(cf$effMass[t1])
   opt.res <- optim(par, fn = fn,
                    method="BFGS", M=M, y = cf$effMass[ii])
@@ -206,11 +205,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   cf$chisqr <- opt.res$value
   cf$Qval <- 1-pchisq(cf$chisqr, cf$dof)
 
-  
   if( boot.fit ) {
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
-    for(i in 1:cf$boot.R) {
+    for(i in c(1:cf$boot.R)) {
       opt <- optim(par, fn = fn,
                    control=list(parscale=1/par),
                    method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
@@ -222,6 +220,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   else {
     cf$massfit.tsboot <- NA
   } # if(boot.fit)
+
+  cf$effMass.tsboot <- tb.save
 
   cf$invCovMatrix <- M
   cf$opt.res <- opt.res
