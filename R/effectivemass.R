@@ -190,8 +190,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     }
   }
   else {
-    ## if the matrix is diagonal, we simply restrict it
-    M <- M[ -ii.remove, -ii.remove]
+    if( length( ii.remove ) > 0 ) {
+      ## if the matrix is diagonal, we simply restrict it
+      M <- M[ -ii.remove, -ii.remove]
+    }
   }
 
   par <- c(cf$effMass[t1])
