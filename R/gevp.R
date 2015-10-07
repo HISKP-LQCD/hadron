@@ -280,7 +280,7 @@ summary.gevp.amplitude <- function(amp) {
   cat("chisqr\t=\t", amp$chisqr, "\ndof\t=\t", amp$dof, "\nchisqr/dof=\t",
       amp$chisqr/amp$dof, "\n")
   cat("Quality of the fit (p-value):", amp$Qval, "\n")
-  if(any(names(bla) == "fps")) {
+  if(any(names(amp) == "fps")) {
     cat("\nDecay Constant (derived quantity):\n")
     cat("mu1 \t=\t", amp$mu1, "\n")
     cat("mu2 \t=\t", amp$mu2, "\n")
