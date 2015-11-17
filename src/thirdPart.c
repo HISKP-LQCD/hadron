@@ -62,11 +62,11 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 
     pmodeSum = 0+I*0;
 
-    //From the formula in the paper: w!=0
+    // From the formula in the paper: w!=0
     if(pmodeSqur == 0)
       continue;
 	
-    //These pmodes has no contribution to the points sets.
+    // These pmodes have no contribution to the points sets.
     if(degnrtDOF[pmodeSqur] == 0){
       pmodeSqur += 1;
       continue;
@@ -74,15 +74,12 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 
     for(int i = 0; i < degnrtDOF[pmodeSqur]; i++){
 
-      //n1,n2,n3 stands for the components of vector w.
+      // n1,n2,n3 stands for the components of vector w.
       n1 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 0];
       n2 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 1];
       n3 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 2];
 
-      if(verbose*0)
-	printf("%3d %3d %3d\n", n1, n2, n3);
-
-      //nVec needed by the integrand in the exponential
+      // nVec needed by the integrand in the exponential
       int nVec[3] = {n1, n2 ,n3};
       double nSqur = n1*n1 + n2*n2 + n3*n3;
 
@@ -99,25 +96,29 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
         //wVecMod stands for |\hat{gamma} * \vec{w}|
         wVecMod = sqrt((pow(gamma,2)-1) * pow(wDotd,2) /dModSqur
                        + nSqur);
-        cosPolarAngle=((gamma-1)*wDotd*dVec[2]/dModSqur + n3)/wVecMod;
+	if(wVecMod < DBL_EPSILON) {
+	  cosPolarAngle = 1.;
+	  azAngle = 0.;
+	}
+        else {
+	  cosPolarAngle = ((gamma-1)*wDotd*dVec[2]/dModSqur + n3)/wVecMod;
         
         
-        if(fabs(cosPolarAngle) > 1) {
-          // cosPolarAngle must not become larger than 1 
-          // we check for this here and drop a warning if unexpectedly large
-          if(fabs(1-cosPolarAngle) > DBL_EPSILON*10) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e in thirdPart\n", 1-cosPolarAngle);
-	  if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON*100) {
-	    fprintf(stderr, "wVecMod: %e\n", wVecMod);
-	    *rstatus = 13;
-	    return(thirdPartSum);
+	  if(fabs(cosPolarAngle) > 1) {
+	    // cosPolarAngle must not become larger than 1 
+	    // we check for this here and drop a warning if unexpectedly large
+	    if(fabs(1-cosPolarAngle) > DBL_EPSILON*10) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e in thirdPart\n", 1-cosPolarAngle);
+	    if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON*100) {
+	      fprintf(stderr, "wVecMod: %e\n", wVecMod);
+	      *rstatus = 13;
+	      return(thirdPartSum);
+	    }
+	    
+	    cosPolarAngle /= fabs(cosPolarAngle);
 	  }
-
-          cosPolarAngle /= fabs(cosPolarAngle);
-        }
-        
-        
-        azAngle = azimutalAngle((gamma-1)*wDotd*dVec[0]/dModSqur + n1 ,
-                                (gamma-1)*wDotd*dVec[1]/dModSqur + n2);
+	  azAngle = azimutalAngle((gamma-1)*wDotd*dVec[0]/dModSqur + n1 ,
+				  (gamma-1)*wDotd*dVec[1]/dModSqur + n2);
+	}
         thirdTerms = gamma * (cos(M_PI*wDotd) - I*sin(M_PI*wDotd))
           * pow(wVecMod, l) *spheHarm(l, m, cosPolarAngle, azAngle, &s1)
           * trdInteFunc(Lamda, dVec, l, qSqur, nVec, gamma, &s2);
