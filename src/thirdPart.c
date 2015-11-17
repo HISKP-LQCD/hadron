@@ -34,7 +34,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
   genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 	
   if(genReturn != 0){
-    printf("Generating the points wrong in thirdPart!");
+    printf("Generated the points wrongly in thirdPart!");
     exit(-1);
   }
 	
@@ -50,7 +50,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
       genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 
       if(genReturn != 0){
-	printf("Generating the points wrong in thirdPart!");
+	printf("Generated the points wrongly in thirdPart!");
 	exit(-1);
       }
 
@@ -79,7 +79,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
       n2 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 1];
       n3 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 2];
 
-      if(verbose)
+      if(verbose*0)
 	printf("%3d %3d %3d\n", n1, n2, n3);
 
       //nVec needed by the integrand in the exponential
@@ -139,7 +139,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
       error = cabs(pmodeSum) / cabs(thirdPartSum);
     
     if(verbose)
-      printf("pmode=%d error: %.16f\n\n",pmodeSqur , error);
+      printf("third term: pmode=%d error: %.16f result (%e, %e)\n",pmodeSqur , error, creal(thirdPartSum), cimag(thirdPartSum));
     
     // if the result is still zero after 4 iterations it is assumed to stay zero
     if (cabs(thirdPartSum) < DBL_EPSILON && niter > 4)
@@ -149,6 +149,9 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
   }//end of while.
 	
   *rstatus = s1 + s2;
+  if(verbose) {
+    printf("Third term = (%e, %e)\n", creal(thirdPartSum), cimag(thirdPartSum));
+  }
 
   return thirdPartSum;
 }

@@ -26,7 +26,7 @@ double integrandPart2(const double t, void * const params);
 
 double sndInteFunc(const double Lamda, const double qSqur, int * const rstatus);
 
-double complex secondPart(const int l, const double gamma, const double Lamda, const double qSqur, int * const rstatus);
+double complex secondPart(const int l, const double gamma, const double Lamda, const double qSqur, int * const rstatus, const int verbose);
 //Third part:
 
 double integrandPart3(const double t, void * const params);
