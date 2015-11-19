@@ -24,7 +24,7 @@ for.tsboot=TRUE, sort.type="values")
   }
   \item{t0}{
     initial time value of the GEVP, must be in between 0 and
-    \code{Time/2-2}. 
+    \code{Time/2-2}. Default is 1.
   }
   \item{matrix.size}{
     the size of the square matrix
