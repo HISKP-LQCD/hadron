@@ -125,14 +125,15 @@ takeTimeDiff.cf <- function(cf) {
   tt1 <- tt0+1
 
   ## take the differences, set the remaining points to NA
-  cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
-  cf$cf0[-tt1] <- NA
   if(!is.null(cf$cf)) {
     cf$cf[,tt1] <- cf$cf[,tt0]-cf$cf[,tt1]
     cf$cf[,-tt1] <- NA
   }
   ## now the bootstrap samples
   if(cf$boot.samples) {
+    cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
+    cf$cf0[-tt1] <- NA
+
     cf$cf.tsboot$t0[tt1] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
     cf$cf.tsboot$t0[-tt1] <- NA
     cf$cf.tsboot$t[,tt1] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
