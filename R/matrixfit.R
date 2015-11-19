@@ -4,27 +4,32 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
 }
 
 matrixModel <- function(par, t, T, parind, sign.vec) {
-  return(0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
+  return(0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
-  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
+  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
   return( sum(z %*% M %*% z) )
+}
+
+matrixChi <- function(par, t, y, L, T, parind, sign.vec) {
+  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+  return( z %*% L )
 }
 
 dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   res <- rep(0., times=length(par))
-  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(T-t)) + sign.vec*exp(-par[1]*t)))
-  zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-(T-t)*exp(-par[1]*(T-t)) + (-t)*sign.vec*exp(-par[1]*t))
+  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+  zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*(T-t[j])) + sign.vec[j]*exp(-par[1]*t[j]))
+    zp[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*(T-t[j])) + sign.vec[j]*exp(-par[1]*t[j]))
+    zp[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
@@ -44,20 +49,40 @@ deriv.CExp <- function(par, t, T, sign) {
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
-                      matrix.size=2, useCov=FALSE, seed=12345,
-                      boot.fit=TRUE) {
+                      useCov=FALSE, seed=12345,
+                      boot.fit=TRUE, fit.method="optim") {
   if(!any(class(cf) == "cf")) {
     stop("matrixfit requires the object to be of class cf! Aborting...!\n")
   }
   ## some sanity checks
-  if(min(parlist) <= 0 || max(parlist) > matrix.size) {
-    stop("Elements of parlist must be all > 0 and <= matrix.size\n")
+  if(min(parlist) <= 0) {
+    stop("Elements of parlist must be all > 0! Aborting\n")
   }
   for(i in 1:max(parlist)) {
     if(!any(parlist==i)) {
-      stop("not all parameters are used in the fit\n")
+      stop("not all parameters are used in the fit! Aborting\n")
     }
   }
+  t1p1 <- t1+1
+  t2p1 <- t2+1
+  N <- dim(cf$cf)[1]
+  Thalfp1 <- cf$T/2+1
+  t <- c(0:(cf$T/2))
+  
+  ## This is the number of correlators in cf
+  if(!is.null(dim(cf$cf)))
+    mSize <- dim(cf$cf)[2]/Thalfp1
+  else
+    mSize <- dim(cf$cf.tsboot$t)[2]/Thalfp1
+  
+  if(dim(parlist)[2] != mSize) {
+    cat(mSize, dim(parlist)[2], "\n")
+    stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
+  }
+  if(length(sym.vec) != mSize) {
+    stop("sym.vec has not the correct length! Aborting\n")
+  }
+  
   if(!cf$boot.samples) {
     cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
   }
@@ -67,21 +92,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     seed <- cf$seed
   }
 
-  t1p1 <- t1+1
-  t2p1 <- t2+1
-  N <- length(cf$cf[,1])
-  Thalfp1 <- cf$T/2+1
-  t <- c(0:(cf$T/2))
   CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
-
-  ## This is the number of correlators in cf
-  mSize <- length(CF$Cor)/Thalfp1
-  if(length(parlist[1,]) < mSize) {
-    stop("parlist has not the correct length\n")
-  }
-  if(length(sym.vec) < mSize) {
-    stop("sym.vec has not the correct length\n")
-  }
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
@@ -103,7 +114,8 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   CovMatrix <- NULL
   if(is.null(cf$cf)) {
     CovMatrix <- cov(cf$cf.tsboot$t[,ii])
-  } else {
+  }
+  else {
     CovMatrix <- cov(cf$cf[,ii])/N
   }
   
@@ -124,39 +136,51 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
       useCov <- FALSE
     }
   }
-
+  lm.avail=FALSE
+  if(fit.method == "lm") 
+    lm.avail <- require(minpack.lm)
+  LM <- chol(M)
+  
   par <- numeric(max(parind))
   ## we get initial guesses for fit parameters from effective masses
   ## first is the mass
   ## (we currently allow for only one)
   j <- which(parlist[1,]==1 & parlist[2,]==1)
   par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$T)
+  ## catch failure of invcosh
+  if(is.na(par[1]) || is.nan(par[1])) par[1] <- 0.2
   ## the amplitudes we estimate from diagonal elements
   for(i in 2:length(par)) {
     j <- which(parlist[1,]==(i-1) & parlist[2,]==(i-1))
     if(length(j) == 0) {
-      warning("one diagonal element does not appear in parlist\n")
-      j <- 1
+      ##if(full.matrix) warning("one diagonal element does not appear in parlist\n")
+      j <- i-1
     }
-    par[i] <- sqrt(CF$Cor[t1p1+(j-1)*Thalfp1]/0.5/exp(-par[1]*t1))
+    par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
   }
 
   ## check out constrOptim
   ## now perform minimisation
-  opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
-                   method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                   t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
-  ##opt.res <- optim(opt.res$par, matrixChisqr, gr = dmatrixChisqr,
-  ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
-  ##                 t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
-
   dof <- (length(CF$t[ii])-length(par))
-  Qval <- 1-pchisq(opt.res$value, dof)
-
+  if(lm.avail) {
+    opt.res <- nls.lm(par = par, fn = matrixChi, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+    rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
+  }
+  else {
+    opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
+                     method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
+                     t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+    ##opt.res <- optim(opt.res$par, matrixChisqr, gr = dmatrixChisqr,
+    ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
+    ##                 t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
+    rchisqr <- opt.res$value
+  }
+  Qval <- 1-pchisq(rchisqr, dof)
+  
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail)
   }
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
@@ -165,7 +189,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 
   res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
-              Qval=Qval, chisqr=opt.res$value, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
+              Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed, N=N)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
@@ -192,7 +216,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
 
-    y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*(T-tx)) + sgn*exp(-pars[1]*tx))
+    y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
 
     if(plot.errorband) {
       ## in the following the covariance matrix of the paramters and vectors of derivatives
@@ -249,8 +273,8 @@ summary.matrixfit <- function(mfit) {
   cat("boot.R\t=\t", mfit$boot.R, " (bootstrap samples)\n")
   cat("boot.l\t=\t", mfit$boot.l, " (block length)\n")
   cat("useCov\t=\t", mfit$useCov, "\n")
-  cat("chisqr\t=\t", mfit$opt.res$value, "\ndof\t=\t", mfit$dof, "\nchisqr/dof=\t",
-      mfit$opt.res$value/mfit$dof, "\n")
+  cat("chisqr\t=\t", mfit$chisqr, "\ndof\t=\t", mfit$dof, "\nchisqr/dof=\t",
+      mfit$chisqr/mfit$dof, "\n")
   ## probability to find a larger chi^2 value
   ## if the data is generated again with the same statistics
   ## given the model is correct
@@ -266,10 +290,16 @@ summary.matrixfit <- function(mfit) {
   }
 }
 
-fit.formatrixboot <- function(cf, par, t, M, T, parind, sign.vec) {
-  opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
-                   method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                   t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec)
+fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE) {
+  if(lm.avail && !missing(LM)) {
+    opt.res <- nls.lm(par = par, fn = matrixChi, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec)
+    opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
+  }
+  else {
+    opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
+                     method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
+                     t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec)
+  }
   ##opt.res <- optim(opt.res$par, fn = matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
   ##                 t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)
