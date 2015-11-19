@@ -147,6 +147,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
+  ## we devide everything by 2 apart from t=0 and t=T/2
   data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
       data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
   ## symmetrise or anti-symmetrise for given observable?
