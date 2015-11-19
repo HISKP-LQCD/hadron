@@ -35,8 +35,10 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
   }
   \item{sym.vec}{
     a vector of length number of correlators in cf indicating whether
-    the correlation function is a cosh or a sinh. Default is
-    \code{sym.vec=c("cosh","cosh","cosh","cosh")}. 
+    the correlation function is a cosh, a sinh or an
+    exponential. Default is 
+    \code{sym.vec=c("cosh","cosh","cosh","cosh")}, possible values are
+    \code{"cosh"}, \code{"sinh"} and \code{"exp"}.
   }
   \item{useCov}{
     use correlated or uncorrelated chisquare. Default is

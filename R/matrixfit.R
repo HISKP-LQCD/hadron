@@ -108,7 +108,8 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   sign.vec <- rep(+1, times=length(CF$Cor))
   for(i in 1:mSize) {
     parind[((i-1)*Thalfp1+1):(i*Thalfp1),] <- t(array(parlist[,i]+1, dim=c(2,Thalfp1)))
-    if(sym.vec[i] != "cosh") sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
+    if(sym.vec[i] == "sinh") sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
+    if(sym.vec[i] == "exp") sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- 0
   }
   
   CovMatrix <- NULL
