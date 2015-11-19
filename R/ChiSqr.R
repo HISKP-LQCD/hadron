@@ -1,12 +1,10 @@
 ChiSqr.singleCor <- function(par, Thalf, x, y, err, tr, sign) {
   ii <- c(1:tr)
-  Sumall <- 0.
   return( sum(((y[ii] - par[1]*par[1]*( CExp(m=par[2], Time=2*Thalf, x=x, sign=sign) ))/err[ii])^2) )
 }
 
 ChiSqr.pcac <- function(par, Thalf, x, y, err, tr) {
   ii <- c(1:tr)
-  Sumall <- 0.
   return( sum(((y[ii] - par[1]*par[1]*( CExp(m=par[3], Time=2*Thalf, x=x, sign=+1.) ))/err[ii])^2)
          + sum(((y[ii+tr] - par[1]*par[2]*( CExp(m=par[3], Time=2*Thalf, x=x, sign=-1.) ))/err[ii+tr])^2))
 }
