@@ -124,16 +124,23 @@ mul.cf <- function(cf, a=1.) {
   }
 }
 
-extractSingleCor.cf <- function(cf, id=1) {
+extractSingleCor.cf <- function(cf, id=c(1)) {
   if(!inherits(cf, "cf")) {
     stop("extractSingleCor.cf: cf must be of class 'cf'. Aborting...\n")
   }
-  cf$cf0 <- NULL
-  N <- dim(cf$cf)[1]
-  nCors <- N/(cf$Time/2+1)
-  ii <- c(1:(cf$Time/2+1)) + (id-1)*(cf$Time/2+1)
+  
+  ii <- c()
+  for(i in c(1:length(id))) {
+    ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
+  }
+
   cf$cf <- cf$cf[,ii]
-  cf$boot.samples <- FALSE
+  if(cf$boot.samples) {
+    cf$cf0 <- cf$cf0[ii]
+    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
+    cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
+    cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
+  }
   cf$nrObs <- 1
   cf$nsStypes <- 1
   return(cf)
