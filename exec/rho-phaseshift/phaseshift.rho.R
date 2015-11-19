@@ -1,3 +1,33 @@
+## the ratio defined in Jansen, Renner, Xu
+## of shifted 4 and 2pt functions
+compRpipi <- function(c4, c2, Thalf) {
+  ## we do not go until Thalf+1, because we take the difference and
+  ## it would not be defined
+  tt <- c(1:Thalf)
+  return((c4[tt] - c4[tt+1])/(c2[tt]^2 - c2[tt+1]^2))
+}
+
+## in case c4 is already a principal correlator from a weighted and
+## shifted matrix
+compRpipi2 <- function(c4, c2, Thalf) {
+  ## we do not go until Thalf+1, because we take the difference and
+  ## it would not be defined
+  tt <- c(1:Thalf)
+  ## c4 is from a shifted and weighted gevp -> need it at tt+1
+  return(c4[tt+1]/(c2[tt]^2 - c2[tt+1]^2))
+}
+
+## in case c4 is already a principal correlator from a weighted and
+## shifted matrix
+compRpipi3 <- function(c4, c21, c22, Thalf, dE) {
+  ## we do not go until Thalf+1, because we take the difference and
+  ## it would not be defined
+  tt <- c(1:Thalf)
+  ## c4 is from a shifted and weighted gevp -> need it at tt+1
+  return(c4[tt+1]/(c21[tt]*c22[tt]*exp(dE*tt) - c21[tt+1]*c22[tt+1]*exp(dE*(tt+1))))
+}
+
+
 phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1) {
 
   if(missing(L)) {
@@ -50,7 +80,6 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1
 
   Z00 <- Re(LuescherZeta(qtilde$qtsq, gamma = qtilde$gamma, dvec = Pcm))
   Z00boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma = qtilde$gamma, dvec = Pcm))
-
   
   if(frame == "cmf") {
     tandelta <- pi^(3./2.)*sqrt(qtilde$qtsq)/Z00
