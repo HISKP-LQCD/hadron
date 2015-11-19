@@ -5,6 +5,8 @@
 static int pmodes_initialised = 0;
 static int * degnrtDOF = NULL;
 static int * arrayPmode = NULL;
+static int _NPmode = 0;
+static int _DimMAX = 0;
 
 //NPmode should be bigger than the biggest pmodeSqur we may meet in the iteration,
 //DimMax is the biggest degenation degree within the range of NPmode
@@ -49,23 +51,22 @@ void pmode_free_arrays() {
   pmodes_initialised = 0;
   degnrtDOF = NULL;
   arrayPmode = NULL;
+  _NPmode = 0;
+  _DimMAX = 0;
   return;
 }
 
 
 int gen_points_array(int ** _degnrtDOF, int ** _arrayPmode, const int NPmode, const int DimMAX) {	
-  static int _NPmode = 0;
-  static int _DimMAX = 0;
 
   if(!pmodes_initialised || NPmode > _NPmode || DimMAX >  _DimMAX) {
     pmode_free_arrays();
 
     if(NULL == (degnrtDOF = (int *)malloc(NPmode*sizeof(int)))) {
-      printf("Malloc wrong for degnrtDOF!\n");
       return(-1);
     }
     
-    if(NULL == (arrayPmode= (int *)malloc(NPmode*DimMAX*3*sizeof(int)))) {
+    if(NULL == (arrayPmode= (int *)malloc(NPmode*(DimMAX+10)*3*sizeof(int)))) {
       printf("Malloc wrong for arrayPmode!\n");
       return(-2);
     }

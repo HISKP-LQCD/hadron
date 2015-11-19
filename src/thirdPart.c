@@ -35,7 +35,8 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 	
   if(genReturn != 0){
     printf("Generated the points wrongly in thirdPart!");
-    exit(-1);
+    *rstatus = 1000;
+    return(thirdPartSum);
   }
 	
   //From the formula in the paper w!=0,so we start from pmodeSqur=1.
@@ -45,18 +46,20 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 
     if(pmodeSqur > npmode[0]){
       i_npmode++;
-      fprintf(stderr, "increased i_npmode to %ud in thirdPart\n", i_npmode);
+      if(verbose) fprintf(stderr, "increased i_npmode to %ud in thirdPart\n", i_npmode);
       get_npmode(npmode, i_npmode);
       genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 
       if(genReturn != 0){
 	printf("Generated the points wrongly in thirdPart!");
-	exit(-1);
+        *rstatus = 1000;
+        return(thirdPartSum);
       }
 
       if(i_npmode > 4) {
-	fprintf(stderr, "NPmode and DimMax need to be larger than available in thirdPart! Aborting...!\n");
-	exit(-1);
+	if(verbose) fprintf(stderr, "NPmode and DimMax need to be larger than available in thirdPart! Aborting...!\n");
+        *rstatus = 2000;
+        return(thirdPartSum);
       }
     }
 
