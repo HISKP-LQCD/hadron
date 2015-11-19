@@ -35,13 +35,28 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
+matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec) {
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
+  return( z %*% L )
+}
+
 # the calling code must supply the correct three parameters 
 deriv.CExp <- function(par, t, T, sign) {
   res <- array(0.,dim=c(length(par),length(t)))
 
-  res[1,] <- 0.5*par[2]*par[3]*(-(T-t)*exp(-par[1]*(T-t)) + (-t)*sign*exp(-par[1]*t))
-  res[2,] <- 0.5*par[3]*(exp(-par[1]*(T-t)) + sign*exp(-par[1]*t))
-  res[3,] <- 0.5*par[2]*(exp(-par[1]*(T-t)) + sign*exp(-par[1]*t))
+  res[1,] <- 0.5*par[2]*par[3]*(-t*exp(-par[1]*t) -(T-t)*sign*exp(-par[1]*(T-t)))
+  res[2,] <- 0.5*par[3]*(exp(-par[1]*t) + sign*exp(-par[1]*(T-t)))
+  res[3,] <- 0.5*par[2]*(exp(-par[1]*t) + sign*exp(-par[1]*(T-t)))
+
+  return(res)
+}
+
+deriv.CExp.shifted <- function(par, t, T, sign) {
+  res <- array(0.,dim=c(length(par),length(t)))
+  
+  res[1,] <- par[2]*par[3]*(-(t+1/2)*exp(-par[1]*(t+1/2)) + (T-(t+1/2))*sign*exp(-par[1]*(T-(t+1/2))))
+  res[2,] <- par[3]*(exp(-par[1]*(t+1/2)) - sign*exp(-par[1]*(T-(t+1/2))))
+  res[3,] <- par[2]*(exp(-par[1]*(t+1/2)) - sign*exp(-par[1]*(T-(t+1/2))))
 
   return(res)
 }
@@ -49,7 +64,7 @@ deriv.CExp <- function(par, t, T, sign) {
 matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
                       parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
                       sym.vec=c("cosh","cosh","cosh","cosh"),
-                      useCov=FALSE, seed=12345,
+                      useCov=FALSE, seed=12345, model="single",
                       boot.fit=TRUE, fit.method="optim") {
   if(!any(class(cf) == "cf")) {
     stop("matrixfit requires the object to be of class cf! Aborting...!\n")
@@ -160,11 +175,16 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
   }
 
+  fitfn <- matrixChi
+  if(model == "shifted") {
+    fitfn <- matrixChi.shifted
+  }
+  
   ## check out constrOptim
   ## now perform minimisation
   dof <- (length(CF$t[ii])-length(par))
   if(lm.avail) {
-    opt.res <- nls.lm(par = par, fn = matrixChi, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+    opt.res <- nls.lm(par = par, fn = fitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
@@ -181,17 +201,17 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail)
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail, fitfn=fitfn)
   }
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
     N <- cf$N
   }
 
-  res <- list(CF=CF, M=M, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
+  res <- list(CF=CF, M=M, L=L, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
-              parlist=parlist, sym.vec=sym.vec, seed=seed, N=N)
+              parlist=parlist, sym.vec=sym.vec, seed=seed, N=N, model=model, fit.method=fit.method)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }
@@ -217,7 +237,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
 
-    y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
+    if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx+1/2)) - sgn*exp(-pars[1]*(T-(tx+1/2))))
+    else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
 
     if(plot.errorband) {
       ## in the following the covariance matrix of the paramters and vectors of derivatives
@@ -230,7 +251,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
       ## 3 by length(tx) array of derivatives of the model with respect to the three parameters
       ## if any parameters are the same, multiplication with the covariance matrix will give
       ## the correct contributions to the derivative
-      div <- deriv.CExp(par=pars,t=tx,T=T,sign=sgn)
+      if(mfit$model == "shifted") div <- deriv.CExp.shifted(par=pars, t=tx, T=T, sign=sgn)
+      else div <- deriv.CExp(par=pars, t=tx, T=T, sign=sgn)
       yvar <- t(div) %*% parCov %*% div
 
       ## yvar is a length(tx) by length(tx) matrix of which only the diagonal elements are of
@@ -244,7 +266,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
 
       polygon(x=polyx,y=polyval,col=rgb(red=polycol[1],green=polycol[2],blue=polycol[3],alpha=polycol[4]),border=NA)
       lines(tx, y, col=col[i], lwd=c(1))
-    } else {
+    }
+    else {
       lines(tx, y, col=col[i], lwd=c(3))
     }
   }
@@ -291,9 +314,9 @@ summary.matrixfit <- function(mfit) {
   }
 }
 
-fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE) {
+fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- nls.lm(par = par, fn = matrixChi, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec)
+    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec)
     opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
   }
   else {

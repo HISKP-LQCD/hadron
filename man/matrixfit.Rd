@@ -60,6 +60,16 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
     if the library \code{"minpack.lm"} can be loaded. Default and
     fallback is \code{"optim"}.
   }
+  \item{model}{
+    Sets the fit model to be used in the fit. The default model is\cr
+    \eqn{0.5 p_i p_j (\exp(-Et) \pm c* \exp(-E(T-t)))}\cr
+    with sign depending on \code{"cosh"} or \code{"sinh"}. c equals one
+    except for the \code{"exp"} functional dependence. When model is set
+    to \code{"shifted"}, the fit uses  the function\cr
+    \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c* \exp(-E(T-(t+1/2))))}\cr
+    which is useful when the original correlation function or matrix is
+    shifted, see e.g. \link{bootstrap.gevp}.
+  }
 }
 \value{
   returns an object of class \code{matrixfit} with entries:
@@ -67,7 +77,10 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
     object of class cf which contains the mean correlation functions
   }
   \item{M}{
-    weighting matrix for weighted Chi squared minimization
+    inverse variance-covariance matrix for weighted Chi squared minimization
+  }
+  \item{L}{
+    squre root of \code{M}.
   }
   \item{parind}{
     indices in the parameter vector used for the different matrix combinations
@@ -128,6 +141,12 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
   }
   \item{seed}{
     RNG seed for bootstrap procedure
+  }
+  \item{model}{
+    see input.
+  }
+  \item{fit.method}{
+    see input.
   }
 }
 \details{
