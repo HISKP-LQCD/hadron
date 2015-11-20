@@ -14,7 +14,22 @@ matrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
 
 matrixChi <- function(par, t, y, L, T, parind, sign.vec) {
   z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
-  return( z %*% L )
+  return( L %*% z )
+}
+
+dmatrixChi <- function(par, t, y, L, T, parind, sign.vec) {
+  zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
+  res <- L %*% zp
+  for(i in 2:length(par)) {
+    zp1 <- c(0)
+    j <- which(parind[,1]==i)
+    zp1[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp2 <- c(0)
+    j <- which(parind[,2]==i)
+    zp2[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    res <- c(res, L %*% zp1 + L %*% zp2)
+  }
+  return(res)
 }
 
 dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
@@ -35,10 +50,49 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
   return(res)
 }
 
+matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec) {
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
+  return( sum(z %*% M %*% z ) )
+}
+
+dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec) {
+  res <- rep(0., times=length(par))
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
+  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t+1/2)*exp(-par[1]*(t+1/2)) + (T-t-1/2)*sign.vec*exp(-par[1]*(T-(t+1/2))))
+  res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
+  for(i in 2:length(par)) {
+    zp <- rep(0, length(z))
+    j <- which(parind[,1]==i)
+    zp[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
+    zp <- rep(0, length(z))
+    j <- which(parind[,2]==i)
+    zp[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
+  }
+  return(res)
+}
+
 matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec) {
   z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
-  return( z %*% L )
+  return( L %*% z )
 }
+
+dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec) {
+  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t+1/2)*exp(-par[1]*(t+1/2)) +(T-t-1/2)*sign.vec*exp(-par[1]*(T-(t+1/2))))
+  res <- L %*% zp
+  for(i in 2:length(par)) {
+    zp1 <- c(0)
+    j <- which(parind[,1]==i)
+    zp1[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    zp2 <- c(0)
+    j <- which(parind[,2]==i)
+    zp2[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    res <- c(res, L %*% zp1 + L %*% zp2)
+  }
+  return(res)
+}
+
 
 # the calling code must supply the correct three parameters 
 deriv.CExp <- function(par, t, T, sign) {
@@ -175,21 +229,32 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
   }
 
-  fitfn <- matrixChi
+  fitfn <- matrixChisqr
+  dfitfn <- dmatrixChisqr
   if(model == "shifted") {
-    fitfn <- matrixChi.shifted
+    fitfn <- matrixChisqr.shifted
+    dfitfn <- dmatrixChisqr.shifted
+  }
+
+  if(lm.avail) {
+    fitfn <- matrixChi
+    dfitfn <- dmatrixChi
+    if(model == "shifted") {
+      fitfn <- matrixChi.shifted
+      dfitfn <- dmatrixChi.shifted
+    }
   }
   
   ## check out constrOptim
   ## now perform minimisation
   dof <- (length(CF$t[ii])-length(par))
   if(lm.avail) {
-    opt.res <- nls.lm(par = par, fn = fitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
+    opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8))
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
-    opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
-                     method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
+    opt.res <- optim(par, fn = fitfn, gr = dfitfn,
+                     method="BFGS", control=list(maxit=500, parscale=par, ndeps=rep(1.e-8, times=length(par)), REPORT=50),
                      t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
     ##opt.res <- optim(opt.res$par, matrixChisqr, gr = dmatrixChisqr,
     ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
@@ -201,7 +266,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail, fitfn=fitfn)
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn)
   }
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
@@ -226,7 +291,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
   # prevent stray negative values from ruining the plot
   lbound <- mfit$CF$Cor - 2*mfit$CF$Err
   lbound <- lbound[ lbound > 0 ]
-  if(missing(ylim)) ylims <- c( min( lbound ) , max( mfit$CF$Cor + 2*mfit$CF$Err ) )
+  if(missing(ylim)) ylims <- c( min( lbound, na.rm=TRUE ) , max( mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
   else ylims <- ylim
 
   plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
@@ -314,13 +379,13 @@ summary.matrixfit <- function(mfit) {
   }
 }
 
-fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn) {
+fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn, dfitfn) {
   if(lm.avail && !missing(LM)) {
     opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec)
     opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
   }
   else {
-    opt.res <- optim(par, fn = matrixChisqr, gr = dmatrixChisqr,
+    opt.res <- optim(par, fn = fitfn, gr = dfitfn,
                      method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
                      t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec)
   }
