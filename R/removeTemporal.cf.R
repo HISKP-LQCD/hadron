@@ -1,5 +1,7 @@
 ## will first multiply with 
-removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,0), L, lat.disp=TRUE) {
+removeTemporal.cf <- function(cf, single.cf1, single.cf2,
+                              p1=c(0,0,0), p2=c(0,0,0), L,
+                              lat.disp=TRUE, weight.cosh=FALSE) {
 
   if(missing(cf)) {
     stop("cf must be provided to removeTemporal.cf at least\n")
@@ -78,34 +80,39 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
       mass2$t <- sqrt( mass2$t^2 + pshift )
     }
   }
+  c <- 0.
+  if(weight.cosh) c <- 1.
   ## multiply with the exponential correction factor
-  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(T/2)))
+  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(T/2))) + c*exp((mass2$t0-mass1$t0)*(T-c(0:(T/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp((mass2$t[i]-mass1$t[i])*c(0:(T/2)))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
+      (exp((mass2$t[i]-mass1$t[i])*c(0:(T/2))) + c*exp((mass2$t[i]-mass1$t[i])*(T-c(0:(T/2)))))
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1)))
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1))) + c*exp(-(mass2$t0-mass1$t0)*(T-c(-1:(T/2-1))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp(-(mass2$t[i]-mass1$t[i])*c(-1:(T/2-1)))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(T/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(T-c(-1:(T/2-1)))) )
   }
   ## store masses in cf
   cf$mass1 <- mass1
   cf$mass2 <- mass2
   cf$weighted <- TRUE
   cf$weight.factor <- 1.
+  cf$weight.cosh <- weight.cosh
   return(invisible(cf))
 }
 

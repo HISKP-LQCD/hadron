@@ -171,6 +171,12 @@ gevp2cf <- function(gevp, id=1) {
   cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
   cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
   cf$id <- id
+  if(any(names(gevp$cf) == "weighted")) {
+    cf$weighted <- gevp$cf$weighted
+    cf$weight.cosh <- gevp$cf$weight.cosh
+    cf$mass1 <- gevp$cf$mass1
+    cf$mass2 <- gevp$cf$mass2
+  }
   attr(cf, "class") <- c("cf", class(cf))
   return(invisible(cf))
 }
