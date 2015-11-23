@@ -80,48 +80,59 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1
 
   Z00 <- Re(LuescherZeta(qtilde$qtsq, gamma = qtilde$gamma, dvec = Pcm))
   Z00boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma = qtilde$gamma, dvec = Pcm))
-  
+  x <- numeric()
+  y <- numeric()
+  xboot <- numeric()
+  yboot <- numeric()
   if(frame == "cmf") {
-    tandelta <- pi^(3./2.)*sqrt(qtilde$qtsq)/Z00
-    tandeltaboot <- pi^(3./2.)*sqrt(qtildeboot$qtsq)/Z00boot
-    delta <- atan2(pi^(3./2.)*sqrt(qtilde$qtsq),Z00)
-    deltaboot <- atan2(pi^(3./2.)*sqrt(qtildeboot$qtsq),Z00boot)
+    y <- pi^(3./2.)*sqrt(qtilde$qtsq)
+    x <- Z00
+    yboot <- pi^(3./2.)*sqrt(qtildeboot$qtsq)
+    xboot <- Z00boot
   }
   else if(frame == "mf1") {
     ## representation A_1 from arXiv:1206:4141 w00 + 2 w20
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
-    delta <- atan2(qtilde$gamma*pi**(3./2.) * sqrt(qtilde$qtsq) , (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20))
-    tandelta <- qtilde$gamma*pi**(3./2.) * sqrt(qtilde$qtsq) / (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
+    y <- qtilde$gamma*pi**(3./2.) * sqrt(qtilde$qtsq)
+    x <- (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
     
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
-    deltaboot <- atan2(qtildeboot$gamma*pi**(3./2.) * sqrt(qtildeboot$qtsq) , (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot))
-    tandeltaboot <- qtildeboot$gamma*pi**(3./2.) * sqrt(qtildeboot$qtsq) / (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
+    yboot <- qtildeboot$gamma*pi**(3./2.) * sqrt(qtildeboot$qtsq)
+    xboot <- (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
   }
   else if(frame == "mf2") {
     ## representation A_1 from arXiv:1206:4141 w00 - w20 - i \sqrt(6) w22 ??
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
     Z22  <- Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-    delta <- atan2(qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq) , (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22)))
-    tandelta <- qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq) / (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
-    
+    y <- qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq)
+    x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
     Z22boot  <- Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-    deltaboot <- atan2(qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq) , (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot)))
-    tandeltaboot <- qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq) / (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+    yboot <- qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq)
+    xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
   }
   else if(frame == "mf3") {
     ## representation A from arXiv:1206:4141 w00 -2i \sqrt(6) w22 ??
     Z22 <- Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-    delta <- atan2(qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq) , (Z00 +2* ((sqrt(6./5.)/(qtilde$qtsq))*Z22)))
-    tandelta <- qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq) / (Z00 +2* ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+    y <- qtilde$gamma*pi^(3./2.) * sqrt(qtilde$qtsq)
+    x <- (Z00 +2* ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
     
     Z22boot  <- Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-    deltaboot <- atan2(qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq) , (Z00boot +2* ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot)))
-    tandeltaboot <- qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq) / (Z00boot +2* ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+    yboot <- qtildeboot$gamma*pi^(3./2.) * sqrt(qtildeboot$qtsq)
+    xboot <- (Z00boot +2* ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
   }
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }
+  delta <- atan2(y,x)
+  tandelta <- y/x
+  shift <- 0.
+  if(x < 0 && y >= 0) shift <- pi
+  if(x < 0 && y < 0) shift <- -pi
+  
+  deltaboot <- atan(yboot/xboot) + shift
+  tandeltaboot <- yboot/xboot  
   return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot)))
 }
 
