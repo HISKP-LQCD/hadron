@@ -235,6 +235,18 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     fitfn <- matrixChisqr.shifted
     dfitfn <- dmatrixChisqr.shifted
   }
+  if(model == "weighted") {
+    if(any(names(cf) == "weighted")) {
+      if(cf$weighted) {
+        fitfn <- matrixChisqr.weighted
+        dfitfn <- dmatrixChisqr.weighted
+      }
+      else {
+        model <- "single"
+        warning("model chosen to be weighted, but weighting information not available in cf. Falling back to model=single\n")
+      }
+    }
+  }
 
   if(lm.avail) {
     fitfn <- matrixChi
@@ -243,22 +255,24 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
       fitfn <- matrixChi.shifted
       dfitfn <- dmatrixChi.shifted
     }
+    if(model == "weighted") {
+      fitfn <- matrixChi.weighted
+      dfitfn <- dmatrixChi.weighted
+    }
   }
   
   ## check out constrOptim
   ## now perform minimisation
   dof <- (length(CF$t[ii])-length(par))
   if(lm.avail) {
-    opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8))
+    opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time,
+                      parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8))
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn,
                      method="BFGS", control=list(maxit=500, parscale=par, ndeps=rep(1.e-8, times=length(par)), REPORT=50),
                      t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii])
-    ##opt.res <- optim(opt.res$par, matrixChisqr, gr = dmatrixChisqr,
-    ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
-    ##                 t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$T, parind=parind[ii,], sign.vec=sign.vec[ii])
     rchisqr <- opt.res$value
   }
   Qval <- 1-pchisq(rchisqr, dof)
@@ -273,7 +287,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     N <- cf$N
   }
 
-  res <- list(CF=CF, M=M, L=L, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
+  res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed, N=N, model=model, fit.method=fit.method)
