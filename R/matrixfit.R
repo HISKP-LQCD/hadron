@@ -280,7 +280,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii],
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], LM=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn)
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], L=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn)
   }
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
