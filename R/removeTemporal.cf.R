@@ -15,6 +15,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   if(!cf$boot.samples) {
     stop("please provide bootstrapped cf to removeTemporal.cf using the same configurations and seed for all!\n")
   }
+  Time <- cf$Time
   if(missing(L)) {
     L <- cf$Time/2
     warning("L was missing, set it to T/2\n")
@@ -55,7 +56,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   else {
     stop("single.cf2 must be either of class effectivemassfit or matrixfit! Aborting...\n")
   }
-  ## use momenta p1 and p2 and lattice dispersion relation to shift energies
+  ## use momenta p1 and p2 and lattice or continuum dispersion relation to shift energies
   if(any(p1 != 0)) {
     if(lat.disp) {
       pshift <- 2*sum(sin(pi*p1/L)^2)
@@ -83,7 +84,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   c <- 0.
   if(weight.cosh) c <- 1.
   ## multiply with the exponential correction factor
-  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(T/2))) + c*exp((mass2$t0-mass1$t0)*(T-c(0:(T/2))))
+  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + c*exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
@@ -91,13 +92,13 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp((mass2$t[i]-mass1$t[i])*c(0:(T/2))) + c*exp((mass2$t[i]-mass1$t[i])*(T-c(0:(T/2)))))
+      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + c*exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1))) + c*exp(-(mass2$t0-mass1$t0)*(T-c(-1:(T/2-1))))
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + c*exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
@@ -105,7 +106,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(T/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(T-c(-1:(T/2-1)))) )
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
   }
   ## store masses in cf
   cf$mass1 <- mass1
