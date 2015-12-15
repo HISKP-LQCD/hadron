@@ -51,43 +51,43 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec) {
 }
 
 matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec) {
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-1/2)) - sign.vec*exp(-par[1]*(T-(t-1/2)))))
   return( sum(z %*% M %*% z ) )
 }
 
 dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec) {
   res <- rep(0., times=length(par))
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
-  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t+1/2)*exp(-par[1]*(t+1/2)) + (T-t-1/2)*sign.vec*exp(-par[1]*(T-(t+1/2))))
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-1/2)) - sign.vec*exp(-par[1]*(T-(t-1/2)))))
+  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t-1/2)*exp(-par[1]*(t-1/2)) + (T-t+1/2)*sign.vec*exp(-par[1]*(T-(t-1/2))))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    zp[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]-1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-1/2))))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    zp[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]-1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-1/2))))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
 }
 
 matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec) {
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t+1/2)) - sign.vec*exp(-par[1]*(T-(t+1/2)))))
+  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-1/2)) - sign.vec*exp(-par[1]*(T-(t-1/2)))))
   return( L %*% z )
 }
 
 dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec) {
-  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t+1/2)*exp(-par[1]*(t+1/2)) +(T-t-1/2)*sign.vec*exp(-par[1]*(T-(t+1/2))))
+  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t-1/2)*exp(-par[1]*(t-1/2)) +(T-t+1/2)*sign.vec*exp(-par[1]*(T-(t-1/2))))
   res <- L %*% zp
   for(i in 2:length(par)) {
     zp1 <- c(0)
     j <- which(parind[,1]==i)
-    zp1[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    zp1[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]-1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-1/2))))
     zp2 <- c(0)
     j <- which(parind[,2]==i)
-    zp2[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]+1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]+1/2))))
+    zp2[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]-1/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-1/2))))
     res <- c(res, L %*% zp1 + L %*% zp2)
   }
   return(res)
@@ -266,7 +266,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   dof <- (length(CF$t[ii])-length(par))
   if(lm.avail) {
     opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time,
-                      parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8))
+                      parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
@@ -316,7 +316,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
 
-    if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx+1/2)) - sgn*exp(-pars[1]*(T-(tx+1/2))))
+    if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-1/2)) - sgn*exp(-pars[1]*(T-(tx-1/2))))
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
 
     if(plot.errorband) {
@@ -395,7 +395,8 @@ summary.matrixfit <- function(mfit) {
 
 fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn, dfitfn) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec)
+    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
   }
   else {
