@@ -1,4 +1,4 @@
-tikz.init <- function(basename, stadAlone = TRUE, ...) {
+tikz.init <- function(basename, standAlone = TRUE, ...) {
   havetikz <- require("tikzDevice")
   if(!havetikz){
     stop("tikz.init: tikzDevice package was not found!")
