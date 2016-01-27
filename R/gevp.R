@@ -1,3 +1,18 @@
+## generates all permutations of c(1:n)
+permutations <- function(n){
+  if(n==1) {
+    return(matrix(1))
+  }
+  
+  sp <- permutations(n-1)
+  p <- nrow(sp)
+  A <- matrix(nrow=n*p,ncol=n)
+  for(i in 1:n){
+    A[(i-1)*p+1:p,] <- cbind(i,sp+(sp>=i))
+  }
+  return(A)
+}
+
 ## t0 starts counting at 0!
 ##                           ( 1 , 2 )
 ## order c(1,2,3,4) goes to 
@@ -12,7 +27,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
   if(t0 < 0 || t0 > (Time/2-2)) {
     stop("t0 must be in between 0 and T/2-2. Aborting ...\n")
   }
-  if(!any(c("values", "vectors") == sort.type)) {
+  if(!any(c("values", "vectors", "det") == sort.type)) {
     stop("possible values for sort.ype are values or vectors. Aborting\n")
   }
   Thalf <- Time/2
@@ -61,36 +76,54 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
   ## now the time dependence for t > t0
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in (t0+1):(Thalf)) {
+    
     t.sort <- t0+2
     if((t > t0+1) && !sort.t0) t.sort <- t
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
     ## determine eigenvalues and vectors
+
     variational.solve <- eigen(t(invL) %*% cM %*% invL,
                                symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
     ## sort depending on input by values or vectors
-    sortindex <- c()
-    if(sort.type == "values") {
+    sortindex <- integer(matrix.size)
+    if(sort.type == "values" || t == t0+1) {
       sortindex <- order(variational.solve$values, decreasing=TRUE)
     }
-    else {
+    else if(sort.type == "vectors") {
       ## compute the scalar product of eigenvectors with those at t0+1
       idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
       sortindex <- idx[,1]
       if(!all(order(sortindex) == c(1:matrix.size))) {
-        if((sort.t0) && t > t0+1) {
-          t.sort <- t
-        }
-        else if(t > t0+2) {
-          t.sort <- t.sort-1
-        }
         idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
         sortindex <- idx[,1]
       }
       if(!all(order(sortindex) == c(1:matrix.size))) {
         sortindex <- order(variational.solve$values, decreasing=TRUE)
       }
+    }
+    else {
+      Perms <- permutations(matrix.size)
+      NPerms <- dim(Perms)[1]
+      DMp <- integer(NPerms)
+      Mp <- matrix(0, nrow=matrix.size, ncol=matrix.size)
+      for(p in c(1:NPerms)) {
+        for(i in c(1:matrix.size)) {
+          ij <- Perms[p,c(1:matrix.size)[-i]]
+          ##cat(as.vector(evectors[t.sort,,]), "\n")
+          ##cat(ii1, "t.sort", t.sort, "t0", t0, "\n")
+          if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+          else {
+            Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+          }
+          ##else {
+          ##  Mp <- Mp %*% matrix(c(evectors[t.sort,,ii0], variational.solve$vectors[,i], evectors[t.sort,,ii1]), nrow=matrix.size, ncol=matrix.size)
+          ##}
+        }
+        DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
+      }
+      sortindex <- Perms[which.max(DMp),]
     }
     evalues[t+1,] <- variational.solve$values[sortindex]
     evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
@@ -121,7 +154,7 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
   }
-  if(!any(c("values", "vectors") == sort.type)) {
+  if(!any(c("values", "vectors", "det") == sort.type)) {
     stop("possible values for sort.ype are values or vectors. Aborting\n")
   }
   N <- length(cf$cf[,1])
@@ -133,8 +166,7 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
     boot.R <- cf$boot.R
     boot.l <- cf$boot.l
   }
-  res <- gevp(cf$cf0, Time=cf$Time, t0, matrix.size, element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
-
+  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
                          matrix.size=matrix.size, element.order=element.order,

@@ -38,7 +38,8 @@ for.tsboot=TRUE, sort.type="values")
   \item{sort.type}{
     Sort the eigenvalues either in descending order, or by using the
     scalar product of the eigenvectors with the eigenvectors at
-    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
+    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values", "vectors" or
+    "det".  
   }
   \item{for.tsboot}{
     for internal use of \code{\link{bootstrap.gevp}}. Alters the returned
@@ -75,6 +76,15 @@ for.tsboot=TRUE, sort.type="values")
   and this is what the code returns up to the factor\cr
   \eqn{
     1/\sqrt{\exp(-mt)\pm \exp(-m(t-t))}
+  }
+  The states are sorted by their eigenvalues when "values" is chosen. If
+  "vectors" is chosen, we take
+  \eqn{
+    \max( \sum_i \langle v(t_0,i), v(t, j)\rangle)
+  }
+  with \eqn{v} the eigenvectors. For sort type "det" we compute
+  \eqn{
+    \max(...)
   }
 }
 \references{
