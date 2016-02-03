@@ -117,7 +117,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   return(invisible(cf))
 }
 
-takeTimeDiff.cf <- function(cf) {
+takeTimeDiff.cf <- function(cf, deltat = 1) {
   if(missing(cf)) {
     stop("takeTimeDiff: cf must be provided! Aborting...\n")
   }
@@ -128,9 +128,9 @@ takeTimeDiff.cf <- function(cf) {
   ## the time indices to be subtracted
   tt0 <- c()
   for(i in c(1:nrObs)) {
-    tt0 <- c(tt0, ((i-1)*(T/2+1)+1):((i-1)*(T/2+1)+T/2))
+    tt0 <- c(tt0, ((i-1)*(T/2+1)+1):(i*(T/2+1)-deltat))
   }
-  tt1 <- tt0+1
+  tt1 <- tt0 + deltat
 
   ## take the differences, set the remaining points to NA
   if(!is.null(cf$cf)) {
@@ -149,6 +149,7 @@ takeTimeDiff.cf <- function(cf) {
   }
   ## save info
   cf$shifted <- TRUE
+  cf$deltat <- deltat
   ## return subtracted cf
   return(invisible(cf))
 }

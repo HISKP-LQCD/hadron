@@ -1,4 +1,7 @@
-effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1.) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1., deltat=1) {
+  if(missing(cf)) {
+    stop("cf must be provided to effectivemass.cf! Aborting...\n")
+  }
   ## cf is supposed to have nrObs*(Thalf+1) elements in time direction
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -6,7 +9,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   else {
     Cor <- cf
   }
-
+  
   if(length(Cor) != nrObs*(Thalf+1)) {
     stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
   }
@@ -39,7 +42,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+1))-w*exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
+        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) / (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
@@ -85,14 +88,18 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   if(is.null(cf$cf)) {
     N <- cf$N
   }
+  deltat <- 1
+  if(type == "shifted" && any(names(cf) == "deltat")) {
+    deltat <- cf$deltat
+  }
 
   ## number of time slices (hopefully in units of T/2+1)
   Nt <- length(cf$cf0)
   nrObs <- floor(Nt/(cf$Time/2+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor)
+  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
