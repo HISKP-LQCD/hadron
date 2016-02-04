@@ -111,15 +111,10 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
       for(p in c(1:NPerms)) {
         for(i in c(1:matrix.size)) {
           ij <- Perms[p,c(1:matrix.size)[-i]]
-          ##cat(as.vector(evectors[t.sort,,]), "\n")
-          ##cat(ii1, "t.sort", t.sort, "t0", t0, "\n")
           if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
           else {
             Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
           }
-          ##else {
-          ##  Mp <- Mp %*% matrix(c(evectors[t.sort,,ii0], variational.solve$vectors[,i], evectors[t.sort,,ii1]), nrow=matrix.size, ncol=matrix.size)
-          ##}
         }
         DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
       }
