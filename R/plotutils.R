@@ -60,10 +60,16 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, rep=FALSE, col="black", ...)
 
   options(show.error.messages = FALSE)
   if(!missing(dy)) {
-    arrows(x, y-dy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+    if(par()$ylog) {
+      ymdy <- y-dy
+      ymdy[ymdy <= 0] <- par("yaxp")[1]*0.5
+      ymdy[y <= 0] <- NA
+      arrows(x, ymdy, x, y+dy, length=0.01,angle=90,code=3, col=col)
+    }
+    else arrows(x, y-dy, x, y+dy, length=0.01, angle=90, code=3, col=col)
   }
   if(!missing(dx)) {
-    arrows(x-dx,y,x+dx,y, length=0.01,angle=90,code=3, col=col)
+    arrows(x-dx,y,x+dx,y, length=0.01, angle=90, code=3, col=col)
   }
   options(show.error.messages = TRUE)
 }
