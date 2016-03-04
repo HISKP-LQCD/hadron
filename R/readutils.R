@@ -350,9 +350,9 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   return(invisible(cf))
 }
 
-readgradflow <- function(path) {
+readgradflow <- function(path,skip=0) {
   files <- getorderedfilelist(path=path, basename="gradflow", last.digits=6)
-
+  files <- files[(skip+1):length(files)]
   if(length(files)==0) stop(sprintf("readgradflow: no tmlqcd gradient flow files found in path %s",path))
   
   tmpdata <- read.table(file=files[1],colClasses="numeric",header=T)
