@@ -104,14 +104,14 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
     }
   }
-  else if(frame == "mf2"( {
-
+  else if(frame == "mf2") {
+    
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     Z22  <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-
+    
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
     Z22boot  <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-
+    
     if(irrep == "B2") {
       ## arXiv:1212:0830v2: B_2 irrep [0nn]
       x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
@@ -145,7 +145,7 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       ## arXiv:1212:0830v2: A_1 irrep [nnn] 
       Z21 <- LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
       Z21boot  <- LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
-
+      
       x <- (Z00 - ((sqrt(8./15.)/(qtilde$qtsq))*(Z22 - Re(Z21) -Im(Z21) )))
       xboot <- (Z00boot - ((sqrt(8./15.)/(qtildeboot$qtsq))*(Z22boot - Re(Z21boot) -Im(Z21boot) )))
     }
@@ -153,15 +153,17 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }
-  delta <- atan2(y,x)
+  delta <- atan(y,x)
   tandelta <- y/x
   shift <- 0.
-  if(x < 0 && y >= 0) shift <- pi
-  if(x < 0 && y < 0) shift <- -pi
+  if(!is.na(x) && !is.nan(x) && !is.na(y) && !is.nan(y)) {
+    if(x < 0 && y >= 0) shift <- pi
+    if(x < 0 && y < 0) shift <- -pi
+  }
   
   deltaboot <- atan(yboot/xboot) + shift
   tandeltaboot <- yboot/xboot  
-  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot)))
+  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot, shift=shift)))
 }
 
 phaseshift.rho.old <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1) {
@@ -261,15 +263,17 @@ phaseshift.rho.old <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont",
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }
-  delta <- atan2(y,x)
+  delta <- atan(y,x)
   tandelta <- y/x
   shift <- 0.
-  if(x < 0 && y >= 0) shift <- pi
-  if(x < 0 && y < 0) shift <- -pi
+  if(!is.na(x) && !is.nan(x) && !is.na(y) && !is.nan(y)) {
+    if(x < 0 && y >= 0) shift <- pi
+    if(x < 0 && y < 0) shift <- -pi
+  }
   
   deltaboot <- atan(yboot/xboot) + shift
   tandeltaboot <- yboot/xboot  
-  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot)))
+  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot, shift=shift)))
 }
 
 
