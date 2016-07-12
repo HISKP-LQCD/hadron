@@ -28,7 +28,147 @@ compRpipi3 <- function(c4, c21, c22, Thalf, dE) {
 }
 
 
-phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1) {
+phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp="cont", n=1) {
+
+  if(missing(L)) {
+    stop("L must be provided\n")
+  }
+  if(missing(pcfit)) {
+    stop("pcfit must be provided!\n")
+  }
+  E <- c()
+  Eboot  <- c()
+  if(inherits(pcfit, "matrixfit")) {
+    E <- pcfit$opt.res$par[1]
+    Eboot <- pcfit$opt.tsboot[1,]
+  }
+  else if(inherits(pcfit, "effectivemassfit")) {
+    E <- pcfit$opt.res$par[1]
+    Eboot <- pcfit$massfit.tsboot[,1]
+  }
+  else {
+    stop("pcfit is not of either type matrixfit or effectivemassfit\n")
+  }
+  if(missing(Mpiboot)) {
+    Mpiboot <- Mpi
+  }
+
+  if(frame == "cmf") {
+    Pcm <- c(0, 0, 0)
+  }
+  else if(frame == "mf1") {
+    Pcm <- n*c(0, 0, 1)
+  }
+  else if(frame == "mf2") {
+    Pcm <- n*c(0, 1, 1)
+  }
+  else if(frame == "mf3") {
+    Pcm <- n*c(1, 1, 1)
+  }
+  else {
+    stop(paste("value of frame ", frame," not recognised\n", sep=""))
+  }
+  
+  if(disp != "lat") {
+    qtilde <- compute.qtildesq.contdisp(E = E, mpi = Mpi, dvec = Pcm, L = L)
+    qtildeboot <- compute.qtildesq.contdisp(E = Eboot, mpi = Mpiboot, dvec = Pcm, L = L)
+  }
+  else {
+    qtilde <- compute.qtildesq(E = E, mpi = Mpi, dvec = Pcm, L = L)
+    qtildeboot <- compute.qtildesq(E = Eboot, mpi = Mpiboot, dvec = Pcm, L = L)
+  }
+
+  Z00 <- Re(LuescherZeta(qtilde$qtsq, gamma = qtilde$gamma, dvec = Pcm))
+  Z00boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma = qtilde$gamma, dvec = Pcm))
+  y <- qtilde$gamma*pi**(3./2.) * sqrt(qtilde$qtsq)
+  yboot <- qtildeboot$gamma*pi**(3./2.) * sqrt(qtildeboot$qtsq)
+
+  x <- numeric()
+  xboot <- numeric()
+  if(frame == "cmf") {
+    x <- Z00
+    xboot <- Z00boot
+  }
+  else if(frame == "mf1") {
+    Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
+    Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
+    
+    if(irrep == "A1") {
+      ## arXiv:1212:0830v2: A_1 irrep [00n] page 17
+      x <- (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
+      xboot <- (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
+    }
+    else if(irrep == "E2") {
+      ## arXiv:1212:0830v2: E_2 irrep [00n]
+      x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20)
+      xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
+    }
+  }
+  else if(frame == "mf2") {
+    
+    Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
+    Z22  <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+    
+    Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
+    Z22boot  <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+    
+    if(irrep == "B2") {
+      ## arXiv:1212:0830v2: B_2 irrep [0nn]
+      x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+      xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+    }
+    else {
+      Z21  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+      Z21boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+      if(irrep == "A1") {
+        ## arXiv:1212:0830v2: A_1 irrep [0nn]
+        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
+      }
+      else if(irrep == "B1") {
+        ## arXiv:1212:0830v2: B_1 irrep [0nn]
+        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))        
+      }
+    }
+  }
+  else if(frame == "mf3") {
+    Z22 <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+    Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+    
+    if(irrep == "E2") {
+      ## arXiv:1212:0830v2: E_2 irrep [nnn] 
+      x <- (Z00 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+      xboot <- (Z00boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+    }
+    else if(irrep == "A1") {
+      ## arXiv:1212:0830v2: A_1 irrep [nnn] 
+      Z21 <- LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
+      Z21boot  <- LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
+      
+      x <- (Z00 - ((sqrt(8./15.)/(qtilde$qtsq))*(Z22 + Re(Z21) + Im(Z21) )))
+      xboot <- (Z00boot - ((sqrt(8./15.)/(qtildeboot$qtsq))*(Z22boot + Re(Z21boot) + Im(Z21boot) )))
+    }
+  }
+  else {
+    stop(paste("value of frame ", frame," not recognised\n", sep=""))
+  }
+  delta <- atan(y/x)
+  tandelta <- y/x
+  shift <- 0.
+  if(!is.na(x) && !is.nan(x) && !is.na(y) && !is.nan(y)) {
+    if(x < 0 && y >= 0) shift <- pi
+    if(x < 0 && y < 0) shift <- -pi
+  }
+
+  delta <- delta + shift
+  deltaboot <- atan(yboot/xboot) + shift
+  tandeltaboot <- yboot/xboot  
+  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot, shift=shift,
+                        x=x, y=y, xboot=xboot, yboot=yboot, qtilde=qtilde)))
+}
+
+phaseshift.rho.old <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1) {
 
   if(missing(L)) {
     stop("L must be provided\n")
@@ -125,16 +265,20 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", Mpiboot, disp="cont", n=1
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }
-  delta <- atan2(y,x)
+  delta <- atan(y/x)
   tandelta <- y/x
   shift <- 0.
-  if(x < 0 && y >= 0) shift <- pi
-  if(x < 0 && y < 0) shift <- -pi
-  
+  if(!is.na(x) && !is.nan(x) && !is.na(y) && !is.nan(y)) {
+    if(x < 0 && y >= 0) shift <- pi
+    if(x < 0 && y < 0) shift <- -pi
+  }
+
+  delta <- delta + shift
   deltaboot <- atan(yboot/xboot) + shift
   tandeltaboot <- yboot/xboot  
-  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot)))
+  return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot, shift=shift)))
 }
+
 
 tandeltaovEcm <- function(par, Ecm, Mpi) {
   return(par[1]^2/6/pi*sqrt(Ecm^2/4.-Mpi^2)^3/Ecm/(par[2]^2-Ecm^2))

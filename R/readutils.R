@@ -201,8 +201,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
 
   tmp <- read.table(paste(path, file, sep=""), skip=skip)
-  if((length(ind.vector) < length(tmp)-1) || (max(ind.vector) > length(tmp))){
-    stop("index vector too long or out of range\n")
+  if((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)){
+    stop("index vector too short or out of range\n")
   }
   
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
