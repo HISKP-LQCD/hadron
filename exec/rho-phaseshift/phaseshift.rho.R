@@ -60,10 +60,10 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
     Pcm <- n*c(0, 0, 1)
   }
   else if(frame == "mf2") {
-    Pcm <- n*c(0,1,1)
+    Pcm <- n*c(0, 1, 1)
   }
   else if(frame == "mf3") {
-    Pcm <- n*c(1,1,1)
+    Pcm <- n*c(1, 1, 1)
   }
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
@@ -153,14 +153,14 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }
-  delta <- atan(y,x)
   tandelta <- y/x
   shift <- 0.
   if(!is.na(x) && !is.nan(x) && !is.na(y) && !is.nan(y)) {
     if(x < 0 && y >= 0) shift <- pi
     if(x < 0 && y < 0) shift <- -pi
   }
-  
+
+  delta <- atan(y/x) + shift
   deltaboot <- atan(yboot/xboot) + shift
   tandeltaboot <- yboot/xboot  
   return(invisible(list(Ecm=qtilde$Ecm, Ecmboot=qtildeboot$Ecm, tandelta=tandelta, tandeltaboot=tandeltaboot, delta=delta, deltaboot=deltaboot, shift=shift)))
