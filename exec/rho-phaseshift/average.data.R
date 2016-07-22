@@ -1,27 +1,30 @@
 source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
 source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
+source("../../ens.R")
+hint <- rep("no", times=5)
 source("parameters.R")
+source("../../../detect_irrep_frame.R")
 
-res.pc1 <- summarise.rho(ens, frame, PC="pc1")
-res.pc2 <- summarise.rho(ens, frame, PC="pc2")
-
-## correct for negative delta where needed
-##res.pc1 <- shift.delta(res.pc1)
-##res.pc2 <- shift.delta(res.pc2)
-
-res.all.pc1 <- compute.error.rho(res.pc1, PC="pc1")
-res.all.pc2 <- compute.error.rho(res.pc2, PC="pc2")
-
-res.boot.pc1 <- array(0, dim=c(boot.R+1, 3))
-res.boot.pc2 <- array(0, dim=c(boot.R+1, 3))
-for(i in c(1:3)) {
-  res.boot.pc1[,i] <- compute.boots(res.pc1, index=i)
-  res.boot.pc2[,i] <- compute.boots(res.pc2, index=i)
+pdf(file=paste("histograms", ens, frame, irrep, "pdf", sep="."))
+res <- list()
+res.all <- list()
+res.boot <- list()
+for(i in c(1:min(2, N))) {
+  if(i == 1) PC <- "pc1"
+  if(i == 2) PC <- "pc2"
+  if(i == 3) PC <- "pc3"
+  cat("hint", i, hint[i], "\n")
+  res[[i]] <- summarise.rho(ens=ens, frame=frame, irrep=irrep, PC=PC, hint=hint[i])
+  res.all[[i]] <- compute.error.rho(res[[i]], PC=PC)
+  res.boot[[i]] <- array(0, dim=c(boot.R+1, 3))
+  for(j in c(1:3)) {
+    res.boot[[i]][,j] <- compute.boots(res[[i]], index=j)
+  }
+  cat("Ecm:", i, res.all[[i]]$Ecm, "\n")
+  cat("delta:", i, res.all[[i]]$delta, "\n")
 }
-cat("Ecm1:", res.all.pc1$Ecm, "\n")
-cat("delta1:", res.all.pc1$delta, "\n")
-cat("Ecm2:", res.all.pc2$Ecm, "\n")
-cat("delta2", res.all.pc2$delta, "\n")
+dev.off()
+rm(i,j)
 
-save(res.pc1, res.pc2, res.all.pc1, res.all.pc2, res.boot.pc1, res.boot.pc2, file=paste("res.", ens, frame, ".Rdata", sep=""))
+save.image(file=paste("res", ens, frame, irrep, "Rdata", sep="."))
 

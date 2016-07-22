@@ -1,117 +1,140 @@
-source("/home/urbach/daten/workdir/hadron/exec/rho-phaseshift/phaseshift.rho.R")
-source("/home/urbach/daten/workdir/hadron/exec/rho-phaseshift/summarise.R")
-reread <- TRUE
-n <- 1
-t10 <- 7
+## its supposed to be called from a directory with name
+## .../p<N>/<irrep>
+## with <N> being the squared momentum in units of 2pi/L
+## and <irrep> the corresponding irreducible representation,
+## see phaseshift.rho.R for the implemented irreps
+
+## it requires a pion analysis to be stored in ../../pion.Rdata
+
+source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
+source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
+
+t0 <- 2
+reread <- FALSE
+t10 <- rep(7, times=6)
 t11 <- 15
+t21 <- rep(15, times=6)
+dof <- 5
+p <- c(0,0,0)
+maxpcs <- 2
+
 source("parameters.R")
-
 Thalf <- T/2
-load("../dataA40.24/pion.Rdata")
 
-if(reread || !file.exists(paste("./","Cmatrix.", ens, frame, ".Rdata", sep=""))) {
-  Cmatrix <- cf()
-  tmp <- readtextcf(paste("rho_corr_", tp, "_00.dat", sep=""), T=T, check.t=0, path=path)
-  Cmatrix <- c(Cmatrix, tmp)
-  tmp <- readtextcf(paste("rho_corr_", tp, "_01.dat", sep=""), T=T, check.t=0, path=path)
-  Cmatrix <- c(Cmatrix, tmp)
-  tmp <- readtextcf(paste("rho_corr_", tp, "_11.dat", sep=""), T=T, check.t=0, path=path)
-  
-  Cmatrix <- c(Cmatrix, tmp)
-  Cmatrix <- bootstrap.cf(Cmatrix, boot.R=boot.R, boot.l=boot.l, seed=1234)
-  Cmatrix.rt <- removeTemporal.cf(Cmatrix, p1=p, p2=c(0,0,0), single.cf1=pion.matrixfit, L=L, lat.disp=TRUE)
+## extracts irrep and frame from directory name
+## also defines N for th ematrix size
+## and path
+source("../../../detect_irrep_frame.R")
 
-  save(Cmatrix, Cmatrix.rt, file=paste("./","Cmatrix.", ens, frame, ".Rdata", sep=""))
+n <- 1
+if(momentum == "p1") p <- c(0,0,1)
+if(momentum == "p2") p <- c(0,1,1)
+if(momentum == "p3") p <- c(1,1,1)
+if(momentum == "p4") {
+  p <- c(0,0,2)
+  n <- 2
 }
-load(paste("./","Cmatrix.", ens, frame, ".Rdata", sep=""))
 
-Cmatrix.bootstrap.gevp.n <- bootstrap.gevp(Cmatrix, matrix.size=2, element.order=c(1,2,2,3))
-pc.n <- gevp2cf(Cmatrix.bootstrap.gevp.n, id=1)
-pc2.n <- gevp2cf(Cmatrix.bootstrap.gevp.n, id=2)
+## pion analysis
+load("../../pion.Rdata")
 
-Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix.rt, matrix.size=2, element.order=c(1,2,2,3))
-pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=1)
-pc2 <- gevp2cf(Cmatrix.bootstrap.gevp, id=2)
+model <- "single"
+sym.vec <- c("exp")
+if(momentum == "p0") {
+  model <- "shifted"
+  sym.vec<- c("cosh")
+}
 
-pc.effectivemass.n <- bootstrap.effectivemass(cf=pc.n, type="solve", boot.R=boot.R, boot.l=boot.l)
-pc2.effectivemass.n <- bootstrap.effectivemass(cf=pc2.n, type="solve", boot.R=boot.R, boot.l=boot.l)
 
-pc.effectivemass <- bootstrap.effectivemass(cf=pc, type=type, boot.R=boot.R, boot.l=boot.l)
-pc2.effectivemass <- bootstrap.effectivemass(cf=pc2, type=type, boot.R=boot.R, boot.l=boot.l)
+cat("running for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
 
-for(t1 in seq(t10,t11,1)) {
-  for(t2 in seq(t11,T/2,1)) {
-    if(t2-t1>5) {
-      cat(t1, t2, "\n")
-      pc.matrixfit.n <- matrixfit(pc.n, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
-      pc2.matrixfit.n <- matrixfit(pc2.n, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
-      
-      
-      ## 10 to 14
-      pc.matrixfit <- matrixfit(pc, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
-      ## 10 to 15
-      pc2.matrixfit <- matrixfit(pc2, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
-
-      Rpipi.tsboot <- array(NA, dim=c(boot.R+1, Thalf))
-      if(TRUE || frame == "cmf") {
-        ## this is R(t+1/2)
-        Rpipi.tsboot[1,] <- compRpipi2(c4=pc$cf0, c2=pion.cor$cf0, Thalf=Thalf)
-
-        for(i in c(1:boot.R)) {
-          Rpipi.tsboot[i+1,] <- compRpipi2(c4=pc$cf.tsboot$t[i,], c2=pion.cor$cf.tsboot$t[i,], Thalf=Thalf)
-        }
-      }
-      else {
-        Mps <- rep(0, times=boot.R+1)
-        Mps[1] <- pion.matrixfit$opt.res$par[1]
-        Mps[c(1:boot.R)+1] <- pion.matrixfit$opt.tsboot[1,]
-          
-        dE <- rep(0, times=boot.R+1)
-        p2 <- c(0,0,0)
-        if(disp=="lat") {
-          p1shift <- 2*sum(sin(pi*p/L)^2)
-          p2shift <- 2*sum(sin(pi*p2/L)^2)
-          dE <- abs(acosh( cosh(Mps) + p1shift) - acosh( cosh(Mps) + p2shift))
-        }
-        else {
-          p1shift <- sum((2*pi*p/L)^2)
-          p2shift <- sum((2*pi*p2/L)^2)
-          dE <- abs(sqrt( Mps^2 + p1shift ) - sqrt( Mps^2 + p2shift ))
-        }
-
-        ## this is R(t)
-        Rpipi.tsboot[1,] <- compRpipi3(c4=pc$cf0, c21=pion1$cf0, c22=pion2$cf0, Thalf=Thalf, dE=dE[1])
-        
-        for(i in c(1:boot.R)) {
-          Rpipi.tsboot[i+1,] <- compRpipi3(c4=pc$cf.tsboot$t[i,], c21=pion1$cf.tsboot$t[i,], c22=pion2$cf.tsboot$t[i,], Thalf=Thalf, dE=dE[i+1])
-        }
-      }
-      
-      gs <- phaseshift.rho(pcfit =pc.matrixfit, L=L, Mpi=pion.matrixfit$opt.res$par[1], Mpiboot=pion.matrixfit$opt.tsboot[1,], frame=frame, disp=disp, n=n)
-      fes <- phaseshift.rho(pcfit =pc2.matrixfit, L=L, Mpi=pion.matrixfit$opt.res$par[1], Mpiboot=pion.matrixfit$opt.tsboot[1,], frame=frame, disp=disp, n=n)
-
-      save(Cmatrix.bootstrap.gevp, Cmatrix.bootstrap.gevp.n, pc.matrixfit, pc.matrixfit.n,
-           pc.effectivemass, pc.effectivemass.n, pc2.matrixfit, pc2.matrixfit.n,
-           pc2.effectivemass, pc2.effectivemass.n, type, Rpipi.tsboot,
-           L, T, pion.matrixfit, gs, fes, frame, ens, disp, file=paste("rhoana.", t1, "-", t2, ".", ens, frame, ".Rdata", sep=""))
-      
-      
-      cat(t1, t2, gs$Ecm, sd(gs$Ecmboot, na.rm=TRUE), gs$delta, sd(gs$deltaboot, na.rm=TRUE), sin(gs$delta)^2, sd(sin(gs$deltaboot)^2, na.rm=TRUE),
-          gs$tandelta, sd(gs$tandeltaboot, na.rm=TRUE), "Qval=", pc.matrixfit$Qval, "\n")
-      cat(t1, t2, fes$Ecm, sd(fes$Ecmboot, na.rm=TRUE), fes$delta, sd(fes$deltaboot, na.rm=TRUE), sin(fes$delta)^2, sd(sin(fes$deltaboot)^2, na.rm=TRUE),
-          fes$tandelta, sd(fes$tandeltaboot, na.rm=TRUE), "Qval=", pc2.matrixfit$Qval, "\n")
+if(reread || !file.exists(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))) {
+  cat("reading raw data\n")
+  Cmatrix <- cf()
+  for(i in c(0:(N-1))) {
+    for(j in c(0:(N-1))) {
+      tmp <- readtextcf(paste("Rho_Gevp_", momentum, "_", irrep, ".", i, ".", j, ".dat", sep=""), T=T, check.t=1, path=path, ind.vector=c(2,2))
+      Cmatrix <- c(Cmatrix, tmp)
     }
   }
+  cat("reading done, bootstrapping now...\n")
+
+  Cmatrix <- bootstrap.cf(Cmatrix, boot.R=boot.R, boot.l=boot.l, seed=seed)
+  Cmatrix.rt <- removeTemporal.cf(Cmatrix, p1=p, p2=c(0,0,0), single.cf1=pion.matrixfit, L=L, lat.disp=TRUE)
+
+  Cmatrix.bootstrap.gevp.n <- bootstrap.gevp(Cmatrix, matrix.size=N, element.order=c(1:N^2), t0=t0)
+  Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix.rt, matrix.size=N, element.order=c(1:N^2), t0=t0)
+  cat("...done\n")
+  save(Cmatrix, Cmatrix.rt, Cmatrix.bootstrap.gevp, Cmatrix.bootstrap.gevp.n, irrep, frame, N, file=paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
+}
+cat("loading Rdata\n")
+load(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
+cat("...done\n")
+
+if(!file.exists(paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))) {
+  pdf(file=paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))
+  plot(NA, xlim=c(1,T/2), ylim=c(0,1), xlab="t/a", ylab="Meff")
+  clrs <- c("red", "blue", "darkgreen", "black", "purple", "orange")
+  pchs <- c(21, 22, 23, 24, 25, 26)
+  pcs <- c("pc1", "pc2", "pc3", "pc4", "pc5")
+  type="subtracted"
+  if(frame != "cmf") type="weighted"
+  for(id in c(1:N)) {
+    pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
+    effmass <- bootstrap.effectivemass(pc, boot.R=boot.R, boot.l=boot.l, seed=seed, type=type)
+    plot(effmass, rep=TRUE, col=clrs[id], pch=pchs[id])
+  }
+  legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
+  
+  plot(NA, xlim=c(1,T/2), ylim=c(0.000001,1), xlab="t/a", ylab="C(t)", log=c("y"))
+  for(id in c(1:N)) {
+    pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
+    plot(pc, rep=TRUE, col=clrs[id], pch=pchs[id])
+  }
+  legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
+  dev.off()
+}
+
+for(id in c(1:min(N, maxpcs))) {
+  if(id == 1) PC="pc1"
+  if(id == 2) PC="pc2"
+  if(id == 3) PC="pc3"
+  if(id == 4) PC="pc4"
+  if(id == 5) PC="pc5"
+  pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
+  if(file.exists(paste(PC, ".R", sep=""))) {
+    source(paste(PC, ".R", sep=""))
+  }
+  cat(PC, "\n")
+  cat("Mpi = ", pion.matrixfit$opt.res$par[1], sd(pion.matrixfit$opt.tsboot[1,]), "\n")
+  pdf(file=paste(ens, PC, frame, "-fits.pdf", sep=""))
+
+  for(t1 in seq(t10[id], t11, 1)) {
+    for(t2 in seq(t11, t21[id], 1)) {
+      if(t2-t1 > dof) {
+        cat(t1, t2, "\n")
+        filename <- paste("rhoana", PC, t1, t2, ens, frame, irrep, "Rdata", sep=".")
+        if(file.exists(filename)) {
+          load(filename)
+        }
+        else {
+          pc.matrixfit <- matrixfit(pc, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=sym.vec, fit.method="lm", model=model)
+        }
+        plot(pc.matrixfit, main=paste(PC, "t1", t1, "t2", t2, "Qval", format(pc.matrixfit$Qval, digits=3), "E=", format(pc.matrixfit$opt.res$par[1], digits=3)))
+
+        gs <- phaseshift.rho(pcfit =pc.matrixfit, L=L, Mpi=pion.matrixfit$opt.res$par[1], Mpiboot=pion.matrixfit$opt.tsboot[1,], frame=frame, irrep=irrep, disp=disp, n=n)
+
+        save(pc.matrixfit, type, L, T, pion.matrixfit, gs, frame, ens, disp, PC, file=filename)
+      
+        cat(PC, t1, t2, pc.matrixfit$opt.res$par[1], sd(pc.matrixfit$opt.tsboot[1,]), gs$Ecm, sd(gs$Ecmboot, na.rm=TRUE),
+            gs$delta, sd(gs$deltaboot, na.rm=TRUE), sin(gs$delta)^2, sd(sin(gs$deltaboot)^2, na.rm=TRUE),
+            gs$tandelta, sd(gs$tandeltaboot, na.rm=TRUE), "Qval=", pc.matrixfit$Qval, "\n")
+      }
+    }
+  }
+  dev.off()
 }
 
 
-res <- summarise.rho(ens, frame)
 
-res.all <- compute.error.rho(res)
-
-res.boot <- array(0, dim=c(boot.R+1, 4))
-for(i in c(1:4)) {
-  res.boot[,i] <- compute.boots(res, index=i)
-}
-
-save(res, res.all, res.boot, file=paste("res.", ens, frame, ".Rdata", sep=""))
+#source("../../average.data.R")

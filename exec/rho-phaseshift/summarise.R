@@ -10,7 +10,7 @@ compute.boots <- function(res, index=1) {
 }
 
 
-summarise.rho <- function(ens, frame, irrep, PC, threshold=-0.1, shift=pi) {
+summarise.rho <- function(ens, frame, irrep, PC, hint="no") {
   filelist <- Sys.glob(paste("./", "rhoana.", PC, ".*", ens, ".", frame, ".", irrep, ".Rdata", sep=""))
   
   N <- length(filelist)
@@ -32,9 +32,14 @@ summarise.rho <- function(ens, frame, irrep, PC, threshold=-0.1, shift=pi) {
     res[1,i,2] <- gs$delta
     res[rr,i,2] <- gs$deltaboot
 
-    ## shift where neccessary
-    ii <- which(res[,i,2] < threshold)
-    res[ii,i,2] <- res[ii,i,2]+shift
+    if(hint == "pi") {
+      ii <- which(res[,i,2] < pi/2.)
+      res[ii,i,2] <- res[ii,i,2] + pi
+    }
+    if(hint == "zero") {
+      ii <- which(res[,i,2] > pi/2.)
+      res[ii,i,2] <- res[ii,i,2] - pi
+    }
 
     ##tan(delta)
     res[1,i,3] <- gs$tandelta
