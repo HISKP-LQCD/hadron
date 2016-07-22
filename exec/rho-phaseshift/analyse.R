@@ -9,13 +9,21 @@
 source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
 source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
 
+## t0 for the GEVP
 t0 <- 2
+## force a data reread
 reread <- FALSE
+## the left boundary of the fit interval runs from t10 to t11 in steps of 1
+## the right from t11 to t21
+## all these can be set specifically in parameters.R
 t10 <- rep(7, times=6)
-t11 <- 15
-t21 <- rep(15, times=6)
-dof <- 5
+t11 <- rep(15, times=6)
+t21 <- rep(25, times=6)
+## minimal number of timeslices in fit range
+dof <- rep(5, times=6)
+## momentum of the moving frame
 p <- c(0,0,0)
+## maximal number of principal correlators to analyse
 maxpcs <- 2
 
 source("parameters.R")
@@ -26,6 +34,9 @@ Thalf <- T/2
 ## and path
 source("../../../detect_irrep_frame.R")
 
+## full momentum is given by p*2*pi/L
+## n is needed for function phaseshift.rho
+## while p is needed for weighting and shifting
 n <- 1
 if(momentum == "p1") p <- c(0,0,1)
 if(momentum == "p2") p <- c(0,1,1)
@@ -109,9 +120,9 @@ for(id in c(1:min(N, maxpcs))) {
   cat("Mpi = ", pion.matrixfit$opt.res$par[1], sd(pion.matrixfit$opt.tsboot[1,]), "\n")
   pdf(file=paste(ens, PC, frame, "-fits.pdf", sep=""))
 
-  for(t1 in seq(t10[id], t11, 1)) {
-    for(t2 in seq(t11, t21[id], 1)) {
-      if(t2-t1 > dof) {
+  for(t1 in seq(t10[id], t11[id], 1)) {
+    for(t2 in seq(t11[id], t21[id], 1)) {
+      if(t2-t1 > dof[id]) {
         cat(t1, t2, "\n")
         filename <- paste("rhoana", PC, t1, t2, ens, frame, irrep, "Rdata", sep=".")
         if(file.exists(filename)) {
@@ -136,5 +147,3 @@ for(id in c(1:min(N, maxpcs))) {
 }
 
 
-
-#source("../../average.data.R")
