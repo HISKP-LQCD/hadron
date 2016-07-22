@@ -122,16 +122,42 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       Z21boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
       if(irrep == "A1") {
         ## arXiv:1212:0830v2: A_1 irrep [0nn]
-        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
-        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
+        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
       }
       else if(irrep == "B1") {
         ## arXiv:1212:0830v2: B_1 irrep [0nn]
-        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
-        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))        
+        x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+        xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))        
       }
     }
   }
+#  else if(frame == "mf2") {
+#    
+#    Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
+#    Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
+#    
+#    if(irrep == "B2") {
+#      ## arXiv:1212:0830v2: B_2 irrep [0nn]
+#      x <- (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
+#      xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+#    }
+#    else {
+#      Z22  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#      Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#
+#      if(irrep == "B1") {
+#        ## arXiv:1212:0830v2: A_1 irrep [0nn]
+#        x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+#        xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+#      }
+#      else if(irrep == "A1") {
+#        ## arXiv:1212:0830v2: B_1 irrep [0nn]
+#        x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+#        xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))        
+#      }
+#    }
+#  }
   else if(frame == "mf3") {
     Z22 <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
     Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
@@ -146,8 +172,8 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       Z21 <- LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
       Z21boot  <- LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1)
       
-      x <- (Z00 - ((sqrt(8./15.)/(qtilde$qtsq))*(Z22 + Re(Z21) + Im(Z21) )))
-      xboot <- (Z00boot - ((sqrt(8./15.)/(qtildeboot$qtsq))*(Z22boot + Re(Z21boot) + Im(Z21boot) )))
+      x <- (Z00 + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
+      xboot <- (Z00boot + ((sqrt(8./15.)/(qtildeboot$qtsq))*(Re(Z21boot) + Im(Z21boot) - Z22boot)))
     }
   }
   else {
