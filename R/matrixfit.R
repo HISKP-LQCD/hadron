@@ -110,9 +110,9 @@ deriv.CExp <- function(par, t, T, sign) {
 deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
   res <- array(0.,dim=c(length(par),length(t)))
   
-  res[1,] <- par[2]*par[3]*(-(t+deltat/2)*exp(-par[1]*(t+deltat/2)) + (T-(t+deltat/2))*sign*exp(-par[1]*(T-(t+deltat/2))))
-  res[2,] <- par[3]*(exp(-par[1]*(t+deltat/2)) - sign*exp(-par[1]*(T-(t+deltat/2))))
-  res[3,] <- par[2]*(exp(-par[1]*(t+deltat/2)) - sign*exp(-par[1]*(T-(t+deltat/2))))
+  res[1,] <- par[2]*par[3]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-(t-deltat/2))*sign*exp(-par[1]*(T-(t-deltat/2))))
+  res[2,] <- par[3]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(T-(t-deltat/2))))
+  res[3,] <- par[2]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(T-(t-deltat/2))))
 
   return(res)
 }
