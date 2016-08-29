@@ -6,14 +6,15 @@
 }
 \usage{
 bootstrap.gevp(cf, t0, boot.R=400, boot.l=2, matrix.size=2,
-element.order=c(1,2,3,4), seed=1234, sort.type="values")
+element.order=c(1,2,3,4), seed=1234, sort.type="values", sort.t0=TRUE)
 }
 \arguments{
   \item{cf}{
     correlation matrix obtained with a call to \code{extrac.obs}.
   }
   \item{t0}{
-    initial time value of the GEVP
+    initial time value of the GEVP, must be in between 0 and
+    \code{Time/2-2}. Default is 1.
   }
   \item{matrix.size}{
     the size of the square matrix
@@ -39,6 +40,9 @@ element.order=c(1,2,3,4), seed=1234, sort.type="values")
     Sort the eigenvalues either in descending order, or by using the
     scalar product of the eigenvectors with the eigenvectors at
     \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
+  }
+  \item{sort.t0}{
+    for \code{sort.type} "vectors" use \eqn{t_0}{t0} as reference or \eqn{t-1}{t-1}.
   }
 }
 \value{

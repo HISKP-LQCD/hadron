@@ -1,5 +1,7 @@
 ## will first multiply with 
-removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,0), L, lat.disp=TRUE) {
+removeTemporal.cf <- function(cf, single.cf1, single.cf2,
+                              p1=c(0,0,0), p2=c(0,0,0), L,
+                              lat.disp=TRUE, weight.cosh=FALSE) {
 
   if(missing(cf)) {
     stop("cf must be provided to removeTemporal.cf at least\n")
@@ -13,6 +15,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   if(!cf$boot.samples) {
     stop("please provide bootstrapped cf to removeTemporal.cf using the same configurations and seed for all!\n")
   }
+  Time <- cf$Time
   if(missing(L)) {
     L <- cf$Time/2
     warning("L was missing, set it to T/2\n")
@@ -53,7 +56,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
   else {
     stop("single.cf2 must be either of class effectivemassfit or matrixfit! Aborting...\n")
   }
-  ## use momenta p1 and p2 and lattice dispersion relation to shift energies
+  ## use momenta p1 and p2 and lattice or continuum dispersion relation to shift energies
   if(any(p1 != 0)) {
     if(lat.disp) {
       pshift <- 2*sum(sin(pi*p1/L)^2)
@@ -78,38 +81,43 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2, p1=c(0,0,0), p2=c(0,0,
       mass2$t <- sqrt( mass2$t^2 + pshift )
     }
   }
+  c <- 0.
+  if(weight.cosh) c <- 1.
   ## multiply with the exponential correction factor
-  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(T/2)))
+  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + c*exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp((mass2$t[i]-mass1$t[i])*c(0:(T/2)))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
+      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + c*exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(T/2-1)))
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + c*exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*exp(-(mass2$t[i]-mass1$t[i])*c(-1:(T/2-1)))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
   }
   ## store masses in cf
   cf$mass1 <- mass1
   cf$mass2 <- mass2
   cf$weighted <- TRUE
   cf$weight.factor <- 1.
+  cf$weight.cosh <- weight.cosh
   return(invisible(cf))
 }
 
-takeTimeDiff.cf <- function(cf) {
+takeTimeDiff.cf <- function(cf, deltat = 1) {
   if(missing(cf)) {
     stop("takeTimeDiff: cf must be provided! Aborting...\n")
   }
@@ -120,19 +128,20 @@ takeTimeDiff.cf <- function(cf) {
   ## the time indices to be subtracted
   tt0 <- c()
   for(i in c(1:nrObs)) {
-    tt0 <- c(tt0, ((i-1)*(T/2+1)+1):((i-1)*(T/2+1)+T/2))
+    tt0 <- c(tt0, ((i-1)*(T/2+1)+1):(i*(T/2+1)-deltat))
   }
-  tt1 <- tt0+1
+  tt1 <- tt0 + deltat
 
   ## take the differences, set the remaining points to NA
-  cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
-  cf$cf0[-tt1] <- NA
   if(!is.null(cf$cf)) {
     cf$cf[,tt1] <- cf$cf[,tt0]-cf$cf[,tt1]
     cf$cf[,-tt1] <- NA
   }
   ## now the bootstrap samples
   if(cf$boot.samples) {
+    cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
+    cf$cf0[-tt1] <- NA
+
     cf$cf.tsboot$t0[tt1] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
     cf$cf.tsboot$t0[-tt1] <- NA
     cf$cf.tsboot$t[,tt1] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
@@ -140,6 +149,7 @@ takeTimeDiff.cf <- function(cf) {
   }
   ## save info
   cf$shifted <- TRUE
+  cf$deltat <- deltat
   ## return subtracted cf
   return(invisible(cf))
 }

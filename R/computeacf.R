@@ -1,5 +1,6 @@
 computeacf <- function(tdata, W.max, Lambda=100) {
   N <- length(tdata)
+  if(missing(W.max)) W.max <- floor(sqrt(N))
   Gamma.tmp <- rep(0, times=2*W.max+W.max+1)
   dGamma <- rep(0., times=W.max+1)
   ## for t > W.max we set Gamma to 0 for simplicity
@@ -42,7 +43,7 @@ plot.hadronacf <- function (Gamma, col = "black", ...)
             max(Gamma$Gamma + 2 * Gamma$dGamma, na.rm = TRUE))
   ## data points
   plot(Gamma$lags, Gamma$Gamma, ylim = ylim,
-       col = col, xlab="t", ylab="rho[t]", ...)
+       col = col, xlab="t", ylab="Gamma[t]", ...)
   ## errors
   arrows(Gamma$lags, Gamma$Gamma - Gamma$dGamma, Gamma$lags, Gamma$Gamma + Gamma$dGamma,
          length = 0.01, angle = 90, code = 3, col = col)

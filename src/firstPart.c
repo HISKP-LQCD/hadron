@@ -7,28 +7,19 @@
 
 #include "zetaFunc.h"
 
-//NPmode should be bigger than the biggest pmodeSqur we may meet in the iteration,
-//DimMax is the biggest degenation degree within the range of NPmode
-//Usually we should set big enough value for these two parameters, 
-//or the program will crash.
-//For precision of 1e-8, (NPmode=40, DimMAX=72) is good enough.
-//
-//Other selections may be 
-//(NPmode=70,DimMAX=96),
-//(NPmode=100,DimMAX=120),
-//(NPmode=145,DimMAX=168)
-//These two parameters are set in the header file zetaFunc.h
-
-double complex firstPart(const double Tolerance, const int l, const int m, const double * dVec, const double gamma, const double Lamda, const double qSqur, const int verbose, int * const rstatus)
+double complex firstPart(const double Tolerance, const int l, const int m, 
+			 const double * dVec, const double gamma, 
+			 const double Lamda, const double qSqur, 
+			 const int verbose, int * const rstatus)
 {
   double complex firstTerms=0+I*0, pmodeSum=0+I*0, firstPartSum=0+I*0;
-  double cosPolarAngle,azAngle;
-  double rVecMod;
+  int npmode[2] = {40, 72};
+  int i_npmode = 1;
   
   double error = 1.0;
   int pmodeSqur;
   
-  int n1,n2,n3;
+  int n0, n1, n2;
   double dModSqur=dVec[0]*dVec[0]+dVec[1]*dVec[1]+dVec[2]*dVec[2];
   
   int * degnrtDOF = NULL;
@@ -36,15 +27,17 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
   
   int niter = 0;
   int genReturn;
-  genReturn = gen_points_array(&degnrtDOF, &arrayPmode, NPmode, DimMAX);
+  get_npmode(npmode, i_npmode);
+  genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 
   if(genReturn != 0){
-    printf("Generating the points wrong!");
-    exit(-1);
+    printf("Generated the points wrongly in firstPart!");
+    *rstatus = 1000;
+    return(firstPartSum);
   }
   
-  if(verbose){
-    for(int i=0; i<NPmode; i++){
+  if(verbose*0){
+    for(int i = 0; i < npmode[0]; i++){
       if(degnrtDOF[i] == 0)
 	printf("pmodeSqur=%d has no corresponding points.\n", i);
       else
@@ -56,9 +49,23 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
   
   while(error > Tolerance){
     
-    if(pmodeSqur > NPmode){
-      printf("The tolerance requisition has exceeded the pmodeSqur upper limit set by NPmode!\nPlease increase the macro definition of NPmode and DimMax in the head file zetaFunc.h!\n");
-      exit(-1);
+    if(pmodeSqur > npmode[0]){
+      i_npmode++;
+      get_npmode(npmode, i_npmode);
+      genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
+      if(verbose) fprintf(stderr, "increased i_npmode to %d in firstPart %d %d\n", i_npmode, npmode[0], npmode[1]);
+
+      if(genReturn != 0){
+	printf("Generated the points wrongly in firstPart!");
+        *rstatus = 1000;
+        return(firstPartSum);
+      }
+
+      if(i_npmode > 4) {
+	if(verbose) fprintf(stderr, "NPmode and DimMax need to be larger than available in firstPart! Aborting...!\n");
+        *rstatus = 2000;
+        return(firstPartSum);
+      }
     }
     
     pmodeSum = 0+I*0;
@@ -69,48 +76,45 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
       continue;
     }
     
-    for(int i=0; i<degnrtDOF[pmodeSqur]; i++){
+    for(int i = 0; i < degnrtDOF[pmodeSqur]; i++){
 
-      n1=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 0];
-      n2=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 1];
-      n3=arrayPmode[pmodeSqur*DimMAX*3 + i*3 + 2];
+      n0 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 0];
+      n1 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 1];
+      n2 = arrayPmode[pmodeSqur*npmode[1]*3 + i*3 + 2];
       
-      if(verbose)
-	printf("%3d %3d %3d\n", n1, n2, n3);
-      
-      double nSqur = n1*n1+n2*n2+n3*n3; 
-      
-      if( dModSqur == 0 ){
-        rVecMod = sqrt( nSqur );
-        if(n1==0 && n2==0 && n3==0){
-          cosPolarAngle =0;
-          azAngle =0;
-        }
-        else{
-          cosPolarAngle =  n3/sqrt(nSqur) ;
-          azAngle = azimutalAngle(n1,n2) ;
-        }
+      double r[3], rpar[3], rort[3];
+      if( fabs(dModSqur) < DBL_EPSILON ) {
+        r[0] = n0/gamma;
+        r[1] = n1/gamma;
+        r[2] = n2/gamma;
       }
-      else{
-        double nDotd = n1*dVec[0]+n2*dVec[1]+n3*dVec[2];
-        rVecMod = sqrt( (pow(nDotd,2.0)/dModSqur + dModSqur/4.0 - nDotd)/pow(gamma,2.0)
-                        + nSqur  - pow(nDotd,2.0)/dModSqur);
-        cosPolarAngle = ((nDotd*dVec[2]/dModSqur-dVec[2]/2.0)/gamma + (n3-nDotd*dVec[2]/dModSqur))
-          / rVecMod;
-        azAngle=azimutalAngle((nDotd*dVec[0]/dModSqur-dVec[0]/2.0)/gamma+(n1-nDotd*dVec[0]/dModSqur),
-                              (nDotd*dVec[1]/dModSqur-dVec[1]/2.0)/gamma + (n2-nDotd*dVec[1]/dModSqur));
+      else {
+        double nDotd = n0*dVec[0]+n1*dVec[1]+n2*dVec[2];
+	// we split the vector first into a parallel and orthogonal part w.r.t. dVec
+        rpar[0] = nDotd / dModSqur * dVec[0];
+        rpar[1] = nDotd / dModSqur * dVec[1];
+        rpar[2] = nDotd / dModSqur * dVec[2];
+        rort[0] = n0 - rpar[0];
+        rort[1] = n1 - rpar[1];
+        rort[2] = n2 - rpar[2];
+        r[0] = (rpar[0] - 0.5*dVec[0])/gamma + rort[0];
+        r[1] = (rpar[1] - 0.5*dVec[1])/gamma + rort[1];
+        r[2] = (rpar[2] - 0.5*dVec[2])/gamma + rort[2];
       }
+      // now we determine the spherical coordinates appropriate for
+      // usage with GSL spherical harmonics
+      double u,v,w, xy;
+      xy = r[0]*r[0] + r[1]*r[1];
+      u = sqrt(xy + r[2]*r[2]);
+      v = atan2(sqrt(xy), r[2]);
+      w = atan2(r[1], r[0])*180/M_PI;
+      r[0] = u;
+      r[1] = cos(v);
+      r[2] = w;
 
-      if(fabs(cosPolarAngle) > 1) {
-        // cosPolarAngle must not become larger than 1 
-        // we check for this here and drop a warning if unexpectedly large
-        if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON*10) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e\n", 1-fabs(cosPolarAngle));
-        cosPolarAngle /= fabs(cosPolarAngle);
-      }
-      
-      firstTerms = exp(-Lamda*(pow(rVecMod,2.0)-qSqur)) * pow(rVecMod,l)
-        * spheHarm(l, m, cosPolarAngle, azAngle, rstatus)
-        / (pow(rVecMod,2.0) - qSqur);
+      firstTerms = exp(-Lamda*(pow(r[0],2.0)-qSqur)) * pow(r[0],l)
+        * spheHarm(l, m, r[1], r[2], rstatus)
+        / (pow(r[0],2.0) - qSqur);
 
       if(*rstatus != 0) {
 	fprintf(stderr, "spheHarm produced error code \"%s\"\n", gsl_strerror(*rstatus)); 
@@ -123,14 +127,14 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
     }//end of pmode loop
     
     firstPartSum += pmodeSum;
-    //Both pmodeSum and firstPartSum are complex numbers,
-    //cabs take the mode of these variables.
+    // Both pmodeSum and firstPartSum are complex numbers,
+    // cabs take the modulus of these variables.
     // only calculate new error if firstPartSum != 0.
     if (cabs(firstPartSum) > DBL_EPSILON)
       error = cabs(pmodeSum) / cabs(firstPartSum);
     
     if(verbose)
-      printf("pmode%d error: %.16f\n\n",pmodeSqur , error);
+      printf("first term: pmode %d error: %.16f result (%e, %e)\n", pmodeSqur , error, creal(firstPartSum), cimag(firstPartSum));
     
     // if the result is still zero after 4 iterations it is assumed to stay zero
     if (cabs(firstPartSum) < DBL_EPSILON && niter > 4)
@@ -139,7 +143,10 @@ double complex firstPart(const double Tolerance, const int l, const int m, const
     ++niter;
     
   }//end of while.
-  
+  if(verbose) {
+    printf("First term = (%e, %e)\n", creal(firstPartSum), cimag(firstPartSum));
+  }
+
   return firstPartSum;
 }
 				

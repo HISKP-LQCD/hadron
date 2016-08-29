@@ -9,6 +9,7 @@ tlower <- seq(4,20,2)
 tupper <- seq(28,44,2)
 piontlower <- seq(8,20,2)
 piontupper <- c(44,46,48)
+redo <- FALSE
 
 if(file.exists("parameters.R")) {
   source("parameters.R")
@@ -28,13 +29,16 @@ for(piont1 in piontlower) {
                          matrix.size=1, parlist=array(c(1,1), dim=c(2,1)))
     for(t1 in tlower) {
       for(t2 in tupper) {
-        res.averx <- averx(data3pt, data2pt, pionfit, boot.R=boot.R, boot.l=boot.l, piont1=piont1, piont2=piont2, t1=t1, t2=t2, useCov=useCov)
-
-        summary(res.averx)
-        plot(res.averx)
-
         filename <- paste("res.averx.t1", t1, ".t2", t2, ".piont1", piont1, ".piont2", piont2, ".", ens, ".Rdata", sep="")
-        save(res.averx, file=filename)
+        if(!file.exists(filename) && !redo) {
+          res.averx <- averx(data3pt, data2pt, pionfit, boot.R=boot.R, boot.l=boot.l, piont1=piont1, piont2=piont2, t1=t1, t2=t2, useCov=useCov)
+          
+          summary(res.averx)
+          plot(res.averx)
+          
+          
+          save(res.averx, file=filename)
+        }
       }
     }
   }

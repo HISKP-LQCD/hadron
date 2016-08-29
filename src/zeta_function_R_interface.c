@@ -39,11 +39,19 @@ SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gam
   for(int i = 0; i < n; i ++) {
     int rstatus[3] = {0,0,0};
 
-    luscherZeta(ires, qsq[i], l, m, gamma[i], lambda, dvec, tol, verbose, rstatus);
+    // check for NaN or NA in qsq
+    if(ISNAN(qsq[i]) || ISNA(qsq[i])) {
+      resp[i].r = NA_REAL;
+      resp[i].i = NA_REAL;
+    }
+    else {
+      luscherZeta(ires, qsq[i], l, m, gamma[i], lambda, dvec, tol, verbose, rstatus);
 
-    resp[i].r = ires[0];
-    resp[i].i = ires[1];
+      resp[i].r = ires[0];
+      resp[i].i = ires[1];
+    }
 
+    // check for anything went wrong in Luescher Zeta evaluation
     if(rstatus[0]!=0) {
       warning("GSL error in evaluation of first contribution to Luescher Zeta function, status code %d for element %d\n", rstatus[0], i+1);
       resp[i].r = NA_REAL;

@@ -9,7 +9,7 @@
 \usage{
 tikzfiles <- tikz.init(basename="basename",...)
 plot(...)
-tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE)
+tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE, standAlone=TRUE)
 }
 \arguments{
   \item{basename}{
@@ -21,6 +21,12 @@ tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE)
   \item{tikzfiles}{
     a list with members $pdf, $tex, $aux and $log, returned by \code{tikz.init}
     which must be passed to \code{tikz.finalize}
+  }
+  \item{standAlone}{
+    A logical value indicating whether the output file should
+    be suitable for direct processing by LaTeX. A value of
+    \code{FALSE} indicates that the file is intended for inclusion
+    in a larger document.
   }
   \item{crop}{
     boolean indicating whether \code{pdfcrop} should be called on the resulting pdf

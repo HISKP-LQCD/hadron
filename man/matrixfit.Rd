@@ -5,7 +5,11 @@
   Performs a factorising fit on a correlation matrix
 }
 \usage{
-matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
+matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
+          parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
+          sym.vec=c("cosh","cosh","cosh","cosh"),
+          useCov=FALSE, seed=12345,
+          boot.fit=TRUE, fit.method="optim")
 }
 \arguments{
   \item{cf}{
@@ -17,14 +21,11 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   \item{t2}{
     upper bound for the fitrange in time (t1,t2). Counting starts with 0.
   }
-  \item{symmetrise}{
-    Symmetrise the matrix, not implemented yet.
-  }
   \item{boot.R}{
-    number of bootstrap samples
+    number of bootstrap samples. Default is \code{400}.
   }
   \item{boot.l}{
-    block size for autocorrelation analysis
+    block size for autocorrelation analysis. Default is \code{2}.
   }
   \item{parlist}{
     a two dimensional array of dimension 2 times number of correlators
@@ -34,18 +35,18 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   }
   \item{sym.vec}{
     a vector of length number of correlators in cf indicating whether
-    the correlation function is a cosh or a sinh. Default is
-    \code{sym.vec=c("cosh","cosh","cosh","cosh")}. 
-  }
-  \item{matrix.size}{
-    matrix size, currently only 2 implemented
+    the correlation function is a cosh, a sinh or an
+    exponential. Default is 
+    \code{sym.vec=c("cosh","cosh","cosh","cosh")}, possible values are
+    \code{"cosh"}, \code{"sinh"} and \code{"exp"}.
   }
   \item{useCov}{
     use correlated or uncorrelated chisquare. Default is
     \code{useCov=FALSE}. 
   }
   \item{seed}{
-    seed for the random number generation used for boostrapping.
+    seed for the random number generation used for boostrapping. Default
+    is \code{12345}.
   }
   \item{boot.fit}{
     If set to \code{FALSE}, the fit is not bootstrapped, even if the bootstrapping 
@@ -54,7 +55,21 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
     Of course, this affects the return values related to the bootstrap, which are
     set to \code{NA}.
   }
-
+  \item{fit.method}{
+    Can be either \code{"optim"} or \code{"lm"}. The latter works only
+    if the library \code{"minpack.lm"} can be loaded. Default and
+    fallback is \code{"optim"}.
+  }
+  \item{model}{
+    Sets the fit model to be used in the fit. The default model is\cr
+    \eqn{0.5 p_i p_j (\exp(-Et) \pm c* \exp(-E(T-t)))}\cr
+    with sign depending on \code{"cosh"} or \code{"sinh"}. c equals one
+    except for the \code{"exp"} functional dependence. When model is set
+    to \code{"shifted"}, the fit uses  the function\cr
+    \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c* \exp(-E(T-(t+1/2))))}\cr
+    which is useful when the original correlation function or matrix is
+    shifted, see e.g. \link{bootstrap.gevp}.
+  }
 }
 \value{
   returns an object of class \code{matrixfit} with entries:
@@ -62,7 +77,10 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
     object of class cf which contains the mean correlation functions
   }
   \item{M}{
-    weighting matrix for weighted Chi squared minimization
+    inverse variance-covariance matrix for weighted Chi squared minimization
+  }
+  \item{L}{
+    squre root of \code{M}.
   }
   \item{parind}{
     indices in the parameter vector used for the different matrix combinations
@@ -124,11 +142,18 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   \item{seed}{
     RNG seed for bootstrap procedure
   }
+  \item{model}{
+    see input.
+  }
+  \item{fit.method}{
+    see input.
+  }
 }
 \details{
-  The routine expects in \code{cf$cf} a matrix. Every row corresponds to
-  one observation of a concatenation of correlation functions. The
-  mapping of this linear construct to a matrix is achieved via
+  The routine expects in \code{cf$cf} a set of correlation
+  functions.  The
+  mapping of this linear construct to a matrix or a part of a matrix is
+  achieved via 
   \code{parlist}. The symmetry properties of the individual correlation
   functions must be encoded in \code{sym.vec}.
 
@@ -147,7 +172,7 @@ matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)
   C. Michael, \href{hep-lat/9412087}{hep-lat/9412087}
 }
 \seealso{
-  
+  \code{\link{cf}}, \code{\link{bootstrap.cf}}
 }
 \examples{
 \dontrun{readcmidatafiles(basename="outpr", verbose=TRUE, skip=1,

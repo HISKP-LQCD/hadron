@@ -1,4 +1,7 @@
-effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1.) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1., deltat=1) {
+  if(missing(cf)) {
+    stop("cf must be provided to effectivemass.cf! Aborting...\n")
+  }
   ## cf is supposed to have nrObs*(Thalf+1) elements in time direction
   if(length(dim(cf)) == 2) {
     Cor <- apply(cf, 2, mean)
@@ -6,7 +9,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   else {
     Cor <- cf
   }
-
+  
   if(length(Cor) != nrObs*(Thalf+1)) {
     stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
   }
@@ -39,7 +42,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+1))-w*exp(-m*(T-t-1))) / (exp(-m*(t-1))+exp(-m*(T-t+1)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
+        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) / (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
@@ -71,7 +74,8 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
     stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
   }
 
-  if(!cf$boot.samples) {
+  if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
+    
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
   else {
@@ -84,14 +88,18 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   if(is.null(cf$cf)) {
     N <- cf$N
   }
+  deltat <- 1
+  if(type == "shifted" && any(names(cf) == "deltat")) {
+    deltat <- cf$deltat
+  }
 
   ## number of time slices (hopefully in units of T/2+1)
   Nt <- length(cf$cf0)
   nrObs <- floor(Nt/(cf$Time/2+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor)
+  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t=c(1:(cf$Time/2)),
@@ -133,28 +141,68 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ii.na <- which(is.na(cf$effMass[ii]))
     ii <- ii[-ii.na]
   }
-  cf$ii <- ii
-  cf$dof <-  length(ii)-1
-  
 
   CovMatrix <- cov(cf$effMass.tsboot[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(1/cf$deffMass[ii]^2)
-  if(useCov) {
-    ## compute correlation matrix and compute the correctly normalised inverse
-    M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
-    if(inherits(M, "try-error")) {
-      M <- diag(1/cf$deffMass[ii]^2)
-      warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses, continuing with uncorrelated chi^2\n")
-      useCov <- FALSE
-    }
-  }
+
   ## the chisqr function
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
   
-  cf$invCovMatrix <- M
   cf$CovMatrix <- CovMatrix
+  
+  tb.save <- cf$effMass.tsboot
+  ## now we replace all NAs by randomly chosen other bootstrap values
+  ## or remove a given column if there are too many NAs to resample
+  ii.remove <- c()
+  if(replace.na && any(is.na(cf$effMass.tsboot))) {
+    for(k in ii) {
+      cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
+      if(any(is.na(cf$effMass.tsboot[,k]))) {
+        ## indices of NA elements
+        jj <- which(is.na(cf$effMass.tsboot[,k]))
+        ## if there are more NA elements than non-NA elements, the replacement
+        ## below will fail
+        if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
+          ## random indices in the non-NA elements of effMass.tsboot
+          rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+          ## replace
+          cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
+        }
+        else {
+          ## so we remove this column from the analysis below
+          ii.remove <- c( ii.remove, which( ii == k ) )
+        }
+      }
+    }
+  }
+  
+  if( length( ii.remove ) > 0 ) {
+    ## remove the columns that should be excluded from the fit below
+    ii <- ii[ -ii.remove ]
+    cat("Due to NAs we have removed the time slices", ii.remove-1, " from the fit\n")
+  }
+  cf$ii <- ii
+  cf$dof <-  length(ii)-1
+
+  ## and treat the inverse covariance matrix accordingly
+  if(useCov) {
+    ## recompute covariance matrix and compute the correctly normalised inverse
+    M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
+    if(inherits(M, "try-error")) {
+      M <- M[ -ii.remove, -ii.remove]
+      warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
+      useCov <- FALSE
+    }
+  }
+  else {
+    if( length( ii.remove ) > 0 ) {
+      ## if the matrix is diagonal, we simply restrict it
+      M <- M[ -ii.remove, -ii.remove]
+    }
+  }
+
   par <- c(cf$effMass[t1])
   opt.res <- optim(par, fn = fn,
                    method="BFGS", M=M, y = cf$effMass[ii])
@@ -165,58 +213,11 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
 
   cf$chisqr <- opt.res$value
   cf$Qval <- 1-pchisq(cf$chisqr, cf$dof)
-  
-  tb.save <- NA
+
   if( boot.fit ) {
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
-    tb.save <- cf$effMass.tsboot
-    ## now we replace all NAs by randomly chosen other bootstrap values
-    ## or remove a given column if there are too many NAs to resample
-    ii.remove <- c()
-    if(replace.na && any(is.na(cf$effMass.tsboot))) {
-      for(k in ii) {
-        cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
-        if(any(is.na(cf$effMass.tsboot[,k]))) {
-          ## indices of NA elements
-          jj <- which(is.na(cf$effMass.tsboot[,k]))
-          ## if there are more NA elements than non-NA elements, the replacement
-          ## below will fail
-          if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
-            ## random indices in the non-NA elements of effMass.tsboot
-            rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
-            ## replace
-            cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
-          }
-          else {
-            ## so we remove this column from the analysis below
-            ii.remove <- c( ii.remove, which( ii == k ) )
-          }
-        }
-      }
-    }
-
-    if( length( ii.remove ) > 0 ) {
-      # remove the columns that should be excluded from the fit below
-      ii <- ii[ -ii.remove ]
-      # and treat the inverse covariance matrix accordingly
-      if(useCov) {
-        ## recompute covariance matrix and compute the correctly normalised inverse
-        ## note that we DON'T change the return value! (cf$invCovMatrix)
-        M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
-        if(inherits(M, "try-error")) {
-          M <- M[ -ii.remove, -ii.remove]
-          warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
-          useCov <- FALSE
-        }
-      }
-      else {
-        ## if the matrix is diagonal, we simply restrict it
-        M <- M[ -ii.remove, -ii.remove]
-      }
-    }
-
-    for(i in 1:cf$boot.R) {
+    for(i in c(1:cf$boot.R)) {
       opt <- optim(par, fn = fn,
                    control=list(parscale=1/par),
                    method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
@@ -229,10 +230,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     cf$massfit.tsboot <- NA
   } # if(boot.fit)
 
-  if(!any(is.na(tb.save))) {
-    cf$effMass.tsboot <- tb.save
-  }
-  rm(tb.save)
+  cf$effMass.tsboot <- tb.save
+
+  cf$invCovMatrix <- M
   cf$opt.res <- opt.res
   cf$useCov <- useCov
   attr(cf, "class") <- c("effectivemassfit", class(cf))

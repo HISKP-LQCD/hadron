@@ -147,6 +147,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
+  ## we devide everything by 2 apart from t=0 and t=T/2
   data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
       data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
   ## symmetrise or anti-symmetrise for given observable?
@@ -200,8 +201,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
 
   tmp <- read.table(paste(path, file, sep=""), skip=skip)
-  if((length(ind.vector) < length(tmp)-1) || (max(ind.vector) > length(tmp))){
-    stop("index vector too long or out of range\n")
+  if((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)){
+    stop("index vector too short or out of range\n")
   }
   
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
@@ -280,6 +281,64 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
+
+
+# read binary correlation functions sample by sample, return as a list of length "nosamples"
+# where increasing indices refer to averaging over increasing numbers of samples
+readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
+                              op="aver", excludelist=c(""), sym=TRUE, path="", ftype=double() ){
+
+  if(missing(files)) {
+    stop("files must be given! Aborting...\n")
+  }
+  if(T < 1) {
+    stop("T must be larger than 0 and integer, aborting...\n")
+  }
+  if(endian != "little" && endian != "big") {
+    stop("endian must be either little or big, abroting...\n")
+  }
+  
+  Cf <- list()
+  for( i in 1:nosamples ){
+    Cf[[i]] <- ftype
+  }
+  ## indices for averaging +-t
+  i1 <- c(2:(T/2))
+  i2 <- c(T:(T/2+2))
+  sign <- +1
+  if(!sym) sign <- -1
+
+  for(f in files){
+    ifs <- paste(path, f, sep="")
+    if( !(ifs %in% excludelist) && file.exists(ifs)){
+      to.read <- file(ifs,"rb")
+      tmp <- array(readBin(to.read, what=ftype, n=T*nosamples, endian=endian), dim=c(T, nosamples))
+      close(to.read)
+      # average over increasing numbers of samples
+      for( i in 1:nosamples ){
+        tmp2 <- ftype
+        if( i == 1 ){
+          tmp2 <- tmp[,1]
+        } else {
+          tmp2 <- apply(X=tmp[,1:i],MARGIN=1,FUN=mean)
+        }
+        # average over +- t
+        tmp2[i1] <- 0.5 * ( tmp2[i1] + sign * tmp2[i2] )
+        Cf[[i]] <- cbind(Cf[[i]],tmp2[1:(T/2+1)])
+      }
+    } else if(!file.exists(ifs)) {
+      cat("file ", ifs, "does not exist...\n")
+    }
+  }
+
+  ret <- list()
+  for( i in 1:nosamples ){
+    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+    attr(ret[[i]], "class") <- c("cf", class(ret[[i]]))
+  }
+  return(invisible(ret))
+}
+
 
 readbinarydisc <- function(files, T=48, obs=5, endian="little",
                            excludelist=c(""), nrSamples=1, path="") {

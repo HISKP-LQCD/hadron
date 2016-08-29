@@ -34,8 +34,9 @@ cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
   }
   \item{sym.vec}{
     a vector of bools of length equal to the number of observables
-    indicating whether C(+t) and C(-t) should be added or subtracted. If
-    not given C(+t) and C(-t) will be averaged for all observables.
+    indicating whether C(t) is symmetric in t, i.e. whether
+    C(+t) and C(-t) should be added or subtracted. If
+    not given C(+t) and C(-t) will be assumed to be symmetric.
   }
   \item{sign.vec}{
     a sign vector of length equal to the number of observables
