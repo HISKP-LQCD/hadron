@@ -395,8 +395,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     X11()
   }
   s <- seq(0,1,1./length(mfit$opt.tsboot[1,]))
-  x <- qchisq(p=s, df=mfit$dof)
-  qqplot(x=x, y=mfit$opt.tsboot[length(mfit$opt.tsboot[,1]), ], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot Chi^2 Values")
+  x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
+  qqplot(x=x, y=mfit$opt.tsboot[length(mfit$opt.tsboot[,1]), ], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
 }
 
 
