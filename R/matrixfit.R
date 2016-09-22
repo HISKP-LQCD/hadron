@@ -22,10 +22,10 @@ dmatrixChi <- function(par, t, y, L, T, parind, sign.vec, deltat=1) {
   zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
   res <- L %*% zp
   for(i in 2:length(par)) {
-    zp1 <- c(0)
+    zp1 <- rep(0, length(zp))
     j <- which(parind[,1]==i)
     zp1[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
-    zp2 <- c(0)
+    zp2 <- rep(0, length(zp))
     j <- which(parind[,2]==i)
     zp2[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res <- c(res, L %*% zp1 + L %*% zp2)
