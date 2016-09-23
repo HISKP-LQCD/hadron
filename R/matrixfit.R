@@ -434,8 +434,8 @@ summary.matrixfit <- function(mfit) {
   if(any(names(mfit) == "fpsOS")) {
     cat("\nOS Decay Constant (derived quantity):\n")
     if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
-    cat("fps \t=\t", mfit$fps, "\n")
-    cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
+    cat("fps \t=\t", mfit$fpsOS, "\n")
+    cat("dfps\t=\t", sd(mfit$fpsOS.tsboot), "\n")
     cat("using\n")
     cat("ZA  \t=\t", mfit$ZA, "\n")
     cat("dZA \t=\t", sd(mfit$ZAboot), "\n")

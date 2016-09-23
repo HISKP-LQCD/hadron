@@ -64,7 +64,7 @@ computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", dis
   }
 }
 
-computefpsOS <- function(mfit, Kappa=sqrt(0.5), nomralisation="cmi", boot.fit=TRUE, ZA=1, ZAboot, dZA) {
+computefpsOS <- function(mfit, Kappa=sqrt(0.5), normalisation="cmi", boot.fit=TRUE, ZA=1, ZAboot, dZA) {
   if(any(class(mfit) == "matrixfit")) {
     k <- Kappa
     if(normalisation != "cmi") k <- sqrt(0.5)
