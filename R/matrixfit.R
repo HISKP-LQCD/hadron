@@ -431,6 +431,15 @@ summary.matrixfit <- function(mfit) {
     cat("fps \t=\t", mfit$fps, "\n")
     cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
   }
+  if(any(names(mfit) == "fpsOS")) {
+    cat("\nOS Decay Constant (derived quantity):\n")
+    if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
+    cat("fps \t=\t", mfit$fps, "\n")
+    cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
+    cat("using\n")
+    cat("ZA  \t=\t", mfit$ZA, "\n")
+    cat("dZA \t=\t", sd(mfit$ZAboot), "\n")
+  }
 }
 
 fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1) {

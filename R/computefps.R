@@ -63,3 +63,40 @@ computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", dis
     stop("computefps: expecting object of class matrixfit, gevp.amplitude or at least an amplitude\nAborting...!\n")
   }
 }
+
+computefpsOS <- function(mfit, Kappa=sqrt(0.5), nomralisation="cmi", boot.fit=TRUE, ZA=1, ZAboot, dZA) {
+  if(any(class(mfit) == "matrixfit")) {
+    k <- Kappa
+    if(normalisation != "cmi") k <- sqrt(0.5)
+    else  mfit$kappa <- Kappa
+
+    mfit$ZA <- ZA
+    zab <- rep(1, times=mfit$boot.R)
+    if(!missing(ZAboot) || !missing(dZA)) {
+      if(missing(ZAboot)){
+        zab <- rnorm(n=mfit$boot.R, mean=ZA, sd=dZA)
+      }
+      else {
+        zab <- ZAboot
+        if(length(ZAboot) != mfit$boot.R) {
+          dZA <- sd(ZAboot)
+          zab <- rnorm(n=mfit$boot.R, mean=ZA, sd=dZA)
+        }
+      }
+    }
+    mfit$ZAboot <- zab
+    
+    mfit$fpsOS <- ZA*sqrt(2)*k*mfit$opt.res$par[3]*sqrt(mfit$opt.res$par[1])/mfit$opt.res$par[1]    
+    if(boot.fit) {
+      mfit$fpsOS.tsboot <- zab*sqrt(2)*k*mfit$opt.tsboot[3,]*sqrt(mfit$opt.tsboot[1,])/mfit$opt.tsboot[1,]
+    }
+    else {
+      mfit$fps.tsboot <- NA
+    }
+    mfit$normalisationOS <- normalisation
+    return(invisible(mfit))
+  }
+  else {
+    stop("computefps: expecting object of class matrixfit\nAborting...!\n")
+  }
+}
