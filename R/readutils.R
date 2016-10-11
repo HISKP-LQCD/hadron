@@ -225,7 +225,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 }
 
 readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
-                         op="aver", excludelist=c(""), sym=TRUE, path="") {
+                         op="aver", excludelist=c(""), sym=TRUE, path="",
+                         hdf5format=FALSE, hdf5name, hdf5index=c(1,2)) {
 
   if(missing(files)) {
     stop("files must be given! Aborting...\n")
@@ -240,9 +241,16 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
     stop("T must be larger than 0 and integer, aborting...\n")
   }
   if(endian != "little" && endian != "big") {
-    stop("endian must be either little or big, abroting...\n")
+    stop("endian must be either little or big, aborting...\n")
   }
-  
+  if(hdf5format) {
+    if(missing(hdf5name)) stop("hdf5name must be given, aborting...\n")
+    h5avail <- require(rhdf5)
+    if(!h5avail) stop("rhdf5 package not installed, aborting...\n")
+    obs <- 1
+    Nop <- 1
+    if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
+  }
   ## indices for averaging +-t
   i1 <- c(2:(T/2))
   i2 <- c(T:(T/2+2))
@@ -254,9 +262,19 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
   for(f in files) {
     ifs <- paste(path, f, sep="")
     if( !(ifs %in% excludelist) && file.exists(ifs)) {
-      to.read <- file(ifs, "rb")
-      tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
-
+      tmp <- numeric()
+      if(!hdf5format) {
+        to.read <- file(ifs, "rb")
+        tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
+      }
+      else {
+        LS <- h5ls(ifs)
+        if(as.integer(LS[LS$name == hdf5name,]$dim) != T) {
+          stop(paste(hdf5name, "in file", ifs, "has not the correct length, aborting...\n"))
+        }
+        tmp <- h5read(file=ifs, name=hdf5name)
+        tmp <- tmp[,hdf5index[1]] + 1i*tmp[,hdf5index[2]]
+      }
       ## we average the replica
       if(Nop > 1) {
         if(op == "aver") {
@@ -266,12 +284,15 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
           tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
         }
       }
-
+      
       ## average +-t
-      tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-
-      Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
-      close(to.read)
+      Cf <- cbind(Cf, 0.5*(tmp[i1] + sign * tmp[i2]))
+      if(!hdf5format) {
+        close(to.read)
+      }
+      else {
+        H5close()
+      }
     }
     else if(!file.exists(ifs)) {
       cat("file ", ifs, "does not exist...\n")
