@@ -286,7 +286,9 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
       }
       
       ## average +-t
-      Cf <- cbind(Cf, 0.5*(tmp[i1] + sign * tmp[i2]))
+      tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
+      Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
+
       if(!hdf5format) {
         close(to.read)
       }
