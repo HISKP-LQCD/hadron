@@ -291,7 +291,7 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
         close(to.read)
       }
       else {
-        H5close()
+        if(exists("H5close")) H5close()
       }
     }
     else if(!file.exists(ifs)) {
