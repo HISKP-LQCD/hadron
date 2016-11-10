@@ -2,11 +2,13 @@
 \alias{readbinarycf}
 \title{read correlation function from binary files}
 \description{
-  Reads a correlation function from binary files.
+  Reads a correlation function from binary files, including hdf5
+  formatted files.
 }
 \usage{
 cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
-                         excludelist=c(""), sym=TRUE, path="")
+                   excludelist=c(""), sym=TRUE, path="",
+                   hdf5format=FALSE, hdf5name, hdf5index=c(1,2))
 }
 \arguments{
   \item{files}{
@@ -41,6 +43,19 @@ cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver",
   }
   \item{path}{
     path to be prepended to every filename.
+  }
+  \item{hdf5format}{
+    if \code{TRUE}, try to read from an hdf5 file.
+  }
+  \item{hdf5name}{
+    Name of the data set as a string.
+  }
+  \item{hdf5index=c(1,2)}{
+    The data might be an array of size n x T. \code{hdf5index} is used
+    to convert two columns of the data to a complex valued vector using
+    the first and second index for real and imaginary part,
+    respectively. If \code{hdf5index} has length smaller than 2 the
+    first index is reused. 
   }
 }
 \value{
