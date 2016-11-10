@@ -146,6 +146,28 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   return(cf)
 }
 
+# Gamma method analysis on all time-slices in a 'cf' object
+uwerr.cf <- function(cf,absval=FALSE){
+  if(!inherits(cf, "cf")){
+    stop("uwerr.cf: cf must be of class 'cf'. Aborting...\n")
+  }
+  uwcf <- as.data.frame( 
+            t(
+              apply(X=cf$cf, MARGIN=2, 
+                    FUN=function(x){
+                          data <- x
+                          if(absval) data <- abs(x)
+                          uw <- uwerrprimary(data=data)
+                          c(value=uw$value, dvalue=uw$dvalue, ddvalue=uw$ddvalue,
+                                     tauint=uw$tauint, dtauint=uw$dtauint)
+                        }
+              )
+            ) 
+          )
+
+  return(uwcf)
+}
+
 as.cf <- function(x){
   if(!inherits(x, "cf")) class(x) <- c("cf", class(x))
   x

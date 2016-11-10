@@ -128,7 +128,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 }
 
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
-                        sym.vec, sign.vec, verbose=FALSE) {
+                        sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE) {
   if(missing(cmicor)) {
     stop("extract.obs: data missing in extract.obs\n")
   }
@@ -138,7 +138,6 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   }
   nrObs <- length(vec.obs)
   nrStypes <- length(unique(cmicor[,ind.vec[2]]))
-
   Time <-  2*max(cmicor[,ind.vec[3]])
   Thalf <- max(cmicor[,ind.vec[3]])+1
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
@@ -147,35 +146,56 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
 
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
-  ## we devide everything by 2 apart from t=0 and t=T/2
-  data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
-      data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
-  ## symmetrise or anti-symmetrise for given observable?
-  isym.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
-  isign.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
-  if(!missing(sym.vec)) {
-    if(length(sym.vec) != nrObs) {
-      stop("extract.obs: sym.vec was given, but had not the correct length")
-    }
-    for(i in c(1:nrObs)) {
-      if(!sym.vec[i]) {
-        isym.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
+  cf <- NULL
+  
+  if(symmetrise){
+    ## we devide everything by 2 apart from t=0 and t=T/2
+    data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
+        data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
+    ## symmetrise or anti-symmetrise for given observable?
+    isym.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
+    isign.vec <- rep(+1, times= nrObs*Thalf*nrStypes)
+    if(!missing(sym.vec)) {
+      if(length(sym.vec) != nrObs) {
+        stop("extract.obs: sym.vec was given, but does not have the correct length")
+      }
+      for(i in c(1:nrObs)) {
+        if(!sym.vec[i]) {
+          isym.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
+        }
       }
     }
-  }
-  if(!missing(sign.vec)) {
-    if(length(sign.vec) != nrObs) {
-      stop("extract.obs: sign.vec was given, but does not have the correct length")
-    }
-    for(i in c(1:nrObs)) {
-      if(sign.vec[i] < 0) {
-        isign.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
+    if(!missing(sign.vec)) {
+      if(length(sign.vec) != nrObs) {
+        stop("extract.obs: sign.vec was given, but does not have the correct length")
+      }
+      for(i in c(1:nrObs)) {
+        if(sign.vec[i] < 0) {
+          isign.vec[((i-1)*Thalf*nrStypes+1):((i)*Thalf*nrStypes)] <- -1
+        }
       }
     }
-  }
 
-  cf <- t(array(isign.vec*(data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
-              dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
+    cf <- t(array(isign.vec*(data[,ind.vec[4]] + isym.vec*data[,ind.vec[5]]),
+                dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
+  }else{ # no symmetrisation
+    cf <- t(array(0,dim=c( nrObs*Time*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes) ) ) )
+    for(bw in c(0:1)){
+      # select forward or backward correlator
+      tmp <-  t(array(data=data[,ind.vec[4+bw]],dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
+      for(i in c(1:nrObs)){
+        for(s in c(1:nrStypes)){
+          # since we are not symmetrising, the individual correlators have T entries 
+          lhs <- c((bw+1):(Thalf-bw)) + (i-1)*nrStypes*Time  + (s-1)*Time  + bw*(Thalf-1)
+          # in the cmi format, the backward correlator is on time-slices 1 to T/2-1 (indices 2 to T/2)
+          rhs <- c((bw+1):(Thalf-bw)) + (i-1)*nrStypes*Thalf + (s-1)*Thalf
+          # but in "reverse" order (to ease averaging)
+          if( bw == 1 ) rhs <- rev(rhs)
+          cf[,lhs] <- tmp[,rhs]
+        }
+      }
+    }
+  }
   ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
