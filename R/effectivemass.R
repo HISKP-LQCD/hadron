@@ -41,15 +41,13 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       w <- 1
       if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
-      fn <- function(m, t, T, Ratio, w, deltat) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) /
-               (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))  ) )
+      fn <- function(m, t, T, Ratio, w) {
+        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) / (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
-        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w, deltat=deltat)
-                *fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w, deltat=deltat) > 0) effMass[i] <- NA
-        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w, deltat=deltat)$root
+        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
       }
     }
   }
