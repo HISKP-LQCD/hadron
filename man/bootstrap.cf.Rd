@@ -5,11 +5,11 @@
   bootstrap a set of correlation functions
 }
 \usage{
-bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234)
+bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
 }
 \arguments{
   \item{cf}{
-    correlation matrix obtained with a call to \code{extrac.obs}.
+    correlation matrix of \class{cf} e.g. obtained with a call to \code{extrac.obs}.
   }
   \item{boot.R}{
     number of bootstrap samples.
@@ -20,16 +20,23 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234)
   \item{seed}{
     seed for the random number generation used for boostrapping.
   }
+  \item{sim}{
+    The type of simulation required to generate the replicate
+    time series.  The possible input values are ‘"fixed"’ (block
+    resampling with fixed block lengths of ‘boot.l’) and ‘"geom"’ (block
+    resampling with block lengths having a geometric distribution with
+    mean ‘boot.l’). Default is ‘"geom"’.
+  }
 }
 \value{
-}
-\details{
-}
-\references{
+  returns an object of class \code{cf} with bootstrap samples added for
+  th correlation function called \code{cf.tsboot}. Moreover, the
+  original average of \code{cf} is returned as \code{cf0} and the
+  bootstrap errors as \code{tsboot.se}. We also copy the input
+  parameters over and set \code{bootstrap.samples} to \code{TRUE}.
 }
 \seealso{
+  \code{boot::tsboot}, \code{jackknife.cf}
 }
-\examples{
-}
-\author{}
-\keyword{}
+\author{Carsten Urbach, \email{curbach@gmx.de}}
+\keyword{bootstrap, time series, }
