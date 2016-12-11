@@ -4,7 +4,7 @@ cf <- function() {
   return(cf)
 }
 
-bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234) {
+bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom") {
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
   }
@@ -12,13 +12,67 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234) {
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
-  cf$cf0 <- apply(cf$cf, 2, mean)
+  cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   ## we set the seed for reproducability and correlation
   set.seed(seed)
   ## now we bootstrap the correlators
-  cf$cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x,2,mean))},
-                         R = boot.R, l=boot.l, sim="geom")
+  cf$cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                         R = boot.R, l=boot.l, sim=sim)
+  ## the bootstrap error
+  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
   return(invisible(cf))
+}
+
+jackknife.cf <- function(cf, boot.l=2) {
+  ## blocking not yet implemented
+  if(!any(class(cf) == "cf")) {
+    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
+  }
+  cf$jackknife.samples <- TRUE
+  cf$boot.l <- boot.l
+  ## blocking with fixed block length, we drop any reminder
+  cf$cf.blocked <- NULL
+  if(boot.l>1) {
+    nn <- ceiling(nrow(cf$cf)/boot.l)
+    cf$lengths <- rep(x=boot.l, times=nn - 1)
+    cf$starts <- cumsum(cf$lengths)
+    for(i in c(1:length(cf$starts))) {
+      cf$cf.blocked <- rbind(cf$cf.blocked, apply(pioncor$cf[c(cf$starts[i]:(cf$starts[i]+boot.l-1)),], MARGIN=2, FUN=mean))
+    }
+  }
+  else cf$cf.blocked <- cf$cf
+  cf$cf0 <- apply(cf$cf.blocked, MARGIN=2L, FUN=mean)
+  
+  cf$cf.jackknife <- array(NA, dim=dim(cf$cf.blocked))
+  for (i in 1:dim(cf$cf.blocked)[1]) {
+    cf$cf.jackknife[i, ] <- apply(cf$cf.blocked[-i,], MARGIN=2L, FUN=mean)
+  }
+  ## the jackknife error
+  cf$jackknife.se <- apply(cf$cf.jackknife, MARGIN=2L, FUN=function(x, n){sqrt(((n - 1)/n) * sum((x - mean(x))^2))},
+                           n=dim(cf$cf.jackknife)[1])
+  return(invisible(cf))
+}
+
+# Gamma method analysis on all time-slices in a 'cf' object
+uwerr.cf <- function(cf, absval=FALSE){
+  if(!inherits(cf, "cf")){
+    stop("uwerr.cf: cf must be of class 'cf'. Aborting...\n")
+  }
+  uwcf <- as.data.frame( 
+      t(
+          apply(X=cf$cf, MARGIN=2L, 
+                FUN=function(x){
+                  data <- x
+                  if(absval) data <- abs(x)
+                  uw <- uwerrprimary(data=data)
+                  c(value=uw$value, dvalue=uw$dvalue, ddvalue=uw$ddvalue,
+                    tauint=uw$tauint, dtauint=uw$dtauint)
+                }
+                )
+      ) 
+  )
+  
+  return(uwcf)
 }
 
 addConfIndex2cf <- function(cf, conf.index) {
@@ -146,27 +200,6 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   return(cf)
 }
 
-# Gamma method analysis on all time-slices in a 'cf' object
-uwerr.cf <- function(cf,absval=FALSE){
-  if(!inherits(cf, "cf")){
-    stop("uwerr.cf: cf must be of class 'cf'. Aborting...\n")
-  }
-  uwcf <- as.data.frame( 
-            t(
-              apply(X=cf$cf, MARGIN=2, 
-                    FUN=function(x){
-                          data <- x
-                          if(absval) data <- abs(x)
-                          uw <- uwerrprimary(data=data)
-                          c(value=uw$value, dvalue=uw$dvalue, ddvalue=uw$ddvalue,
-                                     tauint=uw$tauint, dtauint=uw$dtauint)
-                        }
-              )
-            ) 
-          )
-
-  return(uwcf)
-}
 
 as.cf <- function(x){
   if(!inherits(x, "cf")) class(x) <- c("cf", class(x))
@@ -224,10 +257,12 @@ c.cf <- function(...) {
 }
 
 plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
-  if(!cf$boot.samples) {
+  if(!cf$boot.samples && !cf$jackknife.samples) {
     cf <- bootstrap.cf(cf, boot.R, boot.l)
   }
-  Err <- apply(cf$cf.tsboot$t, 2, sd)
+  Err <- numeric(0)
+  if(cf$boot.samples) Err <- cf$tsboot.se
+  else if(cf$jackknife.samples) Err <- cf$jackknife.se
   plotwitherror(rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), cf$cf0, Err, ...)
   return(invisible(data.frame(t=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), CF=cf$cf0, Err=Err)))
 }
