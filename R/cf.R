@@ -8,6 +8,10 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom") {
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
   }
+  if(boot.l < 1) {
+    stop("boot.l must be larger than 0! Aborting...\n")
+  }
+  boot.l <- ceiling(boot.l)
   cf$boot.samples <- TRUE
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
@@ -28,28 +32,31 @@ jackknife.cf <- function(cf, boot.l=2) {
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
   }
+  if(boot.l < 1) {
+    stop("boot.l must be larger than 0! Aborting...\n")
+  }
+  boot.l <- ceiling(boot.l)
   cf$jackknife.samples <- TRUE
   cf$boot.l <- boot.l
-  ## blocking with fixed block length, we drop any reminder
-  cf$cf.blocked <- NULL
-  if(boot.l>1) {
-    nn <- ceiling(nrow(cf$cf)/boot.l)
-    cf$lengths <- rep(x=boot.l, times=nn - 1)
-    cf$starts <- cumsum(cf$lengths)
-    for(i in c(1:length(cf$starts))) {
-      cf$cf.blocked <- rbind(cf$cf.blocked, apply(pioncor$cf[c(cf$starts[i]:(cf$starts[i]+boot.l-1)),], MARGIN=2, FUN=mean))
-    }
-  }
-  else cf$cf.blocked <- cf$cf
-  cf$cf0 <- apply(cf$cf.blocked, MARGIN=2L, FUN=mean)
+  ## blocking with fixed block length, but overlapping blocks
+  ## number of observations
+  n <- nrow(cf$cf)
+  ## number of overlapping blocks
+  N <- n-boot.l+1
+  cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   
-  cf$cf.jackknife <- array(NA, dim=dim(cf$cf.blocked))
-  for (i in 1:dim(cf$cf.blocked)[1]) {
-    cf$cf.jackknife[i, ] <- apply(cf$cf.blocked[-i,], MARGIN=2L, FUN=mean)
+  cf$cf.jackknife <- array(NA, dim=c(N,ncol(cf$cf)))
+  for (i in 1:N) {
+    ii <- c(i:(i+boot.l-1))
+    ## jackknife replications of the mean
+    gammai <- apply(cf$cf[-ii,], MARGIN=2L, FUN=mean)
+    cf$cf.jackknife[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
   }
   ## the jackknife error
-  cf$jackknife.se <- apply(cf$cf.jackknife, MARGIN=2L, FUN=function(x, n){sqrt(((n - 1)/n) * sum((x - mean(x))^2))},
-                           n=dim(cf$cf.jackknife)[1])
+  tmp <- apply(cf$cf.jackknife, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
+  cf$jackknife.se <- apply(tmp, MARGIN=1L,
+                           FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
+                           n=n, N=N, l=boot.l)
   return(invisible(cf))
 }
 
