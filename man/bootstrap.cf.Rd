@@ -9,7 +9,7 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
 }
 \arguments{
   \item{cf}{
-    correlation matrix of \class{cf} e.g. obtained with a call to \code{extrac.obs}.
+    correlation matrix of class \code{cf} e.g. obtained with a call to \code{extrac.obs}.
   }
   \item{boot.R}{
     number of bootstrap samples.
