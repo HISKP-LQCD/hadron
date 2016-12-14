@@ -1,8 +1,8 @@
 \name{jackknifeafterboot}
-\alias{}
+\alias{jackknifeafterboot}
 \title{jackknife-after-bootstrap analysis}
 \description{
-  jackknife-after-bootstrap analysis for errors of errors of correlation
+  jackknife-after-bootstrap (JAB) analysis for errors of errors of correlation
   functions of class \code{cf}.
 }
 \usage{
@@ -15,12 +15,19 @@ correlator <- jackknifeafterboot(cor)
   }
 }
 \value{
+  Returns an object of class \code{cf} with an element
+  \code{jack.boot.se}, which is the JAB estimate of standard error of
+  the standard error.
 }
 \details{
 }
 \references{
+  S.N. Lahiri,
+  "On the jackknife-after-bootstrap method for dependent data and its consistency properties",
+  Econometric Theory, 2002, Vol. 18, 79-98
 }
 \seealso{
+  \code{\link{bootstrap.cf}}, \code{\link{cf}}, \code{\link{jackknife.cf}}
 }
 \examples{
 }
