@@ -1,0 +1,48 @@
+find.duplicates <- function(xstar, x) {
+  duplicated(c(xstar, x))[(length(x) + 1):(2 * length(x))]
+}
+
+jack.boot <- function(indices, xstar, f) {
+  apply(xstar[!indices, ], MARGIN=2L, FUN=f)
+}
+
+
+jackknifeafterboot <- function(cf) {
+  if(!any(class(cf) == "cf")) {
+    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
+  }
+  if(!cf$boot.sample) {
+    stop("cf must be bootstrapped already using bootstrap.cf! Aborting!\n")
+  }
+  if(cf$cf.tsboot$sim != "fixed") {
+    stop("JAB only implemented for 'sim=fixed' at the moment")
+  }
+
+  ## save random number generator state
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  else temp <- NULL
+
+  m <- 1
+  ## the resampling block indices
+  blockind <- boot:::ts.array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
+                              R=cf$boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
+
+  duplicates <- t(apply(blockind$starts, MARGIN=1L, FUN=find.duplicates, c(1:ncol(blockind$starts))))
+  jack.boot.values <- apply(duplicates, MARGIN=2L, FUN=jack.boot, xstar=cf$cf.tsboot$t, f=sd)
+
+  bootmeans <- apply(cf$cf.tsboot$t, MARGIN=2L, sd)
+
+  ## total number of blocks
+  N <- nrow(jack.boot.values)
+  M <- N - m + 1
+  phitilde <- (N*bootmeans - (N-m)*jack.boot.values)/m - bootmeans
+  jack.boot.se <- sqrt(m/(N-m)/M * apply(phitilde, MARGIN=1L,
+                                           FUN=function(x) {sum(x^2)}))
+  ## restore random number generator state
+  if (!is.null(temp))
+    assign(".Random.seed", temp, envir = .GlobalEnv)
+  else rm(.Random.seed, pos = 1)
+  cf$jack.boot.se <- jack.boot.se
+  return(invisible(cf))
+}
