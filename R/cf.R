@@ -4,31 +4,57 @@ cf <- function() {
   return(cf)
 }
 
-bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom") {
+gen.block.array <- function(n, R, l, endcorr=TRUE) {
+  endpt <- if (endcorr)
+             n
+           else n - l + 1
+  nn <- ceiling(n/l)
+  lens <- c(rep(l, nn - 1), 1 + (n - 1)%%l)
+  st <- matrix(sample.int(endpt, nn * R, replace = TRUE),
+               R)
+  return(list(starts = st, lengths = lens))
+}
+
+bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
+    
   if(!any(class(cf) == "cf")) {
-    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
-  }
-  if(boot.l < 1) {
-    stop("boot.l must be larger than 0! Aborting...\n")
+    stop("bootstrap.cf requires an object of class 'cf' as input! Aborting!\n")
   }
   boot.l <- ceiling(boot.l)
+  if(boot.l < 1 || boot.l > nrow(cf$cf)) {
+    stop("'boot.l' must be larger than 0 and smaller than the length of the time series! Aborting...\n")
+  }
+  boot.R <- floor(boot.R)
+  if(boot.R < 1) {
+    stop("'boot.R' must be positive!")
+  }
+  ## save random number generator state
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  else temp <- NULL
+
   cf$boot.samples <- TRUE
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
+  cf$sim <- sim
   cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   ## we set the seed for reproducability and correlation
-  set.seed(seed)
+  assign(".Random.seed", seed, envir = .GlobalEnv)
   ## now we bootstrap the correlators
   cf$cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                         R = boot.R, l=boot.l, sim=sim)
+                         R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
   ## the bootstrap error
   cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
+  ## restore random number generator state
+  if (!is.null(temp))
+    assign(".Random.seed", temp, envir = .GlobalEnv)
+  else rm(.Random.seed, pos = 1)
+  
   return(invisible(cf))
 }
 
 jackknife.cf <- function(cf, boot.l=2) {
-  ## blocking not yet implemented
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
   }
@@ -45,15 +71,18 @@ jackknife.cf <- function(cf, boot.l=2) {
   N <- n-boot.l+1
   cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   
-  cf$cf.jackknife <- array(NA, dim=c(N,ncol(cf$cf)))
+  cf$cf.jackknife <- list()
+  cf$cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
+  cf$cf.jackknife$t0 <- cf$cf0
+  cf$cf.jackknife$l <- boot.l
   for (i in 1:N) {
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
     gammai <- apply(cf$cf[-ii,], MARGIN=2L, FUN=mean)
-    cf$cf.jackknife[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
+    cf$cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
   }
   ## the jackknife error
-  tmp <- apply(cf$cf.jackknife, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
+  tmp <- apply(cf$cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
   cf$jackknife.se <- apply(tmp, MARGIN=1L,
                            FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
