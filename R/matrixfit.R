@@ -328,6 +328,9 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed, N=N, model=model, fit.method=fit.method)
+  res$t <- t(opt.tsboot)
+  res$t0 <- c(opt.res$par, opt.res$value)
+  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=sd)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }
@@ -365,7 +368,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
       ## there is some level of waste because certain combinations of parameters might
       ## occur multiple times, but the overhead is small and this way is the most convenient
 
-      parCov <- cov(t(mfit$opt.tsboot[par.ind,]))
+      parCov <- cov(mfit$t[,par.ind])
 
       ## 3 by length(tx) array of derivatives of the model with respect to the three parameters
       ## if any parameters are the same, multiplication with the covariance matrix will give
@@ -394,9 +397,9 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
   if(interactive()) {
     X11()
   }
-  s <- seq(0,1,1./length(mfit$opt.tsboot[1,]))
+  s <- seq(0,1,1./length(mfit$t[,1]))
   x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
-  qqplot(x=x, y=mfit$opt.tsboot[length(mfit$opt.tsboot[,1]), ], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
+  qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
 }
 
 
@@ -406,11 +409,11 @@ summary.matrixfit <- function(mfit) {
   cat("time range from", mfit$t1, " to ", mfit$t2, "\n")
   cat("mass:\n")
   cat("m \t=\t", mfit$opt.res$par[1], "\n")
-  cat("dm\t=\t", sd(mfit$opt.tsboot[1,]), "\n")
+  cat("dm\t=\t", sd(mfit$t[,1]), "\n")
   cat("\nAmplitudes:\n")
   for(i in 2:length(mfit$opt.res$par)) {
     cat("P",i-1,"\t=\t", mfit$opt.res$par[i], "\n")
-    cat("dP",i-1,"\t=\t", sd(mfit$opt.tsboot[i,]), "\n")
+    cat("dP",i-1,"\t=\t", sd(mfit$t[,i]), "\n")
   }
   cat("\n")
   cat("boot.R\t=\t", mfit$boot.R, " (bootstrap samples)\n")
@@ -485,7 +488,7 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
     if(from.samples && cf$boot.samples) {
       cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
       for(i in 1:cf$boot.R) {
-        cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$opt.tsboot[c(1:length(mfit$opt.res$par)),i],
+        cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$t[i, c(1:length(mfit$opt.res$par))],
                                             tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
       }
     }

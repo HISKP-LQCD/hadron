@@ -93,10 +93,23 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
     (CF above, say), which are contained in the fit range
   }
   \item{opt.res}{
-    return value of the minimization (see ?optim)
+    return value of the minimization (see ?optim) on the original data.
   }
-  \item{opt.tsboot}{
-    bootstrap analysis of Chi squared minimization
+  \item{t0}{
+    Result of the chisqr fit on the original data. \code{t0} is a vector
+    of length npar+1, where \code{npar} the number of fit
+    parameters. The last value is the chisqr value.
+  }
+  \item{t}{
+    Bootstrap samples of the \code{R} Chi squared minimizations of
+    length(par)+1. \code{t} has dimension \eqn{R x (npar+1)}, where \code{R}
+    is the number of bootstrap samples and \code{npar} the number of fit
+    parameters. The last column corresponds to the chisquare values.
+  }
+  \item{se}{
+    Bootstrap estimate of standard error for all parameters. \code{se}
+    is a vector of length \code{npar}, where \code{npar} the number of fit
+    parameters.
   }
   \item{useCov}{
     whether covariances in the data were taken into account
