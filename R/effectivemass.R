@@ -109,6 +109,10 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
+  ret$cf <- cf
+  ret$t0 <- effMass
+  ret$t <- effMass.tsboot
+  ret.se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -123,10 +127,15 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   if((t2 <= t1) || (t1 < 0) || (t2 > (cf$Time/2-1))) {
     stop("t1 < t2 and both in 0...T/2-1 is required. Aborting...\n")
   }
+  cf$effmassfit <- list()
   cf$t1 <- t1
+  cf$effmassfit$t1 <- t1
   cf$t2 <- t2
+  cf$effmassfit$t2 <- t2
   cf$useCov <- useCov
+  cf$effmassfit$useCov <- useCov
   cf$replace.na <- replace.na
+  cf$effmassfit$replace.na <- replace.na
   
   ## create an index array for the fit range
   ## the '+1' for Fortran index convention
@@ -151,7 +160,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
   
   cf$CovMatrix <- CovMatrix
-  
+  cf$effmassfit$CovMatrix <- CovMatrix
   tb.save <- cf$effMass.tsboot
   ## now we replace all NAs by randomly chosen other bootstrap values
   ## or remove a given column if there are too many NAs to resample
@@ -185,7 +194,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   }
   cf$ii <- ii
   cf$dof <-  length(ii)-1
-
+  cf$effmassfit$ii <- ii
+  cf$effmassfit$dof <- length(ii)-1
   ## and treat the inverse covariance matrix accordingly
   if(useCov) {
     ## recompute covariance matrix and compute the correctly normalised inverse
@@ -213,7 +223,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
 
   cf$chisqr <- opt.res$value
   cf$Qval <- 1-pchisq(cf$chisqr, cf$dof)
-
+  cf$effmassfit$chisqr <- opt.res$value
+  cf$effmassfit$Qval <- 1-pchisq(cf$chisqr, cf$dof)
   if( boot.fit ) {
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
@@ -229,12 +240,15 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   else {
     cf$massfit.tsboot <- NA
   } # if(boot.fit)
-
+  cf$effmassfit$t <- cf$massfit.tsboot
+  cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
+  cf$effmassfit$se <-   apply(massfit.tsboot[,c(1:(dim(massfit.tsboot)[1]-1))], MARGIN=2, FUN=sd)
   cf$effMass.tsboot <- tb.save
 
   cf$invCovMatrix <- M
   cf$opt.res <- opt.res
   cf$useCov <- useCov
+  cf$effmassfit$useCov <- useCov
   attr(cf, "class") <- c("effectivemassfit", class(cf))
   return(invisible(cf))
 }
@@ -245,9 +259,9 @@ summary.effectivemass <- function(effMass) {
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
   cat("Time extend\t=\t", effMass$Time, "\n")
-  cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$effMass.tsboot))), "\n")
+  cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$t))), "\n")
   cat("values with errors:\n\n")
-  print(data.frame(t= effMass$t, m = effMass$effMass, dm = effMass$deffMass))
+  print(data.frame(t= effMass$t, m = effMass$t0, dm = effMass$se))
 }
 
 summary.effectivemassfit <- function(effMass, verbose=FALSE) {
@@ -257,23 +271,23 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
   cat("Time extend\t=\t", effMass$Time, "\n")
-  cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$effMass.tsboot[,effMass$ii]))),
-      "(",100*length(which(is.na(effMass$effMass.tsboot[,effMass$ii])))/ length(effMass$effMass.tsboot[,effMass$ii]), "%)\n")
-  cat("NAs replaced in fit:", effMass$replace.na, "\n")
-  cat("time range from", effMass$t1, " to ", effMass$t2, "\n")
+  cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$t[,effMass$ii]))),
+      "(",100*length(which(is.na(effMass$t[,effMass$ii])))/ length(effMass$t[,effMass$ii]), "%)\n")
+  cat("NAs replaced in fit:", effMass$effmassfit$replace.na, "\n")
+  cat("time range from", effMass$effmassfit$t1, " to ", effMass$effmassfit$t2, "\n")
   cat("No correlation functions", effMass$nrObs, "\n")
   if(verbose) {
     cat("values with errors:\n\n")
-    print(data.frame(t= effMass$t, m = effMass$effMass, dm = effMass$deffMass))
+    print(data.frame(t= effMass$t, m = effMass$t0, dm = effMass$se))
   }
-  cat("correlated fit\t=\t", effMass$useCov, "\n")
-  cat("m\t=\t", effMass$opt.res$par[1], "\n")
-  cat("dm\t=\t", sd(effMass$massfit.tsboot[,1]), "\n")
-  cat("chisqr\t=\t", effMass$chisqr, "\n")
-  cat("dof\t=\t", effMass$dof, "\n")
+  cat("correlated fit\t=\t", effMass$effmassfit$useCov, "\n")
+  cat("m\t=\t", effMass$effmassfit$t0[1], "\n")
+  cat("dm\t=\t", effMass$effmassfit$se[1], "\n")
+  cat("chisqr\t=\t", effMass$effmassfit$chisqr, "\n")
+  cat("dof\t=\t", effMass$effmassfit$dof, "\n")
   cat("chisqr/dof=\t",
-      effMass$opt.res$value/effMass$dof, "\n")
-  cat("Quality of the fit (p-value):",   effMass$Qval, "\n")
+      effMass$effmassfit$chisqr/effMass$effmassfit$dof, "\n")
+  cat("Quality of the fit (p-value):",   effMass$effmassfit$Qval, "\n")
 
 }
 
@@ -288,24 +302,24 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   op <- options()
   options(warn=-1)
   t <- effMass$t
-  plotwitherror(t-1, effMass$effMass[t], effMass$deffMass[t], col=col[1], ...)
+  plotwitherror(t-1, effMass$t0[t], effMass$se[t], col=col[1], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      plotwitherror(t-1, effMass$effMass[t+i*effMass$Time/2], effMass$deffMass[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
+      plotwitherror(t-1, effMass$t0[t+i*effMass$Time/2], effMass$se[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
     }
   }
   options(op)
   if(!missing(ref.value)) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }
-  if(!is.null(effMass$opt.res)) {
-    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1],
-           x1=effMass$t2, y1=effMass$opt.res$par[1], col=c("red"), length=0)
-    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]),
-           x1=effMass$t2, y1=effMass$opt.res$par[1]+sd(effMass$massfit.tsboot[,1]),
+  if(!is.null(effMass$effmassfit)) {
+    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1],
+           x1=effMass$t2, y1=effMass$effmassfit$t0[1], col=c("red"), length=0)
+    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
+           x1=effMass$t2, y1=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
            col=c("red"), length=0, lwd=c(1))
-    arrows(x0=effMass$t1, y0=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]),
-           x1=effMass$t2, y1=effMass$opt.res$par[1]-sd(effMass$massfit.tsboot[,1]),
+    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
+           x1=effMass$t2, y1=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
            col=c("red"), length=0, lwd=c(1))
   }
 }
