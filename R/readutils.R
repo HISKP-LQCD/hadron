@@ -320,7 +320,7 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
       cat("file ", ifs, "does not exist...\n")
     }
   }
-  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
