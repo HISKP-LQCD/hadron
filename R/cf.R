@@ -40,7 +40,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   cf$sim <- sim
   cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   ## we set the seed for reproducability and correlation
-  assign(".Random.seed", seed, envir = .GlobalEnv)
+  set.seed(seed)
   ## now we bootstrap the correlators
   cf$cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                          R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
@@ -301,4 +301,36 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   else if(cf$jackknife.samples) Err <- cf$jackknife.se
   plotwitherror(rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), cf$cf0, Err, ...)
   return(invisible(data.frame(t=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), CF=cf$cf0, Err=Err)))
+}
+
+summary.cf <- function(cf) {
+  cat("T = ", cf$Time, "\n")
+  cat("observations = ", dim(cf$cf)[1], "\n")
+  cat("Nr Stypes = ", cf$nrStypes, "\n")
+  cat("Nr Obs    = ", cf$nrObs, "\n")
+  if(cf$boot.samples) {
+    cat("R = ", cf$boot.R, "\n")
+  }
+  if(cf$boot.samples || !is.null(cf$jackknife.se)) {
+    cat("l = ", cf$boot.l, "\n")
+    out <- data.frame(t=c(0:(T/2)), C=cf$cf0)
+  }
+  if(!is.null(cf$sim)) {
+    cat("sim = ", cf$sim, "\n")
+  }
+
+  if(!is.null(cf$tsboot.se)) {
+    out <- cbind(out, tsboot.se=cf$tsboot.se)
+  }
+  if(!is.null(cf$jackknife.se)) {
+    out <- cbind(out, jackknife.se=cf$jackknife.se)
+  }
+  if(!is.null(cf$jack.boot.se)) {
+    out <- cbind(out, jab.se=cf$jack.boot.se)
+  }
+  print(out)
+}
+
+print.cf <- function(cf) {
+  summary(cf)
 }
