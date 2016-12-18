@@ -171,51 +171,40 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   return(invisible(res))
 }
 
-
-
 uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
-
-  Nalpha <- length(data[,1])
-  N <- length(data[1,])
+  ## for improving performance we should transpose data!
+  data <- t(data)
+  Nalpha <- dim(data)[2]
+  N <- dim(data)[1]
   if(missing(nrep)) {
     nrep <- c(N)
   }
   if(any(nrep < 1) || (sum(nrep) != N)) {
     stop("Error, inconsistent N and nrep!")
   }
-  R=length(nrep)
-  abb <- c(1:Nalpha) #total mean
+  R <- length(nrep)
   abr <- array(0., dim=c(R,Nalpha)) #replicum mean
-  for (i in 1:Nalpha) {
-    abb[i] <- mean(data[i,])
-  }
-  i0=1
+  ## total mean
+  abb <- apply(data, MARGIN=2L, FUN=mean)
+  i0 <- 1
   for(r in 1:R) {
     i1 <- i0-1+nrep[r]
-    for (i in 1:Nalpha) {
-      abr[r,i] <- mean(data[i, i0:i1])
-    }
+    abr[r,] <- apply(data[i0:i1,], MARGIN=2L, FUN=mean)
     i0 <- i0+nrep[r]
   }
 
   Fbb <- f(abb, ...)
-  Fbr <- rep(0., times=R)
-  for(r in 1:R) {
-    Fbr[r] <-  f(abr[r,], ...)
-  }
-  Fb=sum(Fbr*nrep)/N;  # weighted mean of replica means
+  Fbr <- apply(abr, MARGIN=1L, FUN=f, ...)
+  Fb <- sum(Fbr*nrep)/N;  # weighted mean of replica means
 
-  fgrad=rep(0., times=Nalpha)
-  h <- c(1:Nalpha)
-  for (i in 1:Nalpha) {
-    h[i] <- stats::sd(data[(i),])/sqrt(N)
-  }
+  fgrad <- rep(0., times=Nalpha)
+  h <- apply(data, MARGIN=2L, FUN=sd)/sqrt(N)
 
   ainc <- abb
 
   for (alpha in 1:Nalpha) {
     if (h[alpha] == 0) {
-      # Data for this observable do not fluctuate
+      ## Data for this observable do not fluctuate
       fgrad[alpha]=0
     }
     else {
@@ -229,9 +218,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     }
   }
 
-# projected deviations: 
-#  delpro <- (t(data) %*% fgrad) - rep(abb %*% fgrad, times=N)
-  delpro <- crossprod(data, fgrad) - rep(abb %*% fgrad, times=N)
+  ## projected deviations: 
+  delpro <- crossprod(t(data), fgrad) - rep(abb %*% fgrad, times=N)
 
   GammaFbb<-numeric()
   GammaFbb[1] <- mean(delpro^2)
@@ -273,7 +261,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
       GammaFbb[W+1] <- GammaFbb[W+1] + sum(delpro[i0:(i1-W)]*delpro[(i0+W):i1])
       i0 <- i0+nrep[r]
     }    
-    GammaFbb[W+1] = GammaFbb[W+1]/(N-R*W)
+    GammaFbb[W+1] <- GammaFbb[W+1]/(N-R*W)
     #GammaFbb[(W+1)] <- sum(delpro[1:(N-W)]*delpro[(1+W):N])/(N-W)
     if(flag) {
       Gint <- Gint+GammaFbb[(W+1)]/GammaFbb[1]
@@ -300,23 +288,22 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)])
   if(CFbbopt <= 0) {
-    #stop("Gamma pathological, estimated error^2 <0\n")
+    ##stop("Gamma pathological, estimated error^2 <0\n")
     warning("Gamma pathological, estimated error^2 <0\n")
   }
   GammaFbb <- GammaFbb+CFbbopt/N # bias in Gamma corrected
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
-# Why can CFbbopt get negative?
   sigmaF <- sqrt(abs(CFbbopt)/N) #error of F
   rho <- GammaFbb/GammaFbb[1]
   tauintFbb <- cumsum(rho)-0.5 #normalised autocorrelation
 
-  # bias cancellation for the mean value
+  ## bias cancellation for the mean value
 
   if(R >= 2) {
     bF <- (Fb-Fbb)/(R-1);
     Fbb <- Fbb - bF;
     if(abs(bF) > sigmaF/4) {
-      warning("a %.1f sigma bias of the mean has been cancelled",bF/sigmaF)
+      warning("a %.1f sigma bias of the mean has been cancelled", bF/sigmaF)
     }
     
     Fbr = Fbr - bF*N/nrep;
