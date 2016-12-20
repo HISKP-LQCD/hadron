@@ -172,8 +172,6 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
 }
 
 uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
-  ## for improving performance we should transpose data!
-  data <- t(data)
   Nalpha <- dim(data)[2]
   N <- dim(data)[1]
   if(missing(nrep)) {

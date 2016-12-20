@@ -27,8 +27,8 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     f must return a scalar object of numeric type.
   }
   \item{data}{
-    array of data to be analysed. It must be of dimension (Nalpha x N)
-    (i.e. Nalpha rows and N columns),
+    array of data to be analysed. It must be of dimension (N x Nalpha)
+    (i.e. N rows and Nalpha columns),
     where N is the total number of measurements and Nalpha is the number
     of primary observables
   }

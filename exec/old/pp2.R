@@ -60,9 +60,9 @@ interpolateSigma <- function(filename1, filename2, skip=0, from1, to1, from2, to
                        mu=0., dmu=0., ddmu=0., mutauint=0., mudtauint=0., r0muZp =0.,
                        dr0muZp=0.)
   cat("Found", length(psscar1$ps)/T2, "measurements, skipping", skip, " \n")
-  sigma <- uwerrderived(getSigmaInter, W[,skip:length(W[1,(skip):(length(psscar1$ps)/T2)])], S, plot=F, from1, to1,
+  sigma <- uwerrderived(getSigmaInter, t(W[,skip:length(W[1,(skip):(length(psscar1$ps)/T2)])]), S, plot=F, from1, to1,
                         from2, to2, T2, A, m, mu1, mu2, r0, r0mpssq)
-  mu <- uwerrderived(getMuIntermps, W[,skip:length(W[(skip):(length(psscar1$ps)/T2)])], S, plot=F, from1, to1,
+  mu <- uwerrderived(getMuIntermps, t(W[,skip:length(W[(skip):(length(psscar1$ps)/T2)])]), S, plot=F, from1, to1,
                      from2, to2, T2, A, m, mu1, mu2, r0, r0mpssq)
   
   result$sigma <- sigma$value[1]
@@ -125,9 +125,9 @@ interpolateMu <- function(filename1, filename2, skip=0, from1, to1, from2, to2,
                        mumps = 0., dmumps = 0., ddmumps = 0., mumpstauint=0., mumpsdtauint=0., r0mumpsZp=0., dr0mumpsZp=0.,
                        mufps = 0., dmufps = 0., ddmufps = 0., mufpstauint=0., mufpsdtauint=0., r0mufpsZp=0., dr0mufpsZp=0.)
   cat("Found", length(psscar1$ps)/T2, "measurements, skipping", skip, " \n")
-  mumps <- uwerrderived(getMuIntermps, W[,skip:length(W[1,])], S, plot=F, from1, to1,
+  mumps <- uwerrderived(getMuIntermps, t(W[,skip:length(W[1,])]), S, plot=F, from1, to1,
                         from2, to2, T2, A, m, mu1, mu2, r0, r0mpssq)
-  mufps <- uwerrderived(getMuInterfps, W[,skip:length(W[1,])], S, plot=F, from1, to1,
+  mufps <- uwerrderived(getMuInterfps, t(W[,skip:length(W[1,])]), S, plot=F, from1, to1,
                         from2, to2, T2, A, m, mu1, mu2, r0, r0fps)
   
   result$mumps <- mumps$value[1]
@@ -195,16 +195,16 @@ ppfit <- function(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE,
   cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
   cat("fitting from timeslice", from, " to timeslice ", to, " !\n")
 
-  try(mass <- uwerrderived(getmass2, data=W[(from):to,skip:(length(psscar$ps)/T2)],
+  try(mass <- uwerrderived(getmass2, data=t(W[(from):to,skip:(length(psscar$ps)/T2)]),
                            S, plot=debug, T2, from, to, A, m, debug=debug))
 
-  try(amp <- uwerrderived(getamp2, data=W[(from):to,skip:(length(psscar$ps)/T2)],
+  try(amp <- uwerrderived(getamp2, data=t(W[(from):to,skip:(length(psscar$ps)/T2)]),
                            S, plot=debug, T2, from, to, A, m, debug=debug))
 
-  try(fpi <- uwerrderived(getfpi2, data=W[(from):to,skip:(length(psscar$ps)/T2)],
+  try(fpi <- uwerrderived(getfpi2, data=t(W[(from):to,skip:(length(psscar$ps)/T2)]),
                            S, plot=debug, T2, from, to, A, m, debug=debug, mu=mu))
 
-  try(sigma <- uwerrderived(getsigma2, data=W[(from):to,skip:(length(psscar$ps)/T2)],
+  try(sigma <- uwerrderived(getsigma2, data=t(W[(from):to,skip:(length(psscar$ps)/T2)]),
                           S, plot=debug, T2, from, to, A, m, debug=debug, mu=mu))
   
   result$mass <- mass$value[1]

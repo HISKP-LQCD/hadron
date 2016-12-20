@@ -94,11 +94,11 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
 
   ## with UWERR method
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmasses.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
+    fit.uwerrm <- uwerr(f=fitmasses.smeared, data=t(W[ii,]), S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine=fit.routine)
 
-    fit.uwerrf <- uwerr(f=fitf.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
+    fit.uwerrf <- uwerr(f=fitf.smeared, data=t(W[ii,]), S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine=fit.routine)
   }
