@@ -112,7 +112,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   ret$cf <- cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
-  ret.se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
+  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -147,37 +147,37 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
 
   ## get rid of the NAs for the fit, if there are any
   if(any(is.na(cf$effMass[ii]))) {
-    ii.na <- which(is.na(cf$effMass[ii]))
+    ii.na <- which(is.na(cf$t0[ii]))
     ii <- ii[-ii.na]
   }
 
-  CovMatrix <- cov(cf$effMass.tsboot[,ii])
+  CovMatrix <- cov(cf$t[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
-  M <- diag(1/cf$deffMass[ii]^2)
+  M <- diag(1/cf$se[ii]^2)
 
   ## the chisqr function
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
   
   cf$CovMatrix <- CovMatrix
   cf$effmassfit$CovMatrix <- CovMatrix
-  tb.save <- cf$effMass.tsboot
+  tb.save <- cf$t
   ## now we replace all NAs by randomly chosen other bootstrap values
   ## or remove a given column if there are too many NAs to resample
   ii.remove <- c()
-  if(replace.na && any(is.na(cf$effMass.tsboot))) {
+  if(replace.na && any(is.na(cf$t))) {
     for(k in ii) {
-      cf$effMass.tsboot[is.nan(cf$effMass.tsboot[,k]),k] <- NA
-      if(any(is.na(cf$effMass.tsboot[,k]))) {
+      cf$t[is.nan(cf$t[,k]),k] <- NA
+      if(any(is.na(cf$t[,k]))) {
         ## indices of NA elements
-        jj <- which(is.na(cf$effMass.tsboot[,k]))
+        jj <- which(is.na(cf$t[,k]))
         ## if there are more NA elements than non-NA elements, the replacement
         ## below will fail
-        if( length(cf$effMass.tsboot[-jj, k]) > length(jj) ) {
-          ## random indices in the non-NA elements of effMass.tsboot
-          rj <- sample.int(n=length(cf$effMass.tsboot[-jj, k]), size=length(jj), replace=FALSE)
+        if( length(cf$t[-jj, k]) > length(jj) ) {
+          ## random indices in the non-NA elements of t
+          rj <- sample.int(n=length(cf$t[-jj, k]), size=length(jj), replace=FALSE)
           ## replace
-          cf$effMass.tsboot[jj, k] <- cf$effMass.tsboot[-jj, k][rj]
+          cf$t[jj, k] <- cf$t[-jj, k][rj]
         }
         else {
           ## so we remove this column from the analysis below
@@ -199,7 +199,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## and treat the inverse covariance matrix accordingly
   if(useCov) {
     ## recompute covariance matrix and compute the correctly normalised inverse
-    M <- try(invertCovMatrix(cf$effMass.tsboot[,ii], boot.samples=TRUE), silent=TRUE)
+    M <- try(invertCovMatrix(cf$t[,ii], boot.samples=TRUE), silent=TRUE)
     if(inherits(M, "try-error")) {
       M <- M[ -ii.remove, -ii.remove]
       warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
@@ -231,7 +231,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     for(i in c(1:cf$boot.R)) {
       opt <- optim(par, fn = fn,
                    control=list(parscale=1/par),
-                   method="BFGS", M=M, y = cf$effMass.tsboot[i,ii])
+                   method="BFGS", M=M, y = cf$t[i,ii])
       massfit.tsboot[i, 1] <- opt$par[1]
       massfit.tsboot[i, 2] <- opt$value
     }
@@ -242,8 +242,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   } # if(boot.fit)
   cf$effmassfit$t <- cf$massfit.tsboot
   cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
-  cf$effmassfit$se <-   apply(massfit.tsboot[,c(1:(dim(massfit.tsboot)[1]-1))], MARGIN=2, FUN=sd)
-  cf$effMass.tsboot <- tb.save
+  cf$effmassfit$se <-   apply(massfit.tsboot[,c(1:(dim(massfit.tsboot)[1]-1))], MARGIN=2L, FUN=sd)
+  cf$effmassfit$cf <- cf$cf
+  cf$t <- tb.save
 
   cf$invCovMatrix <- M
   cf$opt.res <- opt.res
