@@ -194,6 +194,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   }
 
   Fbb <- f(abb, ...)
+  ## f evaluated on single replicas
   Fbr <- apply(abr, MARGIN=1L, FUN=f, ...)
   Fb <- sum(Fbr*nrep)/N;  # weighted mean of replica means
 
@@ -232,13 +233,12 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     res <- list(value = Fbb, dvalue = NA, ddvalue = NA,
                 tauint = NA, dtauint = NA, Wopt=NA, Wmax=NA,
                 tauintofW=NA, dtauintofW=NA,
-                Qval=NA, S=S,
+                Qval=NA, S=S, fgrad=fgrad,
                 N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=0)
     
     attr(res, "class") <- c("uwerr", "list")
     options(error = NULL)
     return(invisible(res))
-    
   }
 
   if(S==0) {
@@ -329,7 +329,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   res <- list(value = value, dvalue = dvalue, ddvalue = ddvalue,
               tauint = tauint, dtauint = dtauint, Wopt=Wopt, Wmax=Wmax,
               tauintofW=tauintFbb[1:(Wmax+1)], dtauintofW=dtauintofW[1:(Wmax+1)],
-              Qval=Qval, S=S,
+              Qval=Qval, S=S, fgrad=fgrad,
               N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=0)
 
   attr(res, "class") <- c("uwerr", "list")
