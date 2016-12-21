@@ -48,21 +48,21 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
 
     
     result$t[i] <- cutoff-1
-    result$mass[i] <- mass$value[1]
-    result$dmass[i] <- mass$dvalue[1]
-    result$amp[i] <- amp$value[1]
-    result$damp[i] <- amp$dvalue[1]
-    result$ddmass[i] <- mass$ddvalue[1]
-    result$masstauint[i] <- mass$tauint[1]
-    result$massdtauint[i] <- mass$dtauint[1]
-    result$ddamp[i] <- amp$ddvalue[1]
-    result$amptauint[i] <- amp$tauint[1]
-    result$ampdtauint[i] <- amp$dtauint[1]
+    result$mass[i] <- mass$res$value[1]
+    result$dmass[i] <- mass$res$dvalue[1]
+    result$amp[i] <- amp$res$value[1]
+    result$damp[i] <- amp$res$dvalue[1]
+    result$ddmass[i] <- mass$res$ddvalue[1]
+    result$masstauint[i] <- mass$res$tauint[1]
+    result$massdtauint[i] <- mass$res$dtauint[1]
+    result$ddamp[i] <- amp$res$ddvalue[1]
+    result$amptauint[i] <- amp$res$tauint[1]
+    result$ampdtauint[i] <- amp$res$dtauint[1]
     if(!missing(mq)) {
-      result$fps[i] <- fps$value
-      result$dfps[i] <- fps$dvalue
-      result$fpstauint[i] <- fps$tauint
-      result$fpsdtauint[i] <- fps$dtauint
+      result$fps[i] <- fps$res$value
+      result$dfps[i] <- fps$res$dvalue
+      result$fpstauint[i] <- fps$res$tauint
+      result$fpsdtauint[i] <- fps$res$dtauint
     }
     i=i+1
   }
@@ -100,11 +100,11 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
     try(mass <- uwerrderived(f=effmass2, data=t(Z[t:(t+1),]), S=S, pl=F, timeextent=Time, t=t, ...))
 
     result$t[i] <- t-1
-    result$mass[i] <- mass$value[1]
-    result$dmass[i] <- mass$dvalue[1]
-    result$ddmass[i] <- mass$ddvalue[1]
-    result$tauint[i] <- mass$tauint[1]
-    result$dtauint[i] <- mass$dtauint[1]
+    result$mass[i] <- mass$res$value[1]
+    result$dmass[i] <- mass$res$dvalue[1]
+    result$ddmass[i] <- mass$res$ddvalue[1]
+    result$tauint[i] <- mass$res$tauint[1]
+    result$dtauint[i] <- mass$res$dtauint[1]
     i = i+1
   }
   rm(mass)
@@ -145,11 +145,11 @@ ppeffectivemass <- function(filename, psscar, from, to, skip=0, S=1.5, plotit=F)
     try(mass <- uwerrderived(f=effmass, data=t(rbind(Z[t:(t+1),skip:length(Z[1,])], Z[(T2+2-t-1):(T2+2-t),skip:length(Z[1,])])), S=S, pl=F, timeextent=T2, t=t))
 
     result$t[i] <- t-1
-    result$mass[i] <- mass$value[1]
-    result$dmass[i] <- mass$dvalue[1]
-    result$ddmass[i] <- mass$ddvalue[1]
-    result$tauint[i] <- mass$tauint[1]
-    result$dtauint[i] <- mass$dtauint[1]
+    result$mass[i] <- mass$res$value[1]
+    result$dmass[i] <- mass$res$dvalue[1]
+    result$ddmass[i] <- mass$res$ddvalue[1]
+    result$tauint[i] <- mass$res$tauint[1]
+    result$dtauint[i] <- mass$res$dtauint[1]
     i = i+1
   }
 
