@@ -65,20 +65,20 @@ interpolateSigma <- function(filename1, filename2, skip=0, from1, to1, from2, to
   mu <- uwerrderived(getMuIntermps, t(W[,skip:length(W[(skip):(length(psscar1$ps)/T2)])]), S, plot=F, from1, to1,
                      from2, to2, T2, A, m, mu1, mu2, r0, r0mpssq)
   
-  result$sigma <- sigma$value[1]
-  result$dsigma <- sigma$dvalue[1]
-  result$ddsigma <- sigma$ddvalue[1]
-  result$sigmatauint <- sigma$tauint[1]
-  result$sigmadtauint <- sigma$dtauint[1]
-  result$sigmaZpr0c <- sigma$value[1]*Zp*r0^3/2.
-  result$dsigmaZpr0c <- r0^3*(sqrt(sigma$value[1]^2*dZp^2 + sigma$dvalue[1]^2*Zp^2))/2.
-  result$mu <- mu$value
-  result$dmu <- mu$dvalue
-  result$ddmu <- mu$ddvalue
-  result$mutauint <- mu$tauint
-  result$mudtauint <- mu$dtauint
-  result$r0muZp <- r0*mu$value/Zp
-  result$dr0muZp <- r0*sqrt((mu$dvalue/Zp)^2 + (mu$value/Zp^2*dZp)^2)
+  result$sigma <- sigma$res$value[1]
+  result$dsigma <- sigma$res$dvalue[1]
+  result$ddsigma <- sigma$res$ddvalue[1]
+  result$sigmatauint <- sigma$res$tauint[1]
+  result$sigmadtauint <- sigma$res$dtauint[1]
+  result$sigmaZpr0c <- sigma$res$value[1]*Zp*r0^3/2.
+  result$dsigmaZpr0c <- r0^3*(sqrt(sigma$res$value[1]^2*dZp^2 + sigma$res$dvalue[1]^2*Zp^2))/2.
+  result$mu <- mu$res$value
+  result$dmu <- mu$res$dvalue
+  result$ddmu <- mu$res$ddvalue
+  result$mutauint <- mu$res$tauint
+  result$mudtauint <- mu$res$dtauint
+  result$r0muZp <- r0*mu$res$value/Zp
+  result$dr0muZp <- r0*sqrt((mu$res$dvalue/Zp)^2 + (mu$res$value/Zp^2*dZp)^2)
   return(result)
 }
 
@@ -130,20 +130,20 @@ interpolateMu <- function(filename1, filename2, skip=0, from1, to1, from2, to2,
   mufps <- uwerrderived(getMuInterfps, t(W[,skip:length(W[1,])]), S, plot=F, from1, to1,
                         from2, to2, T2, A, m, mu1, mu2, r0, r0fps)
   
-  result$mumps <- mumps$value[1]
-  result$dmumps <- mumps$dvalue[1]
-  result$ddmumps <- mumps$ddvalue[1]
-  result$mumpstauint <- mumps$tauint[1]
-  result$mumpsdtauint <- mumps$dtauint[1]
-  result$r0mumpsZp <- r0*mumps$value/Zp
-  result$dr0mumpsZp <- r0*sqrt((mumps$dvalue/Zp)^2 + (mumps$value/Zp^2*dZp)^2)
-  result$mufps <- mufps$value
-  result$dmufps <- mufps$dvalue
-  result$ddmufps <- mufps$ddvalue
-  result$mufpstauint <- mufps$tauint
-  result$mufpsdtauint <- mufps$dtauint
-  result$r0mufpsZp <- r0*mufps$value/Zp
-  result$dr0mufpsZp <- r0*sqrt((mufps$dvalue/Zp)^2 + (mufps$value/Zp^2*dZp)^2)
+  result$mumps <- mumps$res$value[1]
+  result$dmumps <- mumps$res$dvalue[1]
+  result$ddmumps <- mumps$res$ddvalue[1]
+  result$mumpstauint <- mumps$res$tauint[1]
+  result$mumpsdtauint <- mumps$res$dtauint[1]
+  result$r0mumpsZp <- r0*mumps$res$value/Zp
+  result$dr0mumpsZp <- r0*sqrt((mumps$res$dvalue/Zp)^2 + (mumps$res$value/Zp^2*dZp)^2)
+  result$mufps <- mufps$res$value
+  result$dmufps <- mufps$res$dvalue
+  result$ddmufps <- mufps$res$ddvalue
+  result$mufpstauint <- mufps$res$tauint
+  result$mufpsdtauint <- mufps$res$dtauint
+  result$r0mufpsZp <- r0*mufps$res$value/Zp
+  result$dr0mufpsZp <- r0*sqrt((mufps$res$dvalue/Zp)^2 + (mufps$res$value/Zp^2*dZp)^2)
   return(result)
 }
 
@@ -207,26 +207,26 @@ ppfit <- function(filename, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=FALSE,
   try(sigma <- uwerrderived(getsigma2, data=t(W[(from):to,skip:(length(psscar$ps)/T2)]),
                           S, plot=debug, T2, from, to, A, m, debug=debug, mu=mu))
   
-  result$mass <- mass$value[1]
-  result$dmass <- mass$dvalue[1]
-  result$amp <- amp$value[1]
-  result$damp <- amp$dvalue[1]
-  result$ddmass <- mass$ddvalue[1]
-  result$masstauint <- mass$tauint[1]
-  result$massdtauint <- mass$dtauint[1]
-  result$ddamp <- amp$ddvalue[1]
-  result$amptauint <- amp$tauint[1]
-  result$ampdtauint <- amp$dtauint[1]
-  result$fpi <- fpi$value[1]
-  result$dfpi <- fpi$dvalue[1]
-  result$ddfpi <- fpi$ddvalue[1]
-  result$fpitauint <- fpi$tauint[1]
-  result$fpidtauint <- fpi$dtauint[1]
-  result$sigma <- sigma$value[1]
-  result$dsigma <- sigma$dvalue[1]
-  result$ddsigma <- sigma$ddvalue[1]
-  result$sigmatauint <- sigma$tauint[1]
-  result$sigmadtauint <- sigma$dtauint[1]
+  result$mass <- mass$res$value[1]
+  result$dmass <- mass$res$dvalue[1]
+  result$amp <- amp$res$value[1]
+  result$damp <- amp$res$dvalue[1]
+  result$ddmass <- mass$res$ddvalue[1]
+  result$masstauint <- mass$res$tauint[1]
+  result$massdtauint <- mass$res$dtauint[1]
+  result$ddamp <- amp$res$ddvalue[1]
+  result$amptauint <- amp$res$tauint[1]
+  result$ampdtauint <- amp$res$dtauint[1]
+  result$fpi <- fpi$res$value[1]
+  result$dfpi <- fpi$res$dvalue[1]
+  result$ddfpi <- fpi$res$ddvalue[1]
+  result$fpitauint <- fpi$res$tauint[1]
+  result$fpidtauint <- fpi$res$dtauint[1]
+  result$sigma <- sigma$res$value[1]
+  result$dsigma <- sigma$res$dvalue[1]
+  result$ddsigma <- sigma$res$ddvalue[1]
+  result$sigmatauint <- sigma$res$tauint[1]
+  result$sigmadtauint <- sigma$res$dtauint[1]
 
   attr(result, "class") <- c("data.frame")
   if(plot == TRUE) {
