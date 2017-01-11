@@ -22,9 +22,9 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
 
     f must have the data vector of length Nalpha as the first
     argument. Further arguments to f can be passed to uwerr via the
-    ... argument.
+    \code{...} argument.
 
-    f must return a scalar object of numeric type.
+    f may return a vector object of numeric type.
   }
   \item{data}{
     array of data to be analysed. It must be of dimension (N x Nalpha)
@@ -36,7 +36,8 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     the vector (N1, N2, ...) of replica length N1, N2
   }
   \item{S}{
-    initial guess for tau/tauint
+    initial guess for the ratio tau/tauint, with tau the exponetial
+    autocorrelation length.
   }
   \item{pl}{
     logical: if TRUE, the autocorrelation function, the integrated
@@ -46,7 +47,9 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   }
 }
 \value{
-  returns an object of type uwerr containing
+  In case of a primary observable (\code{uwerrprimary}), an object of
+  class \code{uwerr} with basis class \code{\link{list}} containing the
+  following objects
   \item{value}{
     the expectation value of the obsevable
   }
@@ -64,6 +67,15 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   }
   \item{Wopt}{
     value of optimal cut-off for the Gamma function integration
+  }
+
+  In case of a derived observable (\code{uwerrderived}), i.e. if a
+  function is specified, the above objects are contained in a list
+  called \code{res}.
+
+  In both cases the return object containes
+  \item{xxx}{
+    xxx
   }
 }
 %\details{
