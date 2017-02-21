@@ -42,7 +42,8 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) / (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
+        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
+                         ( exp(-m*t)+exp(-m*(T-t)) - w*( exp(-m*(t-deltat))+exp(-m*(T-(t-deltat))) ) ) ) ) 
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
