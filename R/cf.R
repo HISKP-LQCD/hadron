@@ -227,6 +227,7 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   cf$cf <- cf$cf[,ii]
   if(cf$boot.samples) {
     cf$cf0 <- cf$cf0[ii]
+    cf$tsboot.se <- cf$tsboot.se[ii]
     cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
     cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
     cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
@@ -299,7 +300,7 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   Err <- numeric(0)
   if(cf$boot.samples) Err <- cf$tsboot.se
   else if(cf$jackknife.samples) Err <- cf$jackknife.se
-  plotwitherror(rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), cf$cf0, Err, ...)
+  plotwitherror(x=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), y=cf$cf0, dy=Err, ...)
   return(invisible(data.frame(t=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), CF=cf$cf0, Err=Err)))
 }
 
