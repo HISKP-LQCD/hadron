@@ -303,11 +303,12 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   }
   op <- options()
   options(warn=-1)
-  t <- effMass$t
-  plotwitherror(t-1, effMass$t0[t], effMass$se[t], col=col[1], ...)
+  # BaKo: is this also valid for acosh type effective masses?
+  t <- c(1:(effMass$Time/2))
+  plotwitherror(x=t-1, y=effMass$t0[t], dy=effMass$se[t], col=col[1], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      plotwitherror(t-1, effMass$t0[t+i*effMass$Time/2], effMass$se[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
+      plotwitherror(x=t-1, y=effMass$t0[t+i*effMass$Time/2], dy=effMass$se[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
     }
   }
   options(op)
