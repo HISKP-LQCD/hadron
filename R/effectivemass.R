@@ -42,7 +42,8 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "weighted") w <- weight.factor
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - (exp(-m*t)+exp(-m*(T-t)) - w*exp(-m*(t+deltat))-w*exp(-m*(T-t-deltat))) / (exp(-m*(t-deltat))+exp(-m*(T-t+deltat)) - w*exp(-m*(t))-w*exp(-m*(T-t))  ) )
+        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
+                         ( exp(-m*t)+exp(-m*(T-t)) - w*( exp(-m*(t-deltat))+exp(-m*(T-(t-deltat))) ) ) ) ) 
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
@@ -242,7 +243,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   } # if(boot.fit)
   cf$effmassfit$t <- cf$massfit.tsboot
   cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
-  cf$effmassfit$se <-   apply(massfit.tsboot[,c(1:(dim(massfit.tsboot)[1]-1))], MARGIN=2L, FUN=sd)
+  cf$effmassfit$se <-  sd(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
   cf$effmassfit$cf <- cf$cf
   cf$t <- tb.save
 

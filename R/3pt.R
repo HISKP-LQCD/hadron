@@ -1,16 +1,18 @@
-convert2cf <- function(data, symmetric=TRUE) {
+convert2cf <- function(data, symmetric=TRUE, symmetrise=TRUE) {
   sign <- +1.
   if(!symmetric) {
     sign <- -1.
   }
   Time <- max(data[[1]])+1
-  Thalf <- Time/2
-  Thalfp1 <- Thalf+1
-  i1 <- seq(2,Time/2)
-  i2 <- seq(Time, Time/2+2)
   X <- array(data[[2]], dim=c(Time, length(data[[2]])/Time))
-  X[i1,] <- 0.5*(X[i1,] + sign*X[i2,])
-  X <- X[c(1:Thalfp1),]
+  if(symmetrise){
+    Thalf <- Time/2
+    Thalfp1 <- Thalf+1
+    i1 <- seq(2,Time/2)
+    i2 <- seq(Time, Time/2+2)
+    X[i1,] <- 0.5*(X[i1,] + sign*X[i2,])
+    X <- X[c(1:Thalfp1),]
+  }
   ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
