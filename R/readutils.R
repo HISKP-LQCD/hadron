@@ -196,7 +196,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE)
+  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -239,7 +239,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ## average +-t
   tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
 
-  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -376,7 +376,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for( i in 1:nosamples ){
-    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
     attr(ret[[i]], "class") <- c("cf", class(ret[[i]]))
   }
   return(invisible(ret))
