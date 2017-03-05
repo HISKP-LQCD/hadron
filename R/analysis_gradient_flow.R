@@ -1,3 +1,12 @@
+# these should also have references
+gf.scales <- list()
+gf.scales[["sqrt_t0_Eplaq"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
+                                     label="\\sqrt{ t_0^{\\mathrm{plaq}} }", obs="tsqEplaq")
+gf.scales[["sqrt_t0_Esym"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
+                                    label="\\sqrt{ t_0^{\\mathrm{sym}} }", obs="tsqEsym")
+gf.scales[["w0_Wsym"]] <- list(val=rep(0,3), ref.val=0.1755, ref.dval=0.0019, approx.idx=0,
+                               label="\\w_0^{\\mathrm{sym}}", obs="Wsym")
+
 analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
   if(missing(basename)){
     path.strings <- strsplit(x=path,split='/')[[1]]
@@ -34,26 +43,16 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     }
     gradflow[i_row,] <- summaryvec
   }
-  
-  gf.scales <- list()
-  
-  gf.scales[["sqrt_t0_Eplaq"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
-                                       label="\\sqrt{ t_0^{\\mathrm{plaq}} }", obs="tsqEplaq")
-
-  gf.scales[["sqrt_t0_Esym"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
-                                      label="\\sqrt{ t_0^{\\mathrm{sym}} }", obs="tsqEsym")
-
-  gf.scales[["w0_Wsym"]] <- list(val=rep(0,3), ref.val=0.1755, ref.dval=0.0019, approx.idx=0,
-                                 label="\\w_0^{\\mathrm{sym}}", obs="Wsym")
-
+ 
+  # TODO: estimate the lattice spacing also from the other scales
   for( i in 1:length(gf.scales) ){
     val <- gradflow[,sprintf("%s.value", gf.scales[[i]]$obs)]
     dval <- gradflow[,sprintf("%s.dvalue", gf.scales[[i]]$obs)] 
     tref <- c( approx( x=val+dval,y=gradflow$t,xout=0.3)$y, 
                approx( x=val, y=gradflow$t, xout=0.3 )$y, 
                approx( x=val-dval, y=gradflow$t, xout=0.3)$y )
-
     sqrt_tref <- sqrt(tref)
+    print(sqrt_tref)
   }
 
   save(gradflow,file=sprintf("%s.result.gradflow.Rdata",basename),compress=FALSE)
