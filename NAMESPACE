@@ -1,5 +1,7 @@
 exportPattern("^cf.*")
 exportPattern("^plot.*")
+exportPattern("^plot_*")
+exportPattern("^analysis_*")
 exportPattern("^print.*")
 exportPattern("^summary.*")
 exportPattern("^bootstrap.*")
