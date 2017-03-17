@@ -294,6 +294,12 @@ c.cf <- function(...) {
 }
 
 plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
+  if(is.null(cf$jackknife.samples)) {
+    cf$jackknife.samples <- FALSE
+  }
+  if(is.null(cf$boot.samples)) {
+    cf$boot.samples <- FALSE
+  }
   if(!cf$boot.samples && !cf$jackknife.samples) {
     cf <- bootstrap.cf(cf, boot.R, boot.l)
   }

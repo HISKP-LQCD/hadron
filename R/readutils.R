@@ -196,7 +196,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE)
+  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -239,7 +239,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ## average +-t
   tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
 
-  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -376,7 +376,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for( i in 1:nosamples ){
-    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE)
+    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
     attr(ret[[i]], "class") <- c("cf", class(ret[[i]]))
   }
   return(invisible(ret))
@@ -457,7 +457,7 @@ readgradflow <- function(path,skip=0) {
   files <- files[(skip+1):length(files)]
   if(length(files)==0) stop(sprintf("readgradflow: no tmlqcd gradient flow files found in path %s",path))
   
-  tmpdata <- read.table(file=files[1],colClasses="numeric",header=T)
+  tmpdata <- read.table(file=files[1],colClasses="numeric",header=TRUE,stringsAsFactors=FALSE)
   
   fLength <- length(tmpdata$t)
   nFiles <- length(files)
@@ -471,10 +471,22 @@ readgradflow <- function(path,skip=0) {
   pb <- NULL
   pb <- txtProgressBar(min = 1, max = length(files), style = 3)
   for( i in 1:length(files) ){
-    setTxtProgressBar(pb, i) 
-    ldata[((i-1)*fLength+1):(i*fLength),] <- read.table(file=files[i],header=T)
+    setTxtProgressBar(pb, i)
+    tmp <- read.table(file=files[i], header=TRUE, stringsAsFactors=FALSE)
+    # the tmlqcd gradient flow routine has the tendency to crash, so we check if the files
+    # are complete 
+    if( dim( tmp )[1] != fLength ) {
+      warning(sprintf("For file %s, number of rows is not correct: %d instead of %d\n",files[i],dim(tmp)[1],fLength) )
+      ldata[((i-1)*fLength+1):(i*fLength),] <- NA
+    } else {
+      ldata[((i-1)*fLength+1):(i*fLength),] <- tmp
+    }
   }
   close(pb)
+
+  # keep only rows which contain all data
+  ldata <- ldata[complete.cases(ldata),]
+
   # order by t as outermost index
   ldata <- ldata[order(ldata$t,ldata$traj),]
   rownames(ldata) <- NULL

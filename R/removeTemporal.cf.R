@@ -123,7 +123,7 @@ takeTimeDiff.cf <- function(cf, deltat = 1) {
   }
   ## number of time slices (hopefully in units of T/2+1)
   T <- cf$Time
-  Nt <- length(cf$cf0)
+  Nt <- dim(cf$cf)[2]
   nrObs <- floor(Nt/(T/2+1))
   ## the time indices to be subtracted
   tt0 <- c()
