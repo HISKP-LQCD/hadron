@@ -102,7 +102,7 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     
     # plot MD history of Wsym at w0
     plot(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
-         x=start+c( 0:( length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale,
+         x=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale,
          type='l',lwd=3,
          main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$W\\left( t/a^2 = %s \\right)$",w0sq_approx),las=1)
     
