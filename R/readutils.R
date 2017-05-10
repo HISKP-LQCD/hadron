@@ -212,7 +212,7 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), average=TRUE) {
+readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE) {
   if(missing(file)) {
     stop("files must be given! Aborting...\n")
   }
@@ -237,7 +237,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   ## average +-t
-  if(average) {
+  if(symmetrise) {
     tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
   }
 
