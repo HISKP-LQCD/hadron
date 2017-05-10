@@ -43,6 +43,12 @@ cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
     indicating whether the corresponding correlation function should be 
     multiplied by +-1.
   }
+  \item{symmetrise}{
+    if set to \code{TRUE}, the correlation function will be averaged for
+    \code{t} and \code{T-t}, with the sign depending on the value of
+    \code{sym}.  Note that currently the correlator with t-values larger
+    than \code{T/2} will be discarded.
+  }
 }
 \value{
   returns a list containing

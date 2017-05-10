@@ -16,7 +16,9 @@ readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3))
     time extend of the correlation function
   }
   \item{sym}{
-    if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and -C(-t). 
+    if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
+    -C(-t). Averaging can be switched off using the \code{symmetrise}
+    option. 
   }
   \item{skip}{
     number of lines to skip at beginning of file
@@ -30,6 +32,12 @@ readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3))
   \item{ind.vector}{
     index vector of length 2 with the indices of real and imaginary
     values of correlator, respectivley.
+  }
+  \item{symmetrise}{
+    if set to \code{TRUE}, the correlation function will be averaged for
+    \code{t} and \code{T-t}, with the sign depending on the value of
+    \code{sym}. Note that currently the correlator with t-values larger
+    than \code{T/2} will be discarded.
   }
 }
 \value{
