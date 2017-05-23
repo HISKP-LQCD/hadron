@@ -1,22 +1,30 @@
 # convenience function for analyzing online data from a tmLQCD run
 ### the various parameters are used to build a directory name into which R descends to read
-### pionline.dat and output.data
-### but a directory can also be provided via rundir with the understanding
-### that L, T, kappa and mul must always be provided
-# addon can be used to add arbitrary text to the directory name (such as for replicas)
-# plaquette and dH control whether these are plotted
-# cg_col indicates which column in output.data should be used 
+### onlinemeas.xxxxxx and output.data
+### but a directory can also be provided via 'rundir' with the understanding
+### that L, T, kappa and mul must always be provided for the fits to work
+### and the decay constant to be determined correctly
+# 'addon' can be used to *append* arbitrary text to the directory name
+# if it is construced on the fly. This is useful for analysing replicas
+# which have identical parameters and thus need to be differentiated
+# 'plaquette', 'dH', 'acc' and 'trajtime' control whether these are plotted
+# cg_col indicates which column in output.data should be used to extract 
+# a representative solver iteration counter
 
 analysis_online <- function(L, T, t1, t2, kappa, mul,
                             cg_col, evals, rundir, cg.ylim,
                             type="", beta=0, csw=0, musigma=0, mudelta=0, muh=0, addon="",
                             skip=0,
-                            plaquette=TRUE, dH=TRUE, acc=TRUE,
-                            plotsize=5,debug=FALSE,trajlabel=FALSE,title=FALSE,
-                            pl=FALSE,method="uwerr",fit.routine="optim",oldnorm=FALSE,S=1.5,
+                            plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE,
+                            plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
+                            pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE,S=1.5,
                             omeas.start=0, omeas.stepsize=1, evals.stepsize=1,
                             boot.R=1500, boot.l=2)
 {
+  if( missing(L) || missing(T) || missing(t1) || missing(t2) || missing(kappa) || missing(mul) ){
+    stop("L, T, t1, t2, kappa and mul must always be provided!");
+  }
+
   # store analysis results in practical R format, replacing entries as new data is added
   resultsfile <- "omeas.summary.RData"
   
@@ -42,7 +50,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
                                 mineval=navec, 
                                 maxeval=navec, 
                                 CG.iter=navec, 
-                                accrate=navec, stringsAsFactors=FALSE))
+                                accrate=navec, 
+                                trajtime=navec, stringsAsFactors=FALSE))
   
   errorband_color <- rgb(0.6,0.0,0.0,0.6)
   errorband_color2 <- rgb(0.0,0.0,0.6,0.6)
@@ -77,6 +86,7 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
 
   result$params$N.online <- length(omeas.cnums)
 
+  plotcounter <- 0
   if(!any(class(pioncor)=='try-error')){
     # the correlation functions have been read externally, taking into account the measurement frequency
     # and possibly missing files. Therefore, skip=0! 
@@ -94,7 +104,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
     }
     ave(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
 
-    dpaopp_filename <- sprintf("01_dpaopp_%s",filelabel)
+    plotcounter <- plotcounter+1
+    dpaopp_filename <- sprintf("%02d_dpaopp_%s",plotcounter,filelabel)
     result$obs$mpcac_mc <- plot_timeseries(dat=onlineout$MChist.dpaopp,
       xdat=omeas.cnums,
       pdf.filename=dpaopp_filename,
@@ -120,7 +131,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
                                  tauint=NA, dtauint=NA, Wopt=NA, stringsAsFactors=FALSE)
     result$obs$mpcac_fit <- t(mpcac_fit)
 
-    dpaopp_plateau_filename <- sprintf("02_dpaopp_plateau_%s",filelabel)
+    plotcounter <- plotcounter+1
+    dpaopp_plateau_filename <- sprintf("%02d_dpaopp_plateau_%s",plotcounter,filelabel)
     tikzfiles <- tikz.init(basename=dpaopp_plateau_filename,width=plotsize,height=plotsize)
     op <- par(family="Palatino",cex.main=0.6,font.main=1)
     par(mgp=c(2,1,0))
@@ -144,8 +156,9 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
                     sprintf("$ \\partial_0 \\langle A_0 P \\rangle / 2 \\langle P P \\rangle $ averaged from t=%d to t=%d",t1,t2) )
           )
     tikz.finalize(tikzfiles)
-
-    mpi_plateau_filename <- sprintf("03_mpi_plateau_%s",filelabel)
+    
+    plotcounter <- plotcounter+1
+    mpi_plateau_filename <- sprintf("%02d_mpi_plateau_%s",plotcounter,filelabel)
     tikzfiles <- tikz.init(mpi_plateau_filename,width=plotsize,height=plotsize)
     op <- par(family="Palatino",cex.main=0.6,font.main=1)
     par(mgp=c(2,1,0))
@@ -199,8 +212,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
                                             Wopt=NA, stringsAsFactors=FALSE) )
     }
 
-  } else { # if(!any(class(pioncor)=='try-error'))
-    stop("outputonline: there was an error trying to read the output files (onlinemeas.xxxxxx/pionionline.dat or output.data)")
+  } else {
+    stop("analysis_online: there was an error trying to read the output files (onlinemeas.xxxxxx/pionionline.dat or output.data)")
   }
 
   # something in the skip computation is odd, let's just solve it like this
@@ -212,17 +225,20 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
 
   outdat <- NULL
   tidx <- NULL
-  if( plaquette || dH ) {
+  if( plaquette || dH || trajtime || acc ) {
     # read output.data
     # determine maximum number of columns in output.data (when the mass preconditioning is changed,
     # the number of columns may change so we need to be able to deal with that)
     no_columns <- max(count.fields(outfile))
-    outdat <- read.table(outfile,fill=TRUE,col.names=c("traj","P","dH","expdH",paste("V",5:no_columns,sep="")))
+    outdat <- read.table(outfile, fill=TRUE,
+                         col.names=c("traj","P","dH","expdH",paste("V",5:(no_columns-3),sep=""),"acc","trajtime","rec"))
     tidx <- which(outdat$traj > skip)
+    if(debug) print(outdat)
   }
 
   if(plaquette) {
-    plaquette_filename <- sprintf("04_plaquette_%s",filelabel,title=filelabel)
+    plotcounter <- plotcounter+1
+    plaquette_filename <- sprintf("%02d_plaquette_%s",plotcounter,filelabel,title=filelabel)
     result$params$N.plaq <- length(tidx)
     result$obs$P <- plot_timeseries(dat=outdat$P[tidx],
       xdat=outdat$traj[tidx],
@@ -236,7 +252,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
       #ist.by=0.00002))
   }
   if(dH) {
-    dH_filename <- sprintf("05_dH_%s",filelabel)
+    plotcounter <- plotcounter+1
+    dH_filename <- sprintf("%02d_dH_%s",plotcounter,filelabel)
     result$obs$dH <- plot_timeseries(dat=outdat$dH[tidx],
       xdat=outdat$traj[tidx],
       pdf.filename=dH_filename,
@@ -249,7 +266,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
       ylim=c(-2,3))
       #ist.by=0.2))
 
-    expdH_filename <- sprintf("06_expdH_%s",filelabel)
+    plotcounter <- plotcounter+1
+    expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
     result$obs$expdH <- plot_timeseries(dat=outdat$expdH[tidx],
       xdat=outdat$traj[tidx],
       pdf.filename=expdH_filename,
@@ -264,7 +282,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
       #ist.by=0.2))
   }
   if( !missing("cg_col") ) {
-    cg_filename <- sprintf("07_cg_iter_%s", filelabel)
+    plotcounter <- plotcounter+1
+    cg_filename <- sprintf("%02d_cg_iter_%s", plotcounter, filelabel)
     result$obs$CG.iter <- plot_timeseries(dat=outdat[tidx,cg_col],
       xdat=outdat$traj[tidx],
       pdf.filename=cg_filename,
@@ -277,7 +296,8 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
       #ist.by=5))
   }
   if( !missing("evals") ) {
-    ev_pdf_filename <- sprintf("08_evals_%02d_%s", evals, filelabel )
+    plotcounter <- plotcounter+1
+    ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals )
     
     evaldata <- tryCatch(read.table(ev_filename,stringsAsFactors=FALSE,col.names=c("traj","mineval","maxeval","evalrangemin","evalrangemax") ), 
@@ -301,11 +321,12 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
   }
   if( acc == TRUE ){
     # finally add acceptance rate
-    accrate_filename <- sprintf("09_accrate_%s",filelabel,title=filelabel)
-    result$obs$accrate <- plot_timeseries(dat=outdat[tidx,no_columns-2],
+    plotcounter <- plotcounter+1
+    accrate_filename <- sprintf("%02d_accrate_%s",plotcounter,filelabel,title=filelabel)
+    result$obs$accrate <- plot_timeseries(dat=outdat$acc[tidx],
       xdat=outdat$traj[tidx],
       pdf.filename=accrate_filename,
-      ylab="$ \\langle P_\\mathrm{acc} \\rangle$" ,
+      ylab="Accept / Reject" ,
       name="accrate",
       plotsize=plotsize,
       filelabel=filelabel,
@@ -313,14 +334,27 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
       errorband_color=errorband_color,
       hist.by=0.5)
   }
+  if( trajtime == TRUE ){
+    plotcounter <- plotcounter+1
+    trajtime_filename <- sprintf("%02d_trajtime_%s",plotcounter,filelabel,title=filelabel)
+    result$obs$trajtime <- plot_timeseries(dat=outdat$trajtime[tidx],
+      xdat=outdat$traj[tidx],
+      pdf.filename=trajtime_filename,
+      ylab="Traj. time [s]" ,
+      name="trajtime",
+      plotsize=plotsize,
+      filelabel=filelabel,
+      titletext=titletext,
+      errorband_color=errorband_color)
+  }
 
   print(result$params)
   print(t(result$obs))
 
   # if the script "pdfcat" exists, concatenate the plots and remove the individual files
   if( Sys.which("pdfcat") != "" ) {
-    commands <- c(sprintf("pdfcat analysis_%s.pdf 0?*_%s.pdf",filelabel,filelabel),
-                  sprintf("rm -f 0?_*_%s.pdf",filelabel) )
+    commands <- c(sprintf("pdfcat analysis_%s.pdf ??_*_%s.pdf",filelabel,filelabel),
+                  sprintf("rm -f ??_*_%s.pdf",filelabel) )
     for( command in commands ) {
       print(paste("calling",command))
       system(command=command)
