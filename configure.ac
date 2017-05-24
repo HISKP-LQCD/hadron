@@ -18,7 +18,7 @@ int main() {
    if ((sscanf(gslv, "%d.%d", &major, &minor)) != 2) {
      exit (1);
    }
-   exit( (major < 2) || ( major == 1 && minor < 8 ) );
+   exit( (major > 1) || ( major == 1 && minor < 8 ) );
 #else
   exit(1);
 #endif
@@ -28,7 +28,7 @@ int main() {
 [gsl_version_ok=no],
 [gsl_version_ok=yes])
 if test "${gsl_version_ok}" = no; then
-  AC_MSG_ERROR([Need GSL version >= 1.8])
+  AC_MSG_ERROR([Need GSL version >= 1.8 and < 2.0])
 else
   AC_MSG_RESULT([yes])
 fi
