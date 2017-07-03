@@ -3564,7 +3564,7 @@ int main() {
    if ((sscanf(gslv, "%d.%d", &major, &minor)) != 2) {
      exit (1);
    }
-   exit( (major > 1) || ( major == 1 && minor < 8 ) );
+   exit( !( (major >= 2) || (major == 1 && minor >= 8 ) ) );
 #else
   exit(1);
 #endif
@@ -3581,7 +3581,7 @@ rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
 fi
 
 if test "${gsl_version_ok}" = no; then
-  as_fn_error $? "Need GSL version >= 1.8 and < 2.0" "$LINENO" 5
+  as_fn_error $? "Need GSL version >= 1.8" "$LINENO" 5
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
