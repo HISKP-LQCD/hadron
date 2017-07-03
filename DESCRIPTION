@@ -12,7 +12,7 @@ SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: package to extract hadronic quantities from Lattice QCD simulations
 Depends: boot
 Suggests: tikzDevice, minpack.lm
-License: GPL
+License: GPL 3 or later
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
 LazyData: true
