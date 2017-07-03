@@ -6,7 +6,8 @@
   basename and '*'.
 }
 \usage{
-filelist <- getorderedfilelist(path="./", basename="onlinemeas", last.digits=4)
+filelist <- getorderedfilelist(path="./", basename="onlinemeas",
+last.digits=4, ending="")
 }
 \arguments{
   \item{path}{
@@ -18,6 +19,9 @@ filelist <- getorderedfilelist(path="./", basename="onlinemeas", last.digits=4)
   \item{last.digits}{
     the number of last characters in each filename to be used for
     ordering the list.
+  }
+  \item{ending}{
+    the file extension after the digits.
   }
 }
 \value{
