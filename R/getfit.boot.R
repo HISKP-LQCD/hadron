@@ -17,14 +17,8 @@ getfit.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.12),
     }
   }
 
-  if(fit.routine != "gsl") {
-    fit <- optim(par, ChiSqr.singleCor, method="BFGS", Thalf=Thalf,
-                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr, sign=sign)
-  }
-  else {
-    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr, sign=sign)
-  }
+  fit <- optim(par, ChiSqr.singleCor, method="BFGS", Thalf=Thalf,
+               x=c((t1):(t2)), y=Cor, err=Err, tr=tr, sign=sign)
   sort.ind <- c(1)
   return(c(abs(fit$par[2]), fit$par[1],
            fit$value))
