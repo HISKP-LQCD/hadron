@@ -68,10 +68,14 @@ pp <- function(filename, psscar, skip=0, from, to, S=1.5, A=0.01, m=0.01, plot=F
   }
   attr(result, "class") <- c("massfit", "ampfit", "data.frame")
   if(plot == TRUE) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(result[,1],result[,4], xlab = "t", ylab = "A", main = "One state cosh fit for the amplitude", ylim=c(min(result[,4]-2*result[,5]),max(result[,4]+2*result[,5])))
     arrows(result[,1],result[,4]-result[,5],result[,1],result[,4]+result[,5], length=0.01,angle=90,code=3)
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(result[,1],result[,2], xlab = "t", ylab = "m", main = "One state cosh fit for the mass", ylim=c(min(result[,2]-2*result[,3]),max(result[,2]+2*result[,3])))
     arrows(result[,1],result[,2]-result[,3],result[,1],result[,2]+result[,3], length=0.01,angle=90,code=3)
   }
@@ -111,7 +115,9 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   rm(Z)
   attr(result, "class") <- c("massfit", "data.frame")
   if(pl == T) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(result)
   }
   return(invisible(result))

@@ -362,19 +362,25 @@ summary.uwerr <- function(uwerr) {
 
 plot.uwerr <- function(uwerr, main="x", x11=TRUE, plot.hist=TRUE) {
   if(uwerr$primary && plot.hist) {
-    if(x11) X11()
+    if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+              X11()
+            }
     hist(uwerr$data, main = paste("Histogram of" , main))
   }
   if(!is.null(uwerr$Gamma)) {
     GammaFbb <- uwerr$Gamma/uwerr$Gamma[1]
     Gamma.err <- gammaerror(Gamma=GammaFbb, N=uwerr$N , W=uwerr$Wmax, Lambda=100)
-    if(x11) X11()
+    if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+              X11()
+            }
     plotwitherror(c(0:uwerr$Wmax),GammaFbb[1:(uwerr$Wmax+1)],
                   Gamma.err[1:(uwerr$Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=uwerr$Wopt+1)
     abline(h=0)
   }
-  if(x11) X11()
+  if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+            X11()
+          }
   tauintplot(uwerr$tauintofW, uwerr$dtauintofW, uwerr$Wmax, uwerr$Wopt, main=main)  
   return(invisible(data.frame(t=c(0:uwerr$Wmax),Gamma=GammaFbb[1:(uwerr$Wmax+1)],dGamma=Gamma.err[1:(uwerr$Wmax+1)])))
 }

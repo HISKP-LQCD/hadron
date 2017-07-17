@@ -65,7 +65,9 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   df <- data.frame(Blocksize=Blocksize, Mean=Mean, Error=Error, DError=DError, Tauint=Tauint, Bias=Bias)
   if(pl) {
     plot(data.boot)
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plotwitherror(df$Blocksize, df$Error, df$DError, xlab="l", ylab="Error")
   }
   return(invisible(df))

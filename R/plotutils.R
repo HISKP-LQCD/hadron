@@ -283,27 +283,39 @@ plot.cfit <- function(fit) {
     plot(fit$uwerrresultmv, main=expression(m[V]))
   }
   if(!is.null(fit$boot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$boot, main="Bootstrap analysis for mps")
   }
   if(!is.null(fit$tsboot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$tsboot, main="TS Boostrap analysis for mps")
   }
   if(!is.null(fit$mv.boot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$mv.boot, main="Bootstrap analysis for mv")
   }
   if(!is.null(fit$mv.tsboot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$mv.tsboot, main="TS Bootstrap analysis for mv")
   }
   if(!is.null(fit$fitdata)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab=expression(chi), type="h")
   }
   if(!is.null(fit$dpaopp)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plotwitherror(fit$dpaopp$t, fit$dpaopp$mass, fit$dpaopp$dmass,
                   main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
@@ -321,7 +333,9 @@ plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
 
 plot.effmass <- function(m, ll, lf, ff, ...) {
 
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   if(!missing(ff)) {
     plot.massfit(ff, ylab=expression(m[eff]), xlab="t", ...)
     points((ll$t-0.2), ll$mass, pch=1, col="blue")
@@ -349,17 +363,24 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 plot.averx <- function(averx) {
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
-  if(interactive()) X11()
+  
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau), main=c("3pt ov 2pt"))
   plothlinewitherror(m=averx$plateau, dp=sd(averx$plateau.tsboot[,1]), dm=sd(averx$plateau.tsboot[,1]),
                     x0=averx$t1, x1=averx$t2)
-  if(interactive()) X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plotwitherror(c(0:(averx$Cf2pt$Time/2)),
                 averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
                 apply(averx$Cf3pt$cf.tsboot$t/averx$matrixfit$opt.tsboot[1,]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
                 ylim=c(0,0.6), xlab=c("t/a"), ylab=c("C3pt"), main=c("<x>")
                 )
-  if(interactive()) X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   qqplot(averx$plateau.tsboot[,2], rchisq(n=averx$boot.R, df=averx$dof), main=paste("qqplot chisq"))
   return(invisible(data.frame(t=c(0:(averx$Cf2pt$Time/2)),
                               averx=averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
@@ -376,7 +397,9 @@ plot.pionff <- function(ff) {
   plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)
 
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(mul.cf(ff$Cf3ptratio, ff$Cf2ptratio$cf0[Thalfp1]), ylim=c(0,1.3), main=c("F(q^2)"), xlab=c("t/a"), ylab=c("F(q^2)"))
   plothlinewitherror(m=ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], dp=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitFF$t1, x1=ff$plateaufitFF$t2)
@@ -391,7 +414,9 @@ plot.outputdata <- function(data, skip=0, ...) {
   abline(h=plaq.res$value, col="blue")
   abline(h=plaq.res$value+plaq.res$dvalue)
   abline(h=plaq.res$value-plaq.res$dvalue)
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(data$V1, data$V3, type="l",
        main=expression(paste(Delta, "H")), xlab=expression(t[HMC]), ylab=expression(paste(Delta, "H")), ...)
   return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))

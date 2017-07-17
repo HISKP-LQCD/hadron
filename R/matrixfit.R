@@ -394,7 +394,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     }
   }
 
-  if(interactive()) {
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
     X11()
   }
   s <- seq(0,1,1./length(mfit$t[,1]))
