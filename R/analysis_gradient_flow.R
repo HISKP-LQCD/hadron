@@ -102,7 +102,7 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     legend(x="topleft",
            legend=sprintf("$a=%.4f(%02d)$\\,fm", 
                           a[2,1],
-                          as.integer( 1000*signif(sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2 ),2))),
+                          as.integer( 10000*signif(sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2 ),2))),
            bty='n')
     
     # plot MD history of Wsym at w0
