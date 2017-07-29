@@ -102,7 +102,7 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
     } else {
       filelabel <- rundir
     }
-    ave(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
+    save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
 
     plotcounter <- plotcounter+1
     dpaopp_filename <- sprintf("%02d_dpaopp_%s",plotcounter,filelabel)
