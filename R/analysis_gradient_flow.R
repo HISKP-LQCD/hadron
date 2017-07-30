@@ -99,6 +99,11 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     polygon(x=poly.x,y=poly.y,col=poly.col)
     abline(h=0.3)
     abline(v=w0sq)
+    legend(x="topleft",
+           legend=sprintf("$a=%.4f(%02d)$\\,fm", 
+                          a[2,1],
+                          as.integer( 10000*signif(sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2 ),2))),
+           bty='n')
     
     # plot MD history of Wsym at w0
     plot(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],

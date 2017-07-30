@@ -129,6 +129,7 @@ addStat.cf <- function(cf1, cf2) {
     cf$boot.l <- NULL
     cf$seed <- NULL
     cf$cf <- rbind(cf1$cf, cf2$cf)
+    cf
   }
   else {
     stop("addStat.cf: cf1 and cf2 not compatible. Aborting...\n")
