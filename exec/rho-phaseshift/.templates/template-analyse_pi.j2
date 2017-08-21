@@ -1,0 +1,7 @@
+source("../bootstrap_paras.R")
+source("ens.R")
+
+pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T={{ T }}, check.t=0, path="{{ path }}", ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
+pion.matrixfit <- matrixfit(pion.cor, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
+
+save(pion.cor, pion.matrixfit, file="pion.Rdata")
