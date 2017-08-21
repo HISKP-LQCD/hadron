@@ -1,9 +1,16 @@
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
-source("../../ens.R")
+source("/hiskp2/werner/pipi_I1/2017-08-03_analyse/analyse-A40.32.R")
+ens <-  args$ens
+boot.R <- args$boot.R
+
 hint <- rep("no", times=5)
-source("parameters.R")
-source("../../../detect_irrep_frame.R")
+
+source(paste(args$path.to.hadron, "phaseshift.rho.R", sep="/"))
+source(paste(args$path.to.hadron, "summarise.R", sep="/"))
+
+## extracts irrep and frame from directory name
+## also defines N for th ematrix size
+## and path
+source(paste(args$path.to.hadron, "/detect_irrep_frame.R", sep="/"))
 
 pdf(file=paste("histograms", ens, frame, irrep, "pdf", sep="."))
 res <- list()

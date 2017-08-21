@@ -4,10 +4,20 @@
 ## and <irrep> the corresponding irreducible representation,
 ## see phaseshift.rho.R for the implemented irreps
 
-## it requires a pion analysis to be stored in ../../pion.Rdata
+## read input file and use namespace args
+source("/hiskp2/werner/pipi_I1/2017-08-03_analyse/analyse-A40.32.R")
+ens <-  args$ens
+disp <- args$disp
+maxpcs <- args$maxpcs
+L <- args$L
+T <- args$T
+boot.R <- args$boot.R
+boot.l <- args$boot.l
+seed <- args$seed
 
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
+source(paste(args$path.to.hadron, "phaseshift.rho.R", sep="/"))
+source(paste(args$path.to.hadron, "summarise.R", sep="/"))
+
 
 ## t0 for the GEVP
 t0 <- 2
@@ -26,13 +36,12 @@ p <- c(0,0,0)
 ## maximal number of principal correlators to analyse
 maxpcs <- 2
 
-source("parameters.R")
 Thalf <- T/2
 
 ## extracts irrep and frame from directory name
 ## also defines N for th ematrix size
 ## and path
-source("../../../detect_irrep_frame.R")
+source(paste(args$path.to.hadron, "/detect_irrep_frame.R", sep="/"))
 
 ## full momentum is given by p*2*pi/L
 ## n is needed for function phaseshift.rho
@@ -46,14 +55,24 @@ if(momentum == "p4") {
   n <- 2
 }
 
-## pion analysis
-load("../../pion.Rdata")
-
 model <- "single"
 sym.vec <- c("exp")
 if(momentum == "p0") {
   model <- "shifted"
   sym.vec<- c("cosh")
+}
+type="subtracted"
+if(frame != "cmf") type="weighted"
+
+## pion analysis
+## it requires a pion analysis to be stored in ../../pion.Rdata
+if(!file.exists("/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")) {
+  pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T=64, check.t=0, path="/hiskp2/werner/pipi_I1/data/A40.32/3_gevp-data/", ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
+  pion.matrixfit <- matrixfit(pion.cor, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
+  
+  save(pion.cor, pion.matrixfit, file="/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")
+} else {
+  load("/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")
 }
 
 
@@ -88,8 +107,6 @@ if(!file.exists(paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))) {
   clrs <- c("red", "blue", "darkgreen", "black", "purple", "orange")
   pchs <- c(21, 22, 23, 24, 25, 26)
   pcs <- c("pc1", "pc2", "pc3", "pc4", "pc5")
-  type="subtracted"
-  if(frame != "cmf") type="weighted"
   for(id in c(1:N)) {
     pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
     effmass <- bootstrap.effectivemass(pc, boot.R=boot.R, boot.l=boot.l, seed=seed, type=type)
