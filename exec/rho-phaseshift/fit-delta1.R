@@ -1,17 +1,38 @@
+clargs = commandArgs(trailingOnly=TRUE)
+
+# test if there is at least one argument: if not, return an error
+if (length(clargs)!=1) {
+    stop("Please specify the input file!", call.=FALSE)
+} else  {
+    # default output file
+    input.file = clargs[1]
+}
+
+source(input.file)
+
+ensembles <- args$ens
+#ensembles <- c("A40.24")
+frames <- c("cmf", "mf1", "mf2", "mf3")
+momenta <- c("p0", "p1", "p2", "p3")
+dirs <- args$dirs
+path.to.data <- args$path.to.data
+output.path <- args$output.path
+
+setwd(output.path)
+
+## Starting values for fit parameters
+## g_{\rho\pi\pi} and M_\rho
 par <- c(6,0.4)
 
-frames <- c("cmf", "mf1", "mf2", "mf3", "mf1")
-momenta <- c("p0", "p1", "p2", "p3", "p4")
+labels <- apply( cbind(unlist(lapply(strsplit(dirs, "/"), function(x){x[1]})), unlist(lapply(strsplit(dirs, "/"), function(x){x[2]}))), 1, paste, collapse=" ")
 
-source("parameters.R")
-
-load("pion.Rdata")
+load( paste(args$path.to.data, "/pion.Rdata", sep="") )
 
 boot.R <- pion.cor$boot.R
 
-MKdata <- read.table("../old/mk.dat")
+MKdata <- read.table( paste(args$output.path, "mk.dat", sep="") )
 
-Mk <- MKdata$V2[which(MKdata$V1 == ens[1])]
+Mk <- MKdata$V2[which(MKdata$V1 == ensembles[1])]
 Mpi <- pion.matrixfit$opt.res$par[1]
 Mpiboot <- c(Mpi, pion.matrixfit$opt.tsboot[1,])
 
@@ -27,8 +48,16 @@ for(i in c(1:Ndirs)) {
   momentum <- splitwd[1]
   frameid <- which(momenta == momentum)
   frame <- frames[frameid]
-
-  file <- paste(dirs[i], "/res.", ens[1], ".", frame, ".", splitwd[2], ".Rdata", sep="")
+  Ensemble <- ensembles[1]
+  for(j in c(1:length(ensembles))){
+    cat(length(ensembles), ensembles, ensembles[j], dirs[i], "\n")
+    if(grepl(ensembles[j], dirs[i])) {
+      Ensemble <- ensembles[j]
+      break
+    }
+  }
+  
+  file <- paste(path.to.data, dirs[i], "/res.", Ensemble, ".", frame, ".", splitwd[2], ".Rdata", sep="")
 
   cat("loading file", file, "\n")
   load(file)
@@ -37,7 +66,7 @@ for(i in c(1:Ndirs)) {
   ## alldata[,c(1:N)] -> Ecm
   ## alldata[,c((N+1):(2*N))] -> delta
   n <- length(res.boot)
-  cat(n, dim(res.boot[[1]]), dim(alldata), N, length(dirs), "\n")
+
   alldata[,c(j, 2*Ndirs+j)] <- res.boot[[1]][,c(1:2)]
   alldata[,c(j+1, 2*Ndirs+j+1)] <- res.boot[[2]][,c(1:2)]
 }
@@ -79,21 +108,23 @@ npar <- length(par)
 Mrho.res <- array(NA, dim=c(boot.R+1, npar+1))
 
 ##if(FALSE) {
-if(file.exists(paste("Mrho-res", ens[1], ".Rdata", sep=""))) {
-  load(paste("Mrho-res", ens[1], ".Rdata", sep=""))
+filename <- paste("Mrho-res", ensembles[1], ".", ensembles[2], ".Rdata", sep="")
+if(file.exists(filename) && file_test("-nt", filename, "parameters-A40.R")) {
+  load(filename)
 }
-if(!file.exists(paste("Mrho-res", ens[1], ".Rdata", sep=""))) {
+if(!(file.exists(filename) && file_test("-nt", filename, "parameters-A40.R"))) {
   for(i in c(1:(boot.R+1))) {
     opt.res <- nls.lm(par, fn=Chi, y=data[i,], L=L, Mpi=Mpiboot[i], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     Mrho.res[i, c(1:npar)] <- opt.res$par
     Mrho.res[i, npar+1] <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   
-  save(Mrho.res, data, file=paste("Mrho-res", ens[1], ".Rdata", sep=""))
+  save(Mrho.res, data, file=filename)
 }
 
 dof <- npar-4
 cat("\n************************************\n")
+cat(ensembles, "\n\n")
 cat("Mrho", Mrho.res[1,2], "+-", sd(Mrho.res[,2]), "\n")
 cat("g", Mrho.res[1,1], "+-", sd(Mrho.res[,1]), "\n")
 cat("chi^2", Mrho.res[1,dim(Mrho.res)[2]], "dof", dof, "\n")
@@ -107,24 +138,27 @@ dy <- apply(apply(Mrho.res[, c(1:npar)], 1, deltaovEcm, x, Mpi), 1, sd)
 ##}
 
 
-tikzfiles <- tikz.init(basename=paste("delta-fit", ens[1], sep=""), width=4.5, height=5.)
-
+tikzfiles <- tikz.init(basename="fit-delta1", width=4.5, height=5.)
+##output.path, 
 n <- 2*length(dirs)
-cols <- c("red", "blue", "darkgreen", "magenta", "black", "cyan", "green", "brown", "orange")
+cols <- rep(c("red", "blue", "darkgreen", "magenta", "brown", "black", "cyan", "green", "orange"), times=3)
+# must match the number of plotted irreps for different volumes to have the same color
 
-pchs <- c(21:25,21:25,21:25)
-plot(NA, xlim=c(2*Mpi, 4*Mpi), ylim=c(0,pi), xlab=c("$aE_\\mathrm{CM}$"), ylab=c("$\\delta_1$"))
-polygon(x=c(x,rev(x)), y=c(y+dy, rev(y-dy)), col="gray", lty=0, lwd=0.001, border="gray")
+pchs <- rep(c(21:25,21:25,21:25), times=3)
+plot(NA, xlim=c(2, 4), ylim=c(-0.4,pi+.4), xlab=c("$E_\\mathrm{CM}/M_\\pi$"), ylab=c("$\\delta_1$"))
+polygon(x=c(x,rev(x))/Mpi, y=c(y+dy, rev(y-dy)), col="gray", lty=0, lwd=0.001, border="gray")
 for(i in seq(1,n-1,2)) {
-  plotwitherror(x=alldata[1,c(i,i+1)], y=alldata[1,c(i,i+1)+n], dx=apply(alldata[,c(i,i+1)], 2, sd), dy=apply(alldata[,c(i,i+1)+n], 2, sd), pch=pchs[i/2+1], col=cols[i/2+1], rep=TRUE)
+  plotwitherror(x=alldata[1,c(i,i+1)]/Mpi, y=alldata[1,c(i,i+1)+n], dx=apply(alldata[,c(i,i+1)], 2, sd)/Mpi, dy=apply(alldata[,c(i,i+1)+n], 2, sd),
+                pch=pchs[i/2+1], col=cols[i/2+1], rep=TRUE)
 }
-lines(x,y)
-abline(v=2*Mk, lty=c(2))
-legend("topleft", legend=dirs, bty="n", col=cols[1:(n/2)], pch=pchs[1:(n/2)])
+lines(x/Mpi,y)
+abline(v=2*Mk/Mpi, lty=c(2))
+text(x=2*Mk/Mpi+0.25, y=0.4, "$2M_K/M_\\pi$")
+legend("topleft", legend=labels, bty="n", col=cols[1:(n/2)], pch=pchs[1:(n/2)])
 tikz.finalize(tikzfiles=tikzfiles)
 
 if(FALSE) {
-  tikzfiles <- tikz.init(basename=paste("delta-fitqq", ens[1], sep=""), width=5., height=4.)
+  tikzfiles <- tikz.init(basename=paste("delta-fitqq", ensembles[1], sep=""), width=5., height=4.)
   s <- seq(0,1,1./boot.R)
   x <- qchisq(p=s, df=dof)
   qqplot(x=x, y=Mrho.res[,dim(Mrho.res)[2]], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot chisqr Values")

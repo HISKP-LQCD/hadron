@@ -4,31 +4,20 @@
 ## and <irrep> the corresponding irreducible representation,
 ## see phaseshift.rho.R for the implemented irreps
 
-## read input file and use namespace args
-source("/hiskp2/werner/pipi_I1/2017-08-03_analyse/analyse-A40.32.R")
-ens <-  args$ens
-disp <- args$disp
-maxpcs <- args$maxpcs
-L <- args$L
-T <- args$T
-boot.R <- args$boot.R
-boot.l <- args$boot.l
-seed <- args$seed
+clargs = commandArgs(trailingOnly=TRUE)
 
-source(paste(args$path.to.hadron, "phaseshift.rho.R", sep="/"))
-source(paste(args$path.to.hadron, "summarise.R", sep="/"))
+# test if there is at least one argument: if not, return an error
+if (length(clargs)!=1) {
+    stop("Please specify the input file!", call.=FALSE)
+} else  {
+    # default output file
+    input.file = clargs[1]
+}
 
+## Standard parameters
 
 ## t0 for the GEVP
 t0 <- 2
-## force a data reread
-reread <- FALSE
-## the left boundary of the fit interval runs from t10 to t11 in steps of 1
-## the right from t11 to t21
-## all these can be set specifically in parameters.R
-t10 <- rep(7, times=6)
-t11 <- rep(15, times=6)
-t21 <- rep(25, times=6)
 ## minimal number of timeslices in fit range
 dof <- rep(5, times=6)
 ## momentum of the moving frame
@@ -36,12 +25,33 @@ p <- c(0,0,0)
 ## maximal number of principal correlators to analyse
 maxpcs <- 2
 
+## read input file and use namespace args
+source(input.file)
+ens <-  args$ens
+disp <- args$disp
+maxpcs <- args$maxpcs
+L <- args$L
+T <- args$T
+## the left boundary of the fit interval runs from t10 to t11 in steps of 1
+## the right from t11 to t21
+## all these can be set specifically in parameters.R
+t10 <- args$t10
+t11 <- args$t11
+t21 <- args$t21
+## force a data reread
+reread <- args$reread
 Thalf <- T/2
+boot.R <- args$boot.R
+boot.l <- args$boot.l
+seed <- args$seed
+
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/phaseshift.rho.R", sep="/"))
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/summarise.R", sep="/"))
 
 ## extracts irrep and frame from directory name
 ## also defines N for th ematrix size
 ## and path
-source(paste(args$path.to.hadron, "/detect_irrep_frame.R", sep="/"))
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift//detect_irrep_frame.R", sep="/"))
 
 ## full momentum is given by p*2*pi/L
 ## n is needed for function phaseshift.rho
@@ -65,16 +75,15 @@ type="subtracted"
 if(frame != "cmf") type="weighted"
 
 ## pion analysis
-## it requires a pion analysis to be stored in ../../pion.Rdata
-if(!file.exists("/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")) {
-  pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T=64, check.t=0, path="/hiskp2/werner/pipi_I1/data/A40.32/3_gevp-data/", ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
+pion.filename <- paste(args$output.path, "/pion.Rdata", sep="")
+if(!file.exists(pion.filename)) {
+  pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T=T, check.t=0, path=args$path.to.data, ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
   pion.matrixfit <- matrixfit(pion.cor, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
   
-  save(pion.cor, pion.matrixfit, file="/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")
+  save(pion.cor, pion.matrixfit, file=pion.filename)
 } else {
-  load("/hiskp2/werner/pipi_I1/data/A40.32/5_fit-data/pion.Rdata")
+  load(pion.filename)
 }
-
 
 cat("running for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
 
@@ -83,7 +92,7 @@ if(reread || !file.exists(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
   Cmatrix <- cf()
   for(i in c(0:(N-1))) {
     for(j in c(0:(N-1))) {
-      tmp <- readtextcf(paste("Rho_Gevp_", momentum, "_", irrep, ".", i, ".", j, ".dat", sep=""), T=T, check.t=1, path=path, ind.vector=c(2,2))
+      tmp <- readtextcf(paste("rho", ".", i, ".", j, ".dat", sep=""), T=T, check.t=1, path=path, ind.vector=c(2,2))
       Cmatrix <- c(Cmatrix, tmp)
     }
   }

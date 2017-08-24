@@ -1,16 +1,27 @@
-source("/hiskp2/werner/pipi_I1/2017-08-03_analyse/analyse-A40.32.R")
+args = commandArgs(trailingOnly=TRUE)
+
+# test if there is at least one argument: if not, return an error
+if (length(args)!=1) {
+    stop("Please specify the input file!", call.=FALSE)
+} else  {
+    # default output file
+    input.file = args[1]
+}
+
+source(input.file)
+
 ens <-  args$ens
 boot.R <- args$boot.R
 
 hint <- rep("no", times=5)
 
-source(paste(args$path.to.hadron, "phaseshift.rho.R", sep="/"))
-source(paste(args$path.to.hadron, "summarise.R", sep="/"))
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/phaseshift.rho.R", sep="/"))
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/summarise.R", sep="/"))
 
 ## extracts irrep and frame from directory name
-## also defines N for th ematrix size
+## also defines N for the matrix size
 ## and path
-source(paste(args$path.to.hadron, "/detect_irrep_frame.R", sep="/"))
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/detect_irrep_frame.R", sep="/"))
 
 pdf(file=paste("histograms", ens, frame, irrep, "pdf", sep="."))
 res <- list()

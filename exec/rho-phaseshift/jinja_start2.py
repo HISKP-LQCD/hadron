@@ -13,15 +13,14 @@ from subprocess import call
 def setup_runs():
 
     outpath = "/hiskp2/werner/pipi_I1/data/"
-    lattice = "A40.32"
-    L = 32
-    T = 64
-#    irreps = {    0 : ["T1u"], 
-#                  1 : ["A1g", "Ep1g"], 
-#                  2 : ["A1g", "A2g", "A2u"], 
-#                  3 : ["A1g", "Ep1g"]
-#                }
-    irreps = {    2 : ["A1g", "A2g", "A2u"]
+    lattice = "A40.24"
+    L = 24
+    T = 48
+#    irreps = {    0 : ["T1u"]}
+    irreps = {    0 : ["T1u"], 
+                  1 : ["A1g", "Ep1g"], 
+                  2 : ["A1g", "A2g", "A2u"], 
+                  3 : ["A1g", "Ep1g"]
                 }
 
     # Set up jinja environment
@@ -43,7 +42,9 @@ def setup_runs():
     template = env.get_template("template-run.j2")
     with open("analyse.sh", "w") as f:
         f.write(template.render(
-            irrepmoms = irreps
+            irrepmoms = irreps,
+            outpath = outpath,
+            lattice = lattice,
           ))
 
     os.chmod("analyse.sh", 0o770)
