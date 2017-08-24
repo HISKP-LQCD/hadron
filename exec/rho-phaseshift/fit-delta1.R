@@ -15,7 +15,7 @@ ensembles <- args$ens
 frames <- c("cmf", "mf1", "mf2", "mf3")
 momenta <- c("p0", "p1", "p2", "p3")
 dirs <- args$dirs
-path.to.data <- args$path.to.data
+data.paths <- args$data.paths
 output.path <- args$output.path
 
 setwd(output.path)
@@ -24,13 +24,11 @@ setwd(output.path)
 ## g_{\rho\pi\pi} and M_\rho
 par <- c(6,0.4)
 
-labels <- apply( cbind(unlist(lapply(strsplit(dirs, "/"), function(x){x[1]})), unlist(lapply(strsplit(dirs, "/"), function(x){x[2]}))), 1, paste, collapse=" ")
-
-load( paste(args$path.to.data, "/pion.Rdata", sep="") )
+load( paste(data.paths[length(data.paths)], "/pion.Rdata", sep="") )
 
 boot.R <- pion.cor$boot.R
 
-MKdata <- read.table( paste(args$output.path, "mk.dat", sep="") )
+MKdata <- read.table( paste(data.paths[length(data.paths)], "mk.dat", sep="") )
 
 Mk <- MKdata$V2[which(MKdata$V1 == ensembles[1])]
 Mpi <- pion.matrixfit$opt.res$par[1]
@@ -38,41 +36,45 @@ Mpiboot <- c(Mpi, pion.matrixfit$opt.tsboot[1,])
 
 cat("Mk", Mk, "\n")
 Ndirs <- length(dirs)
+N.ensembles <- length(ensembles)
 
-alldata <- array(NA, dim=c(boot.R+1,4*Ndirs))
-
+alldata <- array(NA, dim=c(boot.R+1,4*N.ensembles*Ndirs))
+alllabels <- array(NA, dim=c(2*N.ensembles*Ndirs))
 rr <- c(1:boot.R)+1
 
-for(i in c(1:Ndirs)) {
-  splitwd <- strsplit(dirs[i], "/")[[1]]
-  momentum <- splitwd[1]
-  frameid <- which(momenta == momentum)
-  frame <- frames[frameid]
-  Ensemble <- ensembles[1]
-  for(j in c(1:length(ensembles))){
-    cat(length(ensembles), ensembles, ensembles[j], dirs[i], "\n")
-    if(grepl(ensembles[j], dirs[i])) {
-      Ensemble <- ensembles[j]
-      break
-    }
+for(e in c(1:N.ensembles)){
+  for(d in c(1:Ndirs)) {
+
+    splitwd <- strsplit(dirs[d], "/")[[1]]
+    momentum <- splitwd[1]
+    frameid <- which(momenta == momentum)
+    frame <- frames[frameid]
+
+    Ensemble <- ensembles[e]
+    data.path <- data.paths[e]
+ 
+    file <- paste(data.path, dirs[d], "/res.", Ensemble, ".", frame, ".", splitwd[2], ".Rdata", sep="")
+
+    cat("loading file", file, "\n")
+    load(file)
+    j <- 2*((e-1)*Ndirs+(d-1))+1
+
+    ## write first the Ecm values and then delta
+    ## N = length(Ndirs)*length(ensembles)
+    ## alldata[,c(1:N)] -> Ecm
+    ## alldata[,c((N+1):(2*N))] -> delta
+    alldata[,c(j, 2*N.ensembles*Ndirs+j)] <- res.boot[[1]][,c(1:2)]
+    alldata[,c(j+1, 2*N.ensembles*Ndirs+j+1)] <- res.boot[[2]][,c(1:2)]
+
+    alllabels[j] <- paste(ensembles[e], dirs[d])
+    alllabels[j+1] <- paste(ensembles[e], dirs[d])
+
   }
-  
-  file <- paste(path.to.data, dirs[i], "/res.", Ensemble, ".", frame, ".", splitwd[2], ".Rdata", sep="")
-
-  cat("loading file", file, "\n")
-  load(file)
-  j <- 2*(i-1)+1
-  ## write first the Ecm values and then delta
-  ## alldata[,c(1:N)] -> Ecm
-  ## alldata[,c((N+1):(2*N))] -> delta
-  n <- length(res.boot)
-
-  alldata[,c(j, 2*Ndirs+j)] <- res.boot[[1]][,c(1:2)]
-  alldata[,c(j+1, 2*Ndirs+j+1)] <- res.boot[[2]][,c(1:2)]
 }
 
-ii <- which(alldata[1,c(1:(2*Ndirs))] < 2*Mk)
-data <- alldata[,c(ii, ii+2*Ndirs)]
+ii <- which(alldata[1,c(1:(2*N.ensembles*Ndirs))] < 2*Mk)
+data <- alldata[,c(ii, ii+2*N.ensembles*Ndirs)]
+labels <- alllabels[ii]
 N <- length(ii)
 
 M <- invertCovMatrix(data, boot.samples=TRUE)
@@ -86,7 +88,6 @@ deltaovEcm <- function(par, Ecm, Mpi) {
   x[which(x < 0)] <- x[which(x < 0)] + pi
   return(x)
 }
-
 
 Chi <- function(par, y, L, Mpi) {
   N <- (length(par)-2)
@@ -140,7 +141,7 @@ dy <- apply(apply(Mrho.res[, c(1:npar)], 1, deltaovEcm, x, Mpi), 1, sd)
 
 tikzfiles <- tikz.init(basename="fit-delta1", width=4.5, height=5.)
 ##output.path, 
-n <- 2*length(dirs)
+n <- 2*Ndirs*N.ensembles
 cols <- rep(c("red", "blue", "darkgreen", "magenta", "brown", "black", "cyan", "green", "orange"), times=3)
 # must match the number of plotted irreps for different volumes to have the same color
 
@@ -154,7 +155,7 @@ for(i in seq(1,n-1,2)) {
 lines(x/Mpi,y)
 abline(v=2*Mk/Mpi, lty=c(2))
 text(x=2*Mk/Mpi+0.25, y=0.4, "$2M_K/M_\\pi$")
-legend("topleft", legend=labels, bty="n", col=cols[1:(n/2)], pch=pchs[1:(n/2)])
+legend("topleft", legend=alllabels[seq(1,n,2)], bty="n", col=cols[1:(n/2)], pch=pchs[1:(n/2)])
 tikz.finalize(tikzfiles=tikzfiles)
 
 if(FALSE) {
