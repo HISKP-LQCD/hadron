@@ -182,6 +182,9 @@ for(dir in dirs){
     }
     dev.off()
   }
+
+  source(paste(args$path.to.hadron, "/exec/rho-phaseshift/average.data.R", sep="/"))
 }
 
 sink()
+
