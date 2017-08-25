@@ -16,9 +16,12 @@ frames <- c("cmf", "mf1", "mf2", "mf3")
 momenta <- c("p0", "p1", "p2", "p3")
 dirs <- args$dirs
 data.paths <- args$data.paths
-output.path <- args$output.path
+output.path <- paste(args$output.path, "6_phaseshift", sep="/")
 
+dir.create(output.path, showWarnings=FALSE, recursive=TRUE)
 setwd(output.path)
+## WARNING: Name of sink may not have the same basename as tikz uses below
+sink("fitresults.log", append=FALSE, split=TRUE)
 
 ## Starting values for fit parameters
 ## g_{\rho\pi\pi} and M_\rho
@@ -140,7 +143,6 @@ dy <- apply(apply(Mrho.res[, c(1:npar)], 1, deltaovEcm, x, Mpi), 1, sd)
 
 
 tikzfiles <- tikz.init(basename="fit-delta1", width=4.5, height=5.)
-##output.path, 
 n <- 2*Ndirs*N.ensembles
 cols <- rep(c("red", "blue", "darkgreen", "magenta", "brown", "black", "cyan", "green", "orange"), times=3)
 # must match the number of plotted irreps for different volumes to have the same color
@@ -167,3 +169,6 @@ if(FALSE) {
   
   tikz.finalize(tikzfiles=tikzfiles)
 }
+
+sink()
+cat(readLines("fitresults.log"), sep="\n")
