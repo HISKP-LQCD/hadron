@@ -8,10 +8,11 @@ clargs = commandArgs(trailingOnly=TRUE)
 
 # test if there is at least one argument: if not, return an error
 if (length(clargs)!=1) {
-    stop("Please specify the input file!", call.=FALSE)
-} else  {
-    # default output file
-    input.file = clargs[1]
+  stop("Please specify the input file!", call.=FALSE)
+} 
+else {
+  # default output file
+  input.file = clargs[1]
 }
 
 ## Standard parameters
@@ -40,7 +41,6 @@ t11 <- args$t11
 t21 <- args$t21
 ## force a data reread
 reread <- args$reread
-Thalf <- T/2
 boot.R <- args$boot.R
 boot.l <- args$boot.l
 seed <- args$seed
@@ -55,7 +55,7 @@ setwd(output.path)
 
 ## pion analysis
 pion.filename <- paste(output.path, "/pion.Rdata", sep="")
-if(!file.exists(pion.filename)) {
+if(reread || !file.exists(pion.filename)) {
   pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T=T, check.t=0, path=args$path.to.data, ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
   pion.matrixfit <- matrixfit(pion.cor, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
   
@@ -98,6 +98,7 @@ for(dir in dirs){
 
   cat("running for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
   
+  ## Create correlation matrix 
   if(reread || !file.exists(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))) {
     cat("reading raw data\n")
     Cmatrix <- cf()
@@ -116,31 +117,34 @@ for(dir in dirs){
     Cmatrix.bootstrap.gevp <- bootstrap.gevp(Cmatrix.rt, matrix.size=N, element.order=c(1:N^2), t0=t0)
     cat("...done\n")
     save(Cmatrix, Cmatrix.rt, Cmatrix.bootstrap.gevp, Cmatrix.bootstrap.gevp.n, irrep, frame, N, file=paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
+
+  ## If it is created anew, solve gevp and plot eigenvalues and their effective mass 
+#  if(!file.exists(paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))) {
+  pdf(file=paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))
+  plot(NA, xlim=c(1,T/2), ylim=c(0,1), xlab="t/a", ylab="Meff")
+  clrs <- c("red", "blue", "darkgreen", "black", "purple", "orange")
+  pchs <- c(21, 22, 23, 24, 25, 26)
+  pcs <- c("pc1", "pc2", "pc3", "pc4", "pc5")
+  for(id in c(1:N)) {
+    pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
+    effmass <- bootstrap.effectivemass(pc, boot.R=boot.R, boot.l=boot.l, seed=seed, type=type)
+    plot(effmass, rep=TRUE, col=clrs[id], pch=pchs[id])
   }
-  cat("loading Rdata\n")
-  load(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
-  cat("...done\n")
+  legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
   
-  if(!file.exists(paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))) {
-    pdf(file=paste(ens, ".", frame, ".", irrep, "-efm.pdf", sep=""))
-    plot(NA, xlim=c(1,T/2), ylim=c(0,1), xlab="t/a", ylab="Meff")
-    clrs <- c("red", "blue", "darkgreen", "black", "purple", "orange")
-    pchs <- c(21, 22, 23, 24, 25, 26)
-    pcs <- c("pc1", "pc2", "pc3", "pc4", "pc5")
-    for(id in c(1:N)) {
-      pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
-      effmass <- bootstrap.effectivemass(pc, boot.R=boot.R, boot.l=boot.l, seed=seed, type=type)
-      plot(effmass, rep=TRUE, col=clrs[id], pch=pchs[id])
-    }
-    legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
-    
-    plot(NA, xlim=c(1,T/2), ylim=c(0.000001,1), xlab="t/a", ylab="C(t)", log=c("y"))
-    for(id in c(1:N)) {
-      pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
-      plot(pc, rep=TRUE, col=clrs[id], pch=pchs[id])
-    }
-    legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
-    dev.off()
+  plot(NA, xlim=c(1,T/2), ylim=c(0.000001,1), xlab="t/a", ylab="C(t)", log=c("y"))
+  for(id in c(1:N)) {
+    pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
+    plot(pc, rep=TRUE, col=clrs[id], pch=pchs[id])
+  }
+  legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
+  dev.off()
+#  }
+  }
+  else {
+    cat("loading Rdata\n")
+    load(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
+    cat("...done\n")
   }
   
   for(id in c(1:min(N, maxpcs))) {
@@ -149,10 +153,12 @@ for(dir in dirs){
     if(id == 3) PC="pc3"
     if(id == 4) PC="pc4"
     if(id == 5) PC="pc5"
+
     pc <- gevp2cf(Cmatrix.bootstrap.gevp, id=id)
     if(file.exists(paste(PC, ".R", sep=""))) {
       source(paste(PC, ".R", sep=""))
     }
+
     cat(PC, "\n")
     cat("Mpi = ", pion.matrixfit$opt.res$par[1], sd(pion.matrixfit$opt.tsboot[1,]), "\n")
     pdf(file=paste(ens, PC, frame, "-fits.pdf", sep=""))
@@ -161,13 +167,15 @@ for(dir in dirs){
       for(t2 in seq(t11[id], t21[id], 1)) {
         if(t2-t1 > dof[id]) {
           cat(t1, t2, "\n")
+
           filename <- paste("rhoana", PC, t1, t2, ens, frame, irrep, "Rdata", sep=".")
-          if(file.exists(filename)) {
-            load(filename)
-          }
-          else {
+          if(reread || !file.exists(filename)) {
             pc.matrixfit <- matrixfit(pc, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=sym.vec, fit.method="lm", model=model)
           }
+          else {
+            load(filename)
+          }
+
           plot(pc.matrixfit, main=paste(PC, "t1", t1, "t2", t2, "Qval", format(pc.matrixfit$Qval, digits=3), "E=", format(pc.matrixfit$opt.res$par[1], digits=3)))
   
           gs <- phaseshift.rho(pcfit =pc.matrixfit, L=L, Mpi=pion.matrixfit$opt.res$par[1], Mpiboot=pion.matrixfit$opt.tsboot[1,], frame=frame, irrep=irrep, disp=disp, n=n)
@@ -175,14 +183,15 @@ for(dir in dirs){
           save(pc.matrixfit, type, L, T, pion.matrixfit, gs, frame, ens, disp, PC, file=filename)
         
           cat(PC, t1, t2, pc.matrixfit$opt.res$par[1], sd(pc.matrixfit$opt.tsboot[1,]), gs$Ecm, sd(gs$Ecmboot, na.rm=TRUE),
-              gs$delta, sd(gs$deltaboot, na.rm=TRUE), sin(gs$delta)^2, sd(sin(gs$deltaboot)^2, na.rm=TRUE),
-              gs$tandelta, sd(gs$tandeltaboot, na.rm=TRUE), "Qval=", pc.matrixfit$Qval, "\n")
+          gs$delta, sd(gs$deltaboot, na.rm=TRUE), sin(gs$delta)^2, sd(sin(gs$deltaboot)^2, na.rm=TRUE),
+          gs$tandelta, sd(gs$tandeltaboot, na.rm=TRUE), "Qval=", pc.matrixfit$Qval, "\n")
         }
       }
     }
     dev.off()
   }
 
+  ## average bootstrapsamples and write result to average.data.log
   source(paste(args$path.to.hadron, "/exec/rho-phaseshift/average.data.R", sep="/"))
 }
 

@@ -33,7 +33,7 @@ boot.R <- pion.cor$boot.R
 
 MKdata <- read.table( paste(data.paths[length(data.paths)], "mk.dat", sep="") )
 
-Mk <- MKdata$V2[which(MKdata$V1 == ensembles[1])]
+Mk <- MKdata$V2[which(MKdata$V1 == ensembles[length(data.paths)])]
 Mpi <- pion.matrixfit$opt.res$par[1]
 Mpiboot <- c(Mpi, pion.matrixfit$opt.tsboot[1,])
 
@@ -45,8 +45,13 @@ alldata <- array(NA, dim=c(boot.R+1,4*N.ensembles*Ndirs))
 alllabels <- array(NA, dim=c(2*N.ensembles*Ndirs))
 rr <- c(1:boot.R)+1
 
+save.dirs <- dirs
+
 for(e in c(1:N.ensembles)){
   for(d in c(1:Ndirs)) {
+
+    ## Dafuq. A40.24 old data kinda broken
+    dirs <- save.dirs
 
     splitwd <- strsplit(dirs[d], "/")[[1]]
     momentum <- splitwd[1]
@@ -171,4 +176,3 @@ if(FALSE) {
 }
 
 sink()
-cat(readLines("fitresults.log"), sep="\n")
