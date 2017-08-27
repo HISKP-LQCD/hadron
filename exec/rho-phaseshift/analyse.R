@@ -19,7 +19,7 @@ if (length(clargs)!=1) {
 ## t0 for the GEVP
 t0 <- 2
 ## minimal number of timeslices in fit range
-dof <- rep(5, times=6)
+dof <- rep(4, times=6)
 ## momentum of the moving frame
 p <- c(0,0,0)
 ## maximal number of principal correlators to analyse
@@ -30,6 +30,7 @@ source(input.file)
 ens <-  args$ens
 disp <- args$disp
 maxpcs <- args$maxpcs
+hint <- rep("no", times=maxpcs)
 L <- args$L
 T <- args$T
 ## the left boundary of the fit interval runs from t10 to t11 in steps of 1

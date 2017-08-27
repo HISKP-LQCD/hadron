@@ -155,14 +155,13 @@ dy <- apply(apply(Mrho.res[, c(1:npar)], 1, deltaovEcm, x, Mpi), 1, sd)
 
 ## Create plot
 tikzfiles <- tikz.init(basename="fit-delta1", width=4.5, height=5.)
-
 plot(NA, xlim=c(2, 4), ylim=c(-0.4,pi+.4), xlab=c("$E_\\mathrm{CM}/M_\\pi$"), ylab=c("$\\delta_1$"))
-lines(x/Mpi,y)
 abline(v=2*Mk/Mpi, lty=c(2))
 text(x=2*Mk/Mpi+0.25, y=0.4, "$2M_K/M_\\pi$")
 
 ## Plot fit to data
 polygon(x=c(x,rev(x))/Mpi, y=c(y+dy, rev(y-dy)), col="gray", lty=0, lwd=0.001, border="gray")
+lines(x/Mpi,y)
 
 ## Plot all data
 for( i in c(1:length(E.cm[1,])) ){
