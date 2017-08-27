@@ -4,7 +4,7 @@ hint <- rep("no", times=5)
 #source(paste(args$path.to.hadron, "/exec/rho-phaseshift/summarise.R", sep="/"))
 
 #setwd(paste(args$output.path, "5_fit-data", dir, sep="/"))
-sink("average.data.log", append=FALSE)
+sink("average.data.log", append=FALSE, split=TRUE)
 
 ## extracts irrep and frame from directory name
 ## also defines N for the matrix size

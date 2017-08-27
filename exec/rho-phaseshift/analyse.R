@@ -9,8 +9,7 @@ clargs = commandArgs(trailingOnly=TRUE)
 # test if there is at least one argument: if not, return an error
 if (length(clargs)!=1) {
   stop("Please specify the input file!", call.=FALSE)
-} 
-else {
+} else {
   # default output file
   input.file = clargs[1]
 }
@@ -39,6 +38,7 @@ T <- args$T
 t10 <- args$t10
 t11 <- args$t11
 t21 <- args$t21
+t.step <- args$t.step
 ## force a data reread
 reread <- args$reread
 boot.R <- args$boot.R
@@ -68,7 +68,6 @@ for(dir in dirs){
 
   dir.create(paste(output.path, dir, sep="/"), showWarnings=FALSE, recursive=TRUE)
   setwd(paste(output.path, dir, sep="/"))
-  sink("analyse.log", append=FALSE)
 
   ## extracts irrep and frame from directory name
   ## also defines N for th ematrix size
@@ -96,8 +95,16 @@ for(dir in dirs){
   type="subtracted"
   if(frame != "cmf") type="weighted"
 
-  cat("running for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
-  
+  cat("\nRunning for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
+
+  if(file.exists("parameters.R")){
+    print("Found local file parameters.R: Overwriting default")
+    source("parameters.R")
+    cat(readLines("parameters.R"), sep="\n")
+  }
+
+  sink("analyse.log", append=FALSE)
+ 
   ## Create correlation matrix 
   if(reread || !file.exists(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))) {
     cat("reading raw data\n")
@@ -140,8 +147,7 @@ for(dir in dirs){
   legend("topright", legend=pcs[1:N], col=clrs[1:N], bty="n", pch=pchs[1:N])
   dev.off()
 #  }
-  }
-  else {
+  } else {
     cat("loading Rdata\n")
     load(paste("Cmatrix", ens, frame, irrep, "Rdata", sep="."))
     cat("...done\n")
@@ -163,16 +169,15 @@ for(dir in dirs){
     cat("Mpi = ", pion.matrixfit$opt.res$par[1], sd(pion.matrixfit$opt.tsboot[1,]), "\n")
     pdf(file=paste(ens, PC, frame, "-fits.pdf", sep=""))
   
-    for(t1 in seq(t10[id], t11[id], 1)) {
-      for(t2 in seq(t11[id], t21[id], 1)) {
+    for(t1 in seq(t10[id], t11[id], t.step)) {
+      for(t2 in seq(t11[id], t21[id], t.step)) {
         if(t2-t1 > dof[id]) {
           cat(t1, t2, "\n")
 
           filename <- paste("rhoana", PC, t1, t2, ens, frame, irrep, "Rdata", sep=".")
           if(reread || !file.exists(filename)) {
             pc.matrixfit <- matrixfit(pc, t1=t1, t2=t2, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=sym.vec, fit.method="lm", model=model)
-          }
-          else {
+          } else {
             load(filename)
           }
 
@@ -191,9 +196,10 @@ for(dir in dirs){
     dev.off()
   }
 
+  sink()
+
   ## average bootstrapsamples and write result to average.data.log
   source(paste(args$path.to.hadron, "/exec/rho-phaseshift/average.data.R", sep="/"))
+  sink()
+
 }
-
-sink()
-
