@@ -240,6 +240,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ## average +-t
   if(symmetrise) {
     tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
+  }else{
+    ii <- c(1:T)
   }
 
   ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
