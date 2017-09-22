@@ -12,6 +12,19 @@ getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, 
   return(invisible(ofiles[ii]))
 }
 
+getconfignumbers <- function(ofiles, basename="onlinemeas", last.digits=4, ending="") {
+  if(any(nchar(ofiles) != nchar(ofiles[1]))) {
+    stop("getconfigurationnumbers: all filenames need to have the same length, aborting...\n")
+  }
+  lending <- nchar(ending)
+  
+  ## sort input files using the last last.digits characters of each filename
+  e <- nchar(ofiles[1]) - lending
+  s <- e-last.digits+1
+  ## sorted config numbers
+  return(invisible(as.integer(substr(ofiles,s,e))))
+}
+
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
@@ -455,12 +468,22 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   return(invisible(cf))
 }
 
-readgradflow <- function(path,skip=0) {
-  files <- getorderedfilelist(path=path, basename="gradflow", last.digits=6)
+readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
+  files <- getorderedfilelist(path=path, basename=basename, last.digits=6)
+  # the trajectory numbers deduced from the filename
+  gaugeno <- getconfignumbers(files, basename=basename, last.digits=6)
   files <- files[(skip+1):length(files)]
   if(length(files)==0) stop(sprintf("readgradflow: no tmlqcd gradient flow files found in path %s",path))
-  
-  tmpdata <- read.table(file=files[1],colClasses="numeric",header=TRUE,stringsAsFactors=FALSE)
+
+  tmpdata <- data.frame()
+  if(missing(col.names)) {
+    tmpdata <- read.table(file=files[1],colClasses="numeric",header=TRUE,stringsAsFactors=FALSE)
+  }
+  else {
+    tmpdata <- read.table(file=files[1],colClasses="numeric",col.names=col.names,stringsAsFactors=FALSE)
+  }
+  ## add the trajectory number, if not present
+  if(is.null(tmpdata$traj)) tmpdata$traj <- gaugeno[1]
   
   fLength <- length(tmpdata$t)
   nFiles <- length(files)
@@ -475,7 +498,14 @@ readgradflow <- function(path,skip=0) {
   pb <- txtProgressBar(min = 1, max = length(files), style = 3)
   for( i in 1:length(files) ){
     setTxtProgressBar(pb, i)
-    tmp <- read.table(file=files[i], header=TRUE, stringsAsFactors=FALSE)
+    tmp <- data.frame()
+    if(missing(col.names)) {
+      tmp <- read.table(file=files[i], colClasses="numeric", header=TRUE, stringsAsFactors=FALSE)
+    }
+    else {
+      tmp <- read.table(file=files[i], colClasses="numeric", col.names=col.names, stringsAsFactors=FALSE)
+    }
+    if(is.null(tmp$traj)) tmp$traj <- gaugeno[i]
     # the tmlqcd gradient flow routine has the tendency to crash, so we check if the files
     # are complete 
     if( dim( tmp )[1] != fLength ) {
