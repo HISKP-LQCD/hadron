@@ -150,7 +150,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   cf <- NULL
   
   if(symmetrise){
-    ## we devide everything by 2 apart from t=0 and t=T/2
+    ## we divide everything by 2 apart from t=0 and t=T/2
     data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
         data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
     ## symmetrise or anti-symmetrise for given observable?
@@ -197,7 +197,8 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE)
+  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE,
+              symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -244,7 +245,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     ii <- c(1:T)
   }
 
-  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
+  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
+              symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
