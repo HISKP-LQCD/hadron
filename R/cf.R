@@ -225,7 +225,6 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
     cf <- cf1
     cf$cf <- cf1$cf - cf2$cf
     cf <- invalidate.samples.cf(cf)
-    cf$boot.samples <- FALSE
     return(cf)
   }
 }
@@ -354,7 +353,9 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
 }
 
-#  a correlation function by 'places' time-slices
+# shift a correlation function by 'places' time-slices
+#   C'(t) = C(t+places)
+# where places can be positive or negative as required
 # this will of course mix smearings and observables
 # and must be taken into account externally by
 # invalidating the affected time-slices
