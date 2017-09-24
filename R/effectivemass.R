@@ -1,4 +1,5 @@
-effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor=1., deltat=1) {
+effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
+                             weight.factor=1., deltat=1, tmax=Thalf) {
   if(missing(cf)) {
     stop("cf must be provided to effectivemass.cf! Aborting...\n")
   }
@@ -9,13 +10,13 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   else {
     Cor <- cf
   }
-  
-  if(length(Cor) != nrObs*(Thalf+1)) {
+
+  if(length(Cor) != nrObs*(tmax+1)) {
     stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
   }
   ## here we generate the index arrays
   ## this is the complete index for time
-  tt <- c(1:(nrObs*(Thalf+1)))
+  tt <- c(1:(nrObs*(tmax+1)))
 
   ## depending on the type, the result is not defined on all t
   ## so we have to cut
@@ -25,12 +26,12 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   cutii2 <- c()
 
   for(i in 1:nrObs) {
-    cutii <- c(cutii, (i-1)*(Thalf+1)+1, i*(Thalf+1))
-    cutii2 <- c(cutii2, i*(Thalf+1))
+    cutii <- c(cutii, (i-1)*(tmax+1)+1, i*(tmax+1))
+    cutii2 <- c(cutii2, i*(tmax+1))
   }
   t2 <- tt[-cutii2]
-  
-  effMass <- rep(NA, nrObs*(Thalf+1))
+
+  effMass <- rep(NA, nrObs*(tmax+1))
   if(type == "acosh" || type == "temporal" || type == "shifted" || type == "weighted") {
     t <- tt[-cutii]
     if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
@@ -47,8 +48,8 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
-        else if(fn(interval[1], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
-        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (Thalf+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
+        else if(fn(interval[1], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
       }
     }
   }
@@ -59,8 +60,9 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       effMass[t2] <- log(Ratio[t2])
     }
     else {
+      # note: for tmax > Thalf, this will produce NA
       for(t in t2) {
-        effMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=(t %% (Thalf+1)))
+        effMass[t] <- invcosh(Ratio[t], timeextent=2*Thalf, t=(t %% (tmax+1)))
       }
     }
   }
@@ -96,14 +98,21 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
 
   ## number of time slices (hopefully in units of T/2+1)
   Nt <- length(cf$cf0)
-  nrObs <- floor(Nt/(cf$Time/2+1))
+  
+  tmax <- cf$Time/2
+  if( "symmetrised" %in% names(cf) ) {
+    if(!cf$symmetrised){
+      tmax <- cf$Time-1
+    }
+  }
+  nrObs <- floor(Nt/(tmax+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
+  effMass <- effectivemass.cf(cf$cf0, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, cf$Time/2, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
-  ret <- list(t=c(1:(cf$Time/2)),
+  ret <- list(t=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
@@ -111,9 +120,9 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
               chisqr=NULL, Qval=NULL
              )
   ret$cf <- cf
-  ret$t0 <- effMass
-  ret$t <- effMass.tsboot
-  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
+#  ret$t0 <- effMass
+#  ret$t <- effMass.tsboot
+#  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -304,11 +313,11 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   op <- options()
   options(warn=-1)
   # BaKo: is this also valid for acosh type effective masses?
-  t <- c(1:(effMass$Time/2))
-  plotwitherror(x=t-1, y=effMass$t0[t], dy=effMass$se[t], col=col[1], ...)
+  t <- effMass$t
+  plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      plotwitherror(x=t-1, y=effMass$t0[t+i*effMass$Time/2], dy=effMass$se[t+i*effMass$Time/2], rep=TRUE, col=col[i+1], ...)
+      plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...)
     }
   }
   options(op)
