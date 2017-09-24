@@ -158,6 +158,43 @@ avg.ls.cf <- function(cf,cols=c(2,3)) {
   return(cf)
 }
 
+# "close-by-times" averaging replaces the value of the correlation function at t
+# with the symmetric average up to ts timeslices
+# it then invalidates the boundary timeslices (for all smearing types and observables)
+avg.cbt.cf <- function(cf, ts=1){
+  if(!any(class(cf) == "cf")) {
+    stop("avg.cbt.cf: Input must be of class 'cf'\n")
+  }
+  # averaging factor 
+  n <- 2*ts+1
+  cf <- mul.cf(cf, 1.0/n)
+  
+  # copy for shifting
+  cf2 <- cf
+  places <- (-ts):ts
+  # remove places=0 contribution  
+  places <- places[-(ts+1)]
+  # average over shifted correlation functions
+  for( p in places ){
+    cf <- cf + shift.cf(cf2,p)
+  }
+  # invalidate time slices with incorrect contributions
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      nts <- cf$Time/2+1
+      if( "symmetrised" %in% names(cf) ) {
+        if(!cf$symmetrised){
+          nts <- cf$Time
+        }
+      }
+      istart <- oidx*cf$nrStypes*nts + sidx*nts + 1
+      iend <- istart+nts
+      ii <- c(istart:(istart+ts-1),(iend-ts):(iend-1))
+      cf$cf[,ii] <- NA
+    }
+  }
+  return(invisible(cf))
+}
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1., b=1.) {
@@ -165,7 +202,7 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
      all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
     cf <- cf1
     cf$cf <- a*cf1$cf + b*cf2$cf
-    cf$boot.samples <- FALSE
+    cf <- invalidate.samples.cf(cf)
     return(cf)
   }
   else {
@@ -177,10 +214,7 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
   if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
     cf <- cf1
     cf$cf <- cf1$cf + cf2$cf
-    cf$boot.samples <- FALSE
-    cf$boot.R <- NULL
-    cf$boot.l <- NULL
-    cf$seed <- NULL
+    cf <- invalidate.samples.cf(cf)
 
     return(cf)
   }
@@ -190,6 +224,7 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
   if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
     cf <- cf1
     cf$cf <- cf1$cf - cf2$cf
+    cf <- invalidate.samples.cf(cf)
     cf$boot.samples <- FALSE
     return(cf)
   }
@@ -199,7 +234,7 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
   if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
     cf <- cf1
     cf$cf <- cf1$cf / cf2$cf
-    cf$boot.samples <- FALSE
+    cf <- invalidate.samples.cf(cf)
     return(cf)
   }
 }
@@ -207,7 +242,7 @@ add.cf <- function(cf1, cf2, a=1., b=1.) {
 mul.cf <- function(cf, a=1.) {
   if(any(class(cf) == "cf") && is.numeric(a)) {
     cf$cf <- a*cf$cf
-    cf$boot.samples=FALSE
+    cf <- invalidate.samples.cf(cf)
     return(cf)
   }
   else {
@@ -307,8 +342,56 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
   Err <- numeric(0)
   if(cf$boot.samples) Err <- cf$tsboot.se
   else if(cf$jackknife.samples) Err <- cf$jackknife.se
-  plotwitherror(x=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), y=cf$cf0, dy=Err, ...)
-  return(invisible(data.frame(t=rep(c(0:(cf$Time/2)), times=length(cf$cf0)/(cf$Time/2+1)), CF=cf$cf0, Err=Err)))
+
+  tmax <- cf$Time/2
+  if( "symmetrised" %in% names(cf) ) {
+    if(!cf$symmetrised){
+      tmax <- cf$Time-1
+    }
+  }
+
+  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=cf$cf0, dy=Err, ...)
+  return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
+}
+
+#  a correlation function by 'places' time-slices
+# this will of course mix smearings and observables
+# and must be taken into account externally by
+# invalidating the affected time-slices
+shift.cf <- function(cf,places){
+  if(!any(class(cf) == "cf")) {
+    stop(".cf: Input must be of class 'cf'\n")
+  }
+  cf <- invalidate.samples.cf(cf)
+  n <- ncol(cf$cf)
+  if(places == 0){
+    cf$cf <- cf$cf
+  } else if ( places < 0 ){
+    cf$cf <- cbind( cf$cf[, (n - abs(places) + 1):n], cf$cf[, 1:(n-abs(places))] )
+  } else {
+    cf$cf <- cbind( cf$cf[, (places+1):n], cf$cf[, 1:places] )
+  }
+  return(invisible(cf))
+}
+
+# when a correlation function is modified, any resampling should be
+# invalidated
+invalidate.samples.cf <- function(cf){
+  cf$cf0 <- NULL
+  if(cf$boot.samples) {
+    cf$boot.samples <- FALSE
+    cf$boot.R <- NULL
+    cf$boot.l <- NULL
+    cf$sim <- NULL
+    cf$tsboot.se <- NULL
+    cf$tsboot <- NULL
+  }
+  if(cf$jackknife.samples){
+    cf$jackknife.samples <- FALSE
+    cf$jackknife <- NULL
+    cf$jackknife.se <- NULL
+  }
+  return(invisible(cf))
 }
 
 summary.cf <- function(cf) {
@@ -320,8 +403,14 @@ summary.cf <- function(cf) {
     cat("R = ", cf$boot.R, "\n")
   }
   if(cf$boot.samples || !is.null(cf$jackknife.se)) {
+    tmax <- cf$Time/2
+    if( "symmetrised" %in% names(cf) ) {
+      if(!cf$symmetrised){
+        tmax <- cf$Time-1
+      }
+    }
     cat("l = ", cf$boot.l, "\n")
-    out <- data.frame(t=c(0:(T/2)), C=cf$cf0)
+    out <- data.frame(t=c(0:tmax), C=cf$cf0)
   }
   if(!is.null(cf$sim)) {
     cat("sim = ", cf$sim, "\n")
