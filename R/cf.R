@@ -395,6 +395,37 @@ invalidate.samples.cf <- function(cf){
   return(invisible(cf))
 }
 
+symmetrise.cf <- function(cf, sym.vec=c(1) ) {
+  if( "symmetrised" %in% names(cf) ) {
+    if(cf$symmetrised){
+      message("symmetrise.cf: cf was already symmetrised\n")
+      return(invisible(cf))
+    }
+  }
+  if( cf$nrObs > 1 & length(sym.vec) == 1 ){
+    sym.vec <- rep(sym.vec[1],times=cf$nrObs)
+  } else if( cf$nrObs != length(sym.vec) ) {
+    stop("symmetrise.cf: length of sym.vec must either be 1 or match cf$nrObs!\n")
+  }
+
+  Thalf <- cf$Time/2
+  isub <- c()
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
+      ihalf <- istart + Thalf
+      iend <- istart + cf$Time - 1
+      isub <- c(isub,(ihalf+1):iend)
+      cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] + sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
+    }
+  }
+  # remove now unnecessary time slices 
+  cf$cf <- cf$cf[, -isub]
+  cf$symmetrised <- TRUE
+  return(invisible(cf))
+}
+
+
 summary.cf <- function(cf) {
   cat("T = ", cf$Time, "\n")
   cat("observations = ", dim(cf$cf)[1], "\n")
