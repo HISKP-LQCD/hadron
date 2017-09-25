@@ -149,7 +149,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     if(ylog) {
       tmp <- tmp[ tmp > 0 ]
     }
-    my.ylim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+    my.ylim <- range(c(as.vector(tmp), as.vector(tmpp)), na.rm=TRUE)
   }
   else {
     my.ylim <- ylim
