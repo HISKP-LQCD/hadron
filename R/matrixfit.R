@@ -335,7 +335,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, ...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -394,12 +394,14 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     }
   }
 
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
+  if(do.qqplot){
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
+    s <- seq(0,1,1./length(mfit$t[,1]))
+    x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
+    qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
   }
-  s <- seq(0,1,1./length(mfit$t[,1]))
-  x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
-  qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
 }
 
 
