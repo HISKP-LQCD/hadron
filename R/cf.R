@@ -159,24 +159,20 @@ avg.ls.cf <- function(cf,cols=c(2,3)) {
 }
 
 # "close-by-times" averaging replaces the value of the correlation function at t
-# with the symmetric average up to ts timeslices
+# with the "hypercubic" average with the values at the neighbouring time-slices 
+# with weights 0.25, 0.5 and 0.25
 # it then invalidates the boundary timeslices (for all smearing types and observables)
-avg.cbt.cf <- function(cf, ts=1){
+avg.cbt.cf <- function(cf){
   if(!any(class(cf) == "cf")) {
     stop("avg.cbt.cf: Input must be of class 'cf'\n")
   }
-  # averaging factor 
-  n <- 2*ts+1
-  cf <- mul.cf(cf, 1.0/n)
-  
   # copy for shifting
   cf2 <- cf
-  places <- (-ts):ts
-  # remove places=0 contribution  
-  places <- places[-(ts+1)]
+  cf <- mul.cf(cf, 0.5)
+  
   # average over shifted correlation functions
-  for( p in places ){
-    cf <- cf + shift.cf(cf2,p)
+  for( p in c(-1,1) ){
+    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
   }
   # invalidate time slices with incorrect contributions
   for( oidx in 0:(cf$nrObs-1) ){
@@ -189,10 +185,11 @@ avg.cbt.cf <- function(cf, ts=1){
       }
       istart <- oidx*cf$nrStypes*nts + sidx*nts + 1
       iend <- istart+nts
-      ii <- c(istart:(istart+ts-1),(iend-ts):(iend-1))
+      ii <- c(istart,iend-1)
       cf$cf[,ii] <- NA
     }
   }
+  cf <- invalidate.samples.cf(cf)
   return(invisible(cf))
 }
 
