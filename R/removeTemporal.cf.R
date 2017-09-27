@@ -141,7 +141,10 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   tt1 <- tt0 + deltat
 
   ## the default is a type of backwards derivative: C'(t) = C(t-1) - C(t)
+  ### which invalidates the point at t=0 
   ## alternatively, we can also do a forward derivative: C'(t) = C(t+1) - C(t)
+  ### which will invalidate the point at t=T/2
+  # C(tlhs) = C(trhs1) - C(trhs2) 
   tlhs <- tt1
   trhs1 <- tt0
   trhs2 <- tt1
