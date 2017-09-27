@@ -140,26 +140,30 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   }
   tt1 <- tt0 + deltat
 
-  ## the default is a backwards derivative: C'(t) = C(t-1) - C(t)
-  ## alternatively, we can also do: C'(t) = C(t) - C(t+1)
+  ## the default is a type of backwards derivative: C'(t) = C(t-1) - C(t)
+  ## alternatively, we can also do a forward derivative: C'(t) = C(t+1) - C(t)
   tlhs <- tt1
+  trhs1 <- tt0
+  trhs2 <- tt1
   if( forwardshift ){
     tlhs <- tt0
+    trhs1 <- tt1
+    trhs2 <- tt0
   }
 
   ## take the differences, set the remaining points to NA
   if(!is.null(cf$cf)) {
-    cf$cf[,tlhs] <- cf$cf[,tt0]-cf$cf[,tt1]
+    cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
     cf$cf[,-tlhs] <- NA
   }
   ## now the bootstrap samples
   if(cf$boot.samples) {
-    cf$cf0[tlhs] <- cf$cf0[tt0]-cf$cf0[tt1]
+    cf$cf0[tlhs] <- cf$cf0[trhs1]-cf$cf0[trhs2]
     cf$cf0[-tlhs] <- NA
 
-    cf$cf.tsboot$t0[tlhs] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
+    cf$cf.tsboot$t0[tlhs] <- cf$cf.tsboot$t0[trhs1]-cf$cf.tsboot$t0[trhs2]
     cf$cf.tsboot$t0[-tlhs] <- NA
-    cf$cf.tsboot$t[,tlhs] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
+    cf$cf.tsboot$t[,tlhs] <- cf$cf.tsboot$t[,trhs1]-cf$cf.tsboot$t[,trhs2]
     cf$cf.tsboot$t[,-tlhs] <- NA
   }
   ## save info
