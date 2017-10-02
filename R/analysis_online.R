@@ -75,9 +75,13 @@ analysis_online <- function(L, T, t1, t2, kappa, mul,
   outfile <- sprintf("%s/output.data",rundir)
   
   # read online measurements
+  # get all omeas files that exist (hopefully in a consistent stepping)
   omeas.files <- getorderedfilelist(path=rundir, basename="onlinemeas", last.digits=6)
+  # extract the trajectory numbers
   omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6)
-  omeas.idx   <- c((1+as.integer(ceiling(skip/omeas.stepsize))):length(omeas.files))
+  # when the online measurements start later than traj 0 and we want to skip 'skip'
+  # trajectories, the following should correspond to the correact indexing
+  omeas.idx   <- c((1+as.integer(ceiling((skip-omeas.start)/omeas.stepsize))):length(omeas.files))
   omeas.files <- omeas.files[omeas.idx]
   omeas.cnums <- omeas.cnums[omeas.idx]
   pioncor <- readcmidatafiles( files=omeas.files, skip=0 )
