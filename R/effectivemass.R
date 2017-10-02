@@ -112,7 +112,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
   effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
-  ret <- list(t=c(1:(tmax)),
+  ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
@@ -120,9 +120,9 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
               chisqr=NULL, Qval=NULL
              )
   ret$cf <- cf
-#  ret$t0 <- effMass
-#  ret$t <- effMass.tsboot
-#  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
+  ret$t0 <- effMass
+  ret$t <- effMass.tsboot
+  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -313,7 +313,7 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   op <- options()
   options(warn=-1)
   # BaKo: is this also valid for acosh type effective masses?
-  t <- effMass$t
+  t <- effMass$t.idx
   plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...)
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
