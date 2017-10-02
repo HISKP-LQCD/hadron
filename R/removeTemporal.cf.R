@@ -121,7 +121,9 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   if(missing(cf)) {
     stop("takeTimeDiff: cf must be provided! Aborting...\n")
   }
-  ## number of time slices (hopefully in units of T/2+1)
+
+  ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
+  ## and units of the time extent if it has not
   T <- cf$Time
   Nt <- dim(cf$cf)[2]
   
@@ -132,6 +134,7 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
     }
   }
 
+  ## number of observables assuming a single smearing type
   nrObs <- floor(Nt/nts)
   ## the time indices to be subtracted
   tt0 <- c()
@@ -140,11 +143,15 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   }
   tt1 <- tt0 + deltat
 
-  ## the default is a type of backwards derivative: C'(t) = C(t-1) - C(t)
-  ### which invalidates the point at t=0 
-  ## alternatively, we can also do a forward derivative: C'(t) = C(t+1) - C(t)
-  ### which will invalidate the point at t=T/2
+  ## the default is a type of backwards derivative: C'(t+deltat) = C(t) - C(t+deltat)
+  ### which invalidates all time slices up to and including deltat-1
+  ## alternatively, we can also do a forward derivative: C'(t) = C(t+deltat) - C(t)
+  ### which will invalidate all time slices after and including tmax-(deltat-1)
+  ## we do this by defining left- and right-hand indices
   # C(tlhs) = C(trhs1) - C(trhs2) 
+  ## note: in both cases one could in pricinple use the symmetry properties of
+  ##       the full correlation function and periodic boundary condtions
+  ##       to do this without any invalidation 
   tlhs <- tt1
   trhs1 <- tt0
   trhs2 <- tt1
