@@ -8,8 +8,23 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
-  ii <- getorderedconfignumbers(path=path, basename=basename, last.digits=last.digits, ending=ending)
+  ii <- getorderedconfigindices(path=path, basename=basename, last.digits=last.digits, ending=ending)
   return(invisible(ofiles[ii]))
+}
+
+getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
+  ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
+  if(any(nchar(ofiles) != nchar(ofiles[1]))) {
+    stop("getconfigurationnumbers: all filenames need to have the same length, aborting...\n")
+  }
+  lending <- nchar(ending)
+  
+  ## sort input files using the last last.digits characters of each filename
+  e <- nchar(ofiles[1]) - lending
+  s <- e-last.digits+1
+  ## sort-index vector
+  gaugeno <- as.integer(substr(ofiles,s,e))
+  return(invisible(order(gaugeno)))
 }
 
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
@@ -24,7 +39,7 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
   s <- e-last.digits+1
   ## sort-index vector
   gaugeno <- as.integer(substr(ofiles,s,e))
-  return(invisible(order(gaugeno)))
+  return(invisible(sort(gaugeno)))
 }
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
