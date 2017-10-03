@@ -23,13 +23,13 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 {
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
-  if( missing(L) | missing(T) | missing(beta) ){
+  if( missing(L) | missing(T) | missing(beta) | missing(type) ){
     stop("L, T and beta must always be provided!\n");
   }
   if( omeas & (missing(t1) || missing(t2) || missing(kappa) || missing(mul)) ){
     stop("t1, t2, kappa and mul must be provided when 'omeas==TRUE'!");
   } else if(!omeas){
-    kappa <- 0.125
+    kappa <- 0.0
     mul <- 0.0
     t1 <- 0
     t2 <- 0
@@ -47,7 +47,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   navec <- t(data.frame(val=NA,dval=NA,tauint=NA,dtauint=NA,Wopt=NA,stringsAsFactors=FALSE))
   
   # set up data structure for analysis results 
-  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,kappa=kappa,csw=csw,mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
+  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
                                    musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,stringsAsFactors=FALSE),
                  obs=data.frame(mpcac_fit=navec, 
                                 mpcac_mc=navec, 
