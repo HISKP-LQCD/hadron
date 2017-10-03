@@ -40,6 +40,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   
   resultsum <- list()
   if(file.exists(resultsfile)){
+    cat("Loading analysis result database from ", resultsfile, "\n")
     load(resultsfile)
   }
 
@@ -117,6 +118,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       } else {
         filelabel <- rundir
       }
+      cat("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
       save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
 
       plotcounter <- plotcounter+1
@@ -408,6 +410,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   }
 
   resultsum[[rundir]] <- result
+  cat("Storing analysis result database in ", resultsfile, "\n")
   save(resultsum,file=resultsfile)
 
   return(invisible(result))
