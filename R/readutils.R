@@ -255,11 +255,19 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   # sparsify data
+  if( sparsity %% ncol(tmp) != 0 ){
+    warning("readtextcf: Sparsification requested but sparsity does not divide number of measurements!\n")
+    sparsity <- 1
+  }
   if(sparsity > 1){
     sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
     tmp <- tmp[,sp.idx]
-  }
+  } 
   # average over 'avg' measurements sequentially
+  if( avg %% ncol(tmp) != 0 ){
+    warning("readtextcf: Averaging requested but avg does not divide number of measurements!\n")
+    avg <- 1
+  }
   if(avg > 1){
     tmp2 <- tmp
     tmp <- array(0, dim=c(T,ncol(tmp2)/avg))
