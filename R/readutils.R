@@ -229,7 +229,8 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE) {
+readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+                       sparsity=1, avg=1) {
   if(missing(file)) {
     stop("files must be given! Aborting...\n")
   }
@@ -253,12 +254,29 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
+  # sparsify data
+  if(sparsity > 1){
+    sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
+    tmp <- tmp[,sp.idx]
+  }
+  # average over 'avg' measurements sequentially
+  if(avg > 1){
+    tmp2 <- tmp
+    tmp <- array(0, dim=c(T,ncol(tmp2)/avg))
+    for( i in c(1:ncol(tmp)) ){
+      tmp[,i] <- (1.0/avg)*apply(X=tmp2[,((i-1)*avg+1):(i*avg)],
+                                 MARGIN=1,
+                                 FUN=sum)
+    }
+  }
+  
   ## average +-t
   if(symmetrise) {
     tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
   }else{
     ii <- c(1:T)
   }
+
 
   ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
               symmetrised=symmetrise)
