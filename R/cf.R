@@ -325,7 +325,10 @@ c.cf <- function(...) {
   return(invisible(cf))
 }
 
-plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
+plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, ...) {
+  if(missing(neg.vec)){
+    neg.vec <- rep(1,times=length(cf$cf0))
+  }
   if(is.null(cf$jackknife.samples)) {
     cf$jackknife.samples <- FALSE
   }
@@ -346,7 +349,7 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, ...) {
     }
   }
 
-  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=cf$cf0, dy=Err, ...)
+  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=neg.vec*cf$cf0, dy=Err, ...)
   return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
 }
 
