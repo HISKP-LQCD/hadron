@@ -9,6 +9,10 @@ ChiSqr.pcac <- function(par, Thalf, x, y, err, tr) {
          + sum(((y[ii+tr] - par[1]*par[2]*( CExp(m=par[3], Time=2*Thalf, x=x, sign=-1.) ))/err[ii+tr])^2))
 }
 
+ChiSqr.cst <- function(par, y, M) {
+  return( sum( (y - par[1]) %*% M %*% (y - par[1]) ) )
+}
+
 ChiSqr.smeared <- function(par, Thalf, x, y, err, tr) {
   ii <- c(1:tr)
   cv1 <- CExp(m = abs(par[3]), Time = 2*Thalf, x=x)
