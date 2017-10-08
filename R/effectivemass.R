@@ -96,7 +96,7 @@ bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type=
     deltat <- cf$deltat
   }
 
-  ## number of time slices (hopefully in units of T/2+1)
+  ## number of time slices (hopefully in units of T/2+1 or T)
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
