@@ -230,7 +230,7 @@ readoutputdata <- function(filename) {
 }
 
 readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
-                       sparsity=1, avg=1) {
+                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE) {
   if(missing(file)) {
     stop("files must be given! Aborting...\n")
   }
@@ -254,20 +254,30 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
-  # sparsify data
-  if( sparsity %% ncol(tmp) != 0 ){
-    warning("readtextcf: Sparsification requested but sparsity does not divide number of measurements!\n")
-    sparsity <- 1
+  if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
+    if(autotruncate){
+      cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,ncol(tmp)))
+      cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      cat("readtextcf: Reducing the number of total measurements to fit!\n")
+      nmeas <- as.integer( (sparsity*avg)*floor( ncol(tmp)/(sparsity*avg) ))
+      if( nmeas/(sparsity*avg) >= Nmin ){
+        tmp <- tmp[,1:nmeas]
+      } else {
+        cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        sparsity <- 1
+        avg <- 1
+      }
+    } else {
+      stop("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+    }
   }
+
+  ## sparsify data
   if(sparsity > 1){
     sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
     tmp <- tmp[,sp.idx]
   } 
   # average over 'avg' measurements sequentially
-  if( avg %% ncol(tmp) != 0 ){
-    warning("readtextcf: Averaging requested but avg does not divide number of measurements!\n")
-    avg <- 1
-  }
   if(avg > 1){
     tmp2 <- tmp
     tmp <- array(0, dim=c(T,ncol(tmp2)/avg))
