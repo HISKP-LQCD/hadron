@@ -4,7 +4,7 @@
 plot_timeseries <- function(dat,xdat,pdf.filename,
                             ylab,plotsize,titletext,hist.by,
                             name="",xlab="$t_\\mathrm{MD}$",hist.probs=c(0.0,1.0),errorband_color=rgb(0.6,0.0,0.0,0.6),
-                            stepsize=1,
+                            stepsize=1,type='l',
                             uwerr.S=2,periodogram=FALSE,debug=FALSE,uw.summary=TRUE,...) {
   if(missing(xdat)) { xdat <- seq(1,length(dat),stepsize) }
 
@@ -21,7 +21,7 @@ plot_timeseries <- function(dat,xdat,pdf.filename,
   par(mgp=c(2,1.0,0))
 
   # plot the timeseries
-  plot(x=xdat,xlim=range(xdat),y=dat,ylab=ylab,t='l',xlab=xlab,main=titletext,...)
+  plot(x=xdat,xlim=range(xdat),y=dat,ylab=ylab,type=type,xlab=xlab,main=titletext,...)
 
   rect(xleft=range(xdat)[1],
        xright=range(xdat)[2],
