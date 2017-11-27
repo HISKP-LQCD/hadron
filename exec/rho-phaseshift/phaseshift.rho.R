@@ -86,19 +86,22 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
   x <- numeric()
   xboot <- numeric()
   if(frame == "cmf") {
-    x <- Z00
-    xboot <- Z00boot
+    ## this is always the T1u irrep
+    if(irrep == "T1u") {
+      x <- Z00
+      xboot <- Z00boot
+    }
   }
   else if(frame == "mf1") {
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     
-    if(irrep == "A1") {
+    if(irrep == "A1g") {
       ## arXiv:1212:0830v2: A_1 irrep [00n] page 17
       x <- (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
       xboot <- (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
     }
-    else if(irrep == "E2") {
+    else if(irrep == "Ep1g") {
       ## arXiv:1212:0830v2: E_2 irrep [00n]
       x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20)
       xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
@@ -113,7 +116,7 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       Z22  <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
       Z22boot  <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
       
-      if(irrep == "B2") {
+      if(irrep == "A2g") {
         ## arXiv:1212:0830v2: B_2 irrep [0nn]
         x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
         xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
@@ -121,12 +124,12 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       else {
         Z21  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
         Z21boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
-        if(irrep == "A1") {
+        if(irrep == "A1g") {
           ## arXiv:1212:0830v2: A_1 irrep [0nn]
           x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
           xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
         }
-        else if(irrep == "B1") {
+        else if(irrep == "A2u") {
           ## arXiv:1212:0830v2: B_1 irrep [0nn]
           x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
           xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))                }
@@ -138,15 +141,15 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       Z22  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
       Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
 
-      if(irrep == "A1") {
+      if(irrep == "A1g") {
         x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 - sqrt(6)*Z22)
         xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot - sqrt(6)*Z22boot)
       }
-      else if(irrep == "B1") {
+      else if(irrep == "A2u") {
         x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*Z20
         xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*Z20boot
       }
-      else if(irrep == "B2") {
+      else if(irrep == "A2g") {
         x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 + sqrt(6)*Z22)
         xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot + sqrt(6)*Z22boot)
       }
@@ -156,12 +159,12 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
     Z22 <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
     Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
     
-    if(irrep == "E2") {
+    if(irrep == "Ep1g") {
       ## arXiv:1212:0830v2: E_2 irrep [nnn] 
       x <- (Z00 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
       xboot <- (Z00boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
     }
-    else if(irrep == "A1") {
+    else if(irrep == "A1g") {
       ## arXiv:1212:0830v2: A_1 irrep [nnn] 
       ##x <- (Z00 + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
 
