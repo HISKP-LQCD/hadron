@@ -1,12 +1,15 @@
-tikz.init <- function(basename, standAlone = TRUE, ...) {
+tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
   havetikz <- require("tikzDevice")
   if(!havetikz){
     stop("tikz.init: tikzDevice package was not found!")
   }
+  if(missing(engine)) {
+    engine <- getOption("tikzDefaultEngine")
+  }
 
   temp <- sprintf("%s.%s",basename,c("tex","pdf","aux","log"))
   tikzfiles <- list(tex=temp[1], pdf=temp[2], aux=temp[3], log=temp[4], standAlone=standAlone)
-  tikz(tikzfiles$tex, standAlone = standAlone, ...)
+  tikz(tikzfiles$tex, standAlone = standAlone, engine=engine, ...)
   tikzfiles
 }
 
