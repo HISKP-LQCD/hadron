@@ -13,7 +13,7 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     basename <- path.strings[length(path.strings)]
   }
   if(read.data) {
-    raw.gradflow <- readgradflow(path=path,skip=skip)
+    raw.gradflow <- readgradflow(path=path,skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",basename),compress=FALSE)
   }else{
     cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",basename))
