@@ -71,19 +71,32 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, boot.R=400, boot.l=20, seed=12345, type="solve", weight.factor = 1.) {
+bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor = 1.) {
 
   if(!any(class(cf) == "cf")) {
     stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
   }
 
+  if(missing(boot.R)){
+    if(cf$boot.samples){
+      boot.R <- cf$boot.R
+    } else {
+      boot.R <- 400
+    }
+  }
+
+  if(missing(boot.l)){
+    if(cf$boot.samples){
+      boot.l <- cf$boot.l
+    } else {
+      boot.l <- 20
+    }
+  }
+
   if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
-    
     cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
   }
   else {
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
     seed <- cf$seed
   }
   ## number of measurements
@@ -324,14 +337,17 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   if(!missing(ref.value)) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }
-  if(!is.null(effMass$effmassfit)) {
-    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1],
-           x1=effMass$t2, y1=effMass$effmassfit$t0[1], col=c("red"), length=0)
-    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
-           x1=effMass$t2, y1=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
-           col=c("red"), length=0, lwd=c(1))
-    arrows(x0=effMass$t1, y0=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
-           x1=effMass$t2, y1=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
-           col=c("red"), length=0, lwd=c(1))
+  if(!is.null(effMass$effmassfit)){
+    lines(x=c(effMass$t1,effMass$t2),
+          y=c(effMass$effmassfit$t0[1],effMass$effmassfit$t0[1]),
+          col=col[1],
+          lwd=1.3)
+      pcol <- col2rgb(col[1],alpha=TRUE)/255                                                                                                   
+      pcol[4] <- 0.65
+      pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
+      rect(xleft=effMass$t1, ybottom=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
+           xright=effMass$t2, ytop=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
+           col=pcol,
+           border=NA)
   }
 }

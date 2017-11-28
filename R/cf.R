@@ -325,7 +325,7 @@ c.cf <- function(...) {
   return(invisible(cf))
 }
 
-plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, ...) {
+plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
   if(missing(neg.vec)){
     neg.vec <- rep(1,times=length(cf$cf0))
   }
@@ -349,7 +349,7 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, ...) {
     }
   }
 
-  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=neg.vec*cf$cf0, dy=Err, ...)
+  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=neg.vec*cf$cf0, dy=Err, rep=rep, ...)
   return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
 }
 

@@ -358,7 +358,7 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, ...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, rep=FALSE, col,...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -375,10 +375,12 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, ...
   if(missing(ylim)) ylims <- c( min( lbound, na.rm=TRUE ) , max( ov.sign.vec*mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
   else ylims <- ylim
 
+  if(missing(col)){
+    col <- c("black",rainbow(n=(mfit$mSize-1)))
+  }
   plotwitherror(x=mfit$CF$t, y=ov.sign.vec*mfit$CF$Cor, 
-                dy=mfit$CF$Err, log="y", ylim=ylims, ...)
+                dy=mfit$CF$Err, log="y", ylim=ylims, rep=rep, col=col,...)
   tx <- seq(mfit$t1, mfit$t2, 0.05)
-  col=c("black",rainbow(n=(mfit$mSize-1)))
   for(i in 1:mfit$mSize ) {
     par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
