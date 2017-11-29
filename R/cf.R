@@ -100,14 +100,25 @@ uwerr.cf <- function(cf, absval=FALSE){
                 FUN=function(x){
                   data <- x
                   if(absval) data <- abs(x)
-                  uw <- uwerrprimary(data=data)
-                  c(value=uw$value, dvalue=uw$dvalue, ddvalue=uw$ddvalue,
-                    tauint=uw$tauint, dtauint=uw$dtauint)
+                  uw <- try(uwerrprimary(data=data), silent=TRUE)
+                  if(any( class(uw) == 'try-error' ) ){
+                    c(value=NA,
+                      dvalue=NA,
+                      ddvalue=NA,
+                      tauint=NA,
+                      dtauint=NA)
+                  } else {
+                    c(value=uw$value, 
+                      dvalue=uw$dvalue, 
+                      ddvalue=uw$ddvalue,
+                      tauint=uw$tauint, 
+                      dtauint=uw$dtauint)
+                  }
                 }
                 )
       ) 
   )
-  
+  uwcf <- cbind(t=(1:ncol(cf$cf))-1,uwcf)
   return(uwcf)
 }
 
