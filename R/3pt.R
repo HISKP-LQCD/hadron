@@ -13,7 +13,7 @@ convert2cf <- function(data, symmetric=TRUE, symmetrise=TRUE) {
     X[i1,] <- 0.5*(X[i1,] + sign*X[i2,])
     X <- X[c(1:Thalfp1),]
   }
-  ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE, symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }

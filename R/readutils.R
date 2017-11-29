@@ -8,7 +8,7 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
-  ii <- getorderedconfignumbers(path=path, basename=basename, last.digits=last.digits, ending=ending)
+  ii <- getorderedconfigindices(path=path, basename=basename, last.digits=last.digits, ending=ending)
   return(invisible(ofiles[ii]))
 }
 
@@ -25,7 +25,7 @@ getconfignumbers <- function(ofiles, basename="onlinemeas", last.digits=4, endin
   return(invisible(as.integer(substr(ofiles,s,e))))
 }
 
-getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
+getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
     stop("getconfigurationnumbers: all filenames need to have the same length, aborting...\n")
@@ -38,6 +38,21 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
   ## sort-index vector
   gaugeno <- as.integer(substr(ofiles,s,e))
   return(invisible(order(gaugeno)))
+}
+
+getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
+  ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
+  if(any(nchar(ofiles) != nchar(ofiles[1]))) {
+    stop("getconfigurationnumbers: all filenames need to have the same length, aborting...\n")
+  }
+  lending <- nchar(ending)
+  
+  ## sort input files using the last last.digits characters of each filename
+  e <- nchar(ofiles[1]) - lending
+  s <- e-last.digits+1
+  ## sort-index vector
+  gaugeno <- as.integer(substr(ofiles,s,e))
+  return(invisible(sort(gaugeno)))
 }
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
@@ -163,7 +178,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   cf <- NULL
   
   if(symmetrise){
-    ## we devide everything by 2 apart from t=0 and t=T/2
+    ## we divide everything by 2 apart from t=0 and t=T/2
     data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
         data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
     ## symmetrise or anti-symmetrise for given observable?
@@ -210,7 +225,8 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE)
+  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE,
+              symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -226,7 +242,8 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
-readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE) {
+readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE) {
   if(missing(file)) {
     stop("files must be given! Aborting...\n")
   }
@@ -250,12 +267,50 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
+  if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
+    if(autotruncate){
+      cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,ncol(tmp)))
+      cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      cat("readtextcf: Reducing the number of total measurements to fit!\n")
+      nmeas <- as.integer( (sparsity*avg)*floor( ncol(tmp)/(sparsity*avg) ))
+      if( nmeas/(sparsity*avg) >= Nmin ){
+        tmp <- tmp[,1:nmeas]
+      } else {
+        cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        sparsity <- 1
+        avg <- 1
+      }
+    } else {
+      stop("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+    }
+  }
+
+  ## sparsify data
+  if(sparsity > 1){
+    sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
+    tmp <- tmp[,sp.idx]
+  } 
+  # average over 'avg' measurements sequentially
+  if(avg > 1){
+    tmp2 <- tmp
+    tmp <- array(0, dim=c(T,ncol(tmp2)/avg))
+    for( i in c(1:ncol(tmp)) ){
+      tmp[,i] <- (1.0/avg)*apply(X=tmp2[,((i-1)*avg+1):(i*avg)],
+                                 MARGIN=1,
+                                 FUN=sum)
+    }
+  }
+  
   ## average +-t
   if(symmetrise) {
     tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
+  }else{
+    ii <- c(1:T)
   }
 
-  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
+
+  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
+              symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
