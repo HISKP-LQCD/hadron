@@ -7,7 +7,7 @@ sd.index <- function(data, indexvector) {
 }
 
 bootstrap.analysis <- function(data, skip=0, boot.R=100,
-                               tsboot.sim="geom", pl=F, boot.l=2) {
+                               tsboot.sim="geom", pl=FALSE, boot.l=2) {
   data <- data[skip:length(data)]
   data.mean = mean(data)
   error.naive = sd(data)/sqrt(length(data))

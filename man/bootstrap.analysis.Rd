@@ -37,7 +37,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
 }
 \examples{
 data(plaq.sample)
-plaq.boot <- bootstrap.analysis(plaq.sample, pl=T)
+plaq.boot <- bootstrap.analysis(plaq.sample, pl=TRUE)
 }
 \seealso{
   for an alternative way to analyse such time series see

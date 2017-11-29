@@ -444,7 +444,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 }
 
 
-summary.cf <- function(cf) {
+summary.cf <- function(cf, ...) {
   cat("T = ", cf$Time, "\n")
   cat("observations = ", dim(cf$cf)[1], "\n")
   cat("Nr Stypes = ", cf$nrStypes, "\n")
@@ -478,6 +478,6 @@ summary.cf <- function(cf) {
   print(out)
 }
 
-print.cf <- function(cf) {
-  summary(cf)
+print.cf <- function(cf, ...) {
+  summary(cf, ...)
 }

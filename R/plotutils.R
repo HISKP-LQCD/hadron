@@ -243,23 +243,23 @@ plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
   plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
-plot.pionfit <- function(fit) {
+plot.pionfit <- function(fit, ...) {
   plot.cfit(fit)
 }
 
-plot.rhofit <- function(fit) {
+plot.rhofit <- function(fit, ...) {
   plot.cfit(fit)
 }
 
-plot.b1fit <- function(fit) {
+plot.b1fit <- function(fit, ...) {
   plot.cfit(fit)
 }
 
-plot.ofit <- function(fit) {
+plot.ofit <- function(fit, ...) {
   plot.cfit(fit)
 }
 
-plot.cfit <- function(fit) {
+plot.cfit <- function(fit, ...) {
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
     plot.effmass(m=fit.mass,
@@ -360,7 +360,7 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx) {
+plot.averx <- function(averx, ...) {
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
@@ -390,7 +390,7 @@ plot.averx <- function(averx) {
          )
 }
 
-plot.pionff <- function(ff) {
+plot.pionff <- function(ff, ...) {
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))

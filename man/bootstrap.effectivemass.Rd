@@ -72,7 +72,7 @@ type="solve", weight.factor=1)
   is numerically solved for m.
 
   "acosh": the effective mass is computed from\cr
-  \eqn{m=\acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
+  \eqn{m=acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
   Note that this definition is less tolerant against noise.
 
   "log": the effective mass is defined via\cr

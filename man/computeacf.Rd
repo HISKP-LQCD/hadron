@@ -69,7 +69,7 @@ computeacf(tseries, W.max, Lambda=100)
 }
 \examples{
 data(plaq.sample)
-myacf <- computeacf(tsdata, 300)
+myacf <- computeacf(plaq.sample, 300)
 plot(myacf)
 summary(myacf)
 }

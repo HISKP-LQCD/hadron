@@ -62,7 +62,7 @@ interval=c(0.000001,2.), weight.factor=1)
   is numerically solved for \eqn{m(t)}.
 
   "acosh": the effective mass is computed from\cr
-  \eqn{m(t)=\acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
+  \eqn{m(t)=acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
   Note that this definition is less tolerant against noise.
 
   "log": the effective mass is defined via\cr
