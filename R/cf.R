@@ -326,9 +326,6 @@ c.cf <- function(...) {
 }
 
 plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
-  if(missing(neg.vec)){
-    neg.vec <- rep(1,times=length(cf$cf0))
-  }
   if(is.null(cf$jackknife.samples)) {
     cf$jackknife.samples <- FALSE
   }
@@ -341,6 +338,9 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
   Err <- numeric(0)
   if(cf$boot.samples) Err <- cf$tsboot.se
   else if(cf$jackknife.samples) Err <- cf$jackknife.se
+  if(missing(neg.vec)){
+    neg.vec <- rep(1,times=length(cf$cf0))
+  }
 
   tmax <- cf$Time/2
   if( "symmetrised" %in% names(cf) ) {
@@ -348,7 +348,6 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
       tmax <- cf$Time-1
     }
   }
-
   plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=neg.vec*cf$cf0, dy=Err, rep=rep, ...)
   return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
 }
