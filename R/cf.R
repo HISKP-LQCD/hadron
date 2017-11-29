@@ -416,11 +416,19 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
       isub <- c(isub,(ihalf+1):iend)
-      cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] + sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
+      cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
+                                             sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
+      if( !is.null(cf$icf) ){
+        cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] + 
+                                                sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
+      }
     }
   }
   # remove now unnecessary time slices 
   cf$cf <- cf$cf[, -isub]
+  if( !is.null(cf$icf) ){
+    cf$icf <- cf$icf[, -isub]
+  }
   cf$symmetrised <- TRUE
   return(invisible(cf))
 }
