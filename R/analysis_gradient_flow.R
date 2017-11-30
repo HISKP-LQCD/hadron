@@ -7,14 +7,14 @@ gf.scales[["sqrt_t0_Esym"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.000
 gf.scales[["w0_Wsym"]] <- list(val=rep(0,3), ref.val=0.1755, ref.dval=0.0019, approx.idx=0,
                                label="\\w_0^{\\mathrm{sym}}", obs="Wsym")
 
-analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
+analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.data=TRUE,plot=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
   if(missing(basename)){
     path.strings <- strsplit(x=path,split='/')[[1]]
     basename <- path.strings[length(path.strings)]
   }
   if(read.data) {
     raw.gradflow <- readgradflow(path=path,skip=skip, basename=basename)
-    save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",basename),compress=FALSE)
+    save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
   }else{
     cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",basename))
     load(sprintf("%s.raw.gradflow.Rdata",basename))
@@ -55,7 +55,7 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
     print(sqrt_tref)
   }
 
-  save(gradflow,file=sprintf("%s.result.gradflow.Rdata",basename),compress=FALSE)
+  save(gradflow,file=sprintf("%s.result.gradflow.Rdata",outputbasename),compress=FALSE)
    
   # find w_0 and its lower and upper values, note how x and y are reversed for this purpose
   w0sq <- c( approx(x=gradflow$Wsym.value+gradflow$Wsym.dvalue,y=gradflow$t,xout=0.3)$y, 
@@ -87,7 +87,7 @@ analysis_gradient_flow <- function(path,basename,read.data=TRUE,plot=FALSE,skip=
 
   
   if(plot) {
-    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",basename),width=4,height=4)
+    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
     # set up plot
     plot(x=gradflow$t, y=gradflow$Wsym.value,
          type='n',xlim=c(0,1.25*w0sq[2]),ylim=c(0.0,0.4),
