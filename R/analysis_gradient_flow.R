@@ -8,10 +8,6 @@ gf.scales[["w0_Wsym"]] <- list(val=rep(0,3), ref.val=0.1755, ref.dval=0.0019, ap
                                label="\\w_0^{\\mathrm{sym}}", obs="Wsym")
 
 analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.data=TRUE,plot=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
-  if(missing(basename)){
-    path.strings <- strsplit(x=path,split='/')[[1]]
-    basename <- path.strings[length(path.strings)]
-  }
   if(read.data) {
     raw.gradflow <- readgradflow(path=path,skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
