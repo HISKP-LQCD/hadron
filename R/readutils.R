@@ -259,6 +259,10 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
     stop("T in function call does not match the one in the file, aborting...\n")
   }
+
+  if(length(tmp[[ind.vector[1]]]) %% T != 0) {
+    stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
+  }
   
   i1 <- c(2:(T/2))
   i2 <- c(T:(T/2+2))

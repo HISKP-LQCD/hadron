@@ -475,7 +475,9 @@ summary.cf <- function(cf, ...) {
   if(!is.null(cf$jack.boot.se)) {
     out <- cbind(out, jab.se=cf$jack.boot.se)
   }
-  print(out)
+  if(exists("out")) {
+    print(out)
+  }
 }
 
 print.cf <- function(cf, ...) {
