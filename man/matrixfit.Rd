@@ -188,10 +188,11 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
   \code{\link{cf}}, \code{\link{bootstrap.cf}}
 }
 \examples{
-\dontrun{readcmidatafiles(basename="outpr", verbose=TRUE, skip=1,
-last.digits=4)}
-\dontrun{cf <- extract.obs(cmicor, verbose=T, vec.obs=c(1))}
-\dontrun{x <- matrixfit(cf, boot.l=2, t1=13, t2=22, useCov=TRUE)}
+data(samplecf)
+samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+fitres <- matrixfit(cf=samplecf, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
+summary(fitres)
+plot(fitres)
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{optimize}

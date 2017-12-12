@@ -91,6 +91,8 @@ interval=c(0.000001,2.), weight.factor=1)
 \references{
   arXiv:1203.6041
 }
+\examples{
+}
 \seealso{
   \code{\link{bootstrap.effectivemass}}
 }

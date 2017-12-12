@@ -35,6 +35,11 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
   bootstrap errors as \code{tsboot.se}. We also copy the input
   parameters over and set \code{bootstrap.samples} to \code{TRUE}.
 }
+\examples{
+data(samplecf)
+samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+plot(samplecf, log=c("y"))
+}
 \seealso{
   \code{boot::tsboot}, \code{jackknife.cf}
 }
