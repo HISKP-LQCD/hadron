@@ -35,7 +35,7 @@ List of 15
   ..$ statistic:function (x)  
   ..$ sim      : chr "geom"
   ..$ n.sim    : int 1018
-  ..$ call     : language tsboot(tseries = cf$cf, statistic = function(x) {     return(apply(x, MARGIN = 2L, FUN = mean)) ...
+  ..$ call     : language tsboot(tseries = cf$cf, statistic = function(x) {     return(apply(x, MARGIN = 2L, FUN = mean)) ...})
   ..$ l        : num 2
   ..$ endcorr  : logi TRUE
   ..- attr(*, "class")= chr "boot"
@@ -43,15 +43,15 @@ List of 15
  $ tsboot.se        : num [1:25] 1.001 0.615 0.572 0.537 0.499 ...
  - attr(*, "class")= chr [1:2] "cf" "list"
 }
-\details{
+%%\details{
 %%  ~~ If necessary, more details than the __description__ above ~~
-}
-\source{
+%%}
+%%\source{
 %%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
+%%}
+%%\references{
 %%  ~~ possibly secondary sources and usages ~~
-}
+%%}
 \examples{
 data(samplecf)
 plot(samplecf)
