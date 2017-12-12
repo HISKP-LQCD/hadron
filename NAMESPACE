@@ -17,7 +17,7 @@ exportPattern("^weighted.*")
 exportPattern("^extract.*")
 exportPattern("^jab\\..*")
 exportPattern("^compute\\..*")
-export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, pp, zetazp, ppcorr, ppeffectivemass, proton, getorderedconfignumbers, fit.effectivemass, invcosh)
+export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, zetazp, proton, getorderedconfignumbers, fit.effectivemass, invcosh)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
 importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
