@@ -34,7 +34,7 @@ plot(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
 }
 \examples{
 data(plaq.sample)
-plaq.res <- uwerprimary(plaq.sample)
+plaq.res <- uwerrprimary(plaq.sample)
 plot(plaq.res)
 }
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
