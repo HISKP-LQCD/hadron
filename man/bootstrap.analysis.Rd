@@ -5,7 +5,7 @@
   Performs a Bootstrap with Blocking Analysis of a Timeseries
 }
 \usage{
-bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
+bootstrap.analysis(data, skip=0, boot.R=100, pl=F)
 }
 \arguments{
 

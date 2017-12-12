@@ -5,7 +5,7 @@
   Plot Command For Class UWerr
 }
 \usage{
-plot.uwerr <- function(uwerr)
+plot.uwerr(uwerr)
 }
 \arguments{
   \item{uwerr}{

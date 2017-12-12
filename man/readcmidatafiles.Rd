@@ -7,20 +7,20 @@
   reads data from single files in Chris Michael format
 }
 \usage{
-cmicor <- readcmicor(filename,
-                     colClasses=c("integer","integer","integer","numeric","numeric","integer"))
+readcmicor(filename,
+           colClasses=c("integer","integer","integer","numeric","numeric","integer"))
 
-cmicor <- readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
-                       colClasses, obs=NULL, obs.index)
+readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
+             colClasses, obs=NULL, obs.index)
 
-cmicor <- readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
-                           colClasses=c("integer","integer","integer","numeric","numeric")
-                           obs=NULL, obs.index=1)
+readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
+                 colClasses=c("integer","integer","integer","numeric","numeric")
+                 obs=NULL, obs.index=1)
 
-cmiloop <- readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
-                            colClasses=c("integer", "integer","integer","integer",
-                                         "numeric","numeric","numeric","numeric")
-                            obs=NULL, obs.index=2)
+readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
+                 colClasses=c("integer", "integer","integer","integer",
+                              "numeric","numeric","numeric","numeric")
+                 obs=NULL, obs.index=2)
 }
 \arguments{
   \item{filename}{

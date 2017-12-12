@@ -70,6 +70,9 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
     which is useful when the original correlation function or matrix is
     shifted, see e.g. \link{bootstrap.gevp}.
   }
+  \item{model}{
+    fit model to be used.
+  }
 }
 \value{
   returns an object of class \code{matrixfit} with entries:

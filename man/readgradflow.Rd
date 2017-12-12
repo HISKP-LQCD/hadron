@@ -5,7 +5,7 @@
   given a pathname, reads all gradient flow output files in that directory
 }
 \usage{
-raw.gf <- readgradflow(path)
+readgradflow(path)
 }
 \arguments{
   \item{path}{
