@@ -285,7 +285,7 @@ summary.effectivemass <- function(effMass) {
   cat("Time extend\t=\t", effMass$Time, "\n")
   cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$t))), "\n")
   cat("values with errors:\n\n")
-  print(data.frame(t= effMass$t, m = effMass$t0, dm = effMass$se))
+  print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
 }
 
 summary.effectivemassfit <- function(effMass, verbose=FALSE) {
