@@ -327,10 +327,6 @@ plot.cfit <- function(fit, ...) {
   }
 }
 
-plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
-  plotwitherror(data$t,data$corr, data$dcorr, xlab=xlab, ylab=ylab, log=log, ...)
-}
-
 plot.effmass <- function(m, ll, lf, ff, ...) {
 
   if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
