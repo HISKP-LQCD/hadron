@@ -48,9 +48,9 @@ tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE, standAlone=TRU
   the corresponding filenames
 }
 \examples{
-libary(hadron)
+library(hadron)
 \dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)
-plot(...)
+plot(...)}
 tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
 }
 \author{Bartosz Kostrzewa, \email{bartosz.kostrzewa@desy.de}}  
