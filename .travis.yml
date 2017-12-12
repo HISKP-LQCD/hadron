@@ -6,6 +6,8 @@
 
 language: c
 
+sudo: required
+
 dist: trusty
 
 before_install:
