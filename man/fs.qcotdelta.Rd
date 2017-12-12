@@ -1,5 +1,6 @@
 \name{fs.qcotdelta}
 \alias{fs.mpia0}
+\alias{fs.a0}
 \title{Finite Size Corrections to \eqn{q\cot\delta}{qcotdelta} for I=2 \eqn{\pi\pi}{pipi}
   near threshold}
 \description{

@@ -8,7 +8,7 @@
 matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
           parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
           sym.vec=c("cosh","cosh","cosh","cosh"),
-          useCov=FALSE, seed=12345,
+          useCov=FALSE, seed=12345, model="single",
           boot.fit=TRUE, fit.method="optim")
 }
 \arguments{
@@ -69,9 +69,6 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
     \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c* \exp(-E(T-(t+1/2))))}\cr
     which is useful when the original correlation function or matrix is
     shifted, see e.g. \link{bootstrap.gevp}.
-  }
-  \item{model}{
-    fit model to be used.
   }
 }
 \value{

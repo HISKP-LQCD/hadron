@@ -12,8 +12,17 @@
 \arguments{
   \item{rev}{\eqn{rev=-1} corrects from \eqn{L} to \eqn{L=\infty}{L =
       infinity}, \eqn{rev=+1} the other way around}
-  \item{aLambn}{The four low energy
+  \item{aLamb1}{The four low energy
     \eqn{\Lambda_{1-4}}{Lambda1-Lambda4}constants in lattice units.}
+  \item{aLamb2}{
+    see \code{aLamb1}.
+  }
+  \item{aLamb3}{
+    see \code{aLamb1}.
+  }
+  \item{aLamb4}{
+    see \code{aLamb1}.
+  }
   \item{ampiV}{pseudo scalar mass values to be corrected}
   \item{afpiV}{pseudo scalar decay constant values to be corrected}
   \item{aF0}{\eqn{af_0}{af0} in lattice units}

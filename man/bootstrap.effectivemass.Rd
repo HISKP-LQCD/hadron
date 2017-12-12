@@ -6,8 +6,7 @@
   object of class \code{cf} (a correlation function)
 }
 \usage{
-boostrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456,
-type="solve", weight.factor=1)
+bootstrap.effectivemass(cf, boot.R=400, boot.l=20, seed=123456, type="solve", weight.factor=1)
 }
 \arguments{
   \item{cf}{

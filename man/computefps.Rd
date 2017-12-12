@@ -10,7 +10,7 @@
   pseudoscalar amplitude and mass
 }
 \usage{
-computefps(mfit, PP, mass, mu1, mu2, Kappa, normalistaion="cmi")
+computefps(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi")
 }
 \arguments{
   \item{mfit}{

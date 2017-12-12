@@ -10,7 +10,7 @@
   methods for the individual errors are supported.
 }
 \usage{
-plotwitherror(x, y, dy, dx, xlim, mdx, mdy, 
+plotwitherror(x, y, dy, ylim, dx, xlim, mdx, mdy, 
               errsum.method="linear.quadrature",
               rep=FALSE, col="black", ...)
 }

@@ -5,18 +5,37 @@
   Plot Command For Class UWerr
 }
 \usage{
-plot.uwerr(uwerr)
+plot(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
 }
 \arguments{
-  \item{uwerr}{
+  \item{x}{
     object of class \code{uwerr}
+  }
+  \item{...}{
+    generic parameters, not used here.
+  }
+  \item{main}{
+    main title of the plot
+  }
+  \item{x11}{
+    whether or not to generate X11 plots
+  }
+  \item{plot.hist}{
+    whether or not to generate a histogram
   }
 }
 \value{
-  plots
+  produces various plots, including a histogram, the
+  autocorrelationfunction and the integrated autocorrelation time, all
+  with error bars.
 }
 \seealso{
   \code{\link{uwerr}}, \code{\link{pion}}, \code{\link{rho}}
+}
+\examples{
+data{plaq.sample}
+plaq.res <- uwerprimary(plaq.sample)
+plot(plaq.res)
 }
 \author{Carsten Urbach, \email{carsten.urbach@liverpool.ac.uk}}
 \keyword{methods}

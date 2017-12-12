@@ -7,7 +7,7 @@
   functions of class \code{cf}.
 }
 \usage{
-correlator <- jab.cf(cor)
+correlator <- jab.cf(cor, m=1)
 }
 \arguments{
   \item{cor}{

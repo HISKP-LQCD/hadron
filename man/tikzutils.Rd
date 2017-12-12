@@ -7,8 +7,8 @@
   initialize and finalize a \code{tikzDevice} and carry out optional post-processing
 }
 \usage{
-tikzfiles <- tikz.init(basename="basename", standAlone=TRUE, engine)
-tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE, standAlone=TRUE)
+tikz.init(basename, standAlone=TRUE, engine)
+tikz.finalize(tikzfiles, crop=TRUE, margins=0, clean=TRUE)
 }
 \arguments{
   \item{basename}{

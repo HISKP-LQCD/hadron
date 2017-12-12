@@ -7,10 +7,10 @@
   correlator stored in cmi format
 }
 \usage{
-cmicor <- extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
-                      sym.vec, verbose=FALSE)
+extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
+                        sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE)
 
-cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
+extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
 }
 \arguments{
   \item{vec.obs}{

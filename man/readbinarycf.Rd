@@ -6,7 +6,7 @@
   formatted files.
 }
 \usage{
-cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
+readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
                    excludelist=c(""), sym=TRUE, path="",
                    hdf5format=FALSE, hdf5name, hdf5index=c(1,2))
 }

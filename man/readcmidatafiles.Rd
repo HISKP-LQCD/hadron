@@ -1,7 +1,8 @@
 \name{readcmifiles}
-\alias{readcmiloopfiles}
-\alias{readcmidatafiles}
 \alias{readcmicor}
+\alias{readcmifiles}
+\alias{readcmidatafiles}
+\alias{readcmiloopfiles}
 \title{Read Single Data Files in Chris Michael Format}
 \description{
   reads data from single files in Chris Michael format
