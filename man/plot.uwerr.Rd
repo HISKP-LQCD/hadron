@@ -33,7 +33,7 @@ plot(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
   \code{\link{uwerr}}, \code{\link{pion}}, \code{\link{rho}}
 }
 \examples{
-data{plaq.sample}
+data(plaq.sample)
 plaq.res <- uwerprimary(plaq.sample)
 plot(plaq.res)
 }
