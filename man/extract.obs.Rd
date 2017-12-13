@@ -1,6 +1,5 @@
 \name{extract.obs}
 \alias{extract.obs}
-\alias{extract.loop}
 \title{Extract One or More Gamma Combinations from am CMI Correlator}
 \description{
   Extracts one or more gamma matrix combinations (observables) from a
@@ -9,21 +8,13 @@
 \usage{
 extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
                         sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE)
-
-extract.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
 }
 \arguments{
   \item{cmicor}{
     an correlator object in cmi format
   }
-  \item{cmiloop}{
-    loops in cmi format
-  }
   \item{vec.obs}{
     vector containing the numbers of observables to be extracted.
-  }
-  \item{obs}{
-    number of a single loop to extract.
   }
   \item{ind.vec}{
     Index vector indexing the column numbers in cmicor to be used. The
@@ -37,9 +28,6 @@ extract.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
   }
   \item{verbose}{
     Increases verbosity of the function.
-  }
-  \item{L}{
-    spatial lattice extend.
   }
   \item{sym.vec}{
     a vector of bools of length equal to the number of observables
