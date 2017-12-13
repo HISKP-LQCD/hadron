@@ -13,26 +13,26 @@ fit.plateau2cf(cf, t1, t2, boot.samples = FALSE, boot.R = 400, boot.l = 2, useCo
 \arguments{
   \item{cf}{
     input object of class \code{cf}
-}
+  }
   \item{t1}{
     starting t-value for the fit
-}
+  }
   \item{t2}{
     final t-value for the fit.
-}
+  }
   \item{boot.samples}{
     use bootstrap samples to estimate the variance-covariance matrix
     instead of the original data
-}
+  }
   \item{boot.R}{
     number of bootstrap samples
-}
+  }
   \item{boot.l}{
     block length for blocked bootstrap
-}
+  }
   \item{useCov}{
     perform a correlated chisquare fit or not.
-}
+  }
 }
 \value{
   Returns a list with elements
@@ -46,7 +46,6 @@ fit.plateau2cf(cf, t1, t2, boot.samples = FALSE, boot.R = 400, boot.l = 2, useCo
 \author{Carsten Urbach \email{curbach@gmx.de}}
 \seealso{
   \code{\link{cf}}
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
