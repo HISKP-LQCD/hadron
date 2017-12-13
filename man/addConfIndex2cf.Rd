@@ -2,10 +2,10 @@
 \alias{addConfIndex2cf}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+  add a configuration index to an \code{cf} object
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+  add a configuration number index and adds it to a \code{cf} object.
 }
 \usage{
 addConfIndex2cf(cf, conf.index)

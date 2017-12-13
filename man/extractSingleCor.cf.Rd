@@ -16,13 +16,14 @@ extractSingleCor.cf(cf, id = c(1))
 \arguments{
   \item{cf}{
     input object of class \code{cf}
-}
+  }
   \item{id}{
     id of the correlators in \code{cf} to be extracted
-}
+  }
 }
 \value{
   A \code{cf} object containing only the single correlator
+}
 \seealso{
   \code{\link{cf}}
 }
