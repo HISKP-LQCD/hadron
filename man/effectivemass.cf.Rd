@@ -48,7 +48,12 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   \item{weight.factor}{
     relative weight for type "weighted" only, see details
   }
-
+  \item{deltat}{
+    time shift for shifted correlation functions
+  }
+  \item{tmax}{
+    t-value up to which the effectivemass is to be computed
+  }
 }
 \value{
   Returns a vector of length \code{Thalf} with the effective mass values

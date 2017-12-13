@@ -6,7 +6,7 @@
   basename and '*'.
 }
 \usage{
-filelist <- getorderedfilelist(path="./", basename="onlinemeas",
+getorderedfilelist(path="./", basename="onlinemeas",
 last.digits=4, ending="")
 }
 \arguments{

@@ -38,6 +38,9 @@ extract.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
   \item{verbose}{
     Increases verbosity of the function.
   }
+  \item{L}{
+    spatial lattice extend.
+  }
   \item{sym.vec}{
     a vector of bools of length equal to the number of observables
     indicating whether C(t) is symmetric in t, i.e. whether

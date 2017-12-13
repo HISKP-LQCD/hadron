@@ -5,7 +5,7 @@
   Performs a factorising fit on a correlation matrix
 }
 \usage{
-matrixfit(cf, boot.R=400, boot.l=20, t1, t2, 
+matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
           parlist, sym.vec, neg.vec,
           useCov=FALSE, seed=12345, model="single",
           boot.fit=TRUE, fit.method="optim")
