@@ -9,7 +9,7 @@
 computeacf(tseries, W.max, Lambda=100)
 }
 \arguments{
-  \item{tdata}{
+  \item{tseries}{
     the time series.
   }
   \item{W.max}{

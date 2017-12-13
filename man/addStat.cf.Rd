@@ -6,7 +6,7 @@
   combines them into one
 }
 \usage{
-addStat.cf(cf1=cf1, cf2=cf2)
+addStat.cf(cf1, cf2)
 }
 \arguments{
   \item{cf1}{

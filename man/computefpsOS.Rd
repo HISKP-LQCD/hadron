@@ -9,7 +9,7 @@
   from the AS and SS amplitude (in the twisted basis), ZA and the OS pion mass.
 }
 \usage{
-computefps(mfit, kappa, normalistaion="cmi", ZA=1, ZAboot, dZA, boot.fit=TRUE)
+computefpsOS(mfit, Kappa, normalistaion="cmi", boot.fit=TRUE, ZA=1, ZAboot, dZA)
 }
 \arguments{
   \item{mfit}{

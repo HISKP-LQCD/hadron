@@ -10,9 +10,15 @@
 extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
                         sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE)
 
-extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
+extract.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
 }
 \arguments{
+  \item{cmicor}{
+    an correlator object in cmi format
+  }
+  \item{cmiloop}{
+    loops in cmi format
+  }
   \item{vec.obs}{
     vector containing the numbers of observables to be extracted.
   }

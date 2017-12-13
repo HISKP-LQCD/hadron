@@ -7,7 +7,7 @@
   initialize and finalize a \code{tikzDevice} and carry out optional post-processing
 }
 \usage{
-tikz.init(basename, standAlone=TRUE, engine)
+tikz.init(basename, standAlone=TRUE, engine, ...)
 tikz.finalize(tikzfiles, crop=TRUE, margins=0, clean=TRUE)
 }
 \arguments{

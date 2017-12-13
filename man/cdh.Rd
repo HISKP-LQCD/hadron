@@ -10,6 +10,9 @@
                  rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE)
 }
 \arguments{
+  \item{parm}{
+    parameters
+  }
   \item{rev}{\eqn{rev=-1} corrects from \eqn{L} to \eqn{L=\infty}{L =
       infinity}, \eqn{rev=+1} the other way around}
   \item{aLamb1}{The four low energy

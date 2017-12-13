@@ -6,7 +6,7 @@
 }
 \usage{
 gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
-for.tsboot=TRUE, sort.type="values")
+for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 }
 \arguments{
   \item{cf}{
@@ -44,6 +44,10 @@ for.tsboot=TRUE, sort.type="values")
   \item{for.tsboot}{
     for internal use of \code{\link{bootstrap.gevp}}. Alters the returned
     values, see details. 
+  }
+  \item{sort.t0}{
+    if true (default), sort with respect to data at t0, otherwise with
+    respect to t-1.
   }
 }
 \value{

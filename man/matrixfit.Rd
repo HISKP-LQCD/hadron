@@ -5,9 +5,8 @@
   Performs a factorising fit on a correlation matrix
 }
 \usage{
-matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
-          parlist = array(c(1,1,1,2,2,1,2,2), dim=c(2,4)),
-          sym.vec=c("cosh","cosh","cosh","cosh"),
+matrixfit(cf, boot.R=400, boot.l=20, t1, t2, 
+          parlist, sym.vec, neg.vec,
           useCov=FALSE, seed=12345, model="single",
           boot.fit=TRUE, fit.method="optim")
 }
@@ -30,15 +29,23 @@ matrixfit(cf, boot.R=400, boot.l=2, t1=13, t2=22,
   \item{parlist}{
     a two dimensional array of dimension 2 times number of correlators
     in cf. Every column assigns a pair of fit parameters to the
-    corresponding correlator in cf. Default is \code{parlist =
-      array(c(1,1,1,2,2,1,2,2), dim=c(2,4))} for four correlators.
+    corresponding correlator in cf. In case this is missing there are
+    defaults provided for certain matrix sizes.
   }
   \item{sym.vec}{
     a vector of length number of correlators in cf indicating whether
     the correlation function is a cosh, a sinh or an
-    exponential. Default is 
-    \code{sym.vec=c("cosh","cosh","cosh","cosh")}, possible values are
+    exponential. Possible values are
     \code{"cosh"}, \code{"sinh"} and \code{"exp"}.
+    In case this is missing there are
+    defaults provided for certain matrix sizes.
+  }
+  \item{neg.vec}{
+    a vector of length number of correlators in cf indicating whether
+    the correlation function is to be multiplied globally with a minus
+    sign.
+    In case this is missing there are
+    defaults provided for certain matrix sizes.
   }
   \item{useCov}{
     use correlated or uncorrelated chisquare. Default is

@@ -9,18 +9,18 @@
 }
 \usage{
 readcmicor(filename,
-           colClasses=c("integer","integer","integer","numeric","numeric","integer"))
+           colClasses=c("integer","integer","integer","numeric","numeric","integer"), skip=0)
 
 readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
              colClasses, obs=NULL, obs.index)
 
 readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
-                 colClasses=c("integer","integer","integer","numeric","numeric")
+                 colClasses=c("integer","integer","integer","numeric","numeric"),
                  obs=NULL, obs.index=1)
 
 readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
                  colClasses=c("integer", "integer","integer","integer",
-                              "numeric","numeric","numeric","numeric")
+                              "numeric","numeric","numeric","numeric"),
                  obs=NULL, obs.index=2)
 }
 \arguments{
@@ -43,11 +43,15 @@ readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
   \item{colClasses}{
     The column data type classes, the \code{read.table}.
   }
-  \item{obs, obs.index}{
+  \item{obs}{
     To reduce memory consumption it is possible to extract only one of
     the observales. The column in which to match \code{obs} is to be
     given with \code{obs.index}. This will only be affective if
     \code{obs} is not \code{NULL}.
+  }
+  \item{obs.index}{
+    The column in which to match \code{obs} is to be
+    given with \code{obs.index}.
   }
 }
 \value{

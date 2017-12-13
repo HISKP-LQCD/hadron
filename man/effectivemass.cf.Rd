@@ -8,7 +8,8 @@
 }
 \usage{
 effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
-interval=c(0.000001,2.), weight.factor=1)
+                 interval=c(0.000001,2.), weight.factor=1,
+                 deltat=1, tmax=Thalf)
 }
 \arguments{
   \item{cf}{
