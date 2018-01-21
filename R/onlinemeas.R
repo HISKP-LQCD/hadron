@@ -1,4 +1,6 @@
-onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
+onlinemeas <- function(data, t1, t2, 
+                       stat_range, 
+                       S=1.5, pl=FALSE, skip=0,
                        iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
                        boot.R=99, boot.l=10, tsboot.sim="geom",
                        method="uwerr", fit.routine="optim", nrep,
@@ -9,6 +11,9 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   if(missing(t1) || missing(t2)) {
     stop("Error! t1 and t2 must be specified!")
+  }
+  if( missing(stat_range) ){
+    stat_range <- c(skip,nrow(data))
   }
   par <- numeric(2)
   sign <- +1.
