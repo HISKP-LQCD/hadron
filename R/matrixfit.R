@@ -57,7 +57,7 @@ matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec,
   return( sum(z %*% M %*% z ) )
 }
 
-dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec) {
+dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
   res <- rep(0., times=length(par))
   z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
   zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
