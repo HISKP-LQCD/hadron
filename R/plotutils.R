@@ -1,3 +1,23 @@
+compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
+  tmp <- val - 0.1*abs(val)
+  tmpp <- val + 0.1*abs(val)
+  if(!is.null(cumul.dval)) {
+    # cumul.mdx is implicitly negative
+    tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
+    tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
+  }
+  if(logscale) {
+    tmp <- tmp[ tmp > 0 ]
+    tmpp <- tmpp[ tmpp > 0 ]
+  }
+  if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
+    warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
+    tmp <- 10^(-6)
+    tmpp <- 10^2
+  }
+  range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
+}
+
 # there are two possibilities for one-dimensional vectors: the vector class or the array class
 is.vectorial <- function(x) {
   ( is.vector(x) || length(dim(x))==1 )
@@ -79,6 +99,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   my.xlim <- c()
   my.ylim <- c()
+
  
   # cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
@@ -123,35 +144,14 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
 
   if(missing(xlim)) {
-    tmp <- x - 0.1*abs(x)
-    tmpp <- x + 0.1*abs(x)
-    if(!is.null(cumul.dx)) {
-      # cumul.mdx is implicitly negative
-      tmp <- x+2*apply(X=cumul.mdx,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- x+2*apply(X=cumul.dx,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(xlog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.xlim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+    my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
   if(missing(ylim)) {
-    tmp <- y - 0.1*abs(y)
-    tmpp <- y + 0.1*abs(y)
-    if(!is.null(cumul.dy)) {
-      # cumul.mdy is implicitly negative
-      tmp <- y+2*apply(X=cumul.mdy,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- y+2*apply(X=cumul.dy,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(ylog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.ylim <- range(c(as.vector(tmp), as.vector(tmpp)), na.rm=TRUE)
-  }
-  else {
+    my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
+  } else {
     my.ylim <- ylim
   }
 

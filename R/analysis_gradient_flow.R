@@ -85,9 +85,14 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
   if(plot) {
     tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
     # set up plot
-    plot(x=gradflow$t, y=gradflow$Wsym.value,
-         type='n',xlim=c(0,1.25*w0sq[2]),ylim=c(0.0,0.4),
-         xlab="$t/a^2$",ylab="$W(t)$",las=1)
+    plot(x=gradflow$t, 
+         y=gradflow$Wsym.value,
+         type='n',
+         xlim=c(0,1.25*w0sq[2]),
+         ylim=c(0.0,0.4),
+         xlab="$t/a^2$",
+         ylab="$W(t)$",
+         las=1)
     # draw errorband
     poly.col <- rgb(red=1.0,green=0.0,blue=0.0,alpha=0.6)
     poly.x <- c(gradflow$t,rev(gradflow$t))
@@ -95,6 +100,7 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
     polygon(x=poly.x,y=poly.y,col=poly.col)
     abline(h=0.3)
     abline(v=w0sq)
+    lines(x=gradflow$t, y=gradflow$Wsym.value)
     legend(x="topleft",
            legend=sprintf("$a=%.4f(%02d)$\\,fm", 
                           a[2,1],
@@ -102,10 +108,39 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
            bty='n')
     
     # plot MD history of Wsym at w0
-    plot(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
-         x=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale,
-         type='l',lwd=3,
-         main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$W\\left( t/a^2 = %s \\right)$",w0sq_approx),las=1)
+    tseries <- data.frame(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
+                          t=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale )
+    plot_timeseries(dat=tseries,
+                    ylab=sprintf("$W\\left( t/a^2 = %.2f \\right)$", w0sq_approx),
+                    titletext="")
+   
+    if( any(cnames == "Qsym") ){
+      ################ TOPOLOGICAL CHARGE ####################
+      # set up plot
+      plot(x=gradflow$t, 
+           y=gradflow$Qsym.value,
+           type='n',
+           ylim=range(c(gradflow$Qsym.value+gradflow$Qsym.dvalue, gradflow$Qsym.value-gradflow$Qsym.dvalue)),
+           xlim=c(0.01,max(gradflow$t)),
+           xlab="$t/a^2$",
+           ylab="$Q(t)$",
+           las=1,
+           log='x')
+      # draw errorband
+      poly.col <- rgb(red=1.0,green=0.0,blue=0.0,alpha=0.6)
+      poly.x <- c(gradflow$t,rev(gradflow$t))
+      poly.y <- c(gradflow$Qsym.value+gradflow$Qsym.dvalue,rev(gradflow$Qsym.value-gradflow$Qsym.dvalue))
+      polygon(x=poly.x,y=poly.y,col=poly.col)
+      lines(x=gradflow$t, y=gradflow$Qsym.value)
+      
+      # plot MD history of Q at maximal flow time
+      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
+      tseries <- data.frame(y=raw.gradflow[tmax_idx,"Qsym"],
+                            t=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale)
+      plot_timeseries(dat=tseries,
+                      ylab=sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
+                      titletext="")
+    }
     
     tikz.finalize(tikzfiles)
   }

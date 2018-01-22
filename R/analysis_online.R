@@ -18,7 +18,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
-                            omeas.start=0, omeas.stepsize=1, evals.stepsize=1,
+                            stat_skip=0,
+                            omeas.start=0, omeas.stepsize=1, 
+                            evals.start=0, evals.stepsize=1,
                             boot.R=1500, boot.l=2)
 {
   # if we want to look at the online measurements in addition to output.data, we better provide
@@ -48,8 +50,10 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   navec <- t(data.frame(val=NA,dval=NA,tauint=NA,dtauint=NA,Wopt=NA,stringsAsFactors=FALSE))
   
   # set up data structure for analysis results 
-  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
-                                   musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,stringsAsFactors=FALSE),
+  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
+                                   mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
+                                   musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,
+                                   stat_skip=stat_skip,stringsAsFactors=FALSE),
                  obs=data.frame(mpcac_fit=navec, 
                                 mpcac_mc=navec, 
                                 mpi=navec, 
@@ -123,16 +127,17 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       plotcounter <- plotcounter+1
       dpaopp_filename <- sprintf("%02d_dpaopp_%s",plotcounter,filelabel)
-      result$obs$mpcac_mc <- plot_timeseries(dat=onlineout$MChist.dpaopp,
-        xdat=omeas.cnums,
-        pdf.filename=dpaopp_filename,
-        ylab="$am_\\mathrm{PCAC}$",
-        name="am_PCAC (MC history)",
-        plotsize=plotsize,
-        filelabel=filelabel,
-        titletext=titletext,
-        errorband_color=errorband_color)
-        #ist.by=0.0002))
+      result$obs$mpcac_mc <- plot_timeseries(dat=data.frame(y=onlineout$MChist.dpaopp,
+                                                            t=omeas.cnums),
+                                             stat_range=c( stat_skip+1, length(onlineout$MChist.dpaopp) ),
+                                             pdf.filename=dpaopp_filename,
+                                             ylab="$am_\\mathrm{PCAC}$",
+                                             name="am_PCAC (MC history)",
+                                             plotsize=plotsize,
+                                             filelabel=filelabel,
+                                             titletext=titletext,
+                                             errorband_color=errorband_color)
+                                             #ist.by=0.0002))
       
       # adjust autocorrelation times to be in terms of trajectories
       result$obs$mpcac_mc[3:5] <- result$obs$mpcac_mc[3:5]*omeas.stepsize
@@ -154,19 +159,19 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
       par(mgp=c(2,1,0))
       plotwitherror(x=onlineout$dpaopp$t,
-        y=onlineout$dpaopp$mass,dy=onlineout$dpaopp$dmass,t='p',
-        ylab="$am_\\mathrm{PCAC}$",
-        xlab="$t/a$",
-        main=titletext)
+                    y=onlineout$dpaopp$mass,dy=onlineout$dpaopp$dmass,t='p',
+                    ylab="$am_\\mathrm{PCAC}$",
+                    xlab="$t/a$",
+                    main=titletext)
       rect(xleft=t1,
-        xright=t2,
-        ytop=mpcac_fit$val+mpcac_fit$dval,
-        ybottom=mpcac_fit$val-mpcac_fit$dval,border=FALSE,col=errorband_color)
+           xright=t2,
+           ytop=mpcac_fit$val+mpcac_fit$dval,
+           ybottom=mpcac_fit$val-mpcac_fit$dval,border=FALSE,col=errorband_color)
       abline(h=mpcac_fit$val,col="red",lwd=2)
       rect(xleft=t1,
-        xright=t2,
-        ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
-        ybottom=result$obs$mpcac_mc["val",]-result$obs$mpcac_mc["dval",],border=FALSE,col=errorband_color2)
+           xright=t2,
+           ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
+           ybottom=result$obs$mpcac_mc["val",]-result$obs$mpcac_mc["dval",],border=FALSE,col=errorband_color2)
       abline(h=result$obs$mpcac_mc["val",],lwd=2,col="blue")
       legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), 
             legend=c("$ M_\\mathrm{PS} |G_A| / 2|G_P| $ from 3-param ground-state fit",
@@ -183,18 +188,19 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       # sometimes the error computation for the effective mass fails
       # we deal with it here
       ploterror <- try(plotwitherror(x=onlineout$effmass$t,
-        y=onlineout$effmass$m,dy=onlineout$effmass$dm,t='p',
-        ylab="$aM_\\mathrm{PS}$",
-        xlab="$t/a$",
-        main=titletext),silent=FALSE)
+                                     y=onlineout$effmass$m,dy=onlineout$effmass$dm,t='p',
+                                     ylab="$aM_\\mathrm{PS}$",
+                                     xlab="$t/a$",
+                                     main=titletext),silent=FALSE)
       # and plot without errors if required
       if(inherits(ploterror,"try-error")) {
         plot(x=onlineout$effmass$t,y=onlineout$effmass$m)
       }
       rect(xleft=t1,
-        xright=t2,
-        ytop=onlineout$uwerrresultmps$value+onlineout$uwerrresultmps$dvalue,
-        ybottom=onlineout$uwerrresultmps$value-onlineout$uwerrresultmps$dvalue,border=FALSE,col=errorband_color)
+           xright=t2,
+           ytop=onlineout$uwerrresultmps$value+onlineout$uwerrresultmps$dvalue,
+           ybottom=onlineout$uwerrresultmps$value-onlineout$uwerrresultmps$dvalue,
+           border=FALSE,col=errorband_color)
       abline(h=onlineout$uwerrresultmps$value,col="black")
       tikz.finalize(tikzfiles)
 
@@ -204,14 +210,16 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                     dtauint=onlineout$uwerrresultmps$dtauint*omeas.stepsize,
                                     Wopt=onlineout$uwerrresultmps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
 
-      result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/(sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
+      result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/
+                                         (sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
                                     dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue,
                                     tauint=onlineout$uwerrresultfps$tauint*omeas.stepsize,
                                     dtauint=onlineout$uwerrresultfps$dtauint*omeas.stepsize,
                                     Wopt=onlineout$uwerrresultfps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
 
       if(method=="boot" | method=="all"){
-        mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/sqrt(2)*(onlineout$tsboot$t[,3]/(sinh(onlineout$tsboot$t[,1])*sqrt(onlineout$tsboot$t[,1]))))
+        mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/
+                      sqrt(2)*(onlineout$tsboot$t[,3]/(sinh(onlineout$tsboot$t[,1])*sqrt(onlineout$tsboot$t[,1]))))
         result$obs$mpi_ov_fpi <- t(data.frame(val=mean(mpi_ov_fpi),
                                               dval=sd(mpi_ov_fpi),
                                               tauint=NA,
@@ -220,7 +228,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       } else {
         # the storage format for the observables summary requires a bit of a transformation
-        # to pass it to the error propagation function
+        # to pass it to the naive error propagation function
         mpi_ov_fpi <- compute_ratio( as.list(result$obs$mpi[,1]), as.list(result$obs$fpi[,1]) )
         result$obs$mpi_ov_fpi <- t(data.frame(val=mpi_ov_fpi$val,
                                               dval=mpi_ov_fpi$dval,
@@ -276,80 +284,85 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if(plaquette) {
     plotcounter <- plotcounter+1
     plaquette_filename <- sprintf("%02d_plaquette_%s",plotcounter,filelabel,title=filelabel)
-    result$params$N.plaq <- length(tidx)
-    result$obs$P <- plot_timeseries(dat=outdat$P[tidx],
-      xdat=outdat$traj[tidx],
-      pdf.filename=plaquette_filename,
-      ylab="$ \\langle P \\rangle$" ,
-      name="plaquette",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color)
-      #ist.by=0.00002))
+    result$params$N.plaq <- length(tidx)-stat_skip
+    result$obs$P <- plot_timeseries(dat=data.frame(y=outdat$P[tidx],
+                                                   t=outdat$traj[tidx]),
+                                    stat_range=c( 1+stat_skip, length( tidx ) ),
+                                    pdf.filename=plaquette_filename,
+                                    ylab="$ \\langle P \\rangle$" ,
+                                    name="plaquette",
+                                    plotsize=plotsize,
+                                    filelabel=filelabel,
+                                    titletext=titletext,
+                                    errorband_color=errorband_color)
+                                    #ist.by=0.00002))
   }
   if(dH) {
     plotcounter <- plotcounter+1
     dH_filename <- sprintf("%02d_dH_%s",plotcounter,filelabel)
-    result$obs$dH <- plot_timeseries(dat=outdat$dH[tidx],
-      xdat=outdat$traj[tidx],
-      pdf.filename=dH_filename,
-      ylab="$ \\delta H $",
-      name="dH",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color,
-      ylim=c(-2,3))
-      #ist.by=0.2))
+    result$obs$dH <- plot_timeseries(dat=data.frame(y=outdat$dH[tidx],
+                                                    t=outdat$traj[tidx]),
+                                     stat_range=c( 1+stat_skip, length(tidx) ),
+                                     pdf.filename=dH_filename,
+                                     ylab="$ \\delta H $",
+                                     name="dH",
+                                     plotsize=plotsize,
+                                     filelabel=filelabel,
+                                     titletext=titletext,
+                                     errorband_color=errorband_color,
+                                     ylim=c(-2,3))
+                                     #ist.by=0.2))
 
     plotcounter <- plotcounter+1
     expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
-    result$obs$expdH <- plot_timeseries(dat=outdat$expdH[tidx],
-      xdat=outdat$traj[tidx],
-      pdf.filename=expdH_filename,
-      ylab="$ \\exp(-\\delta H) $",
-      name="exp(-dH)",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color,
-      hist.xlim=c(-2,4),
-      ylim=c(-0,6))
-      #ist.by=0.2))
+    result$obs$expdH <- plot_timeseries(dat=data.frame(y=outdat$expdH[tidx],
+                                                       t=outdat$traj[tidx]),
+                                        stat_range=c( 1+stat_skip, length(tidx) ),
+                                        pdf.filename=expdH_filename,
+                                        ylab="$ \\exp(-\\delta H) $",
+                                        name="exp(-dH)",
+                                        plotsize=plotsize,
+                                        filelabel=filelabel,
+                                        titletext=titletext,
+                                        errorband_color=errorband_color,
+                                        hist.xlim=c(-2,4),
+                                        ylim=c(-0,6))
+                                        #ist.by=0.2))
   }
   if( !missing("cg_col") ) {
     plotcounter <- plotcounter+1
     cg_filename <- sprintf("%02d_cg_iter_%s", plotcounter, filelabel)
-    result$obs$CG.iter <- plot_timeseries(dat=outdat[tidx,cg_col],
-      xdat=outdat$traj[tidx],
-      pdf.filename=cg_filename,
-      ylab="$N^\\mathrm{iter}_\\mathrm{CG}$",
-      name="CG iterations",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color)
-      #ist.by=5))
+    result$obs$CG.iter <- plot_timeseries(dat=data.frame(y=outdat[tidx,cg_col],
+                                                         t=outdat$traj[tidx]),
+                                          stat_range=c( 1+stat_skip, length(tidx) ),
+                                          pdf.filename=cg_filename,
+                                          ylab="$N^\\mathrm{iter}_\\mathrm{CG}$",
+                                          name="CG iterations",
+                                          plotsize=plotsize,
+                                          filelabel=filelabel,
+                                          titletext=titletext,
+                                          errorband_color=errorband_color)
+                                          #ist.by=5))
   }
   if( !missing("evals") ) {
     plotcounter <- plotcounter+1
     ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals )
     
-    evaldata <- tryCatch(read.table(ev_filename,stringsAsFactors=FALSE,col.names=c("traj","mineval","maxeval","evalrangemin","evalrangemax") ), 
+    evaldata <- tryCatch(read.table(ev_filename, stringsAsFactors=FALSE, 
+                                    col.names=c("traj","min_ev","max_ev","ev_range_min","ev_range_max") ), 
                          error=function(e){ stop(sprintf("Reading of %s failed!",ev_filename)) } )
 
     eval.tidx <- which(evaldata$traj > skip)
 
     temp <- plot_eigenvalue_timeseries(dat=evaldata[eval.tidx,],
-        xdat=evaldata$traj[eval.tidx],
-        pdf.filename = ev_pdf_filename,
-        ylab = "eigenvalue",
-        plotsize=plotsize,
-        filelabel=filelabel,
-        titletext=titletext,
-        errorband_color=errorband_color )
+                                       stat_range=c( 1+stat_skip, length(eval.tidx) ),
+                                       pdf.filename = ev_pdf_filename,
+                                       ylab = "eigenvalue",
+                                       plotsize=plotsize,
+                                       filelabel=filelabel,
+                                       titletext=titletext,
+                                       errorband_color=errorband_color )
     temp$obs$mineval[3:5] <- temp$mineval[3:5]*evals.stepsize
     temp$obs$maxeval[3:5] <- temp$maxeval[3:5]*evals.stepsize
     
@@ -360,29 +373,31 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     # finally add acceptance rate
     plotcounter <- plotcounter+1
     accrate_filename <- sprintf("%02d_accrate_%s",plotcounter,filelabel,title=filelabel)
-    result$obs$accrate <- plot_timeseries(dat=outdat$acc[tidx],
-      xdat=outdat$traj[tidx],
-      pdf.filename=accrate_filename,
-      ylab="Accept / Reject" ,
-      name="accrate",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color,
-      hist.by=0.5)
+    result$obs$accrate <- plot_timeseries(dat=data.frame(y=outdat$acc[tidx],
+                                                         t=outdat$traj[tidx]),
+                                          stat_range=c( 1+stat_skip, length(tidx) ),
+                                          pdf.filename=accrate_filename,
+                                          ylab="Accept / Reject" ,
+                                          name="accrate",
+                                          plotsize=plotsize,
+                                          filelabel=filelabel,
+                                          titletext=titletext,
+                                          errorband_color=errorband_color,
+                                          hist.by=0.5)
   }
   if( trajtime == TRUE ){
     plotcounter <- plotcounter+1
     trajtime_filename <- sprintf("%02d_trajtime_%s",plotcounter,filelabel,title=filelabel)
-    result$obs$trajtime <- plot_timeseries(dat=outdat$trajtime[tidx],
-      xdat=outdat$traj[tidx],
-      pdf.filename=trajtime_filename,
-      ylab="Traj. time [s]" ,
-      name="trajtime",
-      plotsize=plotsize,
-      filelabel=filelabel,
-      titletext=titletext,
-      errorband_color=errorband_color)
+    result$obs$trajtime <- plot_timeseries(data.frame(y=outdat$trajtime[tidx],
+                                                      t=outdat$traj[tidx]),
+                                           stat_range=c( 1+stat_skip, length(tidx) ),
+                                           pdf.filename=trajtime_filename,
+                                           ylab="Traj. time [s]" ,
+                                           name="trajtime",
+                                           plotsize=plotsize,
+                                           filelabel=filelabel,
+                                           titletext=titletext,
+                                           errorband_color=errorband_color)
   }
 
   print(result$params)
