@@ -6,7 +6,7 @@
   the plaquette history and the history of \eqn{\Delta H}{Delta H}
 }
 \usage{
-plot.outputdata <- function(data, skip=0, ...)
+function(data, skip=0, ...)
 }
 \arguments{
   \item{data}{
@@ -15,7 +15,10 @@ plot.outputdata <- function(data, skip=0, ...)
   \item{skip}{
     number of trajectories to be skipped in analysis for plaquette and
     \eqn{\exp(-\Delta H)}{exp(-Delta H)}.
-    }
+  }
+  \item{...}{
+    additional arguments passed to the generic plot function.
+  }
 }
 \value{
   list containing the \dQuote{data}, an object of class \dQuote{uwerr}

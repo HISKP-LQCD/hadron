@@ -1,26 +1,27 @@
 \name{readcmifiles}
-\alias{readcmiloopfiles}
-\alias{readcmidatafiles}
 \alias{readcmicor}
+\alias{readcmifiles}
+\alias{readcmidatafiles}
+\alias{readcmiloopfiles}
 \title{Read Single Data Files in Chris Michael Format}
 \description{
   reads data from single files in Chris Michael format
 }
 \usage{
-cmicor <- readcmicor(filename,
-                     colClasses=c("integer","integer","integer","numeric","numeric","integer"))
+readcmicor(filename,
+           colClasses=c("integer","integer","integer","numeric","numeric","integer"), skip=0)
 
-cmicor <- readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
-                       colClasses, obs=NULL, obs.index)
+readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
+             colClasses, obs=NULL, obs.index)
 
-cmicor <- readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
-                           colClasses=c("integer","integer","integer","numeric","numeric")
-                           obs=NULL, obs.index=1)
+readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
+                 colClasses=c("integer","integer","integer","numeric","numeric"),
+                 obs=NULL, obs.index=1)
 
-cmiloop <- readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
-                            colClasses=c("integer", "integer","integer","integer",
-                                         "numeric","numeric","numeric","numeric")
-                            obs=NULL, obs.index=2)
+readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
+                 colClasses=c("integer", "integer","integer","integer",
+                              "numeric","numeric","numeric","numeric"),
+                 obs=NULL, obs.index=2)
 }
 \arguments{
   \item{filename}{
@@ -42,11 +43,15 @@ cmiloop <- readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
   \item{colClasses}{
     The column data type classes, the \code{read.table}.
   }
-  \item{obs, obs.index}{
+  \item{obs}{
     To reduce memory consumption it is possible to extract only one of
     the observales. The column in which to match \code{obs} is to be
     given with \code{obs.index}. This will only be affective if
     \code{obs} is not \code{NULL}.
+  }
+  \item{obs.index}{
+    The column in which to match \code{obs} is to be
+    given with \code{obs.index}.
   }
 }
 \value{

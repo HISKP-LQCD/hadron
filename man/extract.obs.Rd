@@ -1,23 +1,20 @@
 \name{extract.obs}
 \alias{extract.obs}
-\alias{extract.loop}
 \title{Extract One or More Gamma Combinations from am CMI Correlator}
 \description{
   Extracts one or more gamma matrix combinations (observables) from a
   correlator stored in cmi format
 }
 \usage{
-cmicor <- extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
-                      sym.vec, verbose=FALSE)
-
-cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
+extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
+                        sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE)
 }
 \arguments{
+  \item{cmicor}{
+    an correlator object in cmi format
+  }
   \item{vec.obs}{
     vector containing the numbers of observables to be extracted.
-  }
-  \item{obs}{
-    number of a single loop to extract.
   }
   \item{ind.vec}{
     Index vector indexing the column numbers in cmicor to be used. The

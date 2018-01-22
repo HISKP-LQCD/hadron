@@ -1,5 +1,5 @@
 \name{computeacf}
-\alias{}
+\alias{computeacf}
 \title{Computes The ACF and Integrated AC Time}
 \description{
   Computes the ACF and integrated autocorrelation time of a time
@@ -9,7 +9,7 @@
 computeacf(tseries, W.max, Lambda=100)
 }
 \arguments{
-  \item{tdata}{
+  \item{tseries}{
     the time series.
   }
   \item{W.max}{

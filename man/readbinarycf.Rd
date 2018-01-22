@@ -6,7 +6,7 @@
   formatted files.
 }
 \usage{
-cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
+readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver", 
                    excludelist=c(""), sym=TRUE, path="",
                    hdf5format=FALSE, hdf5name, hdf5index=c(1,2))
 }
@@ -50,7 +50,7 @@ cf <- readbinarycf(files, T=48, obs=5, Nop=1, endian="little", op="aver",
   \item{hdf5name}{
     Name of the data set as a string.
   }
-  \item{hdf5index=c(1,2)}{
+  \item{hdf5index}{
     The data might be an array of size n x T. \code{hdf5index} is used
     to convert two columns of the data to a complex valued vector using
     the first and second index for real and imaginary part,

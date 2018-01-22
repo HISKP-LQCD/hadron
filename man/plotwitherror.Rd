@@ -10,7 +10,7 @@
   methods for the individual errors are supported.
 }
 \usage{
-plotwitherror(x, y, dy, dx, xlim, mdx, mdy, 
+plotwitherror(x, y, dy, ylim, dx, xlim, mdx, mdy, 
               errsum.method="linear.quadrature",
               rep=FALSE, col="black", ...)
 }
@@ -18,8 +18,17 @@ plotwitherror(x, y, dy, dx, xlim, mdx, mdy,
   \item{x}{
     vector of x coordinates
   }
+  \item{xlim}{
+    limits for x-axis
+  }
   \item{y}{
     vector of y coordinates
+  }
+  \item{ylim}{
+    limits for y-axis
+  }
+  \item{col}{
+    colour of plotted data
   }
   \item{dy}{
     one of:

@@ -6,7 +6,8 @@
   from a text file. 
 }
 \usage{
-readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3))
+readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE)
 }
 \arguments{
   \item{file}{
@@ -38,6 +39,12 @@ readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3))
     \code{t} and \code{T-t}, with the sign depending on the value of
     \code{sym}. Note that currently the correlator with t-values larger
     than \code{T/2} will be discarded.
+  }
+  \item{path}{
+    the path to the files.
+  }
+  \item{autotruncate}{
+    
   }
 }
 \value{

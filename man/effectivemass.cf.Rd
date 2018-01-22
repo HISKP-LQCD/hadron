@@ -8,7 +8,8 @@
 }
 \usage{
 effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
-interval=c(0.000001,2.), weight.factor=1)
+                 interval=c(0.000001,2.), weight.factor=1,
+                 deltat=1, tmax=Thalf)
 }
 \arguments{
   \item{cf}{
@@ -47,7 +48,12 @@ interval=c(0.000001,2.), weight.factor=1)
   \item{weight.factor}{
     relative weight for type "weighted" only, see details
   }
-
+  \item{deltat}{
+    time shift for shifted correlation functions
+  }
+  \item{tmax}{
+    t-value up to which the effectivemass is to be computed
+  }
 }
 \value{
   Returns a vector of length \code{Thalf} with the effective mass values
@@ -90,6 +96,8 @@ interval=c(0.000001,2.), weight.factor=1)
 }
 \references{
   arXiv:1203.6041
+}
+\examples{
 }
 \seealso{
   \code{\link{bootstrap.effectivemass}}

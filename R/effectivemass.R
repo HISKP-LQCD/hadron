@@ -147,9 +147,16 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   if(missing(t1) || missing(t2)) {
     stop("t1 and t2 must be specified! Aborting...!\n")
   }
-  if((t2 <= t1) || (t1 < 0) || (t2 > (cf$Time/2-1))) {
-    stop("t1 < t2 and both in 0...T/2-1 is required. Aborting...\n")
+  tmax <- cf$Time/2
+  if(!is.null(cf$cf$symmetrised)) {
+    if(!cf$cf$symmetrised) {
+      tmax <- cf$Time-1
+    }
   }
+  if((t2 <= t1) || (t1 < 0) || (t2 > (tmax))) {
+    stop("t1 < t2 and both in 0...tmax is required, tmax depending on symmetrised or not. Aborting...\n")
+  }
+  else
   cf$effmassfit <- list()
   cf$t1 <- t1
   cf$effmassfit$t1 <- t1
@@ -163,9 +170,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## create an index array for the fit range
   ## the '+1' for Fortran index convention
   ## t1 and t2 can be in range 0-T/2
+  ## if not symmetrised even in the range 0 - T-1
   ii <- c()
   for(i in 1:cf$nrObs) {
-    ii <- c(ii, ((i-1)*cf$Time/2+t1+1):((i-1)*cf$Time/2+t2+1))
+    ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
   }
 
   ## get rid of the NAs for the fit, if there are any
@@ -285,7 +293,7 @@ summary.effectivemass <- function(effMass) {
   cat("Time extend\t=\t", effMass$Time, "\n")
   cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$t))), "\n")
   cat("values with errors:\n\n")
-  print(data.frame(t= effMass$t, m = effMass$t0, dm = effMass$se))
+  print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
 }
 
 summary.effectivemassfit <- function(effMass, verbose=FALSE) {

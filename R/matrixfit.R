@@ -117,7 +117,7 @@ deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
   return(res)
 }
 
-matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
+matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
                       parlist, sym.vec, neg.vec,
                       useCov=FALSE, seed=12345, model="single",
                       boot.fit=TRUE, fit.method="optim") {

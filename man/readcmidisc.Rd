@@ -5,20 +5,17 @@
   reads disconnected loops in cmi (Chris Michael) format from a list of files.
 }
 \usage{
-cf <- readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
-                  excludelist=c(""), skip=0, L,
-                  colClasses=c("integer", "integer","integer","integer",
-                               "numeric","numeric","numeric","numeric"),
-                  debug=FALSE)
+readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
+            excludelist=c(""), skip=0, L,
+            colClasses=c("integer", "integer","integer","integer",
+                          "numeric","numeric","numeric","numeric"),
+            debug=FALSE)
 
 }
 \arguments{
   \item{files}{
     list of filenames to be read. Can be created using
     \code{getorderedfilelist}. 
-  }
-  \item{skip}{
-    Number of lines to be skipped at the beginning of each file
   }
   \item{obs}{
     index of operator to parse from files

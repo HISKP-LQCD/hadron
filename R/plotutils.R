@@ -239,27 +239,28 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
 }
 
-plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
-  plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
+plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
+  plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
-plot.pionfit <- function(fit, ...) {
-  plot.cfit(fit)
+plot.pionfit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.rhofit <- function(fit, ...) {
-  plot.cfit(fit)
+plot.rhofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.b1fit <- function(fit, ...) {
-  plot.cfit(fit)
+plot.b1fit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.ofit <- function(fit, ...) {
-  plot.cfit(fit)
+plot.ofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.cfit <- function(fit, ...) {
+plot.cfit <- function(x, ...) {
+  fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
     plot.effmass(m=fit.mass,
@@ -325,10 +326,6 @@ plot.cfit <- function(fit, ...) {
          main=expression(m[PCAC]), xlab=expression(t[HMC]), ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
   }
-}
-
-plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
-  plotwitherror(data$t,data$corr, data$dcorr, xlab=xlab, ylab=ylab, log=log, ...)
 }
 
 plot.effmass <- function(m, ll, lf, ff, ...) {

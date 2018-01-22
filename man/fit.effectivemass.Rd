@@ -72,11 +72,11 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE, boot.fit=
   \code{\link{gevp2cf}}, \code{\link{invertCovMatrix}}
 }
 \examples{
-\dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
-\dontrun{pion.pc1.effectivemass <-
-fit.effectivemass(pion.pc1.effectivemass, t1=12, t2=23, useCov=FALSE)}
-\dontrun{summary(pion.pc1.effectivemass)}
-\dontrun{plot(pion.pc1.effectivemass)}
+data(samplecf)
+samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556), t1=15, t2=23)
+summary(effmass)
+plot(effmass, ylim=c(0.14,0.15))
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{optim}

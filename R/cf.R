@@ -140,7 +140,7 @@ addStat.cf <- function(cf1, cf2) {
     cf$boot.l <- NULL
     cf$seed <- NULL
     cf$cf <- rbind(cf1$cf, cf2$cf)
-    cf
+    return(invisible(cf))
   }
   else {
     stop("addStat.cf: cf1 and cf2 not compatible. Aborting...\n")
@@ -475,7 +475,9 @@ summary.cf <- function(cf, ...) {
   if(!is.null(cf$jack.boot.se)) {
     out <- cbind(out, jab.se=cf$jack.boot.se)
   }
-  print(out)
+  if(exists("out")) {
+    print(out)
+  }
 }
 
 print.cf <- function(cf, ...) {

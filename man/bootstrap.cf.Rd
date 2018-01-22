@@ -5,7 +5,7 @@
   bootstrap a set of correlation functions
 }
 \usage{
-bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
+bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE)
 }
 \arguments{
   \item{cf}{
@@ -25,7 +25,14 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
     time series.  The possible input values are ‘"fixed"’ (block
     resampling with fixed block lengths of ‘boot.l’) and ‘"geom"’ (block
     resampling with block lengths having a geometric distribution with
-    mean ‘boot.l’). Default is ‘"geom"’.
+    mean ‘boot.l’). Default is ‘"geom"’. See \link{boot::tsboot} for details.
+  }
+  \item{endcorr}{
+    A logical variable indicating whether end corrections are to
+    be applied when ‘sim’ is ‘"fixed"’.  When ‘sim’ is
+    ‘"geom"’, ‘endcorr’ is automatically set to ‘TRUE’; ‘endcorr’ is
+    not used when ‘sim’ is ‘"model"’ or ‘"scramble"’. See
+    \link{boot::tsboot} for details.
   }
 }
 \value{
@@ -34,6 +41,11 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom")
   original average of \code{cf} is returned as \code{cf0} and the
   bootstrap errors as \code{tsboot.se}. We also copy the input
   parameters over and set \code{bootstrap.samples} to \code{TRUE}.
+}
+\examples{
+data(samplecf)
+samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+plot(samplecf, log=c("y"))
 }
 \seealso{
   \code{boot::tsboot}, \code{jackknife.cf}

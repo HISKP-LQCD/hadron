@@ -41,6 +41,9 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     primary quantities) the time history of the observable are plotted
     with plot.uwerr
   }
+  \item{...}{
+    arguments passed to function \code{f}.
+  }
 }
 \value{
   returns an object of type uwerr containing

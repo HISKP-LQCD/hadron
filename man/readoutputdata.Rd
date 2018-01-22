@@ -5,7 +5,7 @@
   reads data from an output.data file written by tmLQCD
 }
 \usage{
-  readouptutdata(filename)
+  readoutputdata(filename)
 }
 \arguments{
 
