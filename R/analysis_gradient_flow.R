@@ -102,10 +102,11 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
            bty='n')
     
     # plot MD history of Wsym at w0
-    plot(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
-         x=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale,
-         type='l',lwd=3,
-         main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$W\\left( t/a^2 = %s \\right)$",w0sq_approx),las=1)
+    tseries <- data.frame(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
+                          t=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale )
+    plot_timeseries(dat=tseries,
+                    ylab=sprintf("$W\\left( t/a^2 = %.2f \\right)$", w0sq_approx),
+                    titletext="")
    
     if( any(cnames == "Qsym") ){
       ################ TOPOLOGICAL CHARGE ####################
@@ -120,11 +121,12 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
       polygon(x=poly.x,y=poly.y,col=poly.col)
       
       # plot MD history of Q at maximal flow time
-      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t)) 
-      plot(y=raw.gradflow[tmax_idx,"Qsym"],
-           x=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale,
-           type='l',lwd=3,
-           main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$Q\\left( t/a^2 = %s \\right)$",max(raw.gradflow$t)),las=1)
+      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
+      tseries <- data.frame(y=raw.gradflow[tmax_idx,"Qsym"],
+                            t=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale)
+      plot_timeseries(dat=tseries,
+                      ylab=sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
+                      titletext="")
     }
     
     tikz.finalize(tikzfiles)
