@@ -106,6 +106,26 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
          x=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale,
          type='l',lwd=3,
          main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$W\\left( t/a^2 = %s \\right)$",w0sq_approx),las=1)
+   
+    if( any(cnames == "Qsym") ){
+      ################ TOPOLOGICAL CHARGE ####################
+      # set up plot
+      plot(x=gradflow$t, y=gradflow$Qsym.value,
+           type='n',xlim=c(0,max(gradflow$t)),
+           xlab="$t/a^2$",ylab="$Q(t)$",las=1)
+      # draw errorband
+      poly.col <- rgb(red=1.0,green=0.0,blue=0.0,alpha=0.6)
+      poly.x <- c(gradflow$t,rev(gradflow$t))
+      poly.y <- c(gradflow$Qsym.value+gradflow$Qsym.dvalue,rev(gradflow$Qsym.value-gradflow$Qsym.dvalue))
+      polygon(x=poly.x,y=poly.y,col=poly.col)
+      
+      # plot MD history of Q at maximal flow time
+      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t)) 
+      plot(y=raw.gradflow[tmax_idx,"Qsym"],
+           x=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale,
+           type='l',lwd=3,
+           main="",xlab="$N_\\mathrm{conf}$",ylab=sprintf("$Q\\left( t/a^2 = %s \\right)$",max(raw.gradflow$t)),las=1)
+    }
     
     tikz.finalize(tikzfiles)
   }
