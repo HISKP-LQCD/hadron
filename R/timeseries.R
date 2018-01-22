@@ -2,12 +2,12 @@
 # and an error shading for an error analysis via uwerr
 
 plot_timeseries <- function(dat, 
-                            pdf.filename,
                             ylab, plotsize, titletext, hist.by,
                             stat_range,
+                            pdf.filename,
                             name="", xlab="$t_\\mathrm{MD}$", 
                             hist.probs=c(0.0,1.0), errorband_color=rgb(0.6,0.0,0.0,0.6),
-                            stepsize=1,type='l',
+                            type='l',
                             uwerr.S=2,
                             periodogram=FALSE,debug=FALSE,uw.summary=TRUE,...) {
 
@@ -23,7 +23,11 @@ plot_timeseries <- function(dat,
     print(summary(uw.data))
   }
   
-  tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
+  tikzfiles <- NULL
+  if( !missing(pdf.filename) ){
+    tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
+  }
+
   op <- par(family="Palatino",cex.main=0.8,font.main=1)
   par(mgp=c(2,1.0,0))
 
@@ -41,7 +45,20 @@ plot_timeseries <- function(dat,
        ytop=uw.data$value+uw.data$dvalue,
        ybottom=uw.data$value-uw.data$dvalue,
        border=FALSE, col=errorband_color)
-  abline(h=uw.data$value,col="black",lwd=2)                                                                                                   
+  abline(h=uw.data$value,col="black",lwd=2)
+
+  legend(x="topright",
+         legend=sprintf("%s $= %.6f(%3d)$",
+                         ylab, 
+                         uw.data$value,
+                         as.integer( 10^6*signif(x=uw.data$dvalue,
+                                                 digits=3) )
+                         ),
+         lty=1,
+         pch=NA,
+         col="red",
+         bty='n')
+  
   # plot the corresponding histogram
   hist.data <- NULL
   
@@ -80,7 +97,9 @@ plot_timeseries <- function(dat,
          x11=FALSE, plot.hist=FALSE)
   }
    
-  tikz.finalize(tikzfiles)
+  if(!missing(pdf.filename)){
+    tikz.finalize(tikzfiles)
+  }
 
   return(t(data.frame(val=uw.data$value, dval=uw.data$dvalue, tauint=uw.data$tauint, 
                       dtauint=uw.data$dtauint, Wopt=uw.data$Wopt, stringsAsFactors=FALSE)))
@@ -89,10 +108,11 @@ plot_timeseries <- function(dat,
 # function to plot timeseries of eigenvlues, including minimum and maximum eigenvalue bands
 # as found in the monomial_0x.data files produced by tmLQCD
 
-plot_eigenvalue_timeseries <- function(dat, pdf.filename,
+plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
                                        ylab, plotsize, filelabel,titletext,
-                                       stepsize=1, errorband_color=rgb(0.6,0.0,0.0,0.6),
+                                       pdf.filename,
+                                       errorband_color=rgb(0.6,0.0,0.0,0.6),
                                        debug=FALSE) {
   if( missing(stat_range) ) { stat_range <- c(1,nrow(dat)) }
   yrange <- range(dat[,2:5])
@@ -110,7 +130,10 @@ plot_eigenvalue_timeseries <- function(dat, pdf.filename,
     print(summary(uw.max_ev))
   }
 
-  tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
+  tikzfiles <- NULL
+  if(!missing(pdf.filename)){
+    tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
+  }
   par(mgp=c(2,1,0))
 
   # plot the timeseries
@@ -142,7 +165,9 @@ plot_eigenvalue_timeseries <- function(dat, pdf.filename,
        xleft=uw.max_ev$value-uw.max_ev$dvalue,border=FALSE,col=errorband_color)
   abline(v=uw.max_ev$value,col="black")                                                                                                   
 
-  tikz.finalize(tikzfiles)
+  if(!missing(pdf.filename)){
+    tikz.finalize(tikzfiles)
+  }
 
   return(list(mineval=t(data.frame(val=uw.min_ev$value, dval=uw.min_ev$dvalue, tauint=uw.min_ev$tauint, 
                                    dtauint=uw.min_ev$dtauint, Wopt=uw.min_ev$Wopt, stringsAsFactors=FALSE)),
