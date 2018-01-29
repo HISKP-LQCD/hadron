@@ -20,7 +20,7 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
     would be 4.
   }
   \item{Time}{
-    time extend of the lattice.
+    time extent of the lattice.
   }
   \item{t0}{
     initial time value of the GEVP, must be in between 0 and
