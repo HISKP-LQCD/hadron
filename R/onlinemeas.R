@@ -1,4 +1,6 @@
-onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
+onlinemeas <- function(data, t1, t2, 
+                       stat_range, 
+                       S=1.5, pl=FALSE, skip=0,
                        iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
                        boot.R=99, boot.l=10, tsboot.sim="geom",
                        method="uwerr", fit.routine="optim", nrep,
@@ -9,6 +11,9 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   if(missing(t1) || missing(t2)) {
     stop("Error! t1 and t2 must be specified!")
+  }
+  if( missing(stat_range) ){
+    stat_range <- c(skip,nrow(data))
   }
   par <- numeric(2)
   sign <- +1.
@@ -77,17 +82,11 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   ii <- c((t1p1):(t2p1))
 
   #BFGS
-  if(fit.routine != "gsl") {
-    massfit <- optim(par, ChiSqr.singleCor, method="BFGS", control=list(trace=0),Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), sign=sign)
-  }
-  else {
-    massfit <- gsl_fit_correlator(par, Thalf=Thalf,
-                                  x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
-  }
+  massfit <- optim(par, ChiSqr.singleCor, method="BFGS", control=list(trace=0),Thalf=Thalf,
+                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1), sign=sign)
   sfit.mass <- abs(massfit$par[2])
   sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
-  if(fit.routine != "gsl" && massfit$convergence!=0) {
+  if(massfit$convergence!=0) {
     warning("optim did not converge for massfit! ", massfit$convergence)
   }
   sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
@@ -106,11 +105,11 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
                         fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    sfit.boot <- boot(data=t(W[ii,]), statistic=fit.boot, R=boot.R, stype="i",
+    sfit.boot <- boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                      fit.routine=fit.routine)
 
-    sfit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+    sfit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
                          Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                          fit.routine=fit.routine)
   }
@@ -125,17 +124,11 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   par2[1] <- sqrt(abs(Cor[(t1+1)]*exp(par[2]*(t1+1))))
   par2[2] <- 0.
                                         #BFGS
-  if(fit.routine != "gsl75") {
-    pcacfit <- optim(par2, ChiSqr.pcac, method="BFGS", control=list(trace=0),Thalf=Thalf,
-                     x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
-  }
-  else {
-    pcacfit <- gsl_fit_correlator(par, Thalf=Thalf,
-                                  x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
-  }
+  pcacfit <- optim(par2, ChiSqr.pcac, method="BFGS", control=list(trace=0),Thalf=Thalf,
+                   x=c((t1):(t2)), y=Cor[ii], err=E[ii], tr = (t2-t1+1))
   fit.pcac <- 0.5*abs(pcacfit$par[3])*pcacfit$par[2]/pcacfit$par[1]
 
-  if(fit.routine != "gsl" && pcacfit$convergence!=0) {
+  if(pcacfit$convergence!=0) {
     warning("optim did not converge for pcacfit! ", massfit$convergence)
   }
   fit.dof <- (t2-t1+1)-length(massfit$par)
@@ -213,7 +206,7 @@ onlinemeas <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 
 fitmpcac.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                             N=2, no.masses=1, no=1, kappa, mu,
-                            fit.routine="gsl") {
+                            fit.routine="optim") {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -221,14 +214,8 @@ fitmpcac.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
 
   if(no.masses == 1) {
-    if(fit.routine != "gsl75") {
-      fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
-                   x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-    }
-    else {
-      fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
-    }
+    fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
 
     sort.ind <- c(1)
   }
@@ -237,7 +224,7 @@ fitmpcac.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
 
 fitmass.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                             N=2, no.masses=1, no=1, kappa, mu,
-                            fit.routine="gsl") {
+                            fit.routine="optim") {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -245,14 +232,8 @@ fitmass.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
 
   if(no.masses == 1) {
-    if(fit.routine != "gsl75") {
-      fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
-                   x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-    }
-    else {
-      fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
-    }
+    fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
 
     sort.ind <- c(1)
   }
@@ -261,7 +242,7 @@ fitmass.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
 
 fitf.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
                         N=2, no.masses=1, no=1, kappa, mu,
-                        fit.routine="gsl") {
+                        fit.routine="optim") {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -269,14 +250,8 @@ fitf.online <- function(Cor, Err, t1, t2, Time, par=c(1.,0.1,0.12),
   tr <- (t2-t1+1)
 
   if(no.masses == 1) {
-    if(fit.routine != "gsl75") {
-      fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
-                   x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-    }
-    else {
-      fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                       x=c((t1):(t2)), y=Cor, err=Err, tr = tr, N=N)
-    }
+    fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
+                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
 
     sort.ind <- c(1)
   }
@@ -290,7 +265,7 @@ pcacsym.online <- function(data, t, T1) {
 }
 
 fit.online.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
-                          kappa, mu, fit.routine="gsl") {
+                          kappa, mu, fit.routine="optim") {
   Thalf <- Time/2
   T1 <- Thalf+1
   t1p1 <- (t1+1)
@@ -308,14 +283,8 @@ fit.online.boot <- function(Z, d, Err, t1, t2, Time, par=c(1.,0.1,0.12),
     }
   }
 
-  if(fit.routine != "gsl75") {
-    fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
-                 x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
-  }
-  else {
-    fit <- gsl_fit_correlator_matrix(par, Thalf=Thalf,
-                                     x=c((t1):(t2)), y=Cor, err=Err, tr = tr)
-  }
+  fit <- optim(par, ChiSqr.pcac, method="BFGS", Thalf=Thalf,
+               x=c((t1):(t2)), y=Cor, err=Err, tr=tr)
   #fit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(fit$par[(sort.ind[1]-1)*(N+1)+1])/sqrt(abs(fit$par[sort.ind[1]*(N+1)])^3)
   fit.pcac <- abs(fit$par[3])*fit$par[2]/fit$par[1]/2.
   #fit.zv <- 2.*mu/abs(fit$par[sort.ind[1]*(N+1)])*fit$par[(sort.ind[1]-1)*(N+1)+1]/fit$par[(sort.ind[1]-1)*(N+1)+5]

@@ -1,5 +1,5 @@
 
-AC_INIT([src/sumit.c])
+AC_INIT([src/zeta_function_R_interface.c])
 AC_PROG_CXX
 AC_CHECK_LIB(gsl, gsl_sf_airy_Ai_e,
              [LIBS="${LIBS} -lgsl -lgslcblas"], 
@@ -18,7 +18,7 @@ int main() {
    if ((sscanf(gslv, "%d.%d", &major, &minor)) != 2) {
      exit (1);
    }
-   exit (minor < 8);
+   exit( !( (major >= 2) || (major == 1 && minor >= 8 ) ) );
 #else
   exit(1);
 #endif

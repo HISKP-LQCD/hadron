@@ -5,7 +5,7 @@
   Performs a Bootstrap with Blocking Analysis of a Timeseries
 }
 \usage{
-bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
+bootstrap.analysis(data, skip=0, boot.R=100, tsboot.sim="geom", pl=FALSE, boot.l=2)
 }
 \arguments{
 
@@ -16,8 +16,13 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
     integer value providing the warm up phase length. 
   }
   \item{boot.R}{
-    number of bootstrap samples. See also \code{boot}, and \code{tsboot}
-    
+    number of bootstrap samples. See also \link{boot::boot}, and \link{boot::tsboot}.
+  }
+  \item{boot.l}{
+    block length for blocked bootstrap.
+  }
+  \item{tsboot.sim}{
+    the \code{sim} parameter of \link{boot::tsboot}.
   }
   \item{pl}{
     logical, indicating whether or not to plot the result.
@@ -37,7 +42,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100, pl=F)
 }
 \examples{
 data(plaq.sample)
-plaq.boot <- bootstrap.analysis(plaq.sample, pl=T)
+plaq.boot <- bootstrap.analysis(plaq.sample, pl=TRUE)
 }
 \seealso{
   for an alternative way to analyse such time series see

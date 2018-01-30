@@ -3,6 +3,9 @@
 ## this is much faster than the blocking
 ## of tsboot
 block.ts <- function(data, l=2) {
+  if(l == 1) {
+    return(invisible(data))
+  }
   if(is.vector(data)) {
     N <- floor(length(data)/l)*l
     return( apply(array(data, dim=c(l, N/l)), 2, mean))

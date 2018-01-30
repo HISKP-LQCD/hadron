@@ -6,7 +6,8 @@
   Prints summary for class cfit
 }
 \usage{
-summary.cfit <- function(fit)
+summary(fit)
+print(fit)
 }
 \arguments{
   \item{fit}{
