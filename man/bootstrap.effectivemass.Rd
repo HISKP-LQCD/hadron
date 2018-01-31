@@ -28,7 +28,7 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
   \item{type}{
     The function to be used to compute the effective mass
     values. Possibilities are "acosh", "solve", "log", "temporal",
-    "subtracted" and "weighted". While the first three assume normal
+    "shifted" and "weighted". While the first three assume normal
     cosh behaviour of 
     the correlation function, "temporal" is desigend to remove an
     additional constant stemming from temporal states in two particle
