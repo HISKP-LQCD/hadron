@@ -319,10 +319,19 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return(invisible(ret))
 }
 
-readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
-                         op="aver", excludelist=c(""), sym=TRUE, path="",
-                         hdf5format=FALSE, hdf5name, hdf5index=c(1,2)) {
-
+readbinarycf <- function(files, 
+                         T, 
+                         obs=5, 
+                         Nop=1,
+                         symmetrise=TRUE,
+                         endian="little",
+                         op="aver",
+                         excludelist=c(""), 
+                         sym=TRUE, 
+                         path="",
+                         hdf5format=FALSE, 
+                         hdf5name, 
+                         hdf5index=c(1,2)) {
   if(missing(files)) {
     stop("files must be given! Aborting...\n")
   }
@@ -381,8 +390,12 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
       }
       
       ## average +-t
-      tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-      Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
+      if(symmetrise) {
+        tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
+        Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
+      }else{
+        Cf <- cbind(Cf, tmp[c(1:T)])
+      }
 
       if(!hdf5format) {
         close(to.read)
@@ -395,7 +408,9 @@ readbinarycf <- function(files, T=48, obs=5, Nop=1, endian="little",
       cat("file ", ifs, "does not exist...\n")
     }
   }
-  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
+  
+  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
+              symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
