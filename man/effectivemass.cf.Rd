@@ -23,7 +23,7 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   \item{type}{
     The function to be used to compute the effective mass
     values. Possibilities are "acosh", "solve", "log", "temporal",
-    "subtracted" and "weighted". While the first three assume normal
+    "shifted" and "weighted". While the first three assume normal
     cosh behaviour of 
     the correlation function, "temporal" is desigend to remove an
     additional constant stemming from temporal states in two particle
