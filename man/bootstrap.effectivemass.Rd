@@ -32,7 +32,7 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
     cosh behaviour of 
     the correlation function, "temporal" is desigend to remove an
     additional constant stemming from temporal states in two particle
-    correlation functions. The same for "subtracted" and "weighted", the
+    correlation functions. The same for "shifted" and "weighted", the
     latter for the case of two particle energies with the two particle
     having different energies. In the latter case only the leading
     polution is removed by \code{removeTemporal.cf} and taken into
