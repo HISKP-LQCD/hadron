@@ -391,7 +391,7 @@ readbinarycf <- function(files,
       
       ## average +-t
       if(symmetrise) {
-        tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
+        tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
         Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
       }else{
         Cf <- cbind(Cf, tmp[c(1:T)])
