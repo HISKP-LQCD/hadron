@@ -82,14 +82,14 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
   \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
   is numerically solved for \eqn{m(t)}.
 
-  "subtracted": like "temporal", but the differences \eqn{C(t)-C(t+1)}
+  "shifted": like "temporal", but the differences \eqn{C(t)-C(t+1)}
   are assumed to be taken already at the correlator matrix level using
   \code{removeTemporal.cf} and hence the ratio\cr
   \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] /
     [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
   is numerically solved for \eqn{m(t)}.
 
-  "weighted": like "subtracted", but now there is an additional weight
+  "weighted": like "shifted", but now there is an additional weight
   factor \eqn{w} from \code{removeTemporal.cf} to be taken into account,
   such that the ratio\cr
   \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-w*\cosh(-m*(t+1))] /
