@@ -3,8 +3,22 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
   return(apply(bootit$t, 2, sd))
 }
 
+#' Correlator matrix model.
+#' 
+#' @param par Numeric vector: Fit parameters of the model. In an 
+#'   object of type \code{matrixfit}, this should be located at 
+#'   \code{$opt.res$par}.
+#' @param t Numeric vector: Time of interest.
+#' @param T Numeric: Time extent of the lattice.
+#' @param parind See \code{\link{matrixfit}}.
+#' @param sign.vec Numeric vector: Relative sign between forward and
+#'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
+#' @param ov.sign.vec Numeric vector: Overal sign.
+#' 
+#' @seealso \code{\link{matrixfit}}
 matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec) {
-  return(ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+  ov.sign.vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+      (exp(- par[1] * t) + sign.vec * exp(- par[1] * (T-t)))
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
