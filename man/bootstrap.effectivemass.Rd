@@ -28,11 +28,11 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
   \item{type}{
     The function to be used to compute the effective mass
     values. Possibilities are "acosh", "solve", "log", "temporal",
-    "subtracted" and "weighted". While the first three assume normal
+    "shifted" and "weighted". While the first three assume normal
     cosh behaviour of 
     the correlation function, "temporal" is desigend to remove an
     additional constant stemming from temporal states in two particle
-    correlation functions. The same for "subtracted" and "weighted", the
+    correlation functions. The same for "shifted" and "weighted", the
     latter for the case of two particle energies with the two particle
     having different energies. In the latter case only the leading
     polution is removed by \code{removeTemporal.cf} and taken into
@@ -82,14 +82,14 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
   \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
   is numerically solved for \eqn{m(t)}.
 
-  "subtracted": like "temporal", but the differences \eqn{C(t)-C(t+1)}
+  "shifted": like "temporal", but the differences \eqn{C(t)-C(t+1)}
   are assumed to be taken already at the correlator matrix level using
   \code{removeTemporal.cf} and hence the ratio\cr
   \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-\cosh(-m*(t+1))] /
     [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr
   is numerically solved for \eqn{m(t)}.
 
-  "weighted": like "subtracted", but now there is an additional weight
+  "weighted": like "shifted", but now there is an additional weight
   factor \eqn{w} from \code{removeTemporal.cf} to be taken into account,
   such that the ratio\cr
   \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-w*\cosh(-m*(t+1))] /
