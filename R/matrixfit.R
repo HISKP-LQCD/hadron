@@ -519,8 +519,8 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
 #'
 #' @return A correlation function of class `cf` which is computed from the old
 #'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
-#'   \eqn{M(t)} is the fit model. Only time slices earlier than the fit are
-#'   altered.
+#'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
+#'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
