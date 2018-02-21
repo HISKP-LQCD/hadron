@@ -551,17 +551,17 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
     tt <- mfit$CF$t[ii]
     ## compute the difference of mean data to model at times smaller than fit range
-    dz <- mfit$cf$cf0[ii] - matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+    dz <- mfit$cf$cf0[ii] - matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
     cf$subtracted.values <- dz
     cf$subtracted.ii <- ii
     for(i in 1:length(cf$cf[,1])) {
       cf$cf[i,ii] <- mfit$cf$cf[i,ii]-dz
     }
     if(from.samples && cf$boot.samples) {
-      cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+      cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
       for(i in 1:cf$boot.R) {
         cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$t[i, c(1:length(mfit$opt.res$par))],
-                                            tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+                                            tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
       }
     }
     else{
