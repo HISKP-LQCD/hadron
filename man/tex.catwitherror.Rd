@@ -11,10 +11,15 @@ tex.catwitherror(x, dx, digits=1, with.dollar=TRUE)
 }
 \arguments{
   \item{x}{
-    the values
+    either a single numeric value, or a numeric vector, where the first
+    element is the value and the second is its error
   }
   \item{dx}{
-    the error
+    the error. If supplied, it will be printed as the error and the
+    value is the first element of \code{x}. If \code{dx} is missing, the
+    second element of \code{x}, if available, is used as the error. If
+    \code{dx} is missing and the length of \code{x} is one, only the
+    value is converted to a string without error.
   }
   \item{digits}{
     number of error digits
@@ -27,8 +32,9 @@ tex.catwitherror(x, dx, digits=1, with.dollar=TRUE)
   writes a string to standard output
 }
 \details{
-  The value \code{x} is properly rounded to its significant digits determined
-  by the values of \code{dx} and \code{digits} and then a tex-ready
+  The value of the first element of \code{x} is properly rounded to its
+  significant digits determined by the values of \code{dx} or the second
+  element of \code{x} (see above) and \code{digits}. Then a tex-ready
   string is returned.
 }
 %\references{
@@ -37,5 +43,9 @@ tex.catwitherror(x, dx, digits=1, with.dollar=TRUE)
 %}
 \examples{
 tex.catwitherror(x=0.375567, dx=0.001)
+tex.catwitherror(x=c(0.375567, 0.001))
+## it can be used with apply
+x = array(c(0.1187, 0.291, 0.388, 0.011, 0.037, 0.021), dim=c(3,2))
+apply(x, 1, tex.catwitherror, digits=2)
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}

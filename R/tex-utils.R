@@ -21,8 +21,13 @@ convert.scientific <- function(str, errstr) {
 }
 
 tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE) {
+  if(missing(x) || !is.numeric(x) || length(x) == 0) {
+    stop("x must be a numeric vector with length > 0")
+  }
+  lx <- length(x)
   tmp <- ""
-  if(missing(dx)) {
+  if(missing(dx) && lx < 2) {
+    ## just a number without error
     N <- 0
     threshold <- 10^(digits-1)
     while(round(10^N*x) < threshold) {
@@ -32,12 +37,17 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE) {
     tmp <- convert.scientific(str=tmp)
   }
   else {
+    ## now we need to typeset the error as well
+    err <- 0.
+    if(missing(dx)) err <- x[2]
+    else err <- dx[1]
+    if(lx > 1) x <- x[1]
     N <- 0
     threshold <- 10^(digits-1)
-    while(round(10^N*dx) < threshold) {
+    while(round(10^N*err) < threshold) {
       N <- N+1
     }
-    tmp <- convert.scientific(str=format(round(x, digits=N), nsmall=N), errstr=paste(round(10^N*dx)))
+    tmp <- convert.scientific(str=format(round(x, digits=N), nsmall=N), errstr=paste(round(10^N*err)))
   }
   ret <- tmp
   if(with.dollar) {
