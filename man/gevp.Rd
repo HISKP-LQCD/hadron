@@ -20,7 +20,7 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
     would be 4.
   }
   \item{Time}{
-    time extend of the lattice.
+    time extent of the lattice.
   }
   \item{t0}{
     initial time value of the GEVP, must be in between 0 and
@@ -61,7 +61,7 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 \details{
   The generalised eigenvalue problem\cr
   \eqn{
-    C(t) v(t,t_0) = C(t_0)\lambda(t,t_0) v(t,t_0)
+    C(t) v(t,t_0) = C(t_0) \lambda(t,t_0) v(t,t_0)
   }{
     C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)}\cr
   is solved by performing a Cholesky decomposition of \eqn{C(t_0)=L^t
