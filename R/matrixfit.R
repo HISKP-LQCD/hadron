@@ -3,8 +3,27 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
   return(apply(bootit$t, 2, sd))
 }
 
+<<<<<<< HEAD
 matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec=+1, deltat=0) {
   return(ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) + sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+=======
+#' Correlator matrix model.
+#' 
+#' @param par Numeric vector: Fit parameters of the model. In an 
+#'   object of type \code{matrixfit}, this should be located at 
+#'   \code{$opt.res$par}.
+#' @param t Numeric vector: Time of interest.
+#' @param T Numeric: Time extent of the lattice.
+#' @param parind See \code{\link{matrixfit}}.
+#' @param sign.vec Numeric vector: Relative sign between forward and
+#'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
+#' @param ov.sign.vec Numeric vector: Overal sign.
+#' 
+#' @seealso \code{\link{matrixfit}}
+matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec) {
+  ov.sign.vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+      (exp(- par[1] * t) + sign.vec * exp(- par[1] * (T-t)))
+>>>>>>> origin/master
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
@@ -496,6 +515,31 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
 }
 
 
+#' Substract excited states.
+#'
+#' Excited states are subtracted from the given correlation function and
+#' matching matrixfit. The fit is usually done on late time slices when the
+#' thermal states have decayed so much that they can be neglected. On the early
+#' time slices there are contributions which cannot be explained with a single
+#' cosh (or sinh) function. These are exactly the contributions that we do not
+#' want.
+#'
+#' The correlation function is altered on the time slices which are earlier than
+#' the start of the fit interval. The correlator is replaced by the model
+#' function (cosh or sinh or exp) extrapolated until the first time slice. The
+#' deviations of the (bootstrap) samples from the mean value are kept.
+#'
+#' @param cf Correlation function of class `cf`.
+#' @param mfit Fit result of class `matrixfit`.
+#' @param from.samples Whether to use existing bootstrap samples. If set to
+#'   `TRUE`, the same operation will be applied to the bootstrap samples.
+#'   Otherwise the result will not contain bootstrap samples, even if the input
+#'   correlation function did.
+#'
+#' @return A correlation function of class `cf` which is computed from the old
+#'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
+#'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
+#'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
