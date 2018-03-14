@@ -48,11 +48,12 @@ plot_timeseries <- function(dat,
   abline(h=uw.data$value,col="black",lwd=2)
 
   legend(x="topright",
-         legend=sprintf("%s $= %.6f(%3d)$",
-                         ylab, 
-                         uw.data$value,
-                         as.integer( 10^6*signif(x=uw.data$dvalue,
-                                                 digits=3) )
+         legend=sprintf("%s $=%s$",
+                         ylab,
+                         tex.catwitherror(x=uw.data$value,
+                                          dx=uw.data$dvalue,
+                                          digits=3,
+                                          with.dollar=FALSE)
                          ),
          lty=1,
          pch=NA,
