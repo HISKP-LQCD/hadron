@@ -66,12 +66,11 @@ bootstrap.nlsfit <- function(fn,
   bsamples[1,] <- Y
   
   if(sim == "parametric") {
-    for(i in seq_along(y)) {
+    for(i in seq_along(Y)) {
       bsamples[rr, i] <- rnorm(n=boot.R, mean = Y[i], sd = dY[i])
     }
   }
   ## else missing currenlty!
-  
   if(errormodel == "yerrors") {
     if(lm.avail) {
       boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn)
@@ -93,7 +92,10 @@ bootstrap.nlsfit <- function(fn,
               ysamples=bsamples,
               errormodel=errormodel,
               t0=boot.res[,1],
-              t=boot.res)
+              t=boot.res,
+              Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
+              chisqr = boot.res[dim(boot.res)[1],1],
+              dof = length(y) - length(par.guess))
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
 }
@@ -101,8 +103,20 @@ bootstrap.nlsfit <- function(fn,
 summary.bootstrapfit <- function(x, digits=2) {
 
   cat("bootstrap nls fit\n\n")
+  cat("model", x$errormodel, "\n")
   errors <- apply(X=x$t[1:(dim(x$t)[1]-1), ], MARGIN=1, FUN=sd)
   values <- x$t[1:(dim(x$t)[1]-1), 1]
-  tmp <- apply(X=array(c(value, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=2)
-  cat(tmp, "\n")
+  npar <- length(x$par.guess)
+  
+  ## parameters with errors as strings
+  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=2)
+  cat("    best fit parameters with errors\n")
+  print(data.frame(par=tmp[1:npar]))
+  if(x$errormodel != "yerrors") {
+    cat("\n estimates for x-values with errors\n")
+    print(data.frame(x=tmp[(npar+1):length(tmp)]))
+  }
+  cat("\n   chi^2 and fit quality\n")
+  cat("chisqr / dof =", x$chisqr, "/", x$dof, "=", x$chisqr/x$dof, "\n")
+  cat("p-value", x$Qval, "\n")
 }
