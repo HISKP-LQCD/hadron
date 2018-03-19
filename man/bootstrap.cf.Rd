@@ -51,4 +51,4 @@ plot(samplecf, log=c("y"))
   \code{boot::tsboot}, \code{jackknife.cf}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
-\keyword{bootstrap, time series, }
+\keyword{bootstrap}
