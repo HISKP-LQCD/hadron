@@ -7,25 +7,31 @@ bootstrap.nlsfit <- function(fn,
                              dy,
                              x,
                              dx=NULL,
+                             bsamples,
+                             useCov,
                              ...) {
+
+  if(missing(y) || missing(dy) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn) || missing(useCov)) {
+    stop("x, y, dy, par.guess, boot.R, useCov and fn must be provided!")
+  }
 
   ## the chi functions for nls.lm
   fitchi <- function(par, x, y, dy, fitfun) {
-    (y - fitfun(par=par, x=x))/dy
+    (y - fitfun(par=par, x=x)) %*% dy
   }
   fitchi.xy <- function(par, y, dy, fitfun, nx) {
     ipx <- length(par)-seq(nx-1,0)
-    (y - c(fitfun(par=par[-ipx], x=par[ipx]), par[ipx]))/dy
+    (y - c(fitfun(par=par[-ipx], x=par[ipx]), par[ipx])) %*% dy
   }
 
   ## the corresponding chisqr functions
   fitchisqr <- function(par, x, y, dy, fitfun) {
     z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun)
-    return (z %*% z)
+    return (sum(z %*% z))
   }
   fitchisqr.xy <- function(par, y, dy, fitfun, nx) {
     z <- fitchixy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
-    return (z %*% z)
+    return (sum(z %*% z))
   }
 
   ## wrapper functions for apply
@@ -62,13 +68,36 @@ bootstrap.nlsfit <- function(fn,
   
   ## the bootstrap samples of the input data
   ## in an array
-  bsamples <- array(NA, dim=c(boot.R+1, length(Y)))
-  bsamples[1,] <- Y
-  
+  if(missing(bsamples)) {
+    bsamples <- array(NA, dim=c(boot.R+1, length(Y)))
+    bsamples[1,] <- Y
+  }
+  else {
+    ## check consistency
+    dbs <- dim(bsamples)
+    if(dbs[2] != length(Y)) {
+      stop("the provided bootstrap samples do not match the number of data points with errors!")
+    }
+    if(boot.R != dbs[1]) {
+      stop("boot.R inconsistent with dimension one of bsamples!")
+    }
+  }
+
+  ## generate bootstrap samples if needed
+  ## and invert covariance matrix, if applicable
   if(sim == "parametric") {
     for(i in seq_along(Y)) {
       bsamples[rr, i] <- rnorm(n=boot.R, mean = Y[i], sd = dY[i])
     }
+    dY <- diag(1./dY)
+  }
+  else if(useCov) {
+    CovMatrix <- cov(bsamples)
+    InvCovMatrix <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
+    if(inherits(InvCovMatrix, "try-error")) {
+      stop("Variance-covariance matrix could not be inverted!")
+    }
+    dY <- chol(InvCovMatrix)
   }
 
   if(errormodel == "yerrors") {
@@ -93,6 +122,8 @@ bootstrap.nlsfit <- function(fn,
               errormodel=errormodel,
               t0=boot.res[,1],
               t=boot.res,
+              useCov=useCov,
+              invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
               chisqr = boot.res[dim(boot.res)[1],1],
               dof = length(y) - length(par.guess))
@@ -100,23 +131,84 @@ bootstrap.nlsfit <- function(fn,
   return(invisible(res))
 }
 
-summary.bootstrapfit <- function(x, digits=2) {
+summary.bootstrapfit <- function(object, digits=2, ...) {
 
   cat("bootstrap nls fit\n\n")
-  cat("model", x$errormodel, "\n")
-  errors <- apply(X=x$t[1:(dim(x$t)[1]-1), ], MARGIN=1, FUN=sd)
-  values <- x$t[1:(dim(x$t)[1]-1), 1]
-  npar <- length(x$par.guess)
+  cat("model", object$errormodel, "\n")
+  errors <- apply(X=object$t[1:(dim(object$t)[1]-1), ], MARGIN=1, FUN=sd)
+  values <- object$t[1:(dim(object$t)[1]-1), 1]
+  npar <- length(object$par.guess)
   
   ## parameters with errors as strings
   tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=2)
   cat("    best fit parameters with errors\n")
   print(data.frame(par=tmp[1:npar]))
-  if(x$errormodel != "yerrors") {
+  if(object$errormodel != "yerrors") {
     cat("\n estimates for x-values with errors\n")
     print(data.frame(x=tmp[(npar+1):length(tmp)]))
   }
   cat("\n   chi^2 and fit quality\n")
-  cat("chisqr / dof =", x$chisqr, "/", x$dof, "=", x$chisqr/x$dof, "\n")
-  cat("p-value", x$Qval, "\n")
+  cat("chisqr / dof =", object$chisqr, "/", object$dof, "=", object$chisqr/object$dof, "\n")
+  cat("p-value", object$Qval, "\n")
 }
+
+print.bootstrapfit <- function(x, digits=2, ...) {
+  summary.bootstrapfit(object=x, digits=digits, ...)
+}
+
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1)) {
+  rx <- range(x$x)
+  X <- seq(rx[1], rx[2], (rx[2]-rx[1])/1000)
+  npar <- length(x$par.guess)
+  Y <- numeric()
+  if(!missing(xlim)) {
+    my.xlim <- xlim
+  }
+  if(!missing(ylim)) {
+    my.ylim <- ylim
+  }
+  if(!rep) {
+    mylims <- c()
+    ## use the xylimits computation of plotwitherror
+    if(missing(xlim) || missing(ylim)) {
+      if(x$errormodel == "yerrors") {
+        mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
+      }
+      else {
+        mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
+      }
+    }
+    if(missing(xlim)) {
+      my.xlim <- mylims$xlim
+    }
+    if(missing(ylim)) {
+      my.ylim <- mylims$ylim
+    }
+    
+    ## generate empty plot
+    
+    plot(NA, xlim=my.xlim, ylim=my.ylim, ...)
+  }
+  
+  if(x$errormodel == "yerrors") {
+    Y <- x$fn(par=x$t0, x=X)
+  }
+  else {
+    Y <- x$fn(par=x$t0[1:npar], x=X)
+  }
+  ## error band
+  se <- apply(X=apply(X=x$t[c(1:npar),], MARGIN=2, FUN=x$fn, x=X), MARGIN=1, FUN=sd)
+  polygon(x=c(X, rev(X)), y=c(Y+se, rev(Y-se)), col=col.band, lty=0, lwd=0.001, border=col.band)
+  ## fitted curve
+  lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
+
+  ## plot data with fitted curve on top of everything
+  if(x$errormodel == "yerrors") {
+    plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=TRUE, ...)
+  }
+  else {
+    plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=TRUE,...)
+  }
+}
+
+  

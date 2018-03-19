@@ -228,6 +228,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   
   options(show.error.messages = TRUE)
+  return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {

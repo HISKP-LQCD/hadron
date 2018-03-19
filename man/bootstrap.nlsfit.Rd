@@ -8,7 +8,8 @@
   performs and bootstraps an NLS fit to data with y and x errors.
 }
 \usage{
-bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim = "parametric", boot.R, y, dy, x, dx = NULL, ...)
+bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim =
+"parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -45,7 +46,13 @@ bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim = "parametric", boot
 }
   \item{dx}{
     errors of \code{x} as a one-dimensional numerical vector.
-}
+  }
+  \item{bsamples}{
+    bootstrap samples of \code{y} (and \code{x}, if applicable). Must be
+    provided as array of dimensions \code{(npar+1, boot.R+1)} with
+    \code{npar} equals to \code{length(par.guess)} in case of 'yerrors'
+    and For 'xyerrors' to \code{length(par.guess) + length(x)}..
+  }
   \item{\dots}{
     additional parameters to be passed on to the fit function \code{fn}.
 }
@@ -95,7 +102,7 @@ dvalue <- c(0.01, 0.01, 0.015)
 x <- c(1,2,3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
-fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="xyerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, dx=dx)
+fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="xyerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, dx=dx, useCov=FALSE)
 summary(fitres)
 }
 \keyword{ models }
