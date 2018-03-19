@@ -70,7 +70,7 @@ bootstrap.nlsfit <- function(fn,
       bsamples[rr, i] <- rnorm(n=boot.R, mean = Y[i], sd = dY[i])
     }
   }
-  ## else missing currenlty!
+
   if(errormodel == "yerrors") {
     if(lm.avail) {
       boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn)
@@ -89,7 +89,7 @@ bootstrap.nlsfit <- function(fn,
   }
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R, sim=sim,
-              ysamples=bsamples,
+              bsamples=bsamples,
               errormodel=errormodel,
               t0=boot.res[,1],
               t=boot.res,
