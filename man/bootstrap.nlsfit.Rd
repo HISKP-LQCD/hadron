@@ -94,6 +94,7 @@ value <- c(0.1, 0.2, 0.3)
 dvalue <- c(0.01, 0.01, 0.015)
 x <- c(1,2,3)
 dx <- c(0.1, 0.1, 0.1)
+boot.R <- 1500
 fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="xyerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, dx=dx)
 summary(fitres)
 }
