@@ -81,6 +81,8 @@ bootstrap.nlsfit <- function(fn,
     if(boot.R != dbs[1]) {
       stop("boot.R inconsistent with dimension one of bsamples!")
     }
+    ## add original data as first row
+    bsamples <- rbind(Y, bsamples)
   }
 
   ## generate bootstrap samples if needed
@@ -121,7 +123,7 @@ bootstrap.nlsfit <- function(fn,
               bsamples=bsamples,
               errormodel=errormodel,
               t0=boot.res[,1],
-              t=boot.res,
+              t=t(boot.res),
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
@@ -135,8 +137,8 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
 
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
-  errors <- apply(X=object$t[1:(dim(object$t)[1]-1), ], MARGIN=1, FUN=sd)
-  values <- object$t[1:(dim(object$t)[1]-1), 1]
+  errors <- apply(X=object$t[,1:(dim(object$t)[2]-1)], MARGIN=2, FUN=sd)
+  values <- object$t[1, 1:(dim(object$t)[2]-1)]
   npar <- length(object$par.guess)
   
   ## parameters with errors as strings
@@ -197,7 +199,7 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
     Y <- x$fn(par=x$t0[1:npar], x=X)
   }
   ## error band
-  se <- apply(X=apply(X=x$t[c(1:npar),], MARGIN=2, FUN=x$fn, x=X), MARGIN=1, FUN=sd)
+  se <- apply(X=apply(X=x$t[, c(1:npar)], MARGIN=1, FUN=x$fn, x=X), MARGIN=1, FUN=sd)
   polygon(x=c(X, rev(X)), y=c(Y+se, rev(Y-se)), col=col.band, lty=0, lwd=0.001, border=col.band)
   ## fitted curve
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
