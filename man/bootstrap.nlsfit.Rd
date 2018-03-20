@@ -148,7 +148,21 @@ dvalue <- c(0.01, 0.01, 0.015)
 x <- c(1,2,3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
+## with xy-errors and no correlated fit
 fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="xyerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, dx=dx, useCov=FALSE)
+summary(fitres)
+## with covariance matrix and y-errors
+bootstrapsamples <- array(NA, dim=c(boot.R+1, length(value)))
+bootstrapsamples[1,] <- value
+## some indices
+crr <- c(1:(boot.R+1))
+rr <- c(2:(boot.R+1))
+bootstrapsamples[rr, 1] <- rnorm(n=boot.R, mean = value[1], sd = dvalue[1])
+bootstrapsamples[rr, 2] <- rnorm(n=boot.R, mean = value[2], sd = dvalue[2])
+bootstrapsamples[rr, 3] <- rnorm(n=boot.R, mean = value[3], sd = dvalue[3])
+
+## the fit without correlation and y-errors only
+fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="yerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, useCov=TRUE, bsamples=bootstrapsamples[rr,])
 summary(fitres)
 }
 \keyword{ models }

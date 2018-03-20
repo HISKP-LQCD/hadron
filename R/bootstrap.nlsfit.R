@@ -30,7 +30,7 @@ bootstrap.nlsfit <- function(fn,
     return (sum(z %*% z))
   }
   fitchisqr.xy <- function(par, y, dy, fitfun, nx) {
-    z <- fitchixy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
+    z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
     return (sum(z %*% z))
   }
 
@@ -95,7 +95,7 @@ bootstrap.nlsfit <- function(fn,
   }
   else if(useCov) {
     CovMatrix <- cov(bsamples)
-    InvCovMatrix <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
+    InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l=1, boot.samples=TRUE), silent=TRUE)
     if(inherits(InvCovMatrix, "try-error")) {
       stop("Variance-covariance matrix could not be inverted!")
     }
