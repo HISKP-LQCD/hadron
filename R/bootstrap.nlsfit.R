@@ -142,12 +142,22 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
   npar <- length(object$par.guess)
   
   ## parameters with errors as strings
-  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=2)
-  cat("    best fit parameters with errors\n")
-  print(data.frame(par=tmp[1:npar]))
+  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=2, human.readable=FALSE)
+  bias <- object$t0[1:(length(object$t0)-1)]-apply(X=object$t[,1:(dim(object$t)[2]-1)], MARGIN=2, FUN=mean)
+  dim(bias) <- c(length(bias), 1)
+  bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=2, with.dollar=FALSE, human.readable=FALSE)
+  ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE)
+  dim(ci16) <- c(length(ci16), 1)
+  ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=2, with.dollar=FALSE, human.readable=FALSE)
+  ci84 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.84), drop=FALSE)
+  dim(ci84) <- c(length(ci84), 1)
+  ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=2, with.dollar=FALSE, human.readable=FALSE)
+  cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
+  print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
   if(object$errormodel != "yerrors") {
-    cat("\n estimates for x-values with errors\n")
-    print(data.frame(x=tmp[(npar+1):length(tmp)]))
+    cat("\n estimates for x-values with errors, bootstrap bias and 68% confidence interval\n\n")
+    ii <- c((npar+1):length(tmp))
+    print(data.frame(x=tmp[ii], bias=bias[ii], ci16=ci16[ii], ci84=ci84[ii]))
   }
   cat("\n   chi^2 and fit quality\n")
   cat("chisqr / dof =", object$chisqr, "/", object$dof, "=", object$chisqr/object$dof, "\n")

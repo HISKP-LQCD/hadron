@@ -1,16 +1,26 @@
 \name{bootstrap.nlsfit}
 \alias{bootstrap.nlsfit}
+\alias{summary.bootstrapfit}
+\alias{print.bootstrapfit}
+\alias{plot.bootstrapfit}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
   bootstrap an NLS fit
 }
 \description{
-  performs and bootstraps an NLS fit to data with y and x errors.
+  performs and bootstraps an non-linear least-squares fit to data with y and x errors.
 }
 \usage{
 bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim =
 "parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov...)
+
+summary.bootstrapfit(object, digits=2, ...)
+
+print.bootstrapfit(x, digits=2, ...)
+
+plot.bootstrapfit(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1))
 }
+
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{fn}{
@@ -55,7 +65,36 @@ bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim =
   }
   \item{\dots}{
     additional parameters to be passed on to the fit function \code{fn}.
-}
+  }
+  \item{object}{
+    object returned by \code{bootstrap.nlsfit}
+  }
+  \item{digits}{
+    number of significant digits to print in summary or print.
+  }
+  \item{xlim}{
+    x limits of the plot.
+  }
+  \item{ylim}{
+    y limits of the plot.
+  }
+  \item{rep}{
+    If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
+    adding points with error bars to the current plot. Switches the underlying
+    plotting routine from \code{plot} to \code{points}.
+  }
+  \item{col.line}{
+    line colour.
+  }
+  \item{col.band}{
+    error band colour.
+  }
+  \item{lwd}{
+    line width for fitted curve.
+  }
+  \item{lty}{
+    line type of fitted curve.
+  }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
