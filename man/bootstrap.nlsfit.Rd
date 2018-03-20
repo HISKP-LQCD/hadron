@@ -18,7 +18,8 @@ summary.bootstrapfit(object, digits=2, ...)
 
 print.bootstrapfit(x, digits=2, ...)
 
-plot.bootstrapfit(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1))
+plot.bootstrapfit(x, ..., xlim, ylim, rep=FALSE, col.line="black",
+col.band="gray", lty=c(1), lwd=c(1), bsamples, useCov)
 }
 
 %- maybe also 'usage' for other objects documented here.
@@ -62,6 +63,12 @@ plot.bootstrapfit(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gra
     provided as array of dimensions \code{(npar+1, boot.R+1)} with
     \code{npar} equals to \code{length(par.guess)} in case of 'yerrors'
     and For 'xyerrors' to \code{length(par.guess) + length(x)}..
+  }
+  \item{useCov}{
+    perform a fully correlated fit by deterining the variance-covariance
+    matrix from the provided bootstrap samples. This works only if
+    bootstrap samples are provided. Otherwise, an uncorrelated fit will
+    be performed.
   }
   \item{\dots}{
     additional parameters to be passed on to the fit function \code{fn}.
