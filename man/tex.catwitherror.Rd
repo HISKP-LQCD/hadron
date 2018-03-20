@@ -7,7 +7,7 @@
   applies.
 }
 \usage{
-tex.catwitherror(x, dx, digits=1, with.dollar=TRUE, human.readable=FALSE)
+tex.catwitherror(x, dx, digits=1, with.dollar=TRUE, human.readable=TRUE)
 }
 \arguments{
   \item{x}{
