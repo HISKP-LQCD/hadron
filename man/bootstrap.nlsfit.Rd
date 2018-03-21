@@ -14,11 +14,11 @@
 bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim =
 "parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov, ...)
 
-summary.bootstrapfit(object, digits=2, ...)
+summary(object, digits=2, ...)
 
-print.bootstrapfit(x, digits=2, ...)
+print(x, digits=2, ...)
 
-plot.bootstrapfit(x, ..., xlim, ylim, rep=FALSE, col.line="black",
+plot(x, ..., xlim, ylim, rep=FALSE, col.line="black",
 col.band="gray", lty=c(1), lwd=c(1))
 }
 
