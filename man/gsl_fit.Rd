@@ -46,7 +46,7 @@
   See GSL webpage \code{http://www.gnu.org/software/gsl/}
 }
 \seealso{
-  \code{\link{pion}}, \code{\link{rho}}, \code{\link{optim}}
+  \code{\link{pion}}, \code{\link[stats]{optim}}
 }
 %\examples{
 %

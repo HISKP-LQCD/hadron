@@ -170,9 +170,8 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
 %\references{
 %}
 \seealso{
-  \code{\link{rho}}, \code{\link{readcmicor}}, \code{\link{uwerr}},
-  \code{\link{plot.cfit}}, \code{\link{summary.pionfit}},
-  \code{\link{pp}}, \code{\link{variational}}
+  \code{\link{readcmicor}}, \code{\link{uwerr}},
+  \code{\link{variational}}
 }
 %\examples{
 %}

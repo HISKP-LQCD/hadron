@@ -102,7 +102,7 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
 }
 \seealso{
   \code{\link{fit.effectivemass}}, \code{\link{bootstrap.cf}},
-  \code{\link{removeTemporal.cf}}
+  \code{removeTemporal.cf}
 }
 \examples{
 data(samplecf)

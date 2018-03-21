@@ -69,7 +69,7 @@ fit.effectivemass(effMass, t1=10, t2=20, useCov=TRUE, replace.na=TRUE, boot.fit=
   C.Michael, A.McKerrell,  Phys.Rev. D51 (1995) 3745-3750, hep-lat/9412087
 }
 \seealso{
-  \code{\link{bootstrap.effectivemass}}, \code{\link{boostrap.gevp}},
+  \code{\link{bootstrap.effectivemass}}, \code{\link{bootstrap.gevp}},
   \code{\link{gevp2cf}}, \code{\link{invertCovMatrix}}
 }
 \examples{

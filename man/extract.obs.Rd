@@ -83,13 +83,11 @@ extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
 \details{
   C(t) and C(-t) are averaged as indicated by \code{sym.vec}.
 
-  The returned object can be further processed by e.g. \code{block.ts}.
 }
 \references{
 }
 \seealso{
   \code{\link{readcmicor}}, \code{\link{readcmidatafiles}},
-  \code{\link{block.ts}}
 }
 \examples{
 \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}

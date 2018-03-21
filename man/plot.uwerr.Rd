@@ -30,7 +30,7 @@ plot.uwerr(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
   with error bars.
 }
 \seealso{
-  \code{\link{uwerr}}, \code{\link{pion}}, \code{\link{rho}}
+  \code{\link{uwerr}}, \code{\link{pion}}
 }
 \examples{
 data(plaq.sample)
