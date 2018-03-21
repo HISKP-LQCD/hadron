@@ -7,8 +7,8 @@
   correlator of the HMC code
 }
 \usage{
-onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
-           iobs=1, ind.vec=c(1,3,4,5),
+onlinemeas(data, t1, t2, stat_range, S=1.5, pl=FALSE, skip=0,
+           iobs=1, ind.vec=c(1,3,4,5), mu=0.1, kappa=0.125,
            boot.R=99, boot.l=10, tsboot.sim="geom",
            method="uwerr", fit.routine="optim", nrep,
            oldnorm = FALSE)
@@ -31,6 +31,9 @@ onlinemeas(data, t1, t2, S=1.5, pl=FALSE, skip=0,
   }
   \item{pl}{
     logical: if set to TRUE the function produces plots
+  }
+  \item{stat_range}{
+    range of data to be included in the analysis.
   }
   \item{skip}{
     number of measurements to be discarded at the beginning of the time
