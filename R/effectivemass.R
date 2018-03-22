@@ -327,9 +327,12 @@ print.effectivemassfit <- function(effMass, verbose=FALSE) {
   summary(effMass, verbose=verbose)
 }
 
-plot.effectivemass <- function(effMass, ref.value, col,...) {
+plot.effectivemass <- function(effMass, ref.value, col, col.fitline,...) {
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))
+  }
+  if(missing(col.fitline)) {
+	col.fitline <- col[1]
   }
   op <- options()
   options(warn=-1)
@@ -348,9 +351,9 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   if(!is.null(effMass$effmassfit)){
     lines(x=c(effMass$t1,effMass$t2),
           y=c(effMass$effmassfit$t0[1],effMass$effmassfit$t0[1]),
-          col=col[1],
+          col=col.fitline,
           lwd=1.3)
-      pcol <- col2rgb(col[1],alpha=TRUE)/255                                                                                                   
+      pcol <- col2rgb(col.fitline,alpha=TRUE)/255                                                                                                   
       pcol[4] <- 0.65
       pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
       rect(xleft=effMass$t1, ybottom=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
