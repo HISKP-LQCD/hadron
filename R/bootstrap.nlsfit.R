@@ -118,12 +118,16 @@ bootstrap.nlsfit <- function(fn,
       boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn)
     }
   }
+
+  errors <- apply(X=boot.res[1:(dim(boot.res)[1]-1),rr], MARGIN=1, FUN=sd)
+
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R, sim=sim,
               bsamples=bsamples,
               errormodel=errormodel,
               t0=boot.res[,1],
               t=t(boot.res),
+			  se=errors,
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
@@ -137,7 +141,7 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
 
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
-  errors <- apply(X=object$t[,1:(dim(object$t)[2]-1)], MARGIN=2, FUN=sd)
+  errors <- object$se
   values <- object$t[1, 1:(dim(object$t)[2]-1)]
   npar <- length(object$par.guess)
   
