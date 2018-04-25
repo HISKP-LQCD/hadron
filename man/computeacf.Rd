@@ -64,8 +64,8 @@ computeacf(tseries, W.max, Lambda=100)
   N. Madras, A. D. Sokal, J. Stat. Phys. 50 (1988) 109
 }
 \seealso{
-  \code{\link{uwerr}}, \code{\link{acf}}, \code{\link{plot.hadronacf}},
-  \code{\link{summary.hadronacf}}, \code{\link{bootstrap.analysis}}
+  \code{\link{uwerr}}, \code{\link{acf}}
+  \code{\link{bootstrap.analysis}}
 }
 \examples{
 data(plaq.sample)

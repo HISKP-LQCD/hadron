@@ -1,7 +1,9 @@
 \name{LuescherZeta}
 \alias{LuescherZeta}
-\title{Computes Lueschers Zeta Funciton}
+\title{Computes Lueschers Zeta Function}
 \description{
+  Implementation of Lueschers Zeta Function for general \code{l},
+  \code{m} and boost vectors \code{dvec}.
 }
 \usage{
   LuescherZeta(qsq, l=0, m=0, dvec=c(0,0,0), gamma=1., lambda=1.,

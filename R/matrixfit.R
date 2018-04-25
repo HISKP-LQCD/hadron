@@ -14,11 +14,13 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
 #' @param sign.vec Numeric vector: Relative sign between forward and
 #'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
 #' @param ov.sign.vec Numeric vector: Overal sign.
+#' @param deltat Numeric: time shift.
 #' 
 #' @seealso \code{\link{matrixfit}}
-matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec) {
-  ov.sign.vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
-      (exp(- par[1] * t) + sign.vec * exp(- par[1] * (T-t)))
+matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
+  return(ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*
+         (exp(-par[1]*(t-deltat/2)) + sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+         )
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
@@ -543,6 +545,15 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
     t2p1 <- mfit$t1
     ii <- c(t1p1:t2p1)
     Thalfp1 <- cf$Time/2+1
+    deltat <- 0
+    nfac <- 1.
+    sign.vec <- mfit$ov.sign.vec
+    if("shifted" %in% names(cf)) {
+      deltat <- cf$deltat
+      nfac <- 2.
+      sign.vec <- -sign.vec
+    }
+    
     if(mfit$mSize > 1) {	
       for(j in 2:mfit$mSize) {
         ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
@@ -551,17 +562,25 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
     tt <- mfit$CF$t[ii]
     ## compute the difference of mean data to model at times smaller than fit range
-    dz <- mfit$cf$cf0[ii] - matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
+    dz <- mfit$cf$cf0[ii] - nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+                                        parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
+                                        ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
     cf$subtracted.values <- dz
     cf$subtracted.ii <- ii
     for(i in 1:length(cf$cf[,1])) {
       cf$cf[i,ii] <- mfit$cf$cf[i,ii]-dz
     }
     if(from.samples && cf$boot.samples) {
-      cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
+      cf$cf0[ii] <- nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+                                parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
+                                ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
+      cf$cf.tsboot$t0[ii] <- cf$cf0[ii]
       for(i in 1:cf$boot.R) {
-        cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$t[i, c(1:length(mfit$opt.res$par))],
-                                            tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii], mfit$ov.sign.vec[ii])
+        cf$cf.tsboot$t[i,ii] <- nfac*matrixModel(par=mfit$t[i, c(1:length(mfit$opt.res$par))],
+                                            t=tt, T=cf$Time, parind=mfit$parind[ii,],
+                                            sign.vec=mfit$sign.vec[ii],
+                                            ov.sign.vec=sign.vec[ii],
+                                            deltat=deltat)
       }
     }
     else{

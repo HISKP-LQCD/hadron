@@ -3,7 +3,8 @@
 \title{Fit a correlator matrix}
 \description{Fit a correlator matrix
 }
-\usage{gsl_fit_correlator_matrix(par, Thalf, x, y, err, tr, N, prec=c(1.e-4,1.e-4))
+\usage{gsl_fit_correlator_matrix(par, Thalf, x, y, err, tr, N,
+no_masses=1, prec=c(1.e-10,1.e-4))
 }
 \arguments{
   \item{par}{initial parameter list}
@@ -13,6 +14,7 @@
   \item{err}{errors on data points}
   \item{tr}{length of \code{x}}
   \item{N}{matrix size. Can be 2, 4, or 6.}
+  \item{no_masses}{the number of masses to fit}
   \item{prec}{vector of precision for the fit routine. First entry is
     the absolute precision, the second relative one}
 }
@@ -46,7 +48,7 @@
   See GSL webpage \code{http://www.gnu.org/software/gsl/}
 }
 \seealso{
-  \code{\link{pion}}, \code{\link{rho}}, \code{\link{optim}}
+  \code{\link{pion}}, \code{\link[stats]{optim}}
 }
 %\examples{
 %

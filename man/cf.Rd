@@ -1,4 +1,5 @@
 \name{cf}
+\alias{cf}
 \alias{c.cf}
 \alias{add.cf}
 \alias{"+.cf"}

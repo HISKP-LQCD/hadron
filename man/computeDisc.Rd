@@ -5,9 +5,13 @@
   computes a disconnected correlation function from loops
 }
 \usage{
-cf <- computeDisc(cf, cf2, real=TRUE, real2=TURE, subtract.vev=TRUE,
-subtract.vev2=TRUE, subtract.equal=TRUE, use.samples, use.samples2,
-smeared=FALSE, smeared2=FALSE, type="cosh", verbose=FALSE)
+computeDisc(cf, cf2,
+                        real=TRUE, real2 = TRUE,
+                        smeared=FALSE, smeared2=FALSE,
+                        subtract.vev=TRUE, subtract.vev2=TRUE,
+                        subtract.equal = TRUE,
+                        use.samples, use.samples2,
+                        type="cosh", verbose=FALSE)
 }
 \arguments{
   \item{cf}{

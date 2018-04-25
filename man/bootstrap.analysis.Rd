@@ -16,13 +16,13 @@ bootstrap.analysis(data, skip=0, boot.R=100, tsboot.sim="geom", pl=FALSE, boot.l
     integer value providing the warm up phase length. 
   }
   \item{boot.R}{
-    number of bootstrap samples. See also \link{boot::boot}, and \link{boot::tsboot}.
+    number of bootstrap samples. See also \link[boot]{boot}, and \link[boot]{tsboot}.
   }
   \item{boot.l}{
     block length for blocked bootstrap.
   }
   \item{tsboot.sim}{
-    the \code{sim} parameter of \link{boot::tsboot}.
+    the \code{sim} parameter of \link[boot]{tsboot}.
   }
   \item{pl}{
     logical, indicating whether or not to plot the result.

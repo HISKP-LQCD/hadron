@@ -48,7 +48,7 @@ samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
 plot(samplecf, log=c("y"))
 }
 \seealso{
-  \code{boot::tsboot}, \code{jackknife.cf}
+  \code{\link[boot]{tsboot}}, \code{jackknife.cf}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
-\keyword{bootstrap, time series, }
+\keyword{bootstrap}

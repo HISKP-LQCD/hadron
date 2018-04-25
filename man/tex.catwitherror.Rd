@@ -7,7 +7,7 @@
   applies.
 }
 \usage{
-tex.catwitherror(x, dx, digits=1, with.dollar=TRUE)
+tex.catwitherror(x, dx, digits=1, with.dollar=TRUE, human.readable=TRUE)
 }
 \arguments{
   \item{x}{
@@ -26,6 +26,11 @@ tex.catwitherror(x, dx, digits=1, with.dollar=TRUE)
   }
   \item{with.dollar}{
     include the tex dollar in the return string or not
+  }
+  \item{human.readable}{
+    controls whether or not scientific format will be produced in a
+    human readable form, or not at all. The latter might be useful for
+    output with summary or print.
   }
 }
 \value{

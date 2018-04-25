@@ -97,8 +97,8 @@
  }
 
  \seealso{
-   \code{\link[base]{median}}, \code{\link[base]{mean}} and
-   \code{\link[base]{weighted.mean}}
+   \code{\link[stats]{median}}, \code{\link[base]{mean}} and
+   \code{\link[stats]{weighted.mean}}
  }
  
  \references{
