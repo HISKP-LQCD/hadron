@@ -52,3 +52,32 @@ df_to_datasetname <- function (df) {
     joined <- apply(words, 1, function (row) paste(row, collapse = '_'))
     datasetname <- sprintf('%s_%s_%s', df$diagram, df$quarks, joined)
 }
+
+p_q_to_df_2 <- function (p, q) {
+    pq <- p + q
+    
+    data.frame(p1x = pq[1],
+               p1y = pq[2],
+               p1z = pq[3],
+               p2x = -q[1],
+               p2y = -q[2],
+               p2z = -q[3])
+}
+
+p_q_to_df_4 <- function (p, q1, q2) {
+    pq1 <- p + q1
+    pq2 <- p + q2
+    
+    data.frame(p1x = pq1[1],
+               p1y = pq1[2],
+               p1z = pq1[3],
+               p2x = -q1[1],
+               p2y = -q1[2],
+               p2z = -q1[3],
+               p3x = pq2[1],
+               p3y = pq2[2],
+               p3z = pq2[3],
+               p4x = -q2[1],
+               p4y = -q2[2],
+               p4z = -q2[3])
+}
