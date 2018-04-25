@@ -5,3 +5,7 @@ config.status
 *~
 *.so
 .Rproj.user
+.RData
+.Rhistory
+functions_with_boot_R.txt
+man/.Rhistory
