@@ -140,7 +140,7 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   return(ret)
 }
 
-fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE) {
+fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE) {
   if(missing(cf) || !any(class(cf) == "effectivemass" )) {
     stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
   }
@@ -182,6 +182,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ii <- ii[-ii.na]
   }
 
+  # cf here is a bootstrapped effective mass and $t is the matrix of bootstrap samples
   CovMatrix <- cov(cf$t[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
@@ -232,9 +233,13 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ## recompute covariance matrix and compute the correctly normalised inverse
     M <- try(invertCovMatrix(cf$t[,ii], boot.samples=TRUE), silent=TRUE)
     if(inherits(M, "try-error")) {
-      M <- M[ -ii.remove, -ii.remove]
-      warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
-      useCov <- FALSE
+      if( autoproceed ){
+        M <- M[ -ii.remove, -ii.remove]
+        warning("[fit.effectivemass] inversion of variance covariance matrix failed, continuing with uncorrelated chi^2\n")
+        useCov <- FALSE
+      } else {
+        stop("[fit.effectivemass] inversion of variance covariance matrix failed!\n")
+      }
     }
   }
   else {
