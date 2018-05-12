@@ -1,3 +1,23 @@
+compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
+  tmp <- val - 0.1*abs(val)
+  tmpp <- val + 0.1*abs(val)
+  if(!is.null(cumul.dval)) {
+    # cumul.mdx is implicitly negative
+    tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
+    tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
+  }
+  if(logscale) {
+    tmp <- tmp[ tmp > 0 ]
+    tmpp <- tmpp[ tmpp > 0 ]
+  }
+  if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
+    warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
+    tmp <- 10^(-6)
+    tmpp <- 10^2
+  }
+  range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
+}
+
 # there are two possibilities for one-dimensional vectors: the vector class or the array class
 is.vectorial <- function(x) {
   ( is.vector(x) || length(dim(x))==1 )
@@ -79,6 +99,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   my.xlim <- c()
   my.ylim <- c()
+
  
   # cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
@@ -123,35 +144,14 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
 
   if(missing(xlim)) {
-    tmp <- x - 0.1*abs(x)
-    tmpp <- x + 0.1*abs(x)
-    if(!is.null(cumul.dx)) {
-      # cumul.mdx is implicitly negative
-      tmp <- x+2*apply(X=cumul.mdx,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- x+2*apply(X=cumul.dx,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(xlog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.xlim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+    my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
   if(missing(ylim)) {
-    tmp <- y - 0.1*abs(y)
-    tmpp <- y + 0.1*abs(y)
-    if(!is.null(cumul.dy)) {
-      # cumul.mdy is implicitly negative
-      tmp <- y+2*apply(X=cumul.mdy,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- y+2*apply(X=cumul.dy,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(ylog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.ylim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
-  }
-  else {
+    my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
+  } else {
     my.ylim <- ylim
   }
 
@@ -228,6 +228,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   
   options(show.error.messages = TRUE)
+  return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
@@ -239,27 +240,28 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
 }
 
-plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
-  plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
+plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
+  plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
-plot.pionfit <- function(fit) {
-  plot.cfit(fit)
+plot.pionfit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.rhofit <- function(fit) {
-  plot.cfit(fit)
+plot.rhofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.b1fit <- function(fit) {
-  plot.cfit(fit)
+plot.b1fit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.ofit <- function(fit) {
-  plot.cfit(fit)
+plot.ofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.cfit <- function(fit) {
+plot.cfit <- function(x, ...) {
+  fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
     plot.effmass(m=fit.mass,
@@ -327,10 +329,6 @@ plot.cfit <- function(fit) {
   }
 }
 
-plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
-  plotwitherror(data$t,data$corr, data$dcorr, xlab=xlab, ylab=ylab, log=log, ...)
-}
-
 plot.effmass <- function(m, ll, lf, ff, ...) {
 
   if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
@@ -360,7 +358,7 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx) {
+plot.averx <- function(averx, ...) {
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
@@ -390,7 +388,7 @@ plot.averx <- function(averx) {
          )
 }
 
-plot.pionff <- function(ff) {
+plot.pionff <- function(ff, ...) {
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))

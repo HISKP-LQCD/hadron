@@ -10,7 +10,7 @@
   methods for the individual errors are supported.
 }
 \usage{
-plotwitherror(x, y, dy, dx, xlim, mdx, mdy, 
+plotwitherror(x, y, dy, ylim, dx, xlim, mdx, mdy, 
               errsum.method="linear.quadrature",
               rep=FALSE, col="black", ...)
 }
@@ -18,8 +18,17 @@ plotwitherror(x, y, dy, dx, xlim, mdx, mdy,
   \item{x}{
     vector of x coordinates
   }
+  \item{xlim}{
+    limits for x-axis
+  }
   \item{y}{
     vector of y coordinates
+  }
+  \item{ylim}{
+    limits for y-axis
+  }
+  \item{col}{
+    colour of plotted data
   }
   \item{dy}{
     one of:
@@ -81,8 +90,14 @@ plotwitherror(x, y, dy, dx, xlim, mdx, mdy,
   \item{rep}{
     If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
     adding points with error bars to the current plot. Switches the underlying
-    plotting routine from \code{plot} to \code{points}.
+    plotting routine from \code{\link[graphics]{plot}} to \code{\link[graphics]{points}}.
   }
+  \item{...}{
+    any graphic options passed over to \code{\link[graphics]{plot}}
+  }
+}
+\seealso{
+  \code{\link[graphics]{plot}}, \code{\link[graphics]{points}}
 }
 \value{
   a plot with error bars is drawn on the current device

@@ -7,7 +7,7 @@ sd.index <- function(data, indexvector) {
 }
 
 bootstrap.analysis <- function(data, skip=0, boot.R=100,
-                               tsboot.sim="geom", pl=F, boot.l=2) {
+                               tsboot.sim="geom", pl=FALSE, boot.l=2) {
   data <- data[skip:length(data)]
   data.mean = mean(data)
   error.naive = sd(data)/sqrt(length(data))
@@ -15,8 +15,8 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   cat("mean value = ", data.mean, "\n")
   cat("naive error = ", error.naive, "\n")
   
-  data.boot <- boot(data=data, statistic=meanindexed, R=boot.R, stype="i")
-  data.boot.ci <- boot.ci(data.boot, type = c("norm", "basic", "perc"))
+  data.boot <- boot::boot(data=data, statistic=meanindexed, R=boot.R, stype="i")
+  data.boot.ci <- boot::boot.ci(data.boot, type = c("norm", "basic", "perc"))
 
   cat("                  mean        -err           +err            stderr        bias\n")
   cat("bootstrap      = ", data.boot$t0[1], "(", (data.boot.ci$normal[1,2]-data.boot$t0[1])/1.96

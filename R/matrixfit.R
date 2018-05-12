@@ -3,93 +3,109 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
   return(apply(bootit$t, 2, sd))
 }
 
-matrixModel <- function(par, t, T, parind, sign.vec) {
-  return(0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+#' Correlator matrix model.
+#' 
+#' @param par Numeric vector: Fit parameters of the model. In an 
+#'   object of type \code{matrixfit}, this should be located at 
+#'   \code{$opt.res$par}.
+#' @param t Numeric vector: Time of interest.
+#' @param T Numeric: Time extent of the lattice.
+#' @param parind See \code{\link{matrixfit}}.
+#' @param sign.vec Numeric vector: Relative sign between forward and
+#'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
+#' @param ov.sign.vec Numeric vector: Overal sign.
+#' @param deltat Numeric: time shift.
+#' 
+#' @seealso \code{\link{matrixfit}}
+matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
+  return(ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*
+         (exp(-par[1]*(t-deltat/2)) + sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+         )
 }
 
-matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, deltat=1) {
-  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
   return( sum(z %*% M %*% z) )
 }
 
-matrixChi <- function(par, t, y, L, T, parind, sign.vec, deltat=1) {
-  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+matrixChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
   return( L %*% z )
 }
 
 ## deltat is dummy variable here
-dmatrixChi <- function(par, t, y, L, T, parind, sign.vec, deltat=1) {
-  zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
+dmatrixChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
   res <- L %*% zp
   for(i in 2:length(par)) {
     zp1 <- rep(0, length(zp))
     j <- which(parind[,1]==i)
-    zp1[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp1[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     zp2 <- rep(0, length(zp))
     j <- which(parind[,2]==i)
-    zp2[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp2[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res <- c(res, L %*% zp1 + L %*% zp2)
   }
   return(res)
 }
 
 ## deltat is dummy variable here
-dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, deltat=1) {
+dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
   res <- rep(0., times=length(par))
-  z <- (y-0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
-  zp <- -0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
 }
 
-matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, deltat=1) {
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
   return( sum(z %*% M %*% z ) )
 }
 
-dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec) {
+dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1) {
   res <- rep(0., times=length(par))
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
-  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
 }
 
-matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, deltat=1) {
-  z <- (y-par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
   return( L %*% z )
 }
 
-dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, deltat=1) {
-  zp <- -par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) +(T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1) {
+  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) +(T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
   res <- L %*% zp
   for(i in 2:length(par)) {
     zp1 <- c(0)
     j <- which(parind[,1]==i)
-    zp1[j] <- -par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp1[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
     zp2 <- c(0)
     j <- which(parind[,2]==i)
-    zp2[j] <- -par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp2[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
     res <- c(res, L %*% zp1 + L %*% zp2)
   }
   return(res)
@@ -117,8 +133,8 @@ deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
   return(res)
 }
 
-matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
-                      parlist, sym.vec,
+matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
+                      parlist, sym.vec, neg.vec,
                       useCov=FALSE, seed=12345, model="single",
                       boot.fit=TRUE, fit.method="optim") {
   if(!any(class(cf) == "cf")) {
@@ -168,6 +184,21 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
       stop("sym.vec is missing and no default is available for this cf size! Aborting...\n")
     }
   }
+
+  if(missing(neg.vec)){
+    if(mSize == 1) {
+      neg.vec <- c(1)
+      warning("missing neg.vec, using default (correlator positive)!\n")
+    } 
+    else if( mSize == 4 ){
+      neg.vec <- c(1,1,1,1)
+      warning("missing neg.vec, using default (all correlators positive)!\n")
+    }
+    else {
+      stop("neg.vec is missing and no default is available for this cf size! Aborting...\n")
+    }
+  }
+
   
   ## some sanity checks
   if(min(parlist) <= 0) {
@@ -184,9 +215,11 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
   }
   if(length(sym.vec) != mSize) {
-    stop("sym.vec has not the correct length! Aborting\n")
+    stop("sym.vec does not have the correct length! Aborting\n")
   }
-
+  if(length(neg.vec) != mSize){
+    stop("neg.vec does not have the correct length! Aborting\n")
+  }
 
   ## now we start the real computation
   if(!cf$boot.samples) {
@@ -210,12 +243,15 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
 
   ## parind is the index vector for the matrix elements
   ## signvec decides on cosh or sinh
+  ## ov.sign.vec indicates the overall sign 
   parind <- array(1, dim=c(length(CF$Cor),2))
   sign.vec <- rep(+1, times=length(CF$Cor))
+  ov.sign.vec <- rep(+1, times=length(CF$Cor))
   for(i in 1:mSize) {
     parind[((i-1)*Thalfp1+1):(i*Thalfp1),] <- t(array(parlist[,i]+1, dim=c(2,Thalfp1)))
     if(sym.vec[i] == "sinh") sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
     if(sym.vec[i] == "exp") sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- 0
+    if(neg.vec[i] == -1) ov.sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
   }
   
   CovMatrix <- NULL
@@ -301,15 +337,19 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   ## check out constrOptim
   ## now perform minimisation
   dof <- (length(CF$t[ii])-length(par))
+  opt.res <- NA
+  rchisqr <- 0.
   if(lm.avail) {
     opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
-                      parind=parind[ii,], sign.vec=sign.vec[ii], control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
+                      parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii],
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn,
                      method="BFGS", control=list(maxit=500, parscale=par, ndeps=rep(1.e-8, times=length(par)), REPORT=50),
-                     t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], deltat=deltat)
+                     t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], 
+                     ov.sign.vec=ov.sign.vec[ii], deltat=deltat)
     rchisqr <- opt.res$value
   }
   Qval <- 1-pchisq(rchisqr, dof)
@@ -317,14 +357,15 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii], deltat=deltat,
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], L=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn)
+                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii],
+                        L=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn)
   }
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
     N <- cf$N
   }
 
-  res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
+  res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
               parlist=parlist, sym.vec=sym.vec, seed=seed, N=N, model=model, fit.method=fit.method)
@@ -335,10 +376,11 @@ matrixfit <- function(cf, t1, t2, symmetrise=TRUE, boot.R=400, boot.l=20,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, rep=FALSE, col,...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
+  ov.sign.vec <- mfit$ov.sign.vec
   T <- mfit$cf$T
   Thalfp1 <- T/2+1
   deltat <- 1
@@ -346,14 +388,17 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     deltat <- mfit$cf$deltat
   }
   # prevent stray negative values from ruining the plot
-  lbound <- mfit$CF$Cor - 2*mfit$CF$Err
+  lbound <- ov.sign.vec*mfit$CF$Cor - 2*mfit$CF$Err
   lbound <- lbound[ lbound > 0 ]
-  if(missing(ylim)) ylims <- c( min( lbound, na.rm=TRUE ) , max( mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
+  if(missing(ylim)) ylims <- c( min( lbound, na.rm=TRUE ) , max( ov.sign.vec*mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
   else ylims <- ylim
 
-  plotwitherror(mfit$CF$t, mfit$CF$Cor, mfit$CF$Err, log="y", ylim=ylims, ...)
+  if(missing(col)){
+    col <- c("black",rainbow(n=(mfit$mSize-1)))
+  }
+  plotwitherror(x=mfit$CF$t, y=ov.sign.vec*mfit$CF$Cor, 
+                dy=mfit$CF$Err, log="y", ylim=ylims, rep=rep, col=col,...)
   tx <- seq(mfit$t1, mfit$t2, 0.05)
-  col=c("black",rainbow(n=(mfit$mSize-1)))
   for(i in 1:mfit$mSize ) {
     par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
@@ -394,12 +439,14 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, ...) {
     }
   }
 
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
+  if(do.qqplot){
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
+    s <- seq(0,1,1./length(mfit$t[,1]))
+    x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
+    qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
   }
-  s <- seq(0,1,1./length(mfit$t[,1]))
-  x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
-  qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
 }
 
 
@@ -445,16 +492,18 @@ summary.matrixfit <- function(mfit) {
   }
 }
 
-fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1) {
+fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec, deltat=deltat,
+    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
+                      deltat=deltat, ov.sign.vec=ov.sign.vec,
                       control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn,
                      method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                     t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec, deltat=deltat)
+                     t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec, deltat=deltat,
+                     ov.sign.vec=ov.sign.vec)
   }
   ##opt.res <- optim(opt.res$par, fn = matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
@@ -463,6 +512,31 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, lm.avail=F
 }
 
 
+#' Substract excited states.
+#'
+#' Excited states are subtracted from the given correlation function and
+#' matching matrixfit. The fit is usually done on late time slices when the
+#' thermal states have decayed so much that they can be neglected. On the early
+#' time slices there are contributions which cannot be explained with a single
+#' cosh (or sinh) function. These are exactly the contributions that we do not
+#' want.
+#'
+#' The correlation function is altered on the time slices which are earlier than
+#' the start of the fit interval. The correlator is replaced by the model
+#' function (cosh or sinh or exp) extrapolated until the first time slice. The
+#' deviations of the (bootstrap) samples from the mean value are kept.
+#'
+#' @param cf Correlation function of class `cf`.
+#' @param mfit Fit result of class `matrixfit`.
+#' @param from.samples Whether to use existing bootstrap samples. If set to
+#'   `TRUE`, the same operation will be applied to the bootstrap samples.
+#'   Otherwise the result will not contain bootstrap samples, even if the input
+#'   correlation function did.
+#'
+#' @return A correlation function of class `cf` which is computed from the old
+#'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
+#'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
+#'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
@@ -471,6 +545,15 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
     t2p1 <- mfit$t1
     ii <- c(t1p1:t2p1)
     Thalfp1 <- cf$Time/2+1
+    deltat <- 0
+    nfac <- 1.
+    sign.vec <- mfit$ov.sign.vec
+    if("shifted" %in% names(cf)) {
+      deltat <- cf$deltat
+      nfac <- 2.
+      sign.vec <- -sign.vec
+    }
+    
     if(mfit$mSize > 1) {	
       for(j in 2:mfit$mSize) {
         ii <- c(ii, (t1p1+(j-1)*Thalfp1):(t2p1+(j-1)*Thalfp1))
@@ -479,17 +562,25 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
     tt <- mfit$CF$t[ii]
     ## compute the difference of mean data to model at times smaller than fit range
-    dz <- mfit$cf$cf0[ii] - matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+    dz <- mfit$cf$cf0[ii] - nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+                                        parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
+                                        ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
     cf$subtracted.values <- dz
     cf$subtracted.ii <- ii
     for(i in 1:length(cf$cf[,1])) {
       cf$cf[i,ii] <- mfit$cf$cf[i,ii]-dz
     }
     if(from.samples && cf$boot.samples) {
-      cf$cf0[ii] <- matrixModel(mfit$opt.res$par, tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+      cf$cf0[ii] <- nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+                                parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
+                                ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
+      cf$cf.tsboot$t0[ii] <- cf$cf0[ii]
       for(i in 1:cf$boot.R) {
-        cf$cf.tsboot$t[i,ii] <- matrixModel(mfit$t[i, c(1:length(mfit$opt.res$par))],
-                                            tt, cf$Time, mfit$parind[ii,], mfit$sign.vec[ii])
+        cf$cf.tsboot$t[i,ii] <- nfac*matrixModel(par=mfit$t[i, c(1:length(mfit$opt.res$par))],
+                                            t=tt, T=cf$Time, parind=mfit$parind[ii,],
+                                            sign.vec=mfit$sign.vec[ii],
+                                            ov.sign.vec=sign.vec[ii],
+                                            deltat=deltat)
       }
     }
     else{

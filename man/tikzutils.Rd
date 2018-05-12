@@ -7,9 +7,8 @@
   initialize and finalize a \code{tikzDevice} and carry out optional post-processing
 }
 \usage{
-tikzfiles <- tikz.init(basename="basename",...)
-plot(...)
-tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE, standAlone=TRUE)
+tikz.init(basename, standAlone=TRUE, engine, ...)
+tikz.finalize(tikzfiles, crop=TRUE, margins=0, clean=TRUE)
 }
 \arguments{
   \item{basename}{
@@ -42,16 +41,20 @@ tikz.finalize(tikzfiles=tikzfiles,crop=TRUE,margins=0,clean=TRUE, standAlone=TRU
     "basename.aux" and "basename.log" should be deleted after the pdf
     has been generated, default TRUE
   }
+  \item{engine}{
+    used to specify the LaTex engine. If missing, the standard engine of
+    tikz is used.
+  }
 }
 \value{
   \code{tikz.init} returns a list with character vector members, $pdf, $tex, $aux $log containing
   the corresponding filenames
 }
 \examples{
-libary(hadron)
-\dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)
-plot(...)
-tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
+library(hadron)
+\dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)}
+\dontrun{plot(...)}
+\dontrun{tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
 }
 \author{Bartosz Kostrzewa, \email{bartosz.kostrzewa@desy.de}}  
 \keyword{file}

@@ -6,9 +6,6 @@
 \description{
   Analyse time series data with the so called gamma method
 }
-\synopsis{
-uwerr(f, data, nrep, S=1.5, pl=FALSE, ...)
-}
 \usage{
 uwerr(f, data, nrep, S=1.5, pl=FALSE, ...)
 uwerrprimary(data, nrep, S=1.5, pl=FALSE)
@@ -43,6 +40,9 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     autocorrelation time as function of the integration cut-off and (for
     primary quantities) the time history of the observable are plotted
     with plot.uwerr
+  }
+  \item{...}{
+    arguments passed to function \code{f}.
   }
 }
 \value{

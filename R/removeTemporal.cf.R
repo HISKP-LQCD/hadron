@@ -117,39 +117,69 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   return(invisible(cf))
 }
 
-takeTimeDiff.cf <- function(cf, deltat = 1) {
+takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   if(missing(cf)) {
     stop("takeTimeDiff: cf must be provided! Aborting...\n")
   }
-  ## number of time slices (hopefully in units of T/2+1)
+
+  ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
+  ## and units of the time extent if it has not
   T <- cf$Time
   Nt <- dim(cf$cf)[2]
-  nrObs <- floor(Nt/(T/2+1))
+  
+  nts <- cf$Time/2+1                                                                                                                          
+  if( "symmetrised" %in% names(cf) ) {
+    if(!cf$symmetrised){
+      nts <- cf$Time
+    }
+  }
+
+  ## number of observables assuming a single smearing type
+  nrObs <- floor(Nt/nts)
   ## the time indices to be subtracted
   tt0 <- c()
   for(i in c(1:nrObs)) {
-    tt0 <- c(tt0, ((i-1)*(T/2+1)+1):(i*(T/2+1)-deltat))
+    tt0 <- c(tt0, ((i-1)*(nts)+1):(i*(nts)-deltat))
   }
   tt1 <- tt0 + deltat
 
+  ## the default is a type of backwards derivative: C'(t+deltat) = C(t) - C(t+deltat)
+  ### which invalidates all time slices up to and including deltat-1
+  ## alternatively, we can also do a forward derivative: C'(t) = C(t+deltat) - C(t)
+  ### which will invalidate all time slices after and including tmax-(deltat-1)
+  ## we do this by defining left- and right-hand indices
+  # C(tlhs) = C(trhs1) - C(trhs2) 
+  ## note: in both cases one could in pricinple use the symmetry properties of
+  ##       the full correlation function and periodic boundary condtions
+  ##       to do this without any invalidation 
+  tlhs <- tt1
+  trhs1 <- tt0
+  trhs2 <- tt1
+  if( forwardshift ){
+    tlhs <- tt0
+    trhs1 <- tt1
+    trhs2 <- tt0
+  }
+
   ## take the differences, set the remaining points to NA
   if(!is.null(cf$cf)) {
-    cf$cf[,tt1] <- cf$cf[,tt0]-cf$cf[,tt1]
-    cf$cf[,-tt1] <- NA
+    cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
+    cf$cf[,-tlhs] <- NA
   }
   ## now the bootstrap samples
   if(cf$boot.samples) {
-    cf$cf0[tt1] <- cf$cf0[tt0]-cf$cf0[tt1]
-    cf$cf0[-tt1] <- NA
+    cf$cf0[tlhs] <- cf$cf0[trhs1]-cf$cf0[trhs2]
+    cf$cf0[-tlhs] <- NA
 
-    cf$cf.tsboot$t0[tt1] <- cf$cf.tsboot$t0[tt0]-cf$cf.tsboot$t0[tt1]
-    cf$cf.tsboot$t0[-tt1] <- NA
-    cf$cf.tsboot$t[,tt1] <- cf$cf.tsboot$t[,tt0]-cf$cf.tsboot$t[,tt1]
-    cf$cf.tsboot$t[,-tt1] <- NA
+    cf$cf.tsboot$t0[tlhs] <- cf$cf.tsboot$t0[trhs1]-cf$cf.tsboot$t0[trhs2]
+    cf$cf.tsboot$t0[-tlhs] <- NA
+    cf$cf.tsboot$t[,tlhs] <- cf$cf.tsboot$t[,trhs1]-cf$cf.tsboot$t[,trhs2]
+    cf$cf.tsboot$t[,-tlhs] <- NA
   }
   ## save info
   cf$shifted <- TRUE
   cf$deltat <- deltat
+  cf$forwardshift <- forwardshift
   ## return subtracted cf
   return(invisible(cf))
 }

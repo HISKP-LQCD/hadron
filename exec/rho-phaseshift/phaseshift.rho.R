@@ -86,8 +86,11 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1g", Mpiboot, dis
   x <- numeric()
   xboot <- numeric()
   if(frame == "cmf") {
-    x <- Z00
-    xboot <- Z00boot
+    ## this is always the T1u irrep
+    if(irrep == "T1u") {
+      x <- Z00
+      xboot <- Z00boot
+    }
   }
   else if(frame == "mf1") {
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))

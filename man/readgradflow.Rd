@@ -5,11 +5,21 @@
   given a pathname, reads all gradient flow output files in that directory
 }
 \usage{
-raw.gf <- readgradflow(path)
+readgradflow(path, skip=0, basename="gradflow", col.names)
 }
 \arguments{
   \item{path}{
     the path into which the function should descend
+  }
+  \item{skip}{
+    number of measurements to skip.
+  }
+  \item{basename}{
+    basename of the files to be read.
+  }
+  \item{col.names}{
+    column names of the columns in the files to be read. If not given it
+    will be infered from the files, if possible.
   }
 }
 \value{

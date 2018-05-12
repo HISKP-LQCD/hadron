@@ -1,5 +1,7 @@
 \name{fs.qcotdelta}
+\alias{fs.qcotdelta}
 \alias{fs.mpia0}
+\alias{fs.a0}
 \title{Finite Size Corrections to \eqn{q\cot\delta}{qcotdelta} for I=2 \eqn{\pi\pi}{pipi}
   near threshold}
 \description{
@@ -9,8 +11,8 @@
   directly using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 }
 \usage{
-  fs.qcotdelta(L, mps)
-  fs.mpia0(fps, mps, L)
+  fs.qcotdelta(mps, L)
+  fs.mpia0(mps, fps, L)
   fs.a0(a0, mps, L)
 }
 \arguments{
