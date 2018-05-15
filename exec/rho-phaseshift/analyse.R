@@ -1,7 +1,6 @@
-## its supposed to be called from a directory with name
-## .../p<N>/<irrep>
-## with <N> being the squared momentum in units of 2pi/L
-## and <irrep> the corresponding irreducible representation,
+## "Rscript analyse.R infile-analyse.R"
+library(hadron)
+
 ## see phaseshift.rho.R for the implemented irreps
 
 clargs = commandArgs(trailingOnly=TRUE)
@@ -57,7 +56,7 @@ setwd(output.path)
 ## pion analysis
 pion.filename <- paste(output.path, "/pion.Rdata", sep="")
 if(reread || !file.exists(pion.filename)) {
-  pion.cor <- bootstrap.cf(readtextcf("Pion_p0.dat", T=T, check.t=0, path=args$path.to.data, ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
+  pion.cor <- bootstrap.cf(readtextcf("pi_p0.dat", T=T, check.t=0, path=args$path.to.data, ind.vector=c(2,2)), boot.R=boot.R, boot.l=boot.l, seed=seed)
   pion.matrixfit <- matrixfit(pion.cor, t1=16, t2=24, useCov=TRUE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
   
   save(pion.cor, pion.matrixfit, file=pion.filename)

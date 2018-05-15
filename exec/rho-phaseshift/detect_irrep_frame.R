@@ -23,7 +23,7 @@ irreps <- list(c("T1u"), c("A1g", "Ep1g"), c("A1g", "A2g", "A2u"), c("A1g", "Ep1
 irrepid <- which(irreps[[frameid]] == irrep)
 sizes <- list(c(2), c(8, 4), c(8, 3, 4), c(6, 4), c(0))
 
-path <- paste(args$path.to.data, "/", momentum, "/", irrep, "/", irrep, "/", sep="")
+path <- paste(args$path.to.data, "/", momentum, "/", irrep, "/", sep="")
 
 N <- 1
 for(N in c(0:10)) {
