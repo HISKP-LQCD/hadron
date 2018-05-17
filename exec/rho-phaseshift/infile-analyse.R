@@ -14,10 +14,11 @@ args <- list(
     t.step = 2,
 #    disp = "lat",
 #    type = "subtracted",
-    reread = FALSE,
-    dirs = c("p0/T1u"),
-#    dirs = c("p0/T1u", "p1/A1g", "p1/Ep1g", "p2/A1g", "p2/A2g", "p2/A2u", "p3/A1g", "p3/Ep1g"),
-    boot.R = 100,
+    reread = TRUE,
+    dirs = c("p4/A1", "p4/E"),
+#    dirs = c("p0/T1u"),
+#    dirs = c("p0/T1u", "p1/A1g", "p1/E", "p2/A1", "p2/B1", "p2/B2", "p3/A1", "p3/E", "p4/A1", "p4/E"),
+    boot.R = 1500,
     boot.l = 4,
     seed = 1234
     )

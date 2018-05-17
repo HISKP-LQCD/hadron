@@ -60,10 +60,13 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1g", Mpiboot, dis
     Pcm <- n*c(0, 0, 1)
   }
   else if(frame == "mf2") {
-    Pcm <- n*c(0, 1, 1)
+    Pcm <- n*c(1, 1, 0)
   }
   else if(frame == "mf3") {
     Pcm <- n*c(1, 1, 1)
+  }
+  else if(frame == "mf4") {
+    Pcm <- n*c(0, 0, 2)
   }
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
@@ -92,16 +95,16 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1g", Mpiboot, dis
       xboot <- Z00boot
     }
   }
-  else if(frame == "mf1") {
+  else if(frame == "mf1" || frame == "mf4") {
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     
-    if(irrep == "A1g") {
+    if(irrep == "A1") {
       ## arXiv:1212:0830v2: A_1 irrep [00n] page 17
       x <- (Z00 + (2./(qtilde$qtsq*sqrt(5)))*Z20)
       xboot <- (Z00boot + (2./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
     }
-    else if(irrep == "Ep1g") {
+    else if(irrep == "E") {
       ## arXiv:1212:0830v2: E_2 irrep [00n]
       x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20)
       xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot)
@@ -112,59 +115,59 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1g", Mpiboot, dis
     Z20 <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 0))
     Z20boot <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2))
 
-    if(Pcm == c(0,1,1)) {
-      Z22  <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-      Z22boot  <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-      
-      if(irrep == "A2g") {
-        ## arXiv:1212:0830v2: B_2 irrep [0nn]
-        x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
-        xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
-      }
-      else {
-        Z21  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
-        Z21boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
-        if(irrep == "A1g") {
-          ## arXiv:1212:0830v2: A_1 irrep [0nn]
-          x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
-          xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
-        }
-        else if(irrep == "A2u") {
-          ## arXiv:1212:0830v2: B_1 irrep [0nn]
-          x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
-          xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))                }
-      }
-    }
-    else {
-      ## this is following the table XVI, page 32 of arXiv version of arxiv:1206.4141
-      ## Pcm is now (1,1,0) and equations significantly simpler
-      Z22  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
-      Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#    if(Pcm == c(0,1,1)) {
+#      Z22  <- Re(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#      Z22boot  <- Re(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#      
+#      if(irrep == "B1") {
+#        ## arXiv:1212:0830v2: B_2 irrep [0nn]
+#        x <- (Z00 - (1./(qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+#        xboot <- (Z00boot - (1./(qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+#      }
+#      else {
+#        Z21  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+#        Z21boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+#        if(irrep == "A1") {
+#          ## arXiv:1212:0830v2: A_1 irrep [0nn]
+#          x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 - ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+#          xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot - ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))
+#        }
+#        else if(irrep == "B2") {
+#          ## arXiv:1212:0830v2: B_1 irrep [0nn]
+#          x <- (Z00 + (1./(2*qtilde$qtsq*sqrt(5)))*Z20 + ((sqrt(6./5.)/(qtilde$qtsq))*Z21) - ((sqrt(3./10.)/(qtilde$qtsq))*Z22))
+#          xboot <- (Z00boot + (1./(2*qtildeboot$qtsq*sqrt(5)))*Z20boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z21boot) - ((sqrt(3./10.)/(qtildeboot$qtsq))*Z22boot))                }
+#      }
+#    }
+#    else {
+    ## this is following the table XVI, page 32 of arXiv version of arxiv:1206.4141
+    ## Pcm is now (1,1,0) and equations significantly simpler
+    Z22  <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+    Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
 
-      if(irrep == "A1g") {
-        x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 - sqrt(6)*Z22)
-        xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot - sqrt(6)*Z22boot)
-      }
-      else if(irrep == "A2u") {
-        x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*Z20
-        xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*Z20boot
-      }
-      else if(irrep == "A2g") {
-        x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 + sqrt(6)*Z22)
-        xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot + sqrt(6)*Z22boot)
-      }
+    if(irrep == "A1") {
+      x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 - sqrt(6)*Z22)
+      xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot - sqrt(6)*Z22boot)
     }
+    else if(irrep == "B1") {
+      x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*Z20
+      xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*Z20boot
+    }
+    else if(irrep == "B2") {
+      x <- Z00 + 1./(qtilde$qtsq*sqrt(5))*(- Z20 + sqrt(6)*Z22)
+      xboot <- Z00boot + 1./(qtildeboot$qtsq*sqrt(5))*(- Z20boot + sqrt(6)*Z22boot)
+    }
+    
   }
   else if(frame == "mf3") {
     Z22 <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
     Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
     
-    if(irrep == "Ep1g") {
+    if(irrep == "E") {
       ## arXiv:1212:0830v2: E_2 irrep [nnn] 
       x <- (Z00 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
       xboot <- (Z00boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
     }
-    else if(irrep == "A1g") {
+    else if(irrep == "A1") {
       # arXiv:1212:0830v2: A_1 irrep [nnn] 
 #      Z21  <- LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
 #      Z21boot  <- LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
