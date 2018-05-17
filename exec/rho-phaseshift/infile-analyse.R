@@ -7,7 +7,6 @@ args <- list(
     maxpcs = 3,
     L = 32,
     T = 64,
-    path.to.hadron = "/home/maow/Code/hadron/",
     t0 = 2,
     t10 = c(7, 5, 5),
     t11 = c(11, 11, 11),

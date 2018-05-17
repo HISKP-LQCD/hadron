@@ -47,9 +47,12 @@ seed <- args$seed
 dirs <- args$dirs
 output.path <- paste(args$output.path, "5_fit-data", sep="/")
 
-source(paste(args$path.to.hadron, "/exec/rho-phaseshift/phaseshift.rho.R", sep="/"))
-source(paste(args$path.to.hadron, "/exec/rho-phaseshift/summarise.R", sep="/"))
+path.to.hadron <- getwd()
 
+source(paste(path.to.hadron, "/phaseshift.rho.R", sep="/"))
+source(paste(path.to.hadron, "/summarise.R", sep="/"))
+
+## With R >= 3.2 dir.exists(output.path) can replace showWarnings=FALSE
 dir.create(output.path, showWarnings=FALSE)
 setwd(output.path)
 
@@ -72,7 +75,7 @@ for(dir in dirs){
   ## extracts irrep and frame from directory name
   ## also defines N for th ematrix size
   ## and path
-  source(paste(args$path.to.hadron, "/exec/rho-phaseshift/detect_irrep_frame.R", sep="/"))
+  source(paste(path.to.hadron, "/detect_irrep_frame.R", sep="/"))
 
   ## full momentum is given by p*2*pi/L
   ## n is needed for function phaseshift.rho
@@ -199,7 +202,7 @@ for(dir in dirs){
   sink()
 
   ## average bootstrapsamples and write result to average.data.log
-  source(paste(args$path.to.hadron, "/exec/rho-phaseshift/average.data.R", sep="/"))
+  source(paste(path.to.hadron, "/average.data.R", sep="/"))
   sink()
 
 }
