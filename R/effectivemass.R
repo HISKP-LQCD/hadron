@@ -140,7 +140,7 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   return(ret)
 }
 
-fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE) {
+fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE) {
   if(missing(cf) || !any(class(cf) == "effectivemass" )) {
     stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
   }
@@ -182,6 +182,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ii <- ii[-ii.na]
   }
 
+  # cf here is a bootstrapped effective mass and $t is the matrix of bootstrap samples
   CovMatrix <- cov(cf$t[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
@@ -232,9 +233,13 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ## recompute covariance matrix and compute the correctly normalised inverse
     M <- try(invertCovMatrix(cf$t[,ii], boot.samples=TRUE), silent=TRUE)
     if(inherits(M, "try-error")) {
-      M <- M[ -ii.remove, -ii.remove]
-      warning("inversion of variance covariance matrix failed in bootstrap.effectivemasses during bootstrapping, continuing with uncorrelated chi^2\n")
-      useCov <- FALSE
+      if( autoproceed ){
+        M <- M[ -ii.remove, -ii.remove]
+        warning("[fit.effectivemass] inversion of variance covariance matrix failed, continuing with uncorrelated chi^2\n")
+        useCov <- FALSE
+      } else {
+        stop("[fit.effectivemass] inversion of variance covariance matrix failed!\n")
+      }
     }
   }
   else {
@@ -327,9 +332,12 @@ print.effectivemassfit <- function(effMass, verbose=FALSE) {
   summary(effMass, verbose=verbose)
 }
 
-plot.effectivemass <- function(effMass, ref.value, col,...) {
+plot.effectivemass <- function(effMass, ref.value, col, col.fitline,...) {
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))
+  }
+  if(missing(col.fitline)) {
+	col.fitline <- col[1]
   }
   op <- options()
   options(warn=-1)
@@ -348,9 +356,9 @@ plot.effectivemass <- function(effMass, ref.value, col,...) {
   if(!is.null(effMass$effmassfit)){
     lines(x=c(effMass$t1,effMass$t2),
           y=c(effMass$effmassfit$t0[1],effMass$effmassfit$t0[1]),
-          col=col[1],
+          col=col.fitline,
           lwd=1.3)
-      pcol <- col2rgb(col[1],alpha=TRUE)/255                                                                                                   
+      pcol <- col2rgb(col.fitline,alpha=TRUE)/255                                                                                                   
       pcol[4] <- 0.65
       pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
       rect(xleft=effMass$t1, ybottom=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
