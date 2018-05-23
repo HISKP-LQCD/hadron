@@ -28,7 +28,7 @@ compRpipi3 <- function(c4, c21, c22, Thalf, dE) {
 }
 
 
-phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp="cont", n=1) {
+phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1g", Mpiboot, disp="cont", n=1) {
 
   if(missing(L)) {
     stop("L must be provided\n")
@@ -165,16 +165,40 @@ phaseshift.rho <- function(pcfit, L, Mpi, frame="cmf", irrep="A1", Mpiboot, disp
       xboot <- (Z00boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
     }
     else if(irrep == "A1g") {
-      ## arXiv:1212:0830v2: A_1 irrep [nnn] 
-      ##x <- (Z00 + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
+      # arXiv:1212:0830v2: A_1 irrep [nnn] 
+#      Z21  <- LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+#      Z21boot  <- LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 1))
+#
+#      x <- (Z00 + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
+#      xboot <- (Z00boot + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
 
       ## following table XVI, page 32 of arXiv version of arxiv:1206.4141
       ## gives numerical identical results to arXiv:1212:0830v2: A_1 irrep [nnn]
       ## when signs are corrected, see above
-      x <- (Z00 - 2*(sqrt(6./5.)/(qtilde$qtsq))*Z22)
-      xboot <- (Z00boot - 2*(sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot)
+      x <- (Z00 - (2*(sqrt(6./5.)/(qtilde$qtsq))*Z22))
+      xboot <- (Z00boot - (2*(sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
     }
   }
+#  else if(frame == "mf3") {
+#    Z22 <- -Im(LuescherZeta(qtilde$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#    Z22boot  <- -Im(LuescherZeta(qtildeboot$qtsq, gamma=qtilde$gamma, dvec = Pcm, l = 2, m = 2))
+#    
+#    if(irrep == "Ep1g") {
+#      ## arXiv:1212:0830v2: E_2 irrep [nnn] 
+#      x <- (Z00 + ((sqrt(6./5.)/(qtilde$qtsq))*Z22))
+#      xboot <- (Z00boot + ((sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot))
+#    }
+#    else if(irrep == "A1g") {
+#      ## arXiv:1212:0830v2: A_1 irrep [nnn] 
+#      ##x <- (Z00 + ((sqrt(8./15.)/(qtilde$qtsq))*(Re(Z21) + Im(Z21) - Z22)))
+#
+#      ## following table XVI, page 32 of arXiv version of arxiv:1206.4141
+#      ## gives numerical identical results to arXiv:1212:0830v2: A_1 irrep [nnn]
+#      ## when signs are corrected, see above
+#      x <- (Z00 - 2*(sqrt(6./5.)/(qtilde$qtsq))*Z22)
+#      xboot <- (Z00boot - 2*(sqrt(6./5.)/(qtildeboot$qtsq))*Z22boot)
+#    }
+#  }
   else {
     stop(paste("value of frame ", frame," not recognised\n", sep=""))
   }

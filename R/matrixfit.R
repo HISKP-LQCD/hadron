@@ -136,10 +136,21 @@ deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
 matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
                       parlist, sym.vec, neg.vec,
                       useCov=FALSE, seed=12345, model="single",
-                      boot.fit=TRUE, fit.method="optim") {
+                      boot.fit=TRUE, fit.method="optim",
+                      autoproceed=FALSE) {
   if(!any(class(cf) == "cf")) {
     stop("matrixfit requires the object to be of class cf! Aborting...!\n")
   }
+
+  if(cf$symmetrised == FALSE){
+    cat("[matrixfit] Forcing symmetrisation before fit!\n")
+    cf <- symmetrise.cf(cf)
+    cf <- bootstrap.cf(cf = cf, 
+                       boot.R = boot.R, 
+                       boot.l = boot.l,
+                       seed = seed)
+  }
+
   t1p1 <- t1+1
   t2p1 <- t2+1
   N <- dim(cf$cf)[1]
@@ -223,6 +234,7 @@ matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
 
   ## now we start the real computation
   if(!cf$boot.samples) {
+    cat("[matrixfit] No boostrap samples found, adding them!\n")
     cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
   }
   else {
@@ -255,31 +267,26 @@ matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
   }
   
   CovMatrix <- NULL
-  if(is.null(cf$cf)) {
-    CovMatrix <- cov(cf$cf.tsboot$t[,ii])
-  }
-  else {
-    CovMatrix <- cov(cf$cf[,ii])/N
-  }
+  # we always use the boostrap samples to estimate the covariance matrix 
+  CovMatrix <- cov(cf$cf.tsboot$t[,ii])
   
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
   M <- diag(1/CF$Err[ii]^2)
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
-    if(is.null(cf$cf)) {
-      M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
-    }
-    else {
-      M <- try(invertCovMatrix(cf$cf[,ii], boot.l=boot.l), silent=TRUE)
-    }
+    M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
     if(inherits(M, "try-error")) {
-      M <- diag(1/CF$Err[ii]^2)
-      warning("inversion of variance covariance matrix failed in matrixfit, continuing with uncorrelated chi^2\n")
-      useCov <- FALSE
+      if( autoproceed ){
+        M <- diag(1/CF$Err[ii]^2)
+        warning("[matrixfit] inversion of variance covariance matrix failed, continuing with uncorrelated chi^2\n")
+        useCov <- FALSE
+      } else {
+        stop("[matrixfit] inversion of variance covariance matrix failed!\n")
+      }
     }
   }
-  lm.avail=FALSE
+  lm.avail <- FALSE
   if(fit.method == "lm") 
     lm.avail <- require(minpack.lm)
   LM <- chol(M)

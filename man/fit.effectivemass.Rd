@@ -6,7 +6,8 @@
   \code{bootstrap.effectivemass}. 
 }
 \usage{
-fit.effectivemass(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE) 
+fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE, 
+                  boot.fit = TRUE, autoproceed = FALSE)
 }
 \arguments{
   \item{cf}{
@@ -37,6 +38,12 @@ fit.effectivemass(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE)
     time-saver if error information is not strictly necessary. Of course,
     this affects the return values related to the bootstrap, which are
     set to \code{NA}.
+  }
+  \item{autoproceed}{
+    When the inversion of the variance-covariance matrix fails, the default
+    behaviour is to abort the fit. Setting this to \code{TRUE} means that
+    the fit is instead continued with a diagonal inverse of the variance-covariance
+    matrix.
   }
 }
 \value{
