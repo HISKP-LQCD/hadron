@@ -27,11 +27,11 @@ bootstrap.nlsfit <- function(fn,
   ## the corresponding chisqr functions
   fitchisqr <- function(par, x, y, dy, fitfun) {
     z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun)
-    return (sum(z %*% z))
+    return (sum(z * z))
   }
   fitchisqr.xy <- function(par, y, dy, fitfun, nx) {
     z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
-    return (sum(z %*% z))
+    return (sum(z * z))
   }
 
   ## wrapper functions for apply
@@ -118,12 +118,16 @@ bootstrap.nlsfit <- function(fn,
       boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn)
     }
   }
+
+  errors <- apply(X=boot.res[1:(dim(boot.res)[1]-1),rr], MARGIN=1, FUN=sd)
+
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R, sim=sim,
               bsamples=bsamples,
               errormodel=errormodel,
               t0=boot.res[,1],
               t=t(boot.res),
+			  se=errors,
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
@@ -137,7 +141,7 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
 
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
-  errors <- apply(X=object$t[,1:(dim(object$t)[2]-1)], MARGIN=2, FUN=sd)
+  errors <- object$se
   values <- object$t[1, 1:(dim(object$t)[2]-1)]
   npar <- length(object$par.guess)
   
@@ -154,6 +158,9 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
   ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
   cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
   print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
+  correlation <- cor(object$t[,1:(dim(object$t)[2]-1)], object$t[,1:(dim(object$t)[2]-1)])
+  cat("\n   correlation matrix of the fit parameters\n\n")
+  print(data.frame(correlation))
   if(object$errormodel != "yerrors") {
     cat("\n estimates for x-values with errors, bootstrap bias and 68% confidence interval\n\n")
     ii <- c((npar+1):length(tmp))
