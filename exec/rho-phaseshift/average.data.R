@@ -1,18 +1,20 @@
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/phaseshift.rho.R")
-source("/hiskp2/urbach/head/hadron/exec/rho-phaseshift/summarise.R")
-source("../../ens.R")
-hint <- rep("no", times=5)
-source("parameters.R")
-source("../../../detect_irrep_frame.R")
+sink("average.data.log", append=FALSE, split=TRUE)
+
+## extracts irrep and frame from directory name
+## also defines N for the matrix size
+## and path
+source(paste(args$path.to.hadron, "/exec/rho-phaseshift/detect_irrep_frame.R", sep="/"))
 
 pdf(file=paste("histograms", ens, frame, irrep, "pdf", sep="."))
 res <- list()
 res.all <- list()
 res.boot <- list()
-for(i in c(1:min(2, N))) {
+for(i in c(1:min(maxpcs, N))) {
   if(i == 1) PC <- "pc1"
   if(i == 2) PC <- "pc2"
   if(i == 3) PC <- "pc3"
+  if(i == 4) PC <- "pc4"
+  if(i == 5) PC <- "pc5"
   cat("hint", i, hint[i], "\n")
   res[[i]] <- summarise.rho(ens=ens, frame=frame, irrep=irrep, PC=PC, hint=hint[i])
   res.all[[i]] <- compute.error.rho(res[[i]], PC=PC)
@@ -28,3 +30,4 @@ rm(i,j)
 
 save.image(file=paste("res", ens, frame, irrep, "Rdata", sep="."))
 
+sink()

@@ -329,6 +329,7 @@ c.cf <- function(...) {
     for(i in (k+1):length(fcall)) {
       if(!is.null(fcall[[i]]$cf)) {
         cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
+        cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
       }
     }
   }

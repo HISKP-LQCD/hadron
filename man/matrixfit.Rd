@@ -7,8 +7,9 @@
 \usage{
 matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
           parlist, sym.vec, neg.vec,
-          useCov=FALSE, seed=12345, model="single",
-          boot.fit=TRUE, fit.method="optim")
+          useCov = FALSE, seed=12345, model="single",
+          boot.fit = TRUE, fit.method="optim",
+          autoproceed = FALSE)
 }
 \arguments{
   \item{cf}{
@@ -76,6 +77,12 @@ matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
     \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c* \exp(-E(T-(t+1/2))))}\cr
     which is useful when the original correlation function or matrix is
     shifted, see e.g. \link{bootstrap.gevp}.
+  }
+  \item{autoproceed}{
+    When the inversion of the variance-covariance matrix fails, the default
+    behaviour is to abort the fit. Setting this to \code{TRUE} means that
+    the fit is instead continued with a diagonal inverse of the variance-covariance
+    matrix.
   }
 }
 \value{
