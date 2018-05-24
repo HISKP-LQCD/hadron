@@ -1,3 +1,23 @@
+compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
+  tmp <- val - 0.1*abs(val)
+  tmpp <- val + 0.1*abs(val)
+  if(!is.null(cumul.dval)) {
+    # cumul.mdx is implicitly negative
+    tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
+    tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
+  }
+  if(logscale) {
+    tmp <- tmp[ tmp > 0 ]
+    tmpp <- tmpp[ tmpp > 0 ]
+  }
+  if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
+    warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
+    tmp <- 10^(-6)
+    tmpp <- 10^2
+  }
+  range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
+}
+
 # there are two possibilities for one-dimensional vectors: the vector class or the array class
 is.vectorial <- function(x) {
   ( is.vector(x) || length(dim(x))==1 )
@@ -79,6 +99,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   my.xlim <- c()
   my.ylim <- c()
+
  
   # cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
@@ -123,35 +144,14 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
 
   if(missing(xlim)) {
-    tmp <- x - 0.1*abs(x)
-    tmpp <- x + 0.1*abs(x)
-    if(!is.null(cumul.dx)) {
-      # cumul.mdx is implicitly negative
-      tmp <- x+2*apply(X=cumul.mdx,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- x+2*apply(X=cumul.dx,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(xlog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.xlim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
+    my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
   if(missing(ylim)) {
-    tmp <- y - 0.1*abs(y)
-    tmpp <- y + 0.1*abs(y)
-    if(!is.null(cumul.dy)) {
-      # cumul.mdy is implicitly negative
-      tmp <- y+2*apply(X=cumul.mdy,MARGIN=1,FUN=min,na.rm=TRUE)
-      tmpp <- y+2*apply(X=cumul.dy,MARGIN=1,FUN=max,na.rm=TRUE)
-    }
-    if(ylog) {
-      tmp <- tmp[ tmp > 0 ]
-    }
-    my.ylim <- c(min(tmp, na.rm = TRUE), max(tmpp, na.rm = TRUE))
-  }
-  else {
+    my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
+  } else {
     my.ylim <- ylim
   }
 
@@ -228,6 +228,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   }
   
   options(show.error.messages = TRUE)
+  return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
@@ -239,27 +240,28 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
 }
 
-plot.massfit <- function(data, xlab = "t", ylab = "m", ...) {
-  plotwitherror(data$t,data$mass, data$dmass, xlab=xlab, ylab=ylab, ...)
+plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
+  plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
-plot.pionfit <- function(fit) {
-  plot.cfit(fit)
+plot.pionfit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.rhofit <- function(fit) {
-  plot.cfit(fit)
+plot.rhofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.b1fit <- function(fit) {
-  plot.cfit(fit)
+plot.b1fit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.ofit <- function(fit) {
-  plot.cfit(fit)
+plot.ofit <- function(x, ...) {
+  plot.cfit(x)
 }
 
-plot.cfit <- function(fit) {
+plot.cfit <- function(x, ...) {
+  fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
     plot.effmass(m=fit.mass,
@@ -283,27 +285,39 @@ plot.cfit <- function(fit) {
     plot(fit$uwerrresultmv, main=expression(m[V]))
   }
   if(!is.null(fit$boot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$boot, main="Bootstrap analysis for mps")
   }
   if(!is.null(fit$tsboot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$tsboot, main="TS Boostrap analysis for mps")
   }
   if(!is.null(fit$mv.boot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$mv.boot, main="Bootstrap analysis for mv")
   }
   if(!is.null(fit$mv.tsboot)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$mv.tsboot, main="TS Bootstrap analysis for mv")
   }
   if(!is.null(fit$fitdata)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab=expression(chi), type="h")
   }
   if(!is.null(fit$dpaopp)) {
-    X11()
+    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+      X11()
+    }
     plotwitherror(fit$dpaopp$t, fit$dpaopp$mass, fit$dpaopp$dmass,
                   main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
@@ -315,13 +329,11 @@ plot.cfit <- function(fit) {
   }
 }
 
-plot.correlator <- function(data, xlab = "t", ylab = "C(t)", log="y", ...) {
-  plotwitherror(data$t,data$corr, data$dcorr, xlab=xlab, ylab=ylab, log=log, ...)
-}
-
 plot.effmass <- function(m, ll, lf, ff, ...) {
 
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   if(!missing(ff)) {
     plot.massfit(ff, ylab=expression(m[eff]), xlab="t", ...)
     points((ll$t-0.2), ll$mass, pch=1, col="blue")
@@ -346,20 +358,27 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx) {
+plot.averx <- function(averx, ...) {
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
-  if(interactive()) X11()
+  
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau), main=c("3pt ov 2pt"))
   plothlinewitherror(m=averx$plateau, dp=sd(averx$plateau.tsboot[,1]), dm=sd(averx$plateau.tsboot[,1]),
                     x0=averx$t1, x1=averx$t2)
-  if(interactive()) X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plotwitherror(c(0:(averx$Cf2pt$Time/2)),
                 averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
                 apply(averx$Cf3pt$cf.tsboot$t/averx$matrixfit$opt.tsboot[1,]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
                 ylim=c(0,0.6), xlab=c("t/a"), ylab=c("C3pt"), main=c("<x>")
                 )
-  if(interactive()) X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   qqplot(averx$plateau.tsboot[,2], rchisq(n=averx$boot.R, df=averx$dof), main=paste("qqplot chisq"))
   return(invisible(data.frame(t=c(0:(averx$Cf2pt$Time/2)),
                               averx=averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
@@ -369,14 +388,16 @@ plot.averx <- function(averx) {
          )
 }
 
-plot.pionff <- function(ff) {
+plot.pionff <- function(ff, ...) {
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
   plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)
 
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(mul.cf(ff$Cf3ptratio, ff$Cf2ptratio$cf0[Thalfp1]), ylim=c(0,1.3), main=c("F(q^2)"), xlab=c("t/a"), ylab=c("F(q^2)"))
   plothlinewitherror(m=ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], dp=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitFF$t1, x1=ff$plateaufitFF$t2)
@@ -391,7 +412,9 @@ plot.outputdata <- function(data, skip=0, ...) {
   abline(h=plaq.res$value, col="blue")
   abline(h=plaq.res$value+plaq.res$dvalue)
   abline(h=plaq.res$value-plaq.res$dvalue)
-  X11()
+  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+    X11()
+  }
   plot(data$V1, data$V3, type="l",
        main=expression(paste(Delta, "H")), xlab=expression(t[HMC]), ylab=expression(paste(Delta, "H")), ...)
   return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))

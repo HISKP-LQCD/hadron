@@ -9,7 +9,8 @@
   range. 
 }
 \usage{
-gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov)
+gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2,
+               useCov=TRUE, fit=TRUE)
 }
 \arguments{
   \item{gevp}{
@@ -45,6 +46,9 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov)
   \item{useCov}{
     Use the covariance matrix for fitting the constant to the amplitude
     data. 
+  }
+  \item{fit}{
+    perform a fit to the data.
   }
 }
 \value{

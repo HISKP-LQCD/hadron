@@ -8,7 +8,8 @@
 }
 \usage{
 effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
-interval=c(0.000001,2.), weight.factor=1)
+                 interval=c(0.000001,2.), weight.factor=1,
+                 deltat=1, tmax=Thalf)
 }
 \arguments{
   \item{cf}{
@@ -22,7 +23,7 @@ interval=c(0.000001,2.), weight.factor=1)
   \item{type}{
     The function to be used to compute the effective mass
     values. Possibilities are "acosh", "solve", "log", "temporal",
-    "subtracted" and "weighted". While the first three assume normal
+    "shifted" and "weighted". While the first three assume normal
     cosh behaviour of 
     the correlation function, "temporal" is desigend to remove an
     additional constant stemming from temporal states in two particle
@@ -47,7 +48,12 @@ interval=c(0.000001,2.), weight.factor=1)
   \item{weight.factor}{
     relative weight for type "weighted" only, see details
   }
-
+  \item{deltat}{
+    time shift for shifted correlation functions
+  }
+  \item{tmax}{
+    t-value up to which the effectivemass is to be computed
+  }
 }
 \value{
   Returns a vector of length \code{Thalf} with the effective mass values
@@ -62,7 +68,7 @@ interval=c(0.000001,2.), weight.factor=1)
   is numerically solved for \eqn{m(t)}.
 
   "acosh": the effective mass is computed from\cr
-  \eqn{m(t)=\acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
+  \eqn{m(t)=acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr
   Note that this definition is less tolerant against noise.
 
   "log": the effective mass is defined via\cr
@@ -90,6 +96,8 @@ interval=c(0.000001,2.), weight.factor=1)
 }
 \references{
   arXiv:1203.6041
+}
+\examples{
 }
 \seealso{
   \code{\link{bootstrap.effectivemass}}

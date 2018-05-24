@@ -1,5 +1,3 @@
-# $Id$
-#
 # this is a more or less line by line translation of
 # U. Wolffs UWerr.m for R: The R Project for Statistical Computing
 #
@@ -379,37 +377,44 @@ summary.uwerr <- function(uwerr) {
   }
 }
 
-plot.uwerr <- function(uwerr, main="x", x11=TRUE, plot.hist=TRUE, index=1, Lambda=100) {
-  if(uwerr$primary && plot.hist) {
-    if(x11) X11()
-    hist(uwerr$data, main = paste("Histogram of" , main))
+plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lambda=100) {
+  if(x$primary && plot.hist) {
+    if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+              X11()
+            }
+    hist(x$data, main = paste("Histogram of" , main))
   }
-  if(!is.null(uwerr$Gamma)) {
+  if(!is.null(x$Gamma)) {
     GammaFbb <- NULL
     Gamma.err <- NULL
     Wopt <- numeric()
     Wmax <- numeric()
-    if(uwerr$primary == 1) {
-      GammaFbb <- uwerr$Gamma/uwerr$Gamma[1]
-      Gamma.err <- gammaerror(Gamma=GammaFbb, N=uwerr$N , W=uwerr$Wmax, Lambda=Lambda)
-      Wopt <- uwerr$Wopt
-      Wmax <- uwerr$Wmax
+    if(x$primary == 1) {
+      GammaFbb <- x$Gamma/x$Gamma[1]
+      Gamma.err <- gammaerror(Gamma=GammaFbb, N=x$N , W=x$Wmax, Lambda=Lambda)
+      Wopt <- x$Wopt
+      Wmax <- x$Wmax
     }
     else {
-      GammaFbb <- uwerr$Gamma[[index]]/uwerr$Gamma[[index]][1]
-      Gamma.err <- gammaerror(Gamma=GammaFbb, N=uwerr$N , W=uwerr$Wmax[[index]], Lambda=Lambda)
-      Wopt <- uwerr$Wopt[[index]]
-      Wmax <- uwerr$Wmax[[index]]
+      GammaFbb <- x$Gamma[[index]]/x$Gamma[[index]][1]
+      Gamma.err <- gammaerror(Gamma=GammaFbb, N=x$N , W=x$Wmax[[index]], Lambda=Lambda)
+      Wopt <- x$Wopt[[index]]
+      Wmax <- x$Wmax[[index]]
     }
-    if(x11) X11()
+    if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+              X11()
+            }
     plotwitherror(c(0:Wmax),GammaFbb[1:(Wmax+1)],
                   Gamma.err[1:(Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=Wopt+1)
     abline(h=0)
   }
-  if(x11) X11()
-  if(uwerr$primary == 1) tauintplot(uwerr$tauintofW, uwerr$dtauintofW, Wmax, Wopt, main=main)  
-  else tauintplot(uwerr$tauintofW[[index]], uwerr$dtauintofW[[index]], Wmax, Wopt, main=main)  
+  if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
+            X11()
+          }
+
+  if(x$primary == 1) tauintplot(x$tauintofW, x$dtauintofW, Wmax, Wopt, main=main)  
+  else tauintplot(x$tauintofW[[index]], x$dtauintofW[[index]], Wmax, Wopt, main=main)  
   return(invisible(data.frame(t=c(0:Wmax),Gamma=GammaFbb[1:(Wmax+1)],dGamma=Gamma.err[1:(Wmax+1)])))
 }
 

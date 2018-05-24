@@ -197,6 +197,8 @@ gevp2cf <- function(gevp, id=1) {
   cf$cf.tsboot <- list()
   cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
   cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
+  ## the bootstrap error
+  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
   cf$id <- id
   if(any(names(gevp$cf) == "weighted")) {
     cf$weighted <- gevp$cf$weighted

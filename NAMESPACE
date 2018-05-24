@@ -1,4 +1,5 @@
 exportPattern("^cf.*")
+exportPattern("*.cf")
 exportPattern("^plot.*")
 exportPattern("^analysis_*")
 exportPattern("^print.*")
@@ -15,6 +16,20 @@ exportPattern("^computefps.*")
 exportPattern("^weighted.*")
 exportPattern("^extract.*")
 exportPattern("^jab\\..*")
-export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, pp, zetazp, ppcorr, ppeffectivemass, proton, getorderedconfignumbers, fit.effectivemass)
+exportPattern("^compute\\..*")
+export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, zetazp, proton, getorderedconfignumbers, fit.effectivemass, invcosh, tex.catwitherror)
+export(escapeLatexSpecials)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
+importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
+           "rainbow", "rgb")
+importFrom("graphics", "abline", "arrows", "axis", "barplot",
+           "grconvertX", "grconvertY", "hist", "legend", "lines",
+           "par", "plot", "points", "polygon", "rect", "segments",
+           "title")
+importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
+           "na.omit", "optim", "pchisq", "pgamma", "qchisq", "qqplot",
+           "quantile", "rchisq", "rnorm", "sd", "spec.pgram", "spline",
+           "uniroot", "var", "weighted.mean")
+importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
+           "txtProgressBar")

@@ -5,8 +5,8 @@
   Reads disconnected loops from binary files.
 }
 \usage{
-cf <- readbinarydisc(files, T=48, obs=5, endian="little",
-                         excludelist=c(""), nrSamples, path="")
+readbinarydisc(files, T=48, obs=5, endian="little",
+               excludelist=c(""), nrSamples, path="")
 }
 \arguments{
   \item{files}{

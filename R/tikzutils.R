@@ -1,12 +1,15 @@
-tikz.init <- function(basename, standAlone = TRUE, ...) {
+tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
   havetikz <- require("tikzDevice")
   if(!havetikz){
     stop("tikz.init: tikzDevice package was not found!")
   }
+  if(missing(engine)) {
+    engine <- getOption("tikzDefaultEngine")
+  }
 
   temp <- sprintf("%s.%s",basename,c("tex","pdf","aux","log"))
   tikzfiles <- list(tex=temp[1], pdf=temp[2], aux=temp[3], log=temp[4], standAlone=standAlone)
-  tikz(tikzfiles$tex, standAlone = standAlone, ...)
+  tikz(tikzfiles$tex, standAlone = standAlone, engine=engine, ...)
   tikzfiles
 }
 
@@ -30,4 +33,21 @@ tikz.finalize <- function(tikzfiles, crop=TRUE, margins=0, clean=TRUE) {
       system(command)
     }
   }
+}
+
+# from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
+escapeLatexSpecials <- function(x) {
+  x <- gsub("\\", "$\\backslash$", x, fixed = TRUE)
+  x <- gsub("#", "\\\\#", x)
+  x <- gsub("$", "\\\\$", x)
+  x <- gsub("%", "\\\\%", x)
+  x <- gsub("&", "\\\\&", x)
+  x <- gsub("~", "\\\\~", x)
+  x <- gsub("_", "\\\\_", x)
+  x <- gsub("^", "\\\\^", x)
+  x <- gsub("\\{", "\\\\{", x)
+  x <- gsub("\\}", "\\\\}", x)
+  x <- gsub(">", "$>$", x)
+  x <- gsub("<", "$<$", x)
+  return(x)
 }

@@ -2,9 +2,10 @@ invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
   ## compute compute the correctly normalised inverse of a noisy covariance matrix
   ## see C. Michael hep-lat/9412087
 
-  ## block data first
+  ## block data first, this should only be done if we're not dealing with boostrap samples
+  ## because these already stem from an appropriate block sampling procedure
   ncf <- cf
-  if(boot.l > 1) {
+  if(boot.l > 1 && boot.samples == FALSE) {
     ncf <- block.ts(cf, l=boot.l)
   }
   ## compute covariance matrix and invert

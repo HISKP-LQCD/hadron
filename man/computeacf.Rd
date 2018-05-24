@@ -1,5 +1,5 @@
 \name{computeacf}
-\alias{}
+\alias{computeacf}
 \title{Computes The ACF and Integrated AC Time}
 \description{
   Computes the ACF and integrated autocorrelation time of a time
@@ -9,7 +9,7 @@
 computeacf(tseries, W.max, Lambda=100)
 }
 \arguments{
-  \item{tdata}{
+  \item{tseries}{
     the time series.
   }
   \item{W.max}{
@@ -64,12 +64,12 @@ computeacf(tseries, W.max, Lambda=100)
   N. Madras, A. D. Sokal, J. Stat. Phys. 50 (1988) 109
 }
 \seealso{
-  \code{\link{uwerr}}, \code{\link{acf}}, \code{\link{plot.hadronacf}},
-  \code{\link{summary.hadronacf}}, \code{\link{bootstrap.analysis}}
+  \code{\link{uwerr}}, \code{\link{acf}}
+  \code{\link{bootstrap.analysis}}
 }
 \examples{
 data(plaq.sample)
-myacf <- computeacf(tsdata, 300)
+myacf <- computeacf(plaq.sample, 300)
 plot(myacf)
 summary(myacf)
 }

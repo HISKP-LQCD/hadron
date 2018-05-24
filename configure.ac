@@ -18,7 +18,7 @@ int main() {
    if ((sscanf(gslv, "%d.%d", &major, &minor)) != 2) {
      exit (1);
    }
-   exit( (major < 2) || ( major == 1 && minor < 8 ) );
+   exit( !( (major >= 2) || (major == 1 && minor >= 8 ) ) );
 #else
   exit(1);
 #endif

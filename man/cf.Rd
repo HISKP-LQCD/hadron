@@ -1,5 +1,13 @@
 \name{cf}
-\alias{c.cf, add.cf,"+.cf", "-.cf", "/.cf", as.cf, is.cf, mul.cf}
+\alias{cf}
+\alias{c.cf}
+\alias{add.cf}
+\alias{"+.cf"}
+\alias{"-.cf"}
+\alias{"/.cf"}
+\alias{as.cf}
+\alias{is.cf}
+\alias{mul.cf}
 \title{cf}
 \description{
   The function \code{cf()} creates containers for correlation functions
@@ -9,24 +17,30 @@
   several ways, as well as concatenation and \code{is.cf} and \code{as.cf}.
 }
 \usage{
-correlator <- cf()
+cf()
 
-correlator <- c(cf1, cf2)
+c(cf1, cf2)
 
-correlator <- add.cf(cf1, cf2, a=1., b=1.)
+add.cf(cf1, cf2, a=1., b=1.)
 
-correlator <- mul.cf(cf1, a=1.)
+mul.cf(cf, a=1.)
 
-correlator <- as.cf(x)
+as.cf(x)
 
-iscf <- is.cf(cf1)
+is.cf(x)
 
-cf1 + cf2
-cf1 - cf2
-cf1 / cf2
++.cf(cf1, cf2)
+-.cf(cf1, cf2)
+/.cf(cf1, cf2)
 }
 \arguments{
-  \item{cf1, cf2}{
+  \item{cf1}{
+    objects of class \code{cf}
+  }
+  \item{cf2}{
+    objects of class \code{cf}
+  }
+  \item{x}{
     objects of class \code{cf}
   }
   \item{a, b}{

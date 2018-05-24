@@ -1,10 +1,10 @@
-computeacf <- function(tdata, W.max, Lambda=100) {
-  N <- length(tdata)
+computeacf <- function(tseries, W.max, Lambda=100) {
+  N <- length(tseries)
   if(missing(W.max)) W.max <- floor(sqrt(N))
   Gamma.tmp <- rep(0, times=2*W.max+W.max+1)
   dGamma <- rep(0., times=W.max+1)
   ## for t > W.max we set Gamma to 0 for simplicity
-  Gamma.tmp[1:(W.max+1)] <- acf(tdata, lag.max = W.max, plot=FALSE)$acf
+  Gamma.tmp[1:(W.max+1)] <- acf(tseries, lag.max = W.max, plot=FALSE)$acf
 
   ## now we determine the error using (E.11) from Luescher, hep-lat/0409106
   for(t in 0:W.max) {
@@ -28,7 +28,7 @@ computeacf <- function(tdata, W.max, Lambda=100) {
   dtau <- sqrt((4*W + 2) * tau^2 / N)
   
   res <- list(lags = c(0:(W.max)), Gamma=Gamma, dGamma=dGamma,
-              W.max=W.max, W=W, tdata=tdata, tau=tau, dtau=dtau)
+              W.max=W.max, W=W, tseries=tseries, tau=tau, dtau=dtau)
   attr(res, "class") <- c("hadronacf", "list")
   return(invisible(res))
 }
@@ -58,8 +58,8 @@ summary.hadronacf <- function(Gamma) {
   cat("cut-off parameter W:\t", Gamma$W, "\n")
   cat("tauint:\t\t\t", Gamma$tau, "\n")
   cat("dtauint:\t\t", Gamma$dtau, "\n")
-  cat("data mean:\t\t", mean(Gamma$tdata), "\n")
-  cat("data error (naive):\t", sqrt(var(Gamma$tdata)/length(Gamma$tdata)), "\n")
-  cat("data error (corrected):\t", sqrt(2*Gamma$tau*var(Gamma$tdata)/length(Gamma$tdata)), "\n")
+  cat("data mean:\t\t", mean(Gamma$tseries), "\n")
+  cat("data error (naive):\t", sqrt(var(Gamma$tseries)/length(Gamma$tseries)), "\n")
+  cat("data error (corrected):\t", sqrt(2*Gamma$tau*var(Gamma$tseries)/length(Gamma$tseries)), "\n")
 }
 

@@ -6,7 +6,7 @@
 }
 \usage{
 gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
-for.tsboot=TRUE, sort.type="values")
+for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 }
 \arguments{
   \item{cf}{
@@ -20,7 +20,7 @@ for.tsboot=TRUE, sort.type="values")
     would be 4.
   }
   \item{Time}{
-    time extend of the lattice.
+    time extent of the lattice.
   }
   \item{t0}{
     initial time value of the GEVP, must be in between 0 and
@@ -45,6 +45,10 @@ for.tsboot=TRUE, sort.type="values")
     for internal use of \code{\link{bootstrap.gevp}}. Alters the returned
     values, see details. 
   }
+  \item{sort.t0}{
+    if true (default), sort with respect to data at t0, otherwise with
+    respect to t-1.
+  }
 }
 \value{
   Returns a list with the sorted eigenvalues, sorted eigenvectors and
@@ -57,7 +61,7 @@ for.tsboot=TRUE, sort.type="values")
 \details{
   The generalised eigenvalue problem\cr
   \eqn{
-    C(t) v(t,t_0) = C(t_0)\lambda(t,t_0) v(t,t_0)
+    C(t) v(t,t_0) = C(t_0) \lambda(t,t_0) v(t,t_0)
   }{
     C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)}\cr
   is solved by performing a Cholesky decomposition of \eqn{C(t_0)=L^t

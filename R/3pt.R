@@ -13,7 +13,7 @@ convert2cf <- function(data, symmetric=TRUE, symmetrise=TRUE) {
     X[i1,] <- 0.5*(X[i1,] + sign*X[i2,])
     X <- X[c(1:Thalfp1),]
   }
-  ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE)
+  ret <- list(cf=t(X), icf=NULL, Time=Time, nrStypes=1, nrObs=1, boot.samples=FALSE, symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }
@@ -56,7 +56,7 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
 
   plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
-  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, boot.sample=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
+  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
 
   res <- list(Cf2ptratio=Cf2pt, Cf3ptratio=Cf3pt, Cf2ptp0=Cf2ptp0,
               Cf2ptp=Cf2ptp, Cf3ptp0=Cf3ptp0, Cf3ptp=Cf3ptp,
@@ -68,7 +68,7 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   return(invisible(res))
 }
 
-summary.pionff <- function(ff) {
+summary.pionff <- function(ff, ...) {
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
 
@@ -113,7 +113,7 @@ averx <- function(data3pt, data2pt, pionfit,
   ## now a cosh fit to the 2pt correlator
   if(missing(pionfit)) {
     pionfit <- matrixfit(Cf2pt, t1=piont1, t2=piont2, symmetrise=TRUE, useCov=useCov,
-                         matrix.size=1, parlist=array(c(1,1), dim=c(2,1)))
+                         parlist=array(c(1,1), dim=c(2,1)))
   }
 
   ## which we can use to determine the 2pt correlator at T/2
@@ -194,7 +194,7 @@ averx <- function(data3pt, data2pt, pionfit,
   return(invisible(res))
 }
 
-summary.averx <- function(averx) {
+summary.averx <- function(averx, ...) {
   cat("\n")
   summary(averx$matrixfit)
   cat("\nAnalysis for <x>\n\n")
@@ -221,7 +221,7 @@ summary.averx <- function(averx) {
   cat("error    =", averx$daverx.wm, "\n")  
 }
 
-print.averx <- function(averx) {
+print.averx <- function(averx, ...) {
   summary.averx(averx)
 }
 

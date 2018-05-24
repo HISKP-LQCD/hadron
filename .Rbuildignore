@@ -1,0 +1,4 @@
+## Ignore travis config file
+^\.travis\.yml$
+^.*\.Rproj$
+^\.Rproj\.user$

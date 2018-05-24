@@ -1,23 +1,20 @@
 \name{extract.obs}
 \alias{extract.obs}
-\alias{extract.loop}
 \title{Extract One or More Gamma Combinations from am CMI Correlator}
 \description{
   Extracts one or more gamma matrix combinations (observables) from a
   correlator stored in cmi format
 }
 \usage{
-cmicor <- extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
-                      sym.vec, verbose=FALSE)
-
-cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
+extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
+                        sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE)
 }
 \arguments{
+  \item{cmicor}{
+    an correlator object in cmi format
+  }
   \item{vec.obs}{
     vector containing the numbers of observables to be extracted.
-  }
-  \item{obs}{
-    number of a single loop to extract.
   }
   \item{ind.vec}{
     Index vector indexing the column numbers in cmicor to be used. The
@@ -42,6 +39,12 @@ cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
     a sign vector of length equal to the number of observables
     indicating whether the corresponding correlation function should be 
     multiplied by +-1.
+  }
+  \item{symmetrise}{
+    if set to \code{TRUE}, the correlation function will be averaged for
+    \code{t} and \code{T-t}, with the sign depending on the value of
+    \code{sym}.  Note that currently the correlator with t-values larger
+    than \code{T/2} will be discarded.
   }
 }
 \value{
@@ -80,13 +83,11 @@ cmiloop <- extrac.loop(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8), L)
 \details{
   C(t) and C(-t) are averaged as indicated by \code{sym.vec}.
 
-  The returned object can be further processed by e.g. \code{block.ts}.
 }
 \references{
 }
 \seealso{
   \code{\link{readcmicor}}, \code{\link{readcmidatafiles}},
-  \code{\link{block.ts}}
 }
 \examples{
 \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}
