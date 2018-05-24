@@ -27,20 +27,20 @@ bootstrap.nlsfit <- function(fn,
   ## the corresponding chisqr functions
   fitchisqr <- function(par, x, y, dy, fitfun) {
     z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun)
-    return (sum(z %*% z))
+    return (sum(z * z))
   }
   fitchisqr.xy <- function(par, y, dy, fitfun, nx) {
     z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
-    return (sum(z %*% z))
+    return (sum(z * z))
   }
 
   ## wrapper functions for apply
   wrapper.lm <- function(y, par, fitfun, dy, x, ...) {
-    res <- nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x, ...)
+    res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x, ...)
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
   wrapper.lm.xy <- function(y, par, fitfun, dy, nx, ...) {
-    res <- nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx, ...)
+    res <- minpack.lm::nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx, ...)
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
 
