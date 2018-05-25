@@ -65,17 +65,60 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   \item{dtauint}{
     error of tauint
   }
-  \item{Wopt}{
-    value of optimal cut-off for the Gamma function integration
+  \item{Qval}{
+    the p-value of the weighted average in case of several replicas
   }
-
   In case of a derived observable (\code{uwerrderived}), i.e. if a
   function is specified, the above objects are contained in a list
   called \code{res}.
 
+  \code{uwerrprimary} returns in addition
+  \item{data}{
+    input data
+  }
+  whereas \code{uwerrderived} returns
+  \item{datamean}{
+    (vector of) mean(s) of the (vector of) data
+  }
+  and in addition
+  \item{fgrad}{
+    the estimated gradient of \code{f}
+  }
+  and
+  \item{f}{
+    the input statistics
+  }
+
   In both cases the return object containes
-  \item{xxx}{
-    xxx
+  \item{Wopt}{
+    value of optimal cut-off for the Gamma function integration
+  }
+  \item{Wmax}{
+    maximal value of the cut-off for the Gamma function integration
+  }
+  \item{tauintofW}{
+    integrated autocorrelation time as a function of the cut-off W
+  }
+  \item{dtauintofW}{
+    error of the integrated autocorrelation time as a function of the cut-off W
+  }
+  \item{S}{
+    input parameter S
+  }
+  \item{N}{
+    total number of observations
+  }
+  \item{R}{
+    number of replicas
+  }
+  \item{nrep}{
+    vector of observations per replicum
+  }
+  \item{Gamma}{
+    normalised autocorrelation function
+  }
+  \item{primary}{
+    set to 1 for \code{uwerrprimary} and 0 for \code{uwerrderived}
   }
 }
 %\details{
