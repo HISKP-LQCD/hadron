@@ -404,8 +404,8 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
     if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
               X11()
             }
-    plotwitherror(c(0:Wmax),GammaFbb[1:(Wmax+1)],
-                  Gamma.err[1:(Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
+    plotwitherror(x=c(0:Wmax),y=GammaFbb[1:(Wmax+1)],
+                  dy=Gamma.err[1:(Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=Wopt+1)
     abline(h=0)
   }
@@ -413,8 +413,8 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
             X11()
           }
 
-  if(x$primary == 1) tauintplot(x$tauintofW, x$dtauintofW, Wmax, Wopt, main=main)  
-  else tauintplot(x$tauintofW[[index]], x$dtauintofW[[index]], Wmax, Wopt, main=main)  
+  if(x$primary == 1) tauintplot(ti=x$tauintofW, dti=x$dtauintofW, Wmax=Wmax, Wopt=Wopt, main=main)  
+  else tauintplot(ti=x$tauintofW[[index]], dti=x$dtauintofW[[index]], Wmax=Wmax, Wopt=Wopt, main=main)  
   return(invisible(data.frame(t=c(0:Wmax),Gamma=GammaFbb[1:(Wmax+1)],dGamma=Gamma.err[1:(Wmax+1)])))
 }
 
