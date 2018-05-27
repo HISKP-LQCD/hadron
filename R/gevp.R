@@ -18,12 +18,8 @@ permutations <- function(n){
 ## order c(1,2,3,4) goes to 
 ##                           ( 3 , 4 )
 
-gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
+gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
                  for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE) {
-  
-  if(matrix.size^2 != length(element.order)) {
-    stop("matrix.size^2 must be equal to length of element.order. Aborting...\n")
-  }
   if(t0 < 0 || t0 > (Time/2-2)) {
     stop("t0 must be in between 0 and T/2-2. Aborting ...\n")
   }
@@ -43,6 +39,7 @@ gevp <- function(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
 
   ## number of correlators in cf
   Ncor <- length(Cor)/(Thalf+1)
+  matrix.size <- as.integer(round(sqrt(length(element.order))))
   if(length(element.order) != matrix.size^2) {
     stop("gevp can only operate on square matrices, please adjust element.order! Aborting!\n")
   }
