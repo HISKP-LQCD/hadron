@@ -8,7 +8,6 @@
 #'
 #' This class `cf` _must_ contain the following fields:
 #'
-#' - `cf0`: Numeric vector, mean value of original measurements.
 #' - `nrObs`: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
 #' - `Time`: Integer, full time extent.
 #' - `nrStypes`: Integer, number of smearing types.
@@ -21,6 +20,7 @@
 #'
 #' With the `cf_boot` mixin, it also must have the following fields:
 #'
+#' - `cf0`: Numeric vector, mean value of original measurements.
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available.
 #' - `boot.R`: Integer, number of bootstrap samples used.
 #' - `boot.l`: Integer, block length in the time-series bootstrap process.
@@ -31,6 +31,8 @@
 #'
 #' With the `cf_jackknife` mixin, it also must have the following fields:
 #'
+#' - `cf0`: _See above_.
+#' - `boot.l`: _See above_.
 #' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available.
 #' - `cf.jackknife`: List, containing jackknife samples:
 #'   - `t`: Numeric matrix, jackknifed data sets.
@@ -53,11 +55,11 @@
 #' @param ... Set arbitrary fields which are not explicit arguments.
 #' 
 #' @export
-cf <- function (cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrized = FALSE, ...) {
-  cf <- list(cf = cf, icf = icf)
+cf <- function (cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE, ...) {
+  cf <- list(cf0 = cf0, nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrised)
   args <- list(...)
   cf <- modifyList(cf, args)
-  attr(cf, "class") <- c("cf", class(cf))
+  class(cf) <- append(class(cf), 'cf')
   return (cf)
 }
 
@@ -73,10 +75,9 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 }
 
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
-    
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.cf requires an object of class 'cf' as input! Aborting!\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
   boot.l <- ceiling(boot.l)
   if(boot.l < 1 || boot.l > nrow(cf$cf)) {
     stop("'boot.l' must be larger than 0 and smaller than the length of the time series! Aborting...\n")
@@ -107,14 +108,16 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   if (!is.null(temp))
     assign(".Random.seed", temp, envir = .GlobalEnv)
   else rm(.Random.seed, pos = 1)
+
+  class(cf) <- append(class(cf), 'cf_boot')
   
   return(invisible(cf))
 }
 
 jackknife.cf <- function(cf, boot.l=2) {
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
   if(boot.l < 1) {
     stop("boot.l must be larger than 0! Aborting...\n")
   }
@@ -143,14 +146,15 @@ jackknife.cf <- function(cf, boot.l=2) {
   cf$jackknife.se <- apply(tmp, MARGIN=1L,
                            FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
+  class(cf) <- append(class(cf), 'cf_jackknife')
   return(invisible(cf))
 }
 
 # Gamma method analysis on all time-slices in a 'cf' object
 uwerr.cf <- function(cf, absval=FALSE){
-  if(!inherits(cf, "cf")){
-    stop("uwerr.cf: cf must be of class 'cf'. Aborting...\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
   uwcf <- as.data.frame( 
       t(
           apply(X=cf$cf, MARGIN=2L, 
@@ -187,33 +191,31 @@ addConfIndex2cf <- function(cf, conf.index) {
 }
 
 addStat.cf <- function(cf1, cf2) {
-  if(inherits(cf1, "cf") && inherits(cf2, "cf") &&
-     cf1$Time == cf2$Time && dim(cf1$cf)[2] == dim(cf2$cf)[2] &&
-     cf1$nrObs == cf2$nrObs && cf1$nrStypes == cf2$nrStypes
-     ){
-    cf <- cf1
-    cf$boot.samples <- FALSE
-    cf$boot.R <- NULL
-    cf$boot.l <- NULL
-    cf$seed <- NULL
-    cf$cf <- rbind(cf1$cf, cf2$cf)
-    return(invisible(cf))
-  }
-  else {
-    stop("addStat.cf: cf1 and cf2 not compatible. Aborting...\n")
-  }
+  stopifnot(all(c('cf', 'cf_orig') %in% class(cf1)))
+  stopifnot(all(c('cf', 'cf_orig') %in% class(cf2)))
+
+  stopifnot(cf1$Time == cf2$Time)
+  stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
+  stopifnot(cf1$nrObs == cf2$nrObs )
+  stopifnot(cf1$nrStypes == cf2$nrStypes)
+
+  cf <- cf1
+
+  cf$cf <- rbind(cf1$cf, cf2$cf)
+  cf$icf <- rbind(cf1$icf, cf2$icf)
+
+  cf <- invalidate.samples.cf(cf)
+
+  return (invisible(cf))
 }
 
 ## averages local-smeared and smeared-local correlators in cf and adjusts
 ## nrStypes accordingly
 ## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
-avg.ls.cf <- function(cf,cols=c(2,3)) {
-  if(!any(class(cf) == "cf")) {
-    stop("Input must be of class 'cf'\n")
-  }
-  if(cf$nrStypes < 2) {
-    stop("There must be at least 2 smearing types in cf!\n")
-  }
+avg.ls.cf <- function(cf, cols = c(2, 3)) {
+  stopifnot(c('cf', 'cf_orig') %in% class(cf)
+  stopifnot(cf$nrStypes >= 2)
+
   timeslices <- cf$Time/2+1
 
   ind.ls <- ( (cols[1]-1)*timeslices+1 ):( cols[1]*timeslices )
@@ -223,7 +225,7 @@ avg.ls.cf <- function(cf,cols=c(2,3)) {
 
   cf$cf <- cf$cf[,-ind.sl]
   cf$nrStypes <- cf$nrStypes-1
-  return(cf)
+  return (cf)
 }
 
 # "close-by-times" averaging replaces the value of the correlation function at t
@@ -231,9 +233,8 @@ avg.ls.cf <- function(cf,cols=c(2,3)) {
 # with weights 0.25, 0.5 and 0.25
 # it then invalidates the boundary timeslices (for all smearing types and observables)
 avg.cbt.cf <- function(cf){
-  if(!any(class(cf) == "cf")) {
-    stop("avg.cbt.cf: Input must be of class 'cf'\n")
-  }
+  stopifnot(c('cf', 'cf_orig') %in% class(cf))
+
   # copy for shifting
   cf2 <- cf
   cf <- mul.cf(cf, 0.5)
@@ -262,17 +263,16 @@ avg.cbt.cf <- function(cf){
 }
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
-add.cf <- function(cf1, cf2, a=1., b=1.) {
-  if(any(class(cf1) == "cf") && any(class(cf2) == "cf") &&
-     all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
-    cf <- cf1
-    cf$cf <- a*cf1$cf + b*cf2$cf
-    cf <- invalidate.samples.cf(cf)
-    return(cf)
-  }
-  else {
-    stop("The two objects of class cf are not compatible\n Aborting...!\n")
-  }
+add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
+  stopifnot(c('cf', 'cf_orig') %in% class(cf1))
+  stopifnot(c('cf', 'cf_orig') %in% class(cf2))
+  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
+  stopifnot(cf1$Time == cf2$Time)
+
+  cf <- cf1
+  cf$cf <- a*cf1$cf + b*cf2$cf
+  cf <- invalidate.samples.cf(cf)
+  return(cf)
 }
 
 '+.cf' <- function(cf1, cf2) {
@@ -394,31 +394,34 @@ c.cf <- function(...) {
   return(invisible(cf))
 }
 
-plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
-  if(is.null(cf$jackknife.samples)) {
-    cf$jackknife.samples <- FALSE
-  }
-  if(is.null(cf$boot.samples)) {
-    cf$boot.samples <- FALSE
-  }
-  if(!cf$boot.samples && !cf$jackknife.samples) {
-    cf <- bootstrap.cf(cf, boot.R, boot.l)
-  }
-  Err <- numeric(0)
-  if(cf$boot.samples) Err <- cf$tsboot.se
-  else if(cf$jackknife.samples) Err <- cf$jackknife.se
-  if(missing(neg.vec)){
-    neg.vec <- rep(1,times=length(cf$cf0))
+plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+  # We need to have data, otherwise we cannot plot.
+  stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
+
+  if (inherits(cf, 'cf_boot')) {
+    val <- cf$cf0
+    err <- cf$tsboot.se
+  } else if (inherits(cf, 'cf_jackknife')) {
+    val <- cf$cf0
+    err <- cf$jackknife.se
+  } else {
+    val <- apply(cf$cf, 2, mean)
+    err <- apply(cf$cf, 2, sd) / sqrt(nrow(cf$cf))
   }
 
-  tmax <- cf$Time/2
-  if( "symmetrised" %in% names(cf) ) {
-    if(!cf$symmetrised){
-      tmax <- cf$Time-1
-    }
+  if(!cf$symmetrised){
+    tmax <- cf$Time - 1
+  } else {
+    tmax <- cf$Time / 2
   }
-  plotwitherror(x=rep(c(0:(tmax)), times=length(cf$cf0)/(tmax+1)), y=neg.vec*cf$cf0, dy=Err, rep=rep, ...)
-  return(invisible(data.frame(t=rep(c(0:tmax), times=length(cf$cf0)/(tmax+1)), CF=cf$cf0, Err=Err)))
+
+  df <- data.frame(t = rep(c(0:tmax), times = length(val)/(tmax+1)),
+                   CF = val,
+                   Err = err)
+
+  plotwitherror(x = df$t, y = neg.vec * df$CF, dy = df$Err, rep = rep, ...)
+
+  return(invisible(df))
 }
 
 # shift a correlation function by 'places' time-slices
@@ -427,12 +430,12 @@ plot.cf <- function(cf, boot.R=400, boot.l=2, neg.vec, rep=FALSE, ...) {
 # this will of course mix smearings and observables
 # and must be taken into account externally by
 # invalidating the affected time-slices
-shift.cf <- function(cf,places){
-  if(!any(class(cf) == "cf")) {
-    stop(".cf: Input must be of class 'cf'\n")
-  }
+shift.cf <- function(cf, places) {
+  stopifnot(all(c('cf', 'cf_orig') %in% class(cf)))
+
   cf <- invalidate.samples.cf(cf)
   n <- ncol(cf$cf)
+
   if(places == 0){
     cf$cf <- cf$cf
   } else if ( places < 0 ){
@@ -440,36 +443,39 @@ shift.cf <- function(cf,places){
   } else {
     cf$cf <- cbind( cf$cf[, (places+1):n], cf$cf[, 1:places] )
   }
+
   return(invisible(cf))
 }
 
 # when a correlation function is modified, any resampling should be
 # invalidated
 invalidate.samples.cf <- function(cf){
+  cf$boot.l <- NULL
+  cf$boot.R <- NULL
+  cf$boot.samples <- NULL
   cf$cf0 <- NULL
-  if(cf$boot.samples) {
-    cf$boot.samples <- FALSE
-    cf$boot.R <- NULL
-    cf$boot.l <- NULL
-    cf$sim <- NULL
-    cf$tsboot.se <- NULL
-    cf$tsboot <- NULL
-  }
-  if(cf$jackknife.samples){
-    cf$jackknife.samples <- FALSE
-    cf$jackknife <- NULL
-    cf$jackknife.se <- NULL
-  }
+  cf$jackknife <- NULL
+  cf$jackknife.samples <- NULL
+  cf$jackknife.se <- NULL
+  cf$seed <- NULL
+  cf$sim <- NULL
+  cf$tsboot <- NULL
+  cf$tsboot.se <- NULL
+
+  class(cf) <- setdiff(class(cf), c('cf_boot', 'cf_jackknife'))
+
   return(invisible(cf))
 }
 
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
-  if( "symmetrised" %in% names(cf) ) {
-    if(cf$symmetrised){
-      message("symmetrise.cf: cf was already symmetrised\n")
-      return(invisible(cf))
-    }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  if(cf$symmetrised){
+    message("symmetrise.cf: cf was already symmetrised\n")
+    return(invisible(cf))
   }
+
   if( cf$nrObs > 1 & length(sym.vec) == 1 ){
     sym.vec <- rep(sym.vec[1],times=cf$nrObs)
   } else if( cf$nrObs != length(sym.vec) ) {
@@ -507,32 +513,28 @@ summary.cf <- function(cf, ...) {
   cat("observations = ", dim(cf$cf)[1], "\n")
   cat("Nr Stypes = ", cf$nrStypes, "\n")
   cat("Nr Obs    = ", cf$nrObs, "\n")
-  if(cf$boot.samples) {
+
+  if (inherits(cf, 'cf_boot')) {
     cat("R = ", cf$boot.R, "\n")
-  }
-  if(cf$boot.samples || !is.null(cf$jackknife.se)) {
-    tmax <- cf$Time/2
-    if( "symmetrised" %in% names(cf) ) {
-      if(!cf$symmetrised){
-        tmax <- cf$Time-1
-      }
+
+    if(!cf$symmetrised){
+      tmax <- cf$Time-1
+    } else {
+      tmax <- cf$Time/2
     }
     cat("l = ", cf$boot.l, "\n")
     out <- data.frame(t=c(0:tmax), C=cf$cf0)
-  }
-  if(!is.null(cf$sim)) {
     cat("sim = ", cf$sim, "\n")
-  }
 
-  if(!is.null(cf$tsboot.se)) {
     out <- cbind(out, tsboot.se=cf$tsboot.se)
   }
-  if(!is.null(cf$jackknife.se)) {
+
+
+  if (inherits(cf, 'cf_jackknife')) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)
-  }
-  if(!is.null(cf$jack.boot.se)) {
     out <- cbind(out, jab.se=cf$jack.boot.se)
   }
+
   if(exists("out")) {
     print(out)
   }
