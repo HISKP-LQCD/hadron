@@ -6,48 +6,59 @@
 #' simulations. Arithmetic operations are defined for this class in
 #' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 #'
-#' This class _must_ contain the following fields:
+#' This class `cf` _must_ contain the following fields:
+#'
+#' - `cf0`: Numeric vector, mean value of original measurements.
+#' - `nrObs`: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+#' - `Time`: Integer, full time extent.
+#' - `nrStypes`: Integer, number of smearing types.
+#' - `symmetrised`: Logical, indicating whether the correlation function has been symmetrized.
+#'
+#' With the `cf_orig` mixin, it also must have the following fields:
 #'
 #' - `cf`: Numeric matrix, original data for all observables and measurements.
-#'
-#' It _may_ also contain the following fields:
-#'
 #' - `icf`: Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations.
+#'
+#' With the `cf_boot` mixin, it also must have the following fields:
+#'
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available.
 #' - `boot.R`: Integer, number of bootstrap samples used.
 #' - `boot.l`: Integer, block length in the time-series bootstrap process.
 #' - `seed`: Integer, random number generator seed used in bootstrap.
 #' - `sim`: Character, `sim` argument of \link{boot::tsboot}.
-#' - `cf0`: Numeric vector, mean value of original measurements.
 #' - `cf.tsboot`: List, result from the \link{boot::tsboot} function.
 #' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
+#'
+#' With the `cf_jackknife` mixin, it also must have the following fields:
+#'
 #' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available.
 #' - `cf.jackknife`: List, containing jackknife samples:
 #'   - `t`: Numeric matrix, jackknifed data sets.
 #'   - `t0`: Numeric vector, copy of `cf0`.
 #'   - `l`: Integer, copy of `boot.l`.
 #' - `jackknife.se`: Numeric vector, standard error over jackknife samples.
-#' - `nrObs`: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
-#' - `Time`: Integer, full time extent.
-#' - `T`: Integer, full time extent.
-#' - `nrStypes`: Integer, number of smearing types.
-#' - `symmetrised`: Logical, indicating whether the correlation function has been symmetrized.
 #'
-#' The \link{gevp2cf} function might add the following fields:
+#' With the `cf_principal_correlator` mixin, it also must have the following fields:
 #'
 #' - `weighted`: TODO
 #' - `weight.cosh`: TODO
 #' - `mass1`: TODO
 #' - `mass2`: TODO
 #'
-#' The \link{subtract.excitedstates} function adds the following fields:
+#' With the `cf_subtracted` mixin, it also must have the following fields:
 #'
 #' - `subtracted.values`: Numeric matrix, TODO
 #' - `subtracted.ii`: Integer vector, TODO
-cf <- function() {
-  cf <- list(cf=NULL)
+#'
+#' @param ... Set arbitrary fields which are not explicit arguments.
+#' 
+#' @export
+cf <- function (cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrized = FALSE, ...) {
+  cf <- list(cf = cf, icf = icf)
+  args <- list(...)
+  cf <- modifyList(cf, args)
   attr(cf, "class") <- c("cf", class(cf))
-  return(cf)
+  return (cf)
 }
 
 gen.block.array <- function(n, R, l, endcorr=TRUE) {

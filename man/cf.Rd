@@ -4,7 +4,11 @@
 \alias{cf}
 \title{Correlation function container}
 \usage{
-cf()
+cf(cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrized = FALSE,
+  ...)
+}
+\arguments{
+\item{...}{Set arbitrary fields which are not explicit arguments.}
 }
 \description{
 This function \code{cf()} creates containers for correlation functions
@@ -14,22 +18,34 @@ simulations. Arithmetic operations are defined for this class in
 several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 }
 \details{
-This class \emph{must} contain the following fields:
+This class \code{cf} \emph{must} contain the following fields:
 \itemize{
-\item \code{cf}: Numeric matrix, original data for all observables and measurements.
+\item \code{cf0}: Numeric vector, mean value of original measurements.
+\item \code{nrObs}: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+\item \code{Time}: Integer, full time extent.
+\item \code{nrStypes}: Integer, number of smearing types.
+\item \code{symmetrised}: Logical, indicating whether the correlation function has been symmetrized.
 }
 
-It \emph{may} also contain the following fields:
+With the \code{cf_orig} mixin, it also must have the following fields:
 \itemize{
+\item \code{cf}: Numeric matrix, original data for all observables and measurements.
 \item \code{icf}: Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations.
+}
+
+With the \code{cf_boot} mixin, it also must have the following fields:
+\itemize{
 \item \code{boot.samples}: Logical, indicating whether there are bootstrap samples available.
 \item \code{boot.R}: Integer, number of bootstrap samples used.
 \item \code{boot.l}: Integer, block length in the time-series bootstrap process.
 \item \code{seed}: Integer, random number generator seed used in bootstrap.
 \item \code{sim}: Character, \code{sim} argument of \link{boot::tsboot}.
-\item \code{cf0}: Numeric vector, mean value of original measurements.
 \item \code{cf.tsboot}: List, result from the \link{boot::tsboot} function.
 \item \code{tsboot.se}: Numeric vector, standard deviation over bootstrap samples.
+}
+
+With the \code{cf_jackknife} mixin, it also must have the following fields:
+\itemize{
 \item \code{jackknife.samples}: Logical, indicating whether there are jackknife samples available.
 \item \code{cf.jackknife}: List, containing jackknife samples:
 \itemize{
@@ -38,14 +54,9 @@ It \emph{may} also contain the following fields:
 \item \code{l}: Integer, copy of \code{boot.l}.
 }
 \item \code{jackknife.se}: Numeric vector, standard error over jackknife samples.
-\item \code{nrObs}: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
-\item \code{Time}: Integer, full time extent.
-\item \code{T}: Integer, full time extent.
-\item \code{nrStypes}: Integer, number of smearing types.
-\item \code{symmetrised}: Logical, indicating whether the correlation function has been symmetrized.
 }
 
-The \link{gevp2cf} function might add the following fields:
+With the \code{cf_principal_correlator} mixin, it also must have the following fields:
 \itemize{
 \item \code{weighted}: TODO
 \item \code{weight.cosh}: TODO
@@ -53,7 +64,7 @@ The \link{gevp2cf} function might add the following fields:
 \item \code{mass2}: TODO
 }
 
-The \link{subtract.excitedstates} function adds the following fields:
+With the \code{cf_subtracted} mixin, it also must have the following fields:
 \itemize{
 \item \code{subtracted.values}: Numeric matrix, TODO
 \item \code{subtracted.ii}: Integer vector, TODO
