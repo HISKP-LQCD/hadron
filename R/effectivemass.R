@@ -148,7 +148,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     stop("t1 and t2 must be specified! Aborting...!\n")
   }
   tmax <- cf$Time/2
-  if( "symmetrised" %in% names(cf) ) {
+  if( "symmetrised" %in% names(cf$cf) ) {
     if(!cf$cf$symmetrised) {
       tmax <- cf$Time-1
     }
