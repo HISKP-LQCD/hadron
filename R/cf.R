@@ -1,3 +1,49 @@
+#' Correlation function container
+#'
+#' This function `cf()` creates containers for correlation functions
+#' of class `cf`. This class is particularly designed to deal with
+#' correlation functions emerging in statistical and quantum field theory
+#' simulations. Arithmetic operations are defined for this class in
+#' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
+#'
+#' This class _must_ contain the following fields:
+#'
+#' - `cf`: Numeric matrix, original data for all observables and measurements.
+#'
+#' It _may_ also contain the following fields:
+#'
+#' - `icf`: Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations.
+#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available.
+#' - `boot.R`: Integer, number of bootstrap samples used.
+#' - `boot.l`: Integer, block length in the time-series bootstrap process.
+#' - `seed`: Integer, random number generator seed used in bootstrap.
+#' - `sim`: Character, `sim` argument of \link{boot::tsboot}.
+#' - `cf0`: Numeric vector, mean value of original measurements.
+#' - `cf.tsboot`: List, result from the \link{boot::tsboot} function.
+#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
+#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available.
+#' - `cf.jackknife`: List, containing jackknife samples:
+#'   - `t`: Numeric matrix, jackknifed data sets.
+#'   - `t0`: Numeric vector, copy of `cf0`.
+#'   - `l`: Integer, copy of `boot.l`.
+#' - `jackknife.se`: Numeric vector, standard error over jackknife samples.
+#' - `nrObs`: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+#' - `Time`: Integer, full time extent.
+#' - `T`: Integer, full time extent.
+#' - `nrStypes`: Integer, number of smearing types.
+#' - `symmetrised`: Logical, indicating whether the correlation function has been symmetrized.
+#'
+#' The \link{gevp2cf} function might add the following fields:
+#'
+#' - `weighted`: TODO
+#' - `weight.cosh`: TODO
+#' - `mass1`: TODO
+#' - `mass2`: TODO
+#'
+#' The \link{subtract.excitedstates} function adds the following fields:
+#'
+#' - `subtracted.values`: Numeric matrix, TODO
+#' - `subtracted.ii`: Integer vector, TODO
 cf <- function() {
   cf <- list(cf=NULL)
   attr(cf, "class") <- c("cf", class(cf))
