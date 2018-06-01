@@ -1,4 +1,17 @@
-## will first multiply with 
+#' Remove temporal states
+#'
+#' Performs weighting and shifting in the rest and moving frames.
+#'
+#' @param cf Object of type `cf`, two-to-two particle correlation function which shall be weighted and shifted. It must be a correlation function in the frame \eqn{p_1 + p_2}.
+#' @param single.cf1,single.cf2 Object of type `effectivemassfit` or `matrixfit` which contains the one particle mass in the rest frame.
+#'
+#' If `single.cf2` is missing, then the mass given as `single.cf1` is used as well. This is sensibly done when one scatters identical particles. In case `single.cf1` is missing, no weighting is performed. Instead it is assumed that the user only wants to have a simple shifting. Then this function just calls `takeTimeDiff.cf`.
+#' @param p1,p2 Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.
+#' @param L Integer, spatial extent of the lattice.
+#' @param lat.disp Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.
+#' @param weight.cosh Logical, whether to use some cosh formula which might work better or something.
+#'
+#' @export
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
