@@ -179,9 +179,8 @@ gevp2cf <- function(gevp, id=1) {
 
   # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
-  cf.tsboot <- list()
-  cf.tsboot$t <- gevp$gevp.tsboot[,tt]
-  cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
+  cf.tsboot <- list(t = gevp$gevp.tsboot[,tt],
+                    t0 = gevp$res.gevp$evalues[,id])
 
   cf <- cf_boot(cf,
                 cf0 = gevp$res.gevp$evalues[,id],
@@ -191,15 +190,19 @@ gevp2cf <- function(gevp, id=1) {
                 sim = gevp$cf$sim,
                 cf.tsboot = cf.tsboot)
 
-  # Add some other stuff
-  cf$id <- id
-  cf$N <- length(gevp$cf$cf[,1])
-  if(any(names(gevp$cf) == "weighted")) {
-    cf$weighted <- gevp$cf$weighted
-    cf$weight.cosh <- gevp$cf$weight.cosh
-    cf$mass1 <- gevp$cf$mass1
-    cf$mass2 <- gevp$cf$mass2
+  cf <- cf_principal_correlator(cf,
+                                id = id)
+
+  if (inherits(gevp$cf, 'cf_weighted')) {
+    cf <- cf_weighted(cf,
+                      weighted = gevp$cf$weighted,
+                      weight.cosh = gevp$cf$weight.cosh,
+                      mass1 = gevp$cf$mass1,
+                      mass2 = gevp$cf$mass2)
   }
+
+  # Add some other stuff
+  cf$N <- length(gevp$cf$cf[,1])
 
   return (invisible(cf))
 }

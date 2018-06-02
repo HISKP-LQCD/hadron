@@ -42,6 +42,10 @@
 #'
 #' With the `cf_principal_correlator` mixin, it also must have the following fields:
 #'
+#' - `id`: Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
+#'
+#' With the `cf_weighted` mixin, it also must have the following fields:
+#'
 #' - `weighted`: TODO
 #' - `weight.cosh`: TODO
 #' - `mass1`: TODO
@@ -95,6 +99,23 @@ cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
   cf$jackknife.samples <- TRUE
 
   class(cf) <- append(class(cf), 'cf_jackknife')
+  return (cf)
+}
+
+cf_principal_correlator <- function (cf, id) {
+  cf$id <- id
+
+  class(cf) <- append(class(cf), 'cf_principal_correlators')
+  return (cf)
+}
+
+cf_weighted <- function (cf, weighted, weight.cosh, mass1, mass2) {
+  cf$weighted <- weighted,
+  cf$weight.cosh <- weight.cosh
+  cf$mass1 <- mass1
+  cf$mass2 <- mass2
+
+  class(cf) <- append(class(cf), 'cf_weighted')
   return (cf)
 }
 
