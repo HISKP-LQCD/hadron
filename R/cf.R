@@ -21,7 +21,7 @@
 #' With the `cf_boot` mixin, it also must have the following fields:
 #'
 #' - `cf0`: Numeric vector, mean value of original measurements.
-#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available.
+#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
 #' - `boot.R`: Integer, number of bootstrap samples used.
 #' - `boot.l`: Integer, block length in the time-series bootstrap process.
 #' - `seed`: Integer, random number generator seed used in bootstrap.
@@ -33,7 +33,7 @@
 #'
 #' - `cf0`: _See above_.
 #' - `boot.l`: _See above_.
-#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available.
+#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_jackknife')`.
 #' - `cf.jackknife`: List, containing jackknife samples:
 #'   - `t`: Numeric matrix, jackknifed data sets.
 #'   - `t0`: Numeric vector, copy of `cf0`.
@@ -60,15 +60,41 @@
 #' - `nrSamples`: TODO
 #' - `conf.index`: TODO
 #' - `obs`: TODO
+#' - `N`: Integer, number of measurements.
 #'
 #' @param ... Set arbitrary fields which are not explicit arguments.
 #' 
 #' @export
-cf <- function (cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE, ...) {
-  cf <- list(cf0 = cf0, nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrised)
+cf <- function (nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE, ...) {
+  cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrised)
   args <- list(...)
   cf <- modifyList(cf, args)
   class(cf) <- append(class(cf), 'cf')
+  return (cf)
+}
+
+cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
+  cf$cf0 <- cf0
+  cf$boot.R <- boot.R
+  cf$boot.l <- boot.l
+  cf$seed <- seed
+  cf$sim <- sim
+  cf$cf.tsboot <- cf.tsboot
+  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
+  cf$boot.samples <- TRUE
+
+  class(cf) <- append(class(cf), 'cf_boot')
+  return (cf)
+}
+
+cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
+  cf$cf0 <- cf0,
+  cf$boot.l <- boot.l
+  cf$cf.jackknife <- cf.jackknife
+  cf$jackknife.se <- jackknife.se
+  cf$jackknife.samples <- TRUE
+
+  class(cf) <- append(class(cf), 'cf_jackknife')
   return (cf)
 }
 
@@ -88,38 +114,38 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(inherits(cf, 'cf_orig'))
 
   boot.l <- ceiling(boot.l)
-  if(boot.l < 1 || boot.l > nrow(cf$cf)) {
-    stop("'boot.l' must be larger than 0 and smaller than the length of the time series! Aborting...\n")
-  }
   boot.R <- floor(boot.R)
-  if(boot.R < 1) {
-    stop("'boot.R' must be positive!")
-  }
+
+  stopifnot(boot.l >= 1)
+  stopifnot(boot.l <= nrow(cf$cf))
+  stopifnot(boot.R >= 1)
+
   ## save random number generator state
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
     temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else temp <- NULL
+  else
+    temp <- NULL
 
-  cf$boot.samples <- TRUE
-  cf$boot.R <- boot.R
-  cf$boot.l <- boot.l
-  cf$seed <- seed
-  cf$sim <- sim
-  cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   ## we set the seed for reproducability and correlation
   set.seed(seed)
   ## now we bootstrap the correlators
-  cf$cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+  cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                          R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
-  ## the bootstrap error
-  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
+
+  cf <- cf_boot(cf,
+                cf0 = apply(cf$cf, MARGIN=2L, FUN=mean),
+                boot.R = boot.R,
+                boot.l = boot.l,
+                seed = seed,
+                sim = sim,
+                cf.tsboot = cf.tsboot,
+                tsboot.se = tsboot.se)
+
   ## restore random number generator state
   if (!is.null(temp))
     assign(".Random.seed", temp, envir = .GlobalEnv)
   else rm(.Random.seed, pos = 1)
 
-  class(cf) <- append(class(cf), 'cf_boot')
-  
   return(invisible(cf))
 }
 
@@ -127,23 +153,19 @@ jackknife.cf <- function(cf, boot.l=2) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
 
-  if(boot.l < 1) {
-    stop("boot.l must be larger than 0! Aborting...\n")
-  }
+  stopifnot(boot.l >= 1)
   boot.l <- ceiling(boot.l)
-  cf$jackknife.samples <- TRUE
-  cf$boot.l <- boot.l
+
   ## blocking with fixed block length, but overlapping blocks
   ## number of observations
   n <- nrow(cf$cf)
   ## number of overlapping blocks
   N <- n-boot.l+1
-  cf$cf0 <- apply(cf$cf, MARGIN=2L, FUN=mean)
   
-  cf$cf.jackknife <- list()
-  cf$cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
-  cf$cf.jackknife$t0 <- cf$cf0
-  cf$cf.jackknife$l <- boot.l
+  cf.jackknife <- list()
+  cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
+  cf.jackknife$t0 <- cf$cf0
+  cf.jackknife$l <- boot.l
   for (i in 1:N) {
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
@@ -152,11 +174,17 @@ jackknife.cf <- function(cf, boot.l=2) {
   }
   ## the jackknife error
   tmp <- apply(cf$cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
-  cf$jackknife.se <- apply(tmp, MARGIN=1L,
+  jackknife.se <- apply(tmp, MARGIN=1L,
                            FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
-  class(cf) <- append(class(cf), 'cf_jackknife')
-  return(invisible(cf))
+
+  cf <- cf_jackknife(cf,
+                     cf0 = apply(cf$cf, MARGIN = 2, FUN = mean),
+                     boot.l = boot.l,
+                     cf.jackknife = cf.jackknife,
+                     jackknife.se = jackknife.se)
+
+  return (invisible(cf))
 }
 
 # Gamma method analysis on all time-slices in a 'cf' object
