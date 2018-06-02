@@ -140,24 +140,18 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 }
 
 
-bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
-                           element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE) {
-  ## number of measurements
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
-  }
-  if(!any(c("values", "vectors", "det") == sort.type)) {
-    stop("possible values for sort.ype are values or vectors. Aborting\n")
-  }
+bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
+                           sort.type = "vectors", sort.t0 = TRUE) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(sort.type %in% c("values", "vectors", "det"))
+
   N <- length(cf$cf[,1])
-  if(!cf$boot.samples) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-  }
+  seed <- cf$seed
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
+  matrix.size <- as.integer(round(sqrt(length(element.order))))
   res <- gevp(cf$cf0, Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
@@ -174,12 +168,9 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
 }
 
 gevp2cf <- function(gevp, id=1) {
-  if(!inherits(gevp, "gevp")) {
-    stop("gevp2cf requires an element of class gevp as input. Aborting...\n")
-  }
-  if(id > gevp$matrix.size || id < 1) {
-    stop("gevp2cf: id must be <= matrix.size and > 0. Aborting...\n")
-  }
+  stopifnot(inherits(gevp, "gevp"))
+  stopifnot(!(id > gevp$matrix.size || id < 1))
+
   cf <- list()
   cf$N <- length(gevp$cf$cf[,1])
   cf$cf0 <- gevp$res.gevp$evalues[,id]
@@ -203,7 +194,9 @@ gevp2cf <- function(gevp, id=1) {
     cf$mass1 <- gevp$cf$mass1
     cf$mass2 <- gevp$cf$mass2
   }
-  attr(cf, "class") <- c("cf", class(cf))
+  cf$symmetrised <- gevp$cf$symmetrised
+
+  class(cf) <- append(class(cf), 'cf', 'cf_boot')
   return(invisible(cf))
 }
 
