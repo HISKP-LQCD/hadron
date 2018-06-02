@@ -32,6 +32,8 @@ And last but not least, these are the fields that are used somewhere in the libr
 \item \code{conf.index}: TODO
 \item \code{obs}: TODO
 \item \code{N}: Integer, number of measurements.
+\item \code{blockind}: TODO
+\item \code{jack.boot.se}: TODO
 }
 }
 \seealso{

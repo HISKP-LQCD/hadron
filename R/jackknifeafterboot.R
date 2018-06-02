@@ -29,16 +29,10 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
   return(jack.boot.se)
 }
 
-jab.cf <- function(cf, m=1) {
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
-  }
-  if(!cf$boot.sample) {
-    stop("cf must be bootstrapped already using bootstrap.cf! Aborting!\n")
-  }
-  if(cf$cf.tsboot$sim != "fixed") {
-    stop("JAB only implemented for 'sim=fixed' at the moment")
-  }
+jab.cf <- function(cf, m = 1) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(cf$cf.tsboot$sim == "fixed")
 
   ## save random number generator state
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
