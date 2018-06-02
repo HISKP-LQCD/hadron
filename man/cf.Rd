@@ -4,11 +4,16 @@
 \alias{cf}
 \title{Correlation function container}
 \usage{
-cf(cf0 = NA, nrObs = 1, Time = NA, nrStypes = 0, symmetrized = FALSE,
-  ...)
+cf(nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE)
 }
 \arguments{
-\item{...}{Set arbitrary fields which are not explicit arguments.}
+\item{nrObs}{Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.}
+
+\item{Time}{Integer, full time extent.}
+
+\item{nrStypes}{Integer, number of smearing types.}
+
+\item{symmetrised}{Logical, indicating whether the correlation function has been symmetrized.}
 }
 \description{
 This function \code{cf()} creates containers for correlation functions
@@ -18,55 +23,20 @@ simulations. Arithmetic operations are defined for this class in
 several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 }
 \details{
-This class \code{cf} \emph{must} contain the following fields:
+And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
 \itemize{
-\item \code{cf0}: Numeric vector, mean value of original measurements.
-\item \code{nrObs}: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
-\item \code{Time}: Integer, full time extent.
-\item \code{nrStypes}: Integer, number of smearing types.
-\item \code{symmetrised}: Logical, indicating whether the correlation function has been symmetrized.
+\item \code{smeared}: Logical, whether the correlation function has smeared data.
+\item \code{scf}: Like \code{cf}, but with the smeared data.
+\item \code{iscf}: Like \code{icf}, but with the smeared data.
+\item \code{nrSamples}: TODO
+\item \code{conf.index}: TODO
+\item \code{obs}: TODO
+\item \code{N}: Integer, number of measurements.
 }
-
-With the \code{cf_orig} mixin, it also must have the following fields:
-\itemize{
-\item \code{cf}: Numeric matrix, original data for all observables and measurements.
-\item \code{icf}: Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations.
 }
-
-With the \code{cf_boot} mixin, it also must have the following fields:
-\itemize{
-\item \code{boot.samples}: Logical, indicating whether there are bootstrap samples available.
-\item \code{boot.R}: Integer, number of bootstrap samples used.
-\item \code{boot.l}: Integer, block length in the time-series bootstrap process.
-\item \code{seed}: Integer, random number generator seed used in bootstrap.
-\item \code{sim}: Character, \code{sim} argument of \link{boot::tsboot}.
-\item \code{cf.tsboot}: List, result from the \link{boot::tsboot} function.
-\item \code{tsboot.se}: Numeric vector, standard deviation over bootstrap samples.
-}
-
-With the \code{cf_jackknife} mixin, it also must have the following fields:
-\itemize{
-\item \code{jackknife.samples}: Logical, indicating whether there are jackknife samples available.
-\item \code{cf.jackknife}: List, containing jackknife samples:
-\itemize{
-\item \code{t}: Numeric matrix, jackknifed data sets.
-\item \code{t0}: Numeric vector, copy of \code{cf0}.
-\item \code{l}: Integer, copy of \code{boot.l}.
-}
-\item \code{jackknife.se}: Numeric vector, standard error over jackknife samples.
-}
-
-With the \code{cf_principal_correlator} mixin, it also must have the following fields:
-\itemize{
-\item \code{weighted}: TODO
-\item \code{weight.cosh}: TODO
-\item \code{mass1}: TODO
-\item \code{mass2}: TODO
-}
-
-With the \code{cf_subtracted} mixin, it also must have the following fields:
-\itemize{
-\item \code{subtracted.values}: Numeric matrix, TODO
-\item \code{subtracted.ii}: Integer vector, TODO
-}
+\seealso{
+Other cf constructors: \code{\link{cf_boot}},
+  \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
+  \code{\link{cf_principal_correlator}},
+  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}}
 }

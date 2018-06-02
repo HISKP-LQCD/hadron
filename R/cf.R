@@ -6,55 +6,12 @@
 #' simulations. Arithmetic operations are defined for this class in
 #' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 #'
-#' This class `cf` _must_ contain the following fields:
+#' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+#' @param Time Integer, full time extent.
+#' @param nrStypes Integer, number of smearing types.
+#' @param symmetrised Logical, indicating whether the correlation function has been symmetrized.
 #'
-#' - `nrObs`: Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
-#' - `Time`: Integer, full time extent.
-#' - `nrStypes`: Integer, number of smearing types.
-#' - `symmetrised`: Logical, indicating whether the correlation function has been symmetrized.
-#'
-#' With the `cf_orig` mixin, it also must have the following fields:
-#'
-#' - `cf`: Numeric matrix, original data for all observables and measurements.
-#' - `icf`: Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations.
-#'
-#' With the `cf_boot` mixin, it also must have the following fields:
-#'
-#' - `cf0`: Numeric vector, mean value of original measurements.
-#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
-#' - `boot.R`: Integer, number of bootstrap samples used.
-#' - `boot.l`: Integer, block length in the time-series bootstrap process.
-#' - `seed`: Integer, random number generator seed used in bootstrap.
-#' - `sim`: Character, `sim` argument of \link{boot::tsboot}.
-#' - `cf.tsboot`: List, result from the \link{boot::tsboot} function.
-#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
-#'
-#' With the `cf_jackknife` mixin, it also must have the following fields:
-#'
-#' - `cf0`: _See above_.
-#' - `boot.l`: _See above_.
-#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_jackknife')`.
-#' - `cf.jackknife`: List, containing jackknife samples:
-#'   - `t`: Numeric matrix, jackknifed data sets.
-#'   - `t0`: Numeric vector, copy of `cf0`.
-#'   - `l`: Integer, copy of `boot.l`.
-#' - `jackknife.se`: Numeric vector, standard error over jackknife samples.
-#'
-#' With the `cf_principal_correlator` mixin, it also must have the following fields:
-#'
-#' - `id`: Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
-#'
-#' With the `cf_weighted` mixin, it also must have the following fields:
-#'
-#' - `weighted`: TODO
-#' - `weight.cosh`: TODO
-#' - `mass1`: TODO
-#' - `mass2`: TODO
-#'
-#' With the `cf_subtracted` mixin, it also must have the following fields:
-#'
-#' - `subtracted.values`: Numeric matrix, TODO
-#' - `subtracted.ii`: Integer vector, TODO
+#' @details
 #'
 #' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
 #'
@@ -66,17 +23,37 @@
 #' - `obs`: TODO
 #' - `N`: Integer, number of measurements.
 #'
-#' @param ... Set arbitrary fields which are not explicit arguments.
+#' @family cf constructors
 #' 
 #' @export
-cf <- function (nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE, ...) {
-  cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrised)
-  args <- list(...)
-  cf <- modifyList(cf, args)
+cf <- function (nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE) {
+  cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes,
+             symmetrised = symmetrised)
+
   class(cf) <- append(class(cf), 'cf')
   return (cf)
 }
 
+#' Bootstrapped CF mixin constructor
+#'
+#' @param cf `cf` object to extend.
+#' @param cf0 Numeric vector, mean value of original measurements.
+#' @param boot.R Integer, number of bootstrap samples used.
+#' @param boot.l Integer, block length in the time-series bootstrap process.
+#' @param seed Integer, random number generator seed used in bootstrap.
+#' @param sim Character, `sim` argument of \link{boot::tsboot}.
+#' @param cf.tsboot List, result from the \link{boot::tsboot} function.
+#'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
+#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
+#'
+#' @family cf constructors
+#' 
+#' @export
 cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
   cf$cf0 <- cf0
   cf$boot.R <- boot.R
@@ -91,8 +68,30 @@ cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
   return (cf)
 }
 
+#' Jackknifed CF mixin constructor
+#'
+#' With the `cf_jackknife` mixin, it also must have the following fields:
+#'
+#' @param cf `cf` object to extend.
+#' @param cf0 _See above_.
+#' @param boot.l _See above_.
+#' @param cf.jackknife List, containing jackknife samples:
+#'   - `t`: Numeric matrix, jackknifed data sets.
+#'   - `t0`: Numeric vector, copy of `cf0`.
+#'   - `l`: Integer, copy of `boot.l`.
+#' @param jackknife.se Numeric vector, standard error over jackknife samples.
+#'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_jackknife')`.
+#'
+#' @family cf constructors
+#' 
+#' @export
 cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
-  cf$cf0 <- cf0,
+  cf$cf0 <- cf0
   cf$boot.l <- boot.l
   cf$cf.jackknife <- cf.jackknife
   cf$jackknife.se <- jackknife.se
@@ -102,6 +101,38 @@ cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
   return (cf)
 }
 
+#' Original data CF mixin constructor
+#'
+#' @param .cf `cf` object to extend. Named with a leading period just to distinguish it from the member also named `cf`.
+#' @param cf Numeric matrix, original data for all observables and measurements.
+#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
+#'
+#' @family cf constructors
+#' 
+#' @export
+cf_orig <- function (.cf, cf, icf = NULL) {
+  .cf$cf <- cf
+
+  if (is.null(icf)) {
+    .cf$icf <- cf
+    .cf$icf[, ] <- NA
+  }
+  else {
+    .cf$icf <- icf
+  }
+
+  class(cf) <- append(class(cf), 'cf_orig')
+  return (cf)
+}
+
+#' Principal correlator CF mixin constructor
+#'
+#' @param cf `cf` object to extend.
+#' @param id Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
+#'
+#' @family cf constructors
+#' 
+#' @export
 cf_principal_correlator <- function (cf, id) {
   cf$id <- id
 
@@ -109,8 +140,36 @@ cf_principal_correlator <- function (cf, id) {
   return (cf)
 }
 
+#' Subtracted CF mixin constructor
+#'
+#' @param cf `cf` object to extend.
+#' @param subtracted.values Numeric matrix, TODO
+#' @param subtracted.ii Integer vector, TODO
+#'
+#' @family cf constructors
+#' 
+#' @export
+cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
+  cf$subtracted.value <- subtracted.values
+  cf$subtracted.ii <- subtracted.ii
+
+  class(cf) <- append(class(cf), 'cf_subtracted')
+  return (cf)
+}
+
+#' Weighted CF mixin constructor
+#'
+#' @param cf `cf` object to extend.
+#' @param weighted TODO
+#' @param weight.cosh TODO
+#' @param mass1 TODO
+#' @param mass2 TODO
+#'
+#' @family cf constructors
+#' 
+#' @export
 cf_weighted <- function (cf, weighted, weight.cosh, mass1, mass2) {
-  cf$weighted <- weighted,
+  cf$weighted <- weighted
   cf$weight.cosh <- weight.cosh
   cf$mass1 <- mass1
   cf$mass2 <- mass2
