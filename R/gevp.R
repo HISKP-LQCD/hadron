@@ -171,33 +171,37 @@ gevp2cf <- function(gevp, id=1) {
   stopifnot(inherits(gevp, "gevp"))
   stopifnot(!(id > gevp$matrix.size || id < 1))
 
-  cf <- list()
-  cf$N <- length(gevp$cf$cf[,1])
-  cf$cf0 <- gevp$res.gevp$evalues[,id]
-  cf$boot.samples <- TRUE
-  cf$boot.R <- gevp$boot.R
-  cf$boot.l <- gevp$boot.l
-  cf$seed <- gevp$seed
-  cf$nrStypes <- 1
-  cf$nrObs <- 1
-  cf$Time <- gevp$cf$Time
+  # Base `cf` properties.
+  cf <- cf(nrObs = 1,
+           Time = gevp$cf$Time,
+           nrStypes = 1,
+           symmetrised = gevp$cf$symmetrised)
+
+  # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
-  cf$cf.tsboot <- list()
-  cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
-  cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
-  ## the bootstrap error
-  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
+  cf.tsboot <- list()
+  cf.tsboot$t <- gevp$gevp.tsboot[,tt]
+  cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
+
+  cf <- cf_boot(cf,
+                cf0 = gevp$res.gevp$evalues[,id],
+                boot.R = gevp$boot.R,
+                boot.l = gevp$boot.l,
+                seed = gevp$seed,
+                sim = gevp$cf$sim,
+                cf.tsboot = cf.tsboot)
+
+  # Add some other stuff
   cf$id <- id
+  cf$N <- length(gevp$cf$cf[,1])
   if(any(names(gevp$cf) == "weighted")) {
     cf$weighted <- gevp$cf$weighted
     cf$weight.cosh <- gevp$cf$weight.cosh
     cf$mass1 <- gevp$cf$mass1
     cf$mass2 <- gevp$cf$mass2
   }
-  cf$symmetrised <- gevp$cf$symmetrised
 
-  class(cf) <- append(class(cf), 'cf', 'cf_boot')
-  return(invisible(cf))
+  return (invisible(cf))
 }
 
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
