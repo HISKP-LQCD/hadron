@@ -1,14 +1,9 @@
-fit.plateau2cf <- function(cf, t1, t2,
-                           boot.samples=FALSE, boot.R=400, boot.l=2,
-                           useCov=FALSE) {
+fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(!cf$boot.samples) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l)
-  }
-  else {
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-  }
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
   ## fit interval
   ii <- c((t1+1):(t2+1))
   ## error weights
