@@ -22,6 +22,8 @@
 #' - `conf.index`: TODO
 #' - `obs`: TODO
 #' - `N`: Integer, number of measurements.
+#' - `blockind`: TODO
+#' - `jack.boot.se`: TODO
 #'
 #' @family cf constructors
 #' 
