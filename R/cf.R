@@ -360,51 +360,46 @@ is.cf <- function(x){
   inherits(x, "cf")
 }
 
-## to concatenate objects of type cf
+#' Concatenate correlation function objects
+#'
+#' @param ... One or multiple objects of type `cf_orig`.
 c.cf <- function(...) {
-  #fcall <- match.call(expand.dots=TRUE)
-  #fnames <- names(fcall)
-  ## first name in fnames is empty/function name
   fcall <- list(...)
+
+  # In case there is only one element, we do not need to do anything.
   if(length(fcall) == 1) {
     return(eval(fcall[[1]]))
   }
 
-  k <- -1
-  for(i in 1:length(fcall)) {
-    if(!is.null(fcall[[i]]$cf)) {
-      k <- i
-      break
-    }
-  }
-  if(k == -1) return(eval(fcall[[1]]))
-  cf <- fcall[[k]]
+  # All arguments must be of type `cf` and `cf_orig` since we want to work with
+  # the actual data.
+  stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf'))))
+  stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf_orig'))))
+
+  cf <- fcall[[1]]
   Time <- cf$Time
   cf$nrObs <- 0
   cf$sTypes <- 0
   N <- dim(cf$cf)[1]
-  for(i in k:length(fcall)) {
-    if(!is.null(fcall[[i]]$cf)) {
-      if(fcall[[i]]$Time != Time) {
-        stop("Times must agree for different objects of type cf\n Aborting\n")
-      }
-      if(dim(fcall[[i]]$cf)[1] != N) {
-        stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
-      }
-      cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
-      cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
+  for (i in 1:length(fcall)) {
+    if (fcall[[i]]$Time != Time) {
+      stop("Times must agree for different objects of type cf\n Aborting\n")
+    }
+    if (dim(fcall[[i]]$cf)[1] != N) {
+      stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
+    }
+    cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
+    cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
+  }
+  if (1 < length(fcall)) {
+    for (i in 2:length(fcall)) {
+      cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
+      cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
     }
   }
-  if(k < length(fcall)) {
-    for(i in (k+1):length(fcall)) {
-      if(!is.null(fcall[[i]]$cf)) {
-        cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
-        cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
-      }
-    }
-  }
-  cf$boot.samples <- FALSE
-  return(invisible(cf))
+  cf <- invalidate.samples.cf(cf)
+
+  return (invisible(cf))
 }
 
 plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
