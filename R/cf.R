@@ -191,9 +191,10 @@ addConfIndex2cf <- function(cf, conf.index) {
 }
 
 addStat.cf <- function(cf1, cf2) {
-  stopifnot(all(c('cf', 'cf_orig') %in% class(cf1)))
-  stopifnot(all(c('cf', 'cf_orig') %in% class(cf2)))
-
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
   stopifnot(cf1$nrObs == cf2$nrObs )
@@ -213,7 +214,8 @@ addStat.cf <- function(cf1, cf2) {
 ## nrStypes accordingly
 ## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
 avg.ls.cf <- function(cf, cols = c(2, 3)) {
-  stopifnot(c('cf', 'cf_orig') %in% class(cf)
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(cf$nrStypes >= 2)
 
   timeslices <- cf$Time/2+1
@@ -233,7 +235,8 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
 # with weights 0.25, 0.5 and 0.25
 # it then invalidates the boundary timeslices (for all smearing types and observables)
 avg.cbt.cf <- function(cf){
-  stopifnot(c('cf', 'cf_orig') %in% class(cf))
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
 
   # copy for shifting
   cf2 <- cf
@@ -264,8 +267,10 @@ avg.cbt.cf <- function(cf){
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
-  stopifnot(c('cf', 'cf_orig') %in% class(cf1))
-  stopifnot(c('cf', 'cf_orig') %in% class(cf2))
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
 
@@ -276,48 +281,61 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 '+.cf' <- function(cf1, cf2) {
-  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
-    cf <- cf1
-    cf$cf <- cf1$cf + cf2$cf
-    cf <- invalidate.samples.cf(cf)
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_orig'))
+  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
+  stopifnot(cf1$Time == cf2$Time)
 
-    return(cf)
-  }
+  cf <- cf1
+  cf$cf <- cf1$cf + cf2$cf
+  cf <- invalidate.samples.cf(cf)
+
+  return(cf)
 }
 
 '-.cf' <- function(cf1, cf2) {
-  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
-    cf <- cf1
-    cf$cf <- cf1$cf - cf2$cf
-    cf <- invalidate.samples.cf(cf)
-    return(cf)
-  }
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_orig'))
+  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
+  stopifnot(cf1$Time == cf2$Time)
+
+  cf <- cf1
+  cf$cf <- cf1$cf - cf2$cf
+  cf <- invalidate.samples.cf(cf)
+  return(cf)
 }
 
 '/.cf' <- function(cf1, cf2) {
-  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
-    cf <- cf1
-    cf$cf <- cf1$cf / cf2$cf
-    cf <- invalidate.samples.cf(cf)
-    return(cf)
-  }
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_orig'))
+  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
+  stopifnot(cf1$Time == cf2$Time)
+
+  cf <- cf1
+  cf$cf <- cf1$cf / cf2$cf
+  cf <- invalidate.samples.cf(cf)
+  return (cf)
 }
 
 mul.cf <- function(cf, a=1.) {
-  if(any(class(cf) == "cf") && is.numeric(a)) {
-    cf$cf <- a*cf$cf
-    cf <- invalidate.samples.cf(cf)
-    return(cf)
-  }
-  else {
-    stop("Wrong classes for input objects, must be cf and numeric. Aborting...!\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(is.numeric(a))
+
+  cf$cf <- a*cf$cf
+  cf <- invalidate.samples.cf(cf)
+  return (cf)
 }
 
 extractSingleCor.cf <- function(cf, id=c(1)) {
-  if(!inherits(cf, "cf")) {
-    stop("extractSingleCor.cf: cf must be of class 'cf'. Aborting...\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
   
   ii <- c()
   for(i in c(1:length(id))) {
@@ -325,7 +343,8 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   }
 
   cf$cf <- cf$cf[,ii]
-  if(cf$boot.samples) {
+
+  if (inherits(cf, 'cf_boot')) {
     cf$cf0 <- cf$cf0[ii]
     cf$tsboot.se <- cf$tsboot.se[ii]
     cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
