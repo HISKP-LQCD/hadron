@@ -5,6 +5,9 @@ computeDisc <- function(cf, cf2,
                         subtract.equal = TRUE,
                         use.samples, use.samples2,
                         type="cosh", verbose=FALSE) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
   T <- cf$Time
   ## extract the corresponding part of the correlation matrix
   tcf <- cf$cf
