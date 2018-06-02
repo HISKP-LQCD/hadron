@@ -334,13 +334,7 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   }
   cf$nrObs <- 1
   cf$nsStypes <- 1
-  return(cf)
-}
-
-
-as.cf <- function(x){
-  if(!inherits(x, "cf")) class(x) <- c("cf", class(x))
-  x
+  return (cf)
 }
 
 is.cf <- function(x){
