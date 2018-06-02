@@ -71,34 +71,10 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor = 1.) {
+bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
-  }
-
-  if(missing(boot.R)){
-    if(cf$boot.samples){
-      boot.R <- cf$boot.R
-    } else {
-      boot.R <- 400
-    }
-  }
-
-  if(missing(boot.l)){
-    if(cf$boot.samples){
-      boot.l <- cf$boot.l
-    } else {
-      boot.l <- 20
-    }
-  }
-
-  if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-  }
   ## number of measurements
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
@@ -113,10 +89,8 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
-  if( "symmetrised" %in% names(cf) ) {
-    if(!cf$symmetrised){
-      tmax <- cf$Time-1
-    }
+  if(!cf$symmetrised){
+    tmax <- cf$Time-1
   }
   nrObs <- floor(Nt/(tmax+1))
   ## we run on the original data first
