@@ -455,8 +455,9 @@ shift.cf <- function(cf, places) {
   return(invisible(cf))
 }
 
-# when a correlation function is modified, any resampling should be
-# invalidated
+#' Invalidate samples
+#'
+#' When a correlation function is modified, any resampling should be invalidated. We could instead also choose to properly work with the samples, but most computations are done with the original data anyway.
 invalidate.samples.cf <- function(cf){
   cf$boot.l <- NULL
   cf$boot.R <- NULL
