@@ -52,6 +52,15 @@
 #' - `subtracted.values`: Numeric matrix, TODO
 #' - `subtracted.ii`: Integer vector, TODO
 #'
+#' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
+#'
+#' - `smeared`: Logical, whether the correlation function has smeared data.
+#' - `scf`: Like `cf`, but with the smeared data.
+#' - `iscf`: Like `icf`, but with the smeared data.
+#' - `nrSamples`: TODO
+#' - `conf.index`: TODO
+#' - `obs`: TODO
+#'
 #' @param ... Set arbitrary fields which are not explicit arguments.
 #' 
 #' @export
