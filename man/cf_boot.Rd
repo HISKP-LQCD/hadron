@@ -4,12 +4,10 @@
 \alias{cf_boot}
 \title{Bootstrapped CF mixin constructor}
 \usage{
-cf_boot(cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot)
+cf_boot(cf, boot.R, boot.l, seed, sim, cf.tsboot)
 }
 \arguments{
 \item{cf}{\code{cf} object to extend.}
-
-\item{cf0}{Numeric vector, mean value of original measurements.}
 
 \item{boot.R}{Integer, number of bootstrap samples used.}
 
@@ -27,6 +25,7 @@ Bootstrapped CF mixin constructor
 \details{
 The following fields will also be made available:
 \itemize{
+\item \code{cf0}: Numeric vector, mean value of original measurements, convenience copy of \code{cf.tsboot$t0}.
 \item \code{tsboot.se}: Numeric vector, standard deviation over bootstrap samples.
 \item \code{boot.samples}: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with \code{inherits(cf, 'cf_boot')}.
 }
@@ -35,6 +34,6 @@ The following fields will also be made available:
 Other cf constructors: \code{\link{cf_jackknife}},
   \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
-  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
-  \code{\link{cf}}
+  \code{\link{cf_smeared}}, \code{\link{cf_subtracted}},
+  \code{\link{cf_weighted}}, \code{\link{cf}}
 }

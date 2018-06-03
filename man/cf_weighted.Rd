@@ -4,12 +4,12 @@
 \alias{cf_weighted}
 \title{Weighted CF mixin constructor}
 \usage{
-cf_weighted(cf, weighted, weight.cosh, mass1, mass2)
+cf_weighted(cf, weight.factor, weight.cosh, mass1, mass2)
 }
 \arguments{
 \item{cf}{\code{cf} object to extend.}
 
-\item{weighted}{TODO}
+\item{weight.factor}{TODO}
 
 \item{weight.cosh}{TODO}
 
@@ -20,9 +20,16 @@ cf_weighted(cf, weighted, weight.cosh, mass1, mass2)
 \description{
 Weighted CF mixin constructor
 }
+\details{
+The following fields will also be made available:
+\itemize{
+\item \code{weighted}: Logical, indicating whether the correlation function has been weighted. This is deprecated and instead the presence of this should be queried with \code{inherits(cf, 'cf_weighted')}.
+}
+}
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
-  \code{\link{cf_subtracted}}, \code{\link{cf}}
+  \code{\link{cf_smeared}}, \code{\link{cf_subtracted}},
+  \code{\link{cf}}
 }

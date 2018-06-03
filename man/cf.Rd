@@ -4,7 +4,7 @@
 \alias{cf}
 \title{Correlation function container}
 \usage{
-cf(nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE)
+cf(nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE)
 }
 \arguments{
 \item{nrObs}{Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.}
@@ -25,12 +25,7 @@ several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 \details{
 And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
 \itemize{
-\item \code{smeared}: Logical, whether the correlation function has smeared data.
-\item \code{scf}: Like \code{cf}, but with the smeared data.
-\item \code{iscf}: Like \code{icf}, but with the smeared data.
-\item \code{nrSamples}: TODO
 \item \code{conf.index}: TODO
-\item \code{obs}: TODO
 \item \code{N}: Integer, number of measurements.
 \item \code{blockind}: TODO
 \item \code{jack.boot.se}: TODO
@@ -40,5 +35,6 @@ And last but not least, these are the fields that are used somewhere in the libr
 Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
-  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}}
+  \code{\link{cf_smeared}}, \code{\link{cf_subtracted}},
+  \code{\link{cf_weighted}}
 }
