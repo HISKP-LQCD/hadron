@@ -139,6 +139,20 @@ cf_principal_correlator <- function (cf, id) {
   return (cf)
 }
 
+#' Shifted CF mixin constructor
+#'
+#' @param deltat TODO
+#' @param forwardshift Logical, TODO
+#'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `shifted`: Logical, whether the correlation function has been shifted This is deprecated and instead the presence of a shift should be queried with `inherits(cf, 'cf_shifted')`.
+#'
+#' @family cf constructors
+#'
+#' @export
 cf_shifted <- function (cf, deltat, forwardshift) {
   cf$deltat <- deltat
   cf$forwardshift <- forwardshift
