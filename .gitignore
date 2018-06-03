@@ -9,3 +9,4 @@ config.status
 .Rhistory
 functions_with_boot_R.txt
 man/.Rhistory
+docs/
