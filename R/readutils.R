@@ -160,7 +160,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
                    obs = obs)
 
   # TODO: This should be set via a constructor.
-  cf$conf.index <- unique(ldata[,ind.vec[8]]))
+  cf$conf.index <- unique(ldata[,ind.vec[8]])
 
   return (invisible(cf))
 }
