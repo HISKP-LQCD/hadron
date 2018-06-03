@@ -17,19 +17,15 @@
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(missing(cf)) {
-    stop("cf must be provided to removeTemporal.cf at least\n")
-  }
   if(missing(single.cf1)) {
     ## take the differences of C(t+1) and C(t)
     cf <- takeTimeDiff.cf(cf)
     return(invisible(cf))
   }
 
-  if(!cf$boot.samples) {
-    stop("please provide bootstrapped cf to removeTemporal.cf using the same configurations and seed for all!\n")
-  }
   Time <- cf$Time
   if(missing(L)) {
     L <- cf$Time/2
@@ -42,8 +38,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     single.cf2 <- single.cf1
   }
   
-  if(!cf$boot.samples || 
-     cf$boot.R != single.cf1$boot.R || single.cf1$boot.R != single.cf2$boot.R ||
+  if(cf$boot.R != single.cf1$boot.R || single.cf1$boot.R != single.cf2$boot.R ||
      cf$boot.l != single.cf1$boot.l || single.cf1$boot.l != single.cf2$boot.l) {
 ##     cf$seed != single.cf1$seed || single.cf1$seed != single.cf2$seed) {
     stop("please provide equally bootstrapped cfs to removeTemporal.cf using the same configurations and seed for all and the same boot.R and boot.l!\n")
@@ -118,24 +113,34 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
-  cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
   }
-  ## store masses in cf
-  cf$mass1 <- mass1
-  cf$mass2 <- mass2
-  cf$weighted <- TRUE
-  cf$weight.factor <- 1.
-  cf$weight.cosh <- weight.cosh
-  return(invisible(cf))
+
+  # We perform a clean copy of the data now to make sure that all invariants
+  # hold and that no new fields have been added.
+  ret <- cf(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+            symmetrised = cf$symmetrised)
+  ret <- cf_orig(ret,
+                 cf = cf$cf)
+  ret <- cf_boot(cf,
+                 boot.R = cf$boot.R,
+                 boot.l = cf$boot.l,
+                 seed = cf$seed,
+                 sim = cf$sim,
+                 cf.tsboot = cf$cf.tsboot)
+  ret <- cf_weighted(cf,
+                     weight.factor = 1.0,
+                     weight.cosh = weight.cosh,
+                     mass1 = mass1,
+                     mass2 = mass2)
+
+  return (invisible(ret))
 }
 
 takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
-  if(missing(cf)) {
-    stop("takeTimeDiff: cf must be provided! Aborting...\n")
-  }
+  stopifnot(inherits(cf, 'cf'))
 
   ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
   ## and units of the time extent if it has not

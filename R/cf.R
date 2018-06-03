@@ -34,7 +34,6 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #' Bootstrapped CF mixin constructor
 #'
 #' @param cf `cf` object to extend.
-#' @param cf0 Numeric vector, mean value of original measurements.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
@@ -45,6 +44,7 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #'
 #' The following fields will also be made available:
 #'
+#' - `cf0`: Numeric vector, mean value of original measurements, convenience copy of `cf.tsboot$t0`.
 #' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
 #'
@@ -52,13 +52,13 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #'
 #' @export
 cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
-  cf$cf0 <- cf0
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
   cf$sim <- sim
   cf$cf.tsboot <- cf.tsboot
 
+  cf$cf0 <- cf.tsboot$t0
   cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
   cf$boot.samples <- TRUE
 
@@ -187,19 +187,27 @@ cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
 #' Weighted CF mixin constructor
 #'
 #' @param cf `cf` object to extend.
-#' @param weighted TODO
+#' @param weight.factor TODO
 #' @param weight.cosh TODO
 #' @param mass1 TODO
 #' @param mass2 TODO
 #'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `weighted`: Logical, indicating whether the correlation function has been weighted. This is deprecated and instead the presence of this should be queried with `inherits(cf, 'cf_weighted')`.
+#'
 #' @family cf constructors
 #'
 #' @export
-cf_weighted <- function (cf, weighted, weight.cosh, mass1, mass2) {
-  cf$weighted <- weighted
+cf_weighted <- function (cf, weight.factor, weight.cosh, mass1, mass2) {
+  cf$weight.factor <- weight.factor
   cf$weight.cosh <- weight.cosh
   cf$mass1 <- mass1
   cf$mass2 <- mass2
+
+  cf$weighted <- TRUE
 
   class(cf) <- append(class(cf), 'cf_weighted')
   return (cf)
