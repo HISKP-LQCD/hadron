@@ -51,7 +51,7 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
+cf_boot <- function (cf, boot.R, boot.l, seed, sim, cf.tsboot) {
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
@@ -83,7 +83,7 @@ cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
 #'
 #' The following fields will also be made available:
 #'
-#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_jackknife')`.
+#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of jackknife samples should be queried with `inherits(cf, 'cf_jackknife')`.
 #'
 #' @family cf constructors
 #'
