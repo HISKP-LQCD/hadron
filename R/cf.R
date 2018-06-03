@@ -15,18 +15,13 @@
 #'
 #' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
 #'
-#' - `smeared`: Logical, whether the correlation function has smeared data.
-#' - `scf`: Like `cf`, but with the smeared data.
-#' - `iscf`: Like `icf`, but with the smeared data.
-#' - `nrSamples`: TODO
 #' - `conf.index`: TODO
-#' - `obs`: TODO
 #' - `N`: Integer, number of measurements.
 #' - `blockind`: TODO
 #' - `jack.boot.se`: TODO
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
   cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes,
@@ -54,7 +49,7 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
   cf$cf0 <- cf0
@@ -63,6 +58,7 @@ cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
   cf$seed <- seed
   cf$sim <- sim
   cf$cf.tsboot <- cf.tsboot
+
   cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
   cf$boot.samples <- TRUE
 
@@ -90,13 +86,14 @@ cf_boot <- function (cf, cf0, boot.R, boot.l, seed, sim, cf.tsboot) {
 #' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_jackknife')`.
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
   cf$cf0 <- cf0
   cf$boot.l <- boot.l
   cf$cf.jackknife <- cf.jackknife
   cf$jackknife.se <- jackknife.se
+
   cf$jackknife.samples <- TRUE
 
   class(cf) <- append(class(cf), 'cf_jackknife')
@@ -110,7 +107,7 @@ cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
 #' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_orig <- function (.cf, cf, icf = NULL) {
   .cf$cf <- cf
@@ -133,12 +130,40 @@ cf_orig <- function (.cf, cf, icf = NULL) {
 #' @param id Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_principal_correlator <- function (cf, id) {
   cf$id <- id
 
   class(cf) <- append(class(cf), 'cf_principal_correlators')
+  return (cf)
+}
+
+#' Smeared CF mixin constructor
+#'
+#' @param scf Like `cf`, but with the smeared data.
+#' @param iscf Like `icf`, but with the smeared data.
+#' @param nrSamples TODO
+#' @param obs TODO
+#'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `smeared`: Logical, whether the correlation function has smeared data. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_smeared')`.
+#'
+#' @family cf constructors
+#'
+#' @export
+cf_smeared <- function (cf, scf, iscf, nrSamples, obs) {
+  cf$scf <- scf
+  cf$iscf <- iscf
+  cf$nrSamples <- nrSamples
+  cf$obs <- obs
+
+  cf$smeared <- TRUE
+
+  class(cf) <- append(class(cf), 'cf_smeared')
   return (cf)
 }
 
@@ -149,7 +174,7 @@ cf_principal_correlator <- function (cf, id) {
 #' @param subtracted.ii Integer vector, TODO
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
   cf$subtracted.value <- subtracted.values
@@ -168,7 +193,7 @@ cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
 #' @param mass2 TODO
 #'
 #' @family cf constructors
-#' 
+#'
 #' @export
 cf_weighted <- function (cf, weighted, weight.cosh, mass1, mass2) {
   cf$weighted <- weighted
@@ -243,7 +268,7 @@ jackknife.cf <- function(cf, boot.l=2) {
   n <- nrow(cf$cf)
   ## number of overlapping blocks
   N <- n-boot.l+1
-  
+
   cf.jackknife <- list()
   cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
   cf.jackknife$t0 <- cf$cf0
@@ -274,9 +299,9 @@ uwerr.cf <- function(cf, absval=FALSE){
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
 
-  uwcf <- as.data.frame( 
+  uwcf <- as.data.frame(
       t(
-          apply(X=cf$cf, MARGIN=2L, 
+          apply(X=cf$cf, MARGIN=2L,
                 FUN=function(x){
                   data <- x
                   if(absval) data <- abs(x)
@@ -288,15 +313,15 @@ uwerr.cf <- function(cf, absval=FALSE){
                       tauint=NA,
                       dtauint=NA)
                   } else {
-                    c(value=uw$value, 
-                      dvalue=uw$dvalue, 
+                    c(value=uw$value,
+                      dvalue=uw$dvalue,
                       ddvalue=uw$ddvalue,
-                      tauint=uw$tauint, 
+                      tauint=uw$tauint,
                       dtauint=uw$dtauint)
                   }
                 }
                 )
-      ) 
+      )
   )
   uwcf <- cbind(t=(1:ncol(cf$cf))-1,uwcf)
   return(uwcf)
@@ -350,7 +375,7 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
 }
 
 # "close-by-times" averaging replaces the value of the correlation function at t
-# with the "hypercubic" average with the values at the neighbouring time-slices 
+# with the "hypercubic" average with the values at the neighbouring time-slices
 # with weights 0.25, 0.5 and 0.25
 # it then invalidates the boundary timeslices (for all smearing types and observables)
 avg.cbt.cf <- function(cf){
@@ -360,7 +385,7 @@ avg.cbt.cf <- function(cf){
   # copy for shifting
   cf2 <- cf
   cf <- mul.cf(cf, 0.5)
-  
+
   # average over shifted correlation functions
   for( p in c(-1,1) ){
     cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
@@ -455,7 +480,7 @@ mul.cf <- function(cf, a=1.) {
 extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
-  
+
   ii <- c()
   for(i in c(1:length(id))) {
     ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
@@ -621,12 +646,12 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
                                              sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
       if( !is.null(cf$icf) ){
-        cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] + 
+        cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
                                                 sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
       }
     }
   }
-  # remove now unnecessary time slices 
+  # remove now unnecessary time slices
   cf$cf <- cf$cf[, -isub]
   if( !is.null(cf$icf) ){
     cf$icf <- cf$icf[, -isub]

@@ -485,9 +485,12 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
     }
   }
   Cf <- array(Cf, dim=c(T, nrSamples, N))
-  cf <- list(cf=Re(Cf), icf=Im(Cf), scf=NULL, sicf=NULL,
-             Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, obs=obs)
-  return(invisible(cf))
+
+  cf <- cf(Time = T)
+  cf <- cf_orig(cf, cf = Re(Cf), icf = Im(Cf))
+  cf <- cf_smeared(cf, scf = NA, iscf = NA, nrSamples = nrSamples, obs = obs)
+
+  return (invisible(cf))
 }
 
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
@@ -528,12 +531,18 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   nrSamples <- max(ldata[,ind.vec[3]])
 
   if(missing(L)) L <- T/2
-  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs)
-  return(invisible(cf))
+
+  cf <- cf(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_orig(cf,
+                cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
+  cf <- cf_smeared(cf,
+                   scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   nrSamples = nrSamples,
+                   obs = obs)
+
+  return (invisible(cf))
 }
 
 readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
