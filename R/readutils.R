@@ -148,12 +148,21 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   if(missing(L)) {
     L <- T/2
   }
-  cf <- list(cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(ldata[,ind.vec[4]])/T/nrSamples))/sqrt(L^3),
-             icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3),
-             scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
-             sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
-             Time=T, nrStypes=2, nrObs=1, nrSamples=nrSamples, obs=obs, conf.index=unique(ldata[,ind.vec[8]]))
-  return(invisible(cf))
+
+  cf <- cf(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_orig(cf,
+                cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(ldata[,ind.vec[4]])/T/nrSamples))/sqrt(L^3),
+                icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3))
+  cf <- cf_smeared(cf,
+                   scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
+                   sicf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
+                   nrSamples = nrSamples,
+                   obs = obs)
+
+  # TODO: This should be set via a constructor.
+  cf$conf.index <- unique(ldata[,ind.vec[8]]))
+
+  return (invisible(cf))
 }
 
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
@@ -225,10 +234,11 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       }
     }
   }
-  ret <- list(cf=cf, icf=NULL, Time=Time, nrStypes=nrStypes, nrObs=nrObs, boot.samples=FALSE, jackknife.samples=FALSE,
-              symmetrised=symmetrise)
-  attr(ret, "class") <- c("cf", class(ret))
-  return(invisible(ret))
+  
+  ret <- cf(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrise)
+  ret <- cf_orig(ret, cf = cf, icf = NA)
+
+  return (invisible(ret))
 }
 
 readhlcor <- function(filename) {
