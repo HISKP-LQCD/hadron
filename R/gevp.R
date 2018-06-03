@@ -152,10 +152,10 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
   boot.R <- cf$boot.R
   boot.l <- cf$boot.l
   matrix.size <- as.integer(round(sqrt(length(element.order))))
-  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
+  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
-                         matrix.size=matrix.size, element.order=element.order,
+                         element.order=element.order,
                          for.tsboot=TRUE, sort.type=sort.type, sort.t0=sort.t0))
 
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
@@ -183,7 +183,6 @@ gevp2cf <- function(gevp, id=1) {
                     t0 = gevp$res.gevp$evalues[,id])
 
   cf <- cf_boot(cf,
-                cf0 = gevp$res.gevp$evalues[,id],
                 boot.R = gevp$boot.R,
                 boot.l = gevp$boot.l,
                 seed = gevp$seed,

@@ -102,7 +102,7 @@ bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
+              boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed, weight.factor=weight.factor,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )

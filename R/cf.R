@@ -120,8 +120,8 @@ cf_orig <- function (.cf, cf, icf = NULL) {
     .cf$icf <- icf
   }
 
-  class(cf) <- append(class(cf), 'cf_orig')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_orig')
+  return (.cf)
 }
 
 #' Principal correlator CF mixin constructor
@@ -258,13 +258,11 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                          R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
 
   cf <- cf_boot(cf,
-                cf0 = apply(cf$cf, MARGIN=2L, FUN=mean),
                 boot.R = boot.R,
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
-                cf.tsboot = cf.tsboot,
-                tsboot.se = tsboot.se)
+                cf.tsboot = cf.tsboot)
 
   ## restore random number generator state
   if (!is.null(temp))
