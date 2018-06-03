@@ -33,17 +33,17 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   }
   mass1 <- list()
   mass2 <- list()
-  
+
   if(missing(single.cf2)) {
     single.cf2 <- single.cf1
   }
-  
+
   if(cf$boot.R != single.cf1$boot.R || single.cf1$boot.R != single.cf2$boot.R ||
      cf$boot.l != single.cf1$boot.l || single.cf1$boot.l != single.cf2$boot.l) {
 ##     cf$seed != single.cf1$seed || single.cf1$seed != single.cf2$seed) {
     stop("please provide equally bootstrapped cfs to removeTemporal.cf using the same configurations and seed for all and the same boot.R and boot.l!\n")
   }
-  
+
   if(inherits(single.cf1, "effectivemassfit")) {
     mass1$t0 <- single.cf1$opt.res$par[1]
     mass1$t <- single.cf1$massfit.tsboot[,1]
@@ -139,26 +139,23 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   return (invisible(ret))
 }
 
-takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
+takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_orig'))
 
   ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
   ## and units of the time extent if it has not
   T <- cf$Time
   Nt <- dim(cf$cf)[2]
-  
-  nts <- cf$Time/2+1                                                                                                                          
-  if( "symmetrised" %in% names(cf) ) {
+
+  nts <- cf$Time/2+1
     if(!cf$symmetrised){
       nts <- cf$Time
     }
-  }
 
-  ## number of observables assuming a single smearing type
-  nrObs <- floor(Nt/nts)
   ## the time indices to be subtracted
   tt0 <- c()
-  for(i in c(1:nrObs)) {
+  for(i in c(1:cf$nrObs)) {
     tt0 <- c(tt0, ((i-1)*(nts)+1):(i*(nts)-deltat))
   }
   tt1 <- tt0 + deltat
@@ -168,10 +165,10 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
   ## alternatively, we can also do a forward derivative: C'(t) = C(t+deltat) - C(t)
   ### which will invalidate all time slices after and including tmax-(deltat-1)
   ## we do this by defining left- and right-hand indices
-  # C(tlhs) = C(trhs1) - C(trhs2) 
+  # C(tlhs) = C(trhs1) - C(trhs2)
   ## note: in both cases one could in pricinple use the symmetry properties of
   ##       the full correlation function and periodic boundary condtions
-  ##       to do this without any invalidation 
+  ##       to do this without any invalidation
   tlhs <- tt1
   trhs1 <- tt0
   trhs2 <- tt1
@@ -181,25 +178,33 @@ takeTimeDiff.cf <- function(cf, deltat = 1, forwardshift= FALSE) {
     trhs2 <- tt0
   }
 
-  ## take the differences, set the remaining points to NA
-  if(!is.null(cf$cf)) {
-    cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
-    cf$cf[,-tlhs] <- NA
-  }
-  ## now the bootstrap samples
-  if(cf$boot.samples) {
-    cf$cf0[tlhs] <- cf$cf0[trhs1]-cf$cf0[trhs2]
-    cf$cf0[-tlhs] <- NA
+  # take the differences, set the remaining points to NA. Apparently we don't care about the imaginary part here.
+  cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
+  cf$cf[,-tlhs] <- NA
 
+  # now the bootstrap samples
+  if (inherits(cf, 'cf_boot')) {
     cf$cf.tsboot$t0[tlhs] <- cf$cf.tsboot$t0[trhs1]-cf$cf.tsboot$t0[trhs2]
     cf$cf.tsboot$t0[-tlhs] <- NA
     cf$cf.tsboot$t[,tlhs] <- cf$cf.tsboot$t[,trhs1]-cf$cf.tsboot$t[,trhs2]
     cf$cf.tsboot$t[,-tlhs] <- NA
   }
-  ## save info
-  cf$shifted <- TRUE
-  cf$deltat <- deltat
-  cf$forwardshift <- forwardshift
-  ## return subtracted cf
+
+  # We perform a new construction in order to have only the fields defined that
+  # we want and also to make sure that invariants are holding.
+  ret <- cf(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+            symmetrised = cf$symmetrised)
+  ret <- cf_orig(ret,
+                 cf = cf$cf)
+  ret <- cf_boot(ret,
+                 boot.R = cf$boot.R,
+                 boot.l = cf$boot.l,
+                 seed = cf$seed,
+                 sim = cf$sim,
+                 cf.tsboot = cf$cf.tsboot)
+  ret <- cf_shifted(ret,
+                    deltat = deltat,
+                    forwardshift = forwardshift)
+
   return(invisible(cf))
 }

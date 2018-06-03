@@ -139,6 +139,16 @@ cf_principal_correlator <- function (cf, id) {
   return (cf)
 }
 
+cf_shifted <- function (cf, deltat, forwardshift) {
+  cf$deltat <- deltat
+  cf$forwardshift <- forwardshift
+
+  cf$shifted <- TRUE
+
+  class(cf) <- append(class(cf), 'cf_shifted')
+  return (cf)
+}
+
 #' Smeared CF mixin constructor
 #'
 #' @param scf Like `cf`, but with the smeared data.
