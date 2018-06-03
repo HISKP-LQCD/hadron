@@ -28,7 +28,7 @@
 #' @family cf constructors
 #' 
 #' @export
-cf <- function (nrObs = 1, Time = NA, nrStypes = 0, symmetrised = FALSE) {
+cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
   cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes,
              symmetrised = symmetrised)
 

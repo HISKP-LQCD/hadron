@@ -244,17 +244,11 @@ readoutputdata <- function(filename) {
 
 readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
                        sparsity=1, avg=1, Nmin=4, autotruncate=TRUE) {
-  if(missing(file)) {
-    stop("files must be given! Aborting...\n")
-  }
-  if(T < 1) {
-    stop("T must be larger than 0 and integer, aborting...\n")
-  }
+  stopifnot(!missing(file))
+  stopifnot(T >= 1)
 
   tmp <- read.table(paste(path, file, sep=""), skip=skip)
-  if((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)){
-    stop("index vector too short or out of range\n")
-  }
+  stopifnot(!((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)))
   
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
     stop("T in function call does not match the one in the file, aborting...\n")
@@ -312,11 +306,10 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     ii <- c(1:T)
   }
 
+  cf <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  cf <- cf_orig(cf, cf = t(Re(tmp[ii, ])), icf = t(Im(tmp[ii, ])))
 
-  ret <- list(cf=t(Re(tmp[ii,])), icf=t(Im(tmp[ii,])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
-              symmetrised=symmetrise)
-  attr(ret, "class") <- c("cf", class(ret))
-  return(invisible(ret))
+  return (invisible(cf))
 }
 
 readbinarycf <- function(files, 
@@ -408,11 +401,11 @@ readbinarycf <- function(files,
       cat("file ", ifs, "does not exist...\n")
     }
   }
-  
-  ret <- list(cf=t(Re(Cf)), icf=t(Im(Cf)), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
-              symmetrised=symmetrise)
-  attr(ret, "class") <- c("cf", class(ret))
-  return(invisible(ret))
+
+  cf <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  cf <- cf_orig(cf, cf = t(Re(Cf)), icf = t(Cf))
+
+  return (invisible(cf))
 }
 
 
@@ -465,11 +458,12 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   }
 
   ret <- list()
-  for( i in 1:nosamples ){
-    ret[[i]] <- list(cf=t(Re(Cf[[i]])), icf=t(Im(Cf[[i]])), Time=T, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE)
-    attr(ret[[i]], "class") <- c("cf", class(ret[[i]]))
+  for (i in 1:nosamples) {
+    ret[[i]] <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+    ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
   }
-  return(invisible(ret))
+
+  return (invisible(ret))
 }
 
 
