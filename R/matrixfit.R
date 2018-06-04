@@ -142,13 +142,15 @@ matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
     stop("matrixfit requires the object to be of class cf! Aborting...!\n")
   }
 
-  if(cf$symmetrised == FALSE){
-    cat("[matrixfit] Forcing symmetrisation before fit!\n")
-    cf <- symmetrise.cf(cf)
-    cf <- bootstrap.cf(cf = cf, 
-                       boot.R = boot.R, 
-                       boot.l = boot.l,
-                       seed = seed)
+  if( "symmetrised" %in% names(cf) ) {
+    if(cf$symmetrised == FALSE){
+      message("[matrixfit] Forcing symmetrisation before fit!\n")
+      cf <- symmetrise.cf(cf)
+      cf <- bootstrap.cf(cf = cf, 
+                         boot.R = boot.R, 
+                         boot.l = boot.l,
+                         seed = seed)
+    }
   }
 
   t1p1 <- t1+1
@@ -234,7 +236,7 @@ matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
 
   ## now we start the real computation
   if(!cf$boot.samples) {
-    cat("[matrixfit] No boostrap samples found, adding them!\n")
+    message("[matrixfit] No boostrap samples found, adding them!\n")
     cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
   }
   else {
