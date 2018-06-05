@@ -4,11 +4,11 @@
 \alias{matrixModel}
 \title{Correlator matrix model.}
 \usage{
-matrixModel(par, t, T, parind, sign.vec, ov.sign.vec)
+matrixModel(par, t, T, parind, sign.vec, ov.sign.vec, deltat = 0)
 }
 \arguments{
-\item{par}{Numeric vector: Fit parameters of the model. In an 
-object of type \code{matrixfit}, this should be located at 
+\item{par}{Numeric vector: Fit parameters of the model. In an
+object of type \code{matrixfit}, this should be located at
 \code{$opt.res$par}.}
 
 \item{t}{Numeric vector: Time of interest.}
@@ -21,6 +21,8 @@ object of type \code{matrixfit}, this should be located at
 backwards propagating part. A plus makes it cosh, a minus makes it sinh.}
 
 \item{ov.sign.vec}{Numeric vector: Overal sign.}
+
+\item{deltat}{Numeric: time shift.}
 }
 \description{
 Correlator matrix model.

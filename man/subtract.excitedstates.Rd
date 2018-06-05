@@ -7,20 +7,20 @@
 subtract.excitedstates(cf, mfit, from.samples = FALSE)
 }
 \arguments{
-\item{cf}{Correlation function of class `cf`.}
+\item{cf}{Correlation function of class \code{cf}.}
 
-\item{mfit}{Fit result of class `matrixfit`.}
+\item{mfit}{Fit result of class \code{matrixfit}.}
 
 \item{from.samples}{Whether to use existing bootstrap samples. If set to
-`TRUE`, the same operation will be applied to the bootstrap samples.
+\code{TRUE}, the same operation will be applied to the bootstrap samples.
 Otherwise the result will not contain bootstrap samples, even if the input
 correlation function did.}
 }
 \value{
-A correlation function of class `cf` which is computed from the old
-  correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
-  \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
-  the (bootstrap) samples. Only time slices earlier than the fit are altered.
+A correlation function of class \code{cf} which is computed from the old
+correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
+\eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
+the (bootstrap) samples. Only time slices earlier than the fit are altered.
 }
 \description{
 Excited states are subtracted from the given correlation function and
