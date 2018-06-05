@@ -1,5 +1,5 @@
 fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
   boot.R <- cf$boot.R

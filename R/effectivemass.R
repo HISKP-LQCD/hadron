@@ -72,7 +72,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 }
 
 bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
   ## number of measurements

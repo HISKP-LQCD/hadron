@@ -149,7 +149,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
     L <- T/2
   }
 
-  cf <- cf(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
   cf <- cf_orig(cf,
                 cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(ldata[,ind.vec[4]])/T/nrSamples))/sqrt(L^3),
                 icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3))
@@ -235,7 +235,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
     }
   }
   
-  ret <- cf(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrise)
+  ret <- cf_meta(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrise)
   ret <- cf_orig(ret, cf = cf, icf = NA)
 
   return (invisible(ret))
@@ -316,7 +316,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     ii <- c(1:T)
   }
 
-  cf <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
   cf <- cf_orig(cf, cf = t(Re(tmp[ii, ])), icf = t(Im(tmp[ii, ])))
 
   return (invisible(cf))
@@ -412,7 +412,7 @@ readbinarycf <- function(files,
     }
   }
 
-  cf <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
   cf <- cf_orig(cf, cf = t(Re(Cf)), icf = t(Cf))
 
   return (invisible(cf))
@@ -469,7 +469,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for (i in 1:nosamples) {
-    ret[[i]] <- cf(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+    ret[[i]] <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
     ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
   }
 
@@ -496,7 +496,7 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
   }
   Cf <- array(Cf, dim=c(T, nrSamples, N))
 
-  cf <- cf(Time = T)
+  cf <- cf_meta(Time = T)
   cf <- cf_orig(cf, cf = Re(Cf), icf = Im(Cf))
   cf <- cf_smeared(cf, scf = NA, iscf = NA, nrSamples = nrSamples, obs = obs)
 
@@ -542,7 +542,7 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 
   if(missing(L)) L <- T/2
 
-  cf <- cf(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
   cf <- cf_orig(cf,
                 cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
                 icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))

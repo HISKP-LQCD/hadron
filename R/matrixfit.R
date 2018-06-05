@@ -133,29 +133,23 @@ deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
   return(res)
 }
 
-matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
+matrixfit <- function(cf, t1, t2,
                       parlist, sym.vec, neg.vec,
-                      useCov=FALSE, seed=12345, model="single",
+                      useCov=FALSE, model="single",
                       boot.fit=TRUE, fit.method="optim",
                       autoproceed=FALSE) {
-  if(!any(class(cf) == "cf")) {
-    stop("matrixfit requires the object to be of class cf! Aborting...!\n")
-  }
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
   if(cf$symmetrised == FALSE){
-    cat("[matrixfit] Forcing symmetrisation before fit!\n")
-    cf <- symmetrise.cf(cf)
-    cf <- bootstrap.cf(cf = cf, 
-                       boot.R = boot.R, 
-                       boot.l = boot.l,
-                       seed = seed)
+    stop('You must symmetrize and bootstrap the function before fitting.')
   }
 
   t1p1 <- t1+1
   t2p1 <- t2+1
   N <- dim(cf$cf)[1]
-  Thalfp1 <- cf$T/2+1
-  t <- c(0:(cf$T/2))
+  Thalfp1 <- cf$Time/2+1
+  t <- c(0:(cf$Time/2))
   deltat <- 1
   if(model == "shifted" && any(names(cf) == "deltat")) {
     deltat <- cf$deltat
@@ -230,17 +224,6 @@ matrixfit <- function(cf, t1, t2, boot.R=400, boot.l=20,
   }
   if(length(neg.vec) != mSize){
     stop("neg.vec does not have the correct length! Aborting\n")
-  }
-
-  ## now we start the real computation
-  if(!cf$boot.samples) {
-    cat("[matrixfit] No boostrap samples found, adding them!\n")
-    cf <- bootstrap.cf(cf, boot.R, boot.l, seed)
-  }
-  else {
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-    seed <- cf$seed
   }
 
   CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))

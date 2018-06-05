@@ -35,6 +35,8 @@ cf <- function () {
 #'
 #' @export
 cf_meta <- function (cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$nrObs = nrObs
   cf$Time = Time
   cf$nrStypes = nrStypes
@@ -65,6 +67,8 @@ cf_meta <- function (cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised 
 #'
 #' @export
 cf_boot <- function (cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
@@ -102,6 +106,8 @@ cf_boot <- function (cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
 #'
 #' @export
 cf_jackknife <- function (cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$cf0 <- cf0
   cf$boot.l <- boot.l
   cf$cf.jackknife <- cf.jackknife
@@ -123,6 +129,8 @@ cf_jackknife <- function (cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
 #'
 #' @export
 cf_orig <- function (.cf = cf(), cf, icf = NULL) {
+  stopifnot(inherits(.cf, 'cf'))
+
   .cf$cf <- cf
 
   if (is.null(icf)) {
@@ -146,6 +154,8 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 #'
 #' @export
 cf_principal_correlator <- function (cf = cf(), id) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$id <- id
 
   class(cf) <- append(class(cf), 'cf_principal_correlators')
@@ -167,6 +177,8 @@ cf_principal_correlator <- function (cf = cf(), id) {
 #'
 #' @export
 cf_shifted <- function (cf = cf(), deltat, forwardshift) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$deltat <- deltat
   cf$forwardshift <- forwardshift
 
@@ -193,6 +205,8 @@ cf_shifted <- function (cf = cf(), deltat, forwardshift) {
 #'
 #' @export
 cf_smeared <- function (cf = cf(), scf, iscf, nrSamples, obs) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$scf <- scf
   cf$iscf <- iscf
   cf$nrSamples <- nrSamples
@@ -214,6 +228,8 @@ cf_smeared <- function (cf = cf(), scf, iscf, nrSamples, obs) {
 #'
 #' @export
 cf_subtracted <- function (cf = cf(), subtracted.values, subtracted.ii) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$subtracted.value <- subtracted.values
   cf$subtracted.ii <- subtracted.ii
 
@@ -239,6 +255,8 @@ cf_subtracted <- function (cf = cf(), subtracted.values, subtracted.ii) {
 #'
 #' @export
 cf_weighted <- function (cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
+  stopifnot(inherits(cf, 'cf'))
+
   cf$weight.factor <- weight.factor
   cf$weight.cosh <- weight.cosh
   cf$mass1 <- mass1
@@ -262,7 +280,6 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 }
 
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
-  stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   boot.l <- ceiling(boot.l)
@@ -300,7 +317,6 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 }
 
 jackknife.cf <- function(cf, boot.l=2) {
-  stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   stopifnot(boot.l >= 1)
@@ -339,7 +355,6 @@ jackknife.cf <- function(cf, boot.l=2) {
 
 # Gamma method analysis on all time-slices in a 'cf' object
 uwerr.cf <- function(cf, absval=FALSE){
-  stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   uwcf <- as.data.frame(
@@ -378,9 +393,9 @@ addConfIndex2cf <- function(cf, conf.index) {
 }
 
 addStat.cf <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
@@ -401,7 +416,7 @@ addStat.cf <- function(cf1, cf2) {
 ## nrStypes accordingly
 ## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
 avg.ls.cf <- function(cf, cols = c(2, 3)) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(cf$nrStypes >= 2)
 
@@ -422,7 +437,7 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
 # with weights 0.25, 0.5 and 0.25
 # it then invalidates the boundary timeslices (for all smearing types and observables)
 avg.cbt.cf <- function(cf){
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   # copy for shifting
@@ -437,10 +452,8 @@ avg.cbt.cf <- function(cf){
   for( oidx in 0:(cf$nrObs-1) ){
     for( sidx in 0:(cf$nrStypes-1) ){
       nts <- cf$Time/2+1
-      if( "symmetrised" %in% names(cf) ) {
-        if(!cf$symmetrised){
-          nts <- cf$Time
-        }
+      if(!cf$symmetrised){
+        nts <- cf$Time
       }
       istart <- oidx*cf$nrStypes*nts + sidx*nts + 1
       iend <- istart+nts
@@ -454,9 +467,9 @@ avg.cbt.cf <- function(cf){
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
-  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -468,9 +481,9 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 '+.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -483,9 +496,9 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 '-.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -497,9 +510,9 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 '/.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -511,7 +524,6 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 mul.cf <- function(cf, a=1.) {
-  stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(is.numeric(a))
 
@@ -521,7 +533,7 @@ mul.cf <- function(cf, a=1.) {
 }
 
 extractSingleCor.cf <- function(cf, id=c(1)) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   ii <- c()
@@ -529,6 +541,7 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
     ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
   }
 
+  # TODO: This should be done using constructors.
   cf$cf <- cf$cf[,ii]
 
   if (inherits(cf, 'cf_boot')) {
@@ -558,10 +571,13 @@ c.cf <- function(...) {
     return(eval(fcall[[1]]))
   }
 
-  # All arguments must be of type `cf` and `cf_orig` since we want to work with
-  # the actual data.
+  # All arguments must be of type `cf`. Since it seems to be a common pattern
+  # to concatenate stuff to an empty `cf` object, this must be supported as
+  # well. We will just ignore these empty objects and concatenate the ones with
+  # data.
   stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf'))))
-  stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf_orig'))))
+  has_data <- sapply(fcall, function (x) inherits(x, 'cf_orig'))
+  fcall <- fcall[has_data]
 
   cf <- fcall[[1]]
   Time <- cf$Time
@@ -590,8 +606,8 @@ c.cf <- function(...) {
 }
 
 plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
-  # We need to have data, otherwise we cannot plot.
   stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
+  stopifnot(inherits(cf, 'cf_meta'))
 
   if (inherits(cf, 'cf_boot')) {
     val <- cf$cf0
@@ -626,7 +642,7 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
 # and must be taken into account externally by
 # invalidating the affected time-slices
 shift.cf <- function(cf, places) {
-  stopifnot(all(c('cf', 'cf_orig') %in% class(cf)))
+  stopifnot(inherits(cf, 'cf_orig'))
 
   cf <- invalidate.samples.cf(cf)
   n <- ncol(cf$cf)
@@ -664,7 +680,7 @@ invalidate.samples.cf <- function(cf){
 }
 
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   if(cf$symmetrised){
@@ -705,6 +721,8 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 
 
 summary.cf <- function(cf, ...) {
+  stopifnot(inherits(cf, 'cf_meta'))
+
   cat("T = ", cf$Time, "\n")
   cat("observations = ", dim(cf$cf)[1], "\n")
   cat("Nr Stypes = ", cf$nrStypes, "\n")
