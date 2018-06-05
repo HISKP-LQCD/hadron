@@ -6,11 +6,6 @@
 #' simulations. Arithmetic operations are defined for this class in
 #' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
 #'
-#' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
-#' @param Time Integer, full time extent.
-#' @param nrStypes Integer, number of smearing types.
-#' @param symmetrised Logical, indicating whether the correlation function has been symmetrized.
-#'
 #' @details
 #'
 #' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
@@ -23,11 +18,29 @@
 #' @family cf constructors
 #'
 #' @export
-cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
-  cf <- list(nrObs = nrObs, Time = Time, nrStypes = nrStypes,
-             symmetrised = symmetrised)
-
+cf <- function () {
+  cf <- list()
   class(cf) <- append(class(cf), 'cf')
+  return (cf)
+}
+
+#' CF metadata mixin constructor
+#'
+#' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+#' @param Time Integer, full time extent.
+#' @param nrStypes Integer, number of smearing types.
+#' @param symmetrised Logical, indicating whether the correlation function has been symmetrized.
+#'
+#' @family cf constructors
+#'
+#' @export
+cf_meta <- function (cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
+  cf$nrObs = nrObs
+  cf$Time = Time
+  cf$nrStypes = nrStypes
+  cf$symmetrised = symmetrised
+
+  class(cf) <- append(class(cf), 'cf_meta')
   return (cf)
 }
 
@@ -51,7 +64,7 @@ cf <- function (nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (cf, boot.R, boot.l, seed, sim, cf.tsboot) {
+cf_boot <- function (cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
   cf$boot.R <- boot.R
   cf$boot.l <- boot.l
   cf$seed <- seed
@@ -88,7 +101,7 @@ cf_boot <- function (cf, boot.R, boot.l, seed, sim, cf.tsboot) {
 #' @family cf constructors
 #'
 #' @export
-cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
+cf_jackknife <- function (cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
   cf$cf0 <- cf0
   cf$boot.l <- boot.l
   cf$cf.jackknife <- cf.jackknife
@@ -109,7 +122,7 @@ cf_jackknife <- function (cf, cf0, boot.l, cf.jackknife, jackknife.se) {
 #' @family cf constructors
 #'
 #' @export
-cf_orig <- function (.cf, cf, icf = NULL) {
+cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   .cf$cf <- cf
 
   if (is.null(icf)) {
@@ -132,7 +145,7 @@ cf_orig <- function (.cf, cf, icf = NULL) {
 #' @family cf constructors
 #'
 #' @export
-cf_principal_correlator <- function (cf, id) {
+cf_principal_correlator <- function (cf = cf(), id) {
   cf$id <- id
 
   class(cf) <- append(class(cf), 'cf_principal_correlators')
@@ -153,7 +166,7 @@ cf_principal_correlator <- function (cf, id) {
 #' @family cf constructors
 #'
 #' @export
-cf_shifted <- function (cf, deltat, forwardshift) {
+cf_shifted <- function (cf = cf(), deltat, forwardshift) {
   cf$deltat <- deltat
   cf$forwardshift <- forwardshift
 
@@ -179,7 +192,7 @@ cf_shifted <- function (cf, deltat, forwardshift) {
 #' @family cf constructors
 #'
 #' @export
-cf_smeared <- function (cf, scf, iscf, nrSamples, obs) {
+cf_smeared <- function (cf = cf(), scf, iscf, nrSamples, obs) {
   cf$scf <- scf
   cf$iscf <- iscf
   cf$nrSamples <- nrSamples
@@ -200,7 +213,7 @@ cf_smeared <- function (cf, scf, iscf, nrSamples, obs) {
 #' @family cf constructors
 #'
 #' @export
-cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
+cf_subtracted <- function (cf = cf(), subtracted.values, subtracted.ii) {
   cf$subtracted.value <- subtracted.values
   cf$subtracted.ii <- subtracted.ii
 
@@ -225,7 +238,7 @@ cf_subtracted <- function (cf, subtracted.values, subtracted.ii) {
 #' @family cf constructors
 #'
 #' @export
-cf_weighted <- function (cf, weight.factor, weight.cosh, mass1, mass2) {
+cf_weighted <- function (cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
   cf$weight.factor <- weight.factor
   cf$weight.cosh <- weight.cosh
   cf$mass1 <- mass1
