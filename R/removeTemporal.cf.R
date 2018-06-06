@@ -196,12 +196,14 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
             symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
                  cf = cf$cf)
-  ret <- cf_boot(ret,
-                 boot.R = cf$boot.R,
-                 boot.l = cf$boot.l,
-                 seed = cf$seed,
-                 sim = cf$sim,
-                 cf.tsboot = cf$cf.tsboot)
+  if (inherits(cf, 'cf_boot')) {
+    ret <- cf_boot(ret,
+                   boot.R = cf$boot.R,
+                   boot.l = cf$boot.l,
+                   seed = cf$seed,
+                   sim = cf$sim,
+                   cf.tsboot = cf$cf.tsboot)
+  }
   ret <- cf_shifted(ret,
                     deltat = deltat,
                     forwardshift = forwardshift)
