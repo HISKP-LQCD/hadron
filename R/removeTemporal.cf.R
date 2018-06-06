@@ -120,8 +120,8 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
 
   # We perform a clean copy of the data now to make sure that all invariants
   # hold and that no new fields have been added.
-  ret <- cf(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
-            symmetrised = cf$symmetrised)
+  ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+                 symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
                  cf = cf$cf)
   ret <- cf_boot(cf,
@@ -192,8 +192,8 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
 
   # We perform a new construction in order to have only the fields defined that
   # we want and also to make sure that invariants are holding.
-  ret <- cf(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
-            symmetrised = cf$symmetrised)
+  ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+                 symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
                  cf = cf$cf)
   if (inherits(cf, 'cf_boot')) {

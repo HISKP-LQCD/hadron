@@ -172,10 +172,10 @@ gevp2cf <- function(gevp, id=1) {
   stopifnot(!(id > gevp$matrix.size || id < 1))
 
   # Base `cf` properties.
-  cf <- cf(nrObs = 1,
-           Time = gevp$cf$Time,
-           nrStypes = 1,
-           symmetrised = gevp$cf$symmetrised)
+  cf <- cf_meta(nrObs = 1,
+                Time = gevp$cf$Time,
+                nrStypes = 1,
+                symmetrised = gevp$cf$symmetrised)
 
   # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)

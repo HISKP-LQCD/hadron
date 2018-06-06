@@ -34,16 +34,16 @@ cf <- function () {
 #' @family cf constructors
 #'
 #' @export
-cf_meta <- function (cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
-  stopifnot(inherits(cf, 'cf'))
+cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$nrObs = nrObs
-  cf$Time = Time
-  cf$nrStypes = nrStypes
-  cf$symmetrised = symmetrised
+  .cf$nrObs = nrObs
+  .cf$Time = Time
+  .cf$nrStypes = nrStypes
+  .cf$symmetrised = symmetrised
 
-  class(cf) <- append(class(cf), 'cf_meta')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_meta')
+  return (.cf)
 }
 
 #' Bootstrapped CF mixin constructor
@@ -66,21 +66,21 @@ cf_meta <- function (cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised 
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
-  stopifnot(inherits(cf, 'cf'))
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$boot.R <- boot.R
-  cf$boot.l <- boot.l
-  cf$seed <- seed
-  cf$sim <- sim
-  cf$cf.tsboot <- cf.tsboot
+  .cf$boot.R <- boot.R
+  .cf$boot.l <- boot.l
+  .cf$seed <- seed
+  .cf$sim <- sim
+  .cf$cf.tsboot <- cf.tsboot
 
-  cf$cf0 <- cf.tsboot$t0
-  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
-  cf$boot.samples <- TRUE
+  .cf$cf0 <- cf.tsboot$t0
+  .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
+  .cf$boot.samples <- TRUE
 
-  class(cf) <- append(class(cf), 'cf_boot')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_boot')
+  return (.cf)
 }
 
 #' Jackknifed CF mixin constructor
@@ -105,18 +105,18 @@ cf_boot <- function (cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
 #' @family cf constructors
 #'
 #' @export
-cf_jackknife <- function (cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
-  stopifnot(inherits(cf, 'cf'))
+cf_jackknife <- function (.cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$cf0 <- cf0
-  cf$boot.l <- boot.l
-  cf$cf.jackknife <- cf.jackknife
-  cf$jackknife.se <- jackknife.se
+  .cf$cf0 <- cf0
+  .cf$boot.l <- boot.l
+  .cf$cf.jackknife <- cf.jackknife
+  .cf$jackknife.se <- jackknife.se
 
-  cf$jackknife.samples <- TRUE
+  .cf$jackknife.samples <- TRUE
 
-  class(cf) <- append(class(cf), 'cf_jackknife')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_jackknife')
+  return (.cf)
 }
 
 #' Original data CF mixin constructor
@@ -153,13 +153,13 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 #' @family cf constructors
 #'
 #' @export
-cf_principal_correlator <- function (cf = cf(), id) {
-  stopifnot(inherits(cf, 'cf'))
+cf_principal_correlator <- function (.cf = cf(), id) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$id <- id
+  .cf$id <- id
 
-  class(cf) <- append(class(cf), 'cf_principal_correlators')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_principal_correlators')
+  return (.cf)
 }
 
 #' Shifted CF mixin constructor
@@ -176,16 +176,16 @@ cf_principal_correlator <- function (cf = cf(), id) {
 #' @family cf constructors
 #'
 #' @export
-cf_shifted <- function (cf = cf(), deltat, forwardshift) {
-  stopifnot(inherits(cf, 'cf'))
+cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$deltat <- deltat
-  cf$forwardshift <- forwardshift
+  .cf$deltat <- deltat
+  .cf$forwardshift <- forwardshift
 
-  cf$shifted <- TRUE
+  .cf$shifted <- TRUE
 
-  class(cf) <- append(class(cf), 'cf_shifted')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_shifted')
+  return (.cf)
 }
 
 #' Smeared CF mixin constructor
@@ -204,18 +204,18 @@ cf_shifted <- function (cf = cf(), deltat, forwardshift) {
 #' @family cf constructors
 #'
 #' @export
-cf_smeared <- function (cf = cf(), scf, iscf, nrSamples, obs) {
-  stopifnot(inherits(cf, 'cf'))
+cf_smeared <- function (.cf = cf(), scf, iscf, nrSamples, obs) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$scf <- scf
-  cf$iscf <- iscf
-  cf$nrSamples <- nrSamples
-  cf$obs <- obs
+  .cf$scf <- scf
+  .cf$iscf <- iscf
+  .cf$nrSamples <- nrSamples
+  .cf$obs <- obs
 
-  cf$smeared <- TRUE
+  .cf$smeared <- TRUE
 
-  class(cf) <- append(class(cf), 'cf_smeared')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_smeared')
+  return (.cf)
 }
 
 #' Subtracted CF mixin constructor
@@ -227,14 +227,14 @@ cf_smeared <- function (cf = cf(), scf, iscf, nrSamples, obs) {
 #' @family cf constructors
 #'
 #' @export
-cf_subtracted <- function (cf = cf(), subtracted.values, subtracted.ii) {
-  stopifnot(inherits(cf, 'cf'))
+cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$subtracted.value <- subtracted.values
-  cf$subtracted.ii <- subtracted.ii
+  .cf$subtracted.value <- subtracted.values
+  .cf$subtracted.ii <- subtracted.ii
 
-  class(cf) <- append(class(cf), 'cf_subtracted')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_subtracted')
+  return (.cf)
 }
 
 #' Weighted CF mixin constructor
@@ -254,18 +254,18 @@ cf_subtracted <- function (cf = cf(), subtracted.values, subtracted.ii) {
 #' @family cf constructors
 #'
 #' @export
-cf_weighted <- function (cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
-  stopifnot(inherits(cf, 'cf'))
+cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
+  stopifnot(inherits(.cf, 'cf'))
 
-  cf$weight.factor <- weight.factor
-  cf$weight.cosh <- weight.cosh
-  cf$mass1 <- mass1
-  cf$mass2 <- mass2
+  .cf$weight.factor <- weight.factor
+  .cf$weight.cosh <- weight.cosh
+  .cf$mass1 <- mass1
+  .cf$mass2 <- mass2
 
-  cf$weighted <- TRUE
+  .cf$weighted <- TRUE
 
-  class(cf) <- append(class(cf), 'cf_weighted')
-  return (cf)
+  class(.cf) <- append(class(.cf), 'cf_weighted')
+  return (.cf)
 }
 
 gen.block.array <- function(n, R, l, endcorr=TRUE) {
