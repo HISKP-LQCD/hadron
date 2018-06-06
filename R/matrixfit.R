@@ -356,9 +356,9 @@ matrixfit <- function(cf, t1, t2,
   }
 
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
-              boot.R=boot.R, boot.l=boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=seed,
+              boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2,
-              parlist=parlist, sym.vec=sym.vec, seed=seed, N=N, model=model, fit.method=fit.method)
+              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method)
   res$t <- t(opt.tsboot)
   res$t0 <- c(opt.res$par, opt.res$value)
   res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=sd)

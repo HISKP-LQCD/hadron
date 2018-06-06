@@ -17,7 +17,7 @@
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
   if(missing(single.cf1)) {
@@ -99,7 +99,6 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
-  cf$cf0 <- cf$cf.tsboot$t0
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + c*exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
@@ -140,7 +139,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
 }
 
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
 
   ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
