@@ -140,7 +140,7 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   return(ret)
 }
 
-fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE) {
+fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
   if(missing(cf) || !any(class(cf) == "effectivemass" )) {
     stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
   }
@@ -172,8 +172,14 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## t1 and t2 can be in range 0-T/2
   ## if not symmetrised even in the range 0 - T-1
   ii <- c()
-  for(i in 1:cf$nrObs) {
-    ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
+  if(missing(every)){
+	  for(i in 1:cf$nrObs) {
+		ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
+	  }
+  }else{
+	  for(i in 1:cf$nrObs) {
+		ii <- c(ii, seq((i-1)*tmax+t1+1, (i-1)*tmax+t2+1, by=every))
+	  }
   }
 
   ## get rid of the NAs for the fit, if there are any
