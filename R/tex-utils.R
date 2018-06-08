@@ -48,8 +48,21 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
     while(round(10^N*err) < threshold) {
       N <- N+1
     }
-    if(human.readable) tmp <- convert.scientific(str=format(round(x, digits=N), nsmall=N), errstr=paste(round(10^N*err)))
-    else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", paste(round(10^N*err)), ")", sep="")
+    # if the error is large it may exceed the number of digits that one actually desires
+    # also, the error may be larger or similar in size to the value itself
+    # in these cases, we display it in the same format as the value, rounded to the
+    # desired number of digits
+    displayerr <- paste(round(10^N*err))
+    if( nchar(displayerr) > digits | ceiling(log10(abs(err/x))) >= 1 ){
+      displayerr <- paste(format(round(err, digits=N)))
+    }
+
+    if(human.readable){
+      tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
+                                errstr = displayerr)
+    } else {
+      tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
+    }
   }
   ret <- tmp
   if(with.dollar) {
