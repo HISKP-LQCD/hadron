@@ -142,7 +142,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 
 bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
                            sort.type = "vectors", sort.t0 = TRUE) {
-  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(sort.type %in% c("values", "vectors", "det"))
