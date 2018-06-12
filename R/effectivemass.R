@@ -122,7 +122,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     tmax <- cf$Time-1
   }
 
-  stopifnot((t2 <= t1) || (t1 < 0) || (t2 > tmax))
+  stopifnot(t1 < t2)
+  stopifnot(0 <= t1)
+  stopifnot(t2 <= tmax)
 
   cf$effmassfit <- list()
   cf$t1 <- t1
