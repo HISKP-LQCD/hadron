@@ -114,7 +114,7 @@ bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
   return(ret)
 }
 
-fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE) {
+fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
   stopifnot(inherits(cf, 'effectivemass'))
 
   tmax <- cf$Time/2
@@ -141,8 +141,14 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## t1 and t2 can be in range 0-T/2
   ## if not symmetrised even in the range 0 - T-1
   ii <- c()
-  for(i in 1:cf$nrObs) {
-    ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
+  if(missing(every)){
+	  for(i in 1:cf$nrObs) {
+		ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
+	  }
+  }else{
+	  for(i in 1:cf$nrObs) {
+		ii <- c(ii, seq((i-1)*tmax+t1+1, (i-1)*tmax+t2+1, by=every))
+	  }
   }
 
   ## get rid of the NAs for the fit, if there are any
