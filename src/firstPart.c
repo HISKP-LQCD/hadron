@@ -49,7 +49,7 @@ double complex firstPart(const double Tolerance, const int l, const int m,
   
   while(error > Tolerance){
     
-    if(pmodeSqur > npmode[0]){
+    if(pmodeSqur >= npmode[0]){
       i_npmode++;
       get_npmode(npmode, i_npmode);
       genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
