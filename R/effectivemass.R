@@ -71,34 +71,10 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor = 1.) {
+bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
-  }
-
-  if(missing(boot.R)){
-    if(cf$boot.samples){
-      boot.R <- cf$boot.R
-    } else {
-      boot.R <- 400
-    }
-  }
-
-  if(missing(boot.l)){
-    if(cf$boot.samples){
-      boot.l <- cf$boot.l
-    } else {
-      boot.l <- 20
-    }
-  }
-
-  if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-  }
   ## number of measurements
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
@@ -113,10 +89,8 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
-  if( "symmetrised" %in% names(cf) ) {
-    if(!cf$symmetrised){
-      tmax <- cf$Time-1
-    }
+  if(!cf$symmetrised){
+    tmax <- cf$Time-1
   }
   nrObs <- floor(Nt/(tmax+1))
   ## we run on the original data first
@@ -128,7 +102,7 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
+              boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed, weight.factor=weight.factor,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
@@ -141,22 +115,17 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
 }
 
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
-  if(missing(cf) || !any(class(cf) == "effectivemass" )) {
-    stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
-  }
-  if(missing(t1) || missing(t2)) {
-    stop("t1 and t2 must be specified! Aborting...!\n")
-  }
+  stopifnot(inherits(cf, 'effectivemass'))
+
   tmax <- cf$Time/2
-  if(!is.null(cf$cf$symmetrised)) {
-    if(!cf$cf$symmetrised) {
-      tmax <- cf$Time-1
-    }
+  if(!cf$cf$symmetrised) {
+    tmax <- cf$Time-1
   }
-  if((t2 <= t1) || (t1 < 0) || (t2 > (tmax))) {
-    stop("t1 < t2 and both in 0...tmax is required, tmax depending on symmetrised or not. Aborting...\n")
-  }
-  else
+
+  stopifnot(t1 < t2)
+  stopifnot(0 <= t1)
+  stopifnot(t2 <= tmax)
+
   cf$effmassfit <- list()
   cf$t1 <- t1
   cf$effmassfit$t1 <- t1

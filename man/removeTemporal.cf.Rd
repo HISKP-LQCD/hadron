@@ -12,7 +12,9 @@ removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0), p2 = c(0, 0,
 
 \item{single.cf1, single.cf2}{Object of type \code{effectivemassfit} or \code{matrixfit} which contains the one particle mass in the rest frame.
 
-If \code{single.cf2} is missing, then the mass given as \code{single.cf1} is used as well. This is sensibly done when one scatters identical particles. In case \code{single.cf1} is missing, no weighting is performed. Instead it is assumed that the user only wants to have a simple shifting. Then this function just calls \code{takeTimeDiff.cf}.}
+If \code{single.cf2} is missing, then the mass given as \code{single.cf1} is used as well. This is sensibly done when one scatters identical particles. But be careful: Even when \code{single.cf2} is missing, the \code{p2} is \emph{not} automatically copied from \code{p1}.
+
+In case \code{single.cf1} is missing, no weighting is performed. Instead it is assumed that the user only wants to have a simple shifting. Then this function just calls \code{takeTimeDiff.cf}.}
 
 \item{p1, p2}{Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.}
 

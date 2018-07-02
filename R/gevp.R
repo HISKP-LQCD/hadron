@@ -140,28 +140,22 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 }
 
 
-bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
-                           element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE) {
-  ## number of measurements
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
-  }
-  if(!any(c("values", "vectors", "det") == sort.type)) {
-    stop("possible values for sort.ype are values or vectors. Aborting\n")
-  }
+bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
+                           sort.type = "vectors", sort.t0 = TRUE) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(sort.type %in% c("values", "vectors", "det"))
+
   N <- length(cf$cf[,1])
-  if(!cf$boot.samples) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-  }
-  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
+  seed <- cf$seed
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
+  matrix.size <- as.integer(round(sqrt(length(element.order))))
+  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
-                         matrix.size=matrix.size, element.order=element.order,
+                         element.order=element.order,
                          for.tsboot=TRUE, sort.type=sort.type, sort.t0=sort.t0))
 
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
@@ -174,37 +168,42 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
 }
 
 gevp2cf <- function(gevp, id=1) {
-  if(!inherits(gevp, "gevp")) {
-    stop("gevp2cf requires an element of class gevp as input. Aborting...\n")
-  }
-  if(id > gevp$matrix.size || id < 1) {
-    stop("gevp2cf: id must be <= matrix.size and > 0. Aborting...\n")
-  }
-  cf <- list()
-  cf$N <- length(gevp$cf$cf[,1])
-  cf$cf0 <- gevp$res.gevp$evalues[,id]
-  cf$boot.samples <- TRUE
-  cf$boot.R <- gevp$boot.R
-  cf$boot.l <- gevp$boot.l
-  cf$seed <- gevp$seed
-  cf$nrStypes <- 1
-  cf$nrObs <- 1
-  cf$Time <- gevp$cf$Time
+  stopifnot(inherits(gevp, "gevp"))
+  stopifnot(!(id > gevp$matrix.size || id < 1))
+
+  # Base `cf` properties.
+  cf <- cf_meta(nrObs = 1,
+                Time = gevp$cf$Time,
+                nrStypes = 1,
+                symmetrised = gevp$cf$symmetrised)
+
+  # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
-  cf$cf.tsboot <- list()
-  cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
-  cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
-  ## the bootstrap error
-  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
-  cf$id <- id
-  if(any(names(gevp$cf) == "weighted")) {
-    cf$weighted <- gevp$cf$weighted
-    cf$weight.cosh <- gevp$cf$weight.cosh
-    cf$mass1 <- gevp$cf$mass1
-    cf$mass2 <- gevp$cf$mass2
+  cf.tsboot <- list(t = gevp$gevp.tsboot[,tt],
+                    t0 = gevp$res.gevp$evalues[,id])
+
+  cf <- cf_boot(cf,
+                boot.R = gevp$boot.R,
+                boot.l = gevp$boot.l,
+                seed = gevp$seed,
+                sim = gevp$cf$sim,
+                cf.tsboot = cf.tsboot)
+
+  cf <- cf_principal_correlator(cf,
+                                id = id)
+
+  if (inherits(gevp$cf, 'cf_weighted')) {
+    cf <- cf_weighted(cf,
+                      weight.factor = gevp$cf$weight.factor,
+                      weight.cosh = gevp$cf$weight.cosh,
+                      mass1 = gevp$cf$mass1,
+                      mass2 = gevp$cf$mass2)
   }
-  attr(cf, "class") <- c("cf", class(cf))
-  return(invisible(cf))
+
+  # Add some other stuff
+  cf$N <- length(gevp$cf$cf[,1])
+
+  return (invisible(cf))
 }
 
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
