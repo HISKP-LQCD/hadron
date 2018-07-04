@@ -7,16 +7,16 @@
 language: r
 cache: packages
 
-r: 
-  bioc-release
+r:
+  - release 
+
+r_packages:
   tikzDevice
   minpack.lm
   boot
 
-addons:
-  apt:
-    packages:
-      - libgsl-dev  
+apt_packages:
+  - libgsl-dev  
 
 sudo: required
 
