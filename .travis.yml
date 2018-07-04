@@ -11,9 +11,7 @@ r:
   - release 
 
 r_packages:
-  - tikzDevice
-  - minpack.lm
-  - boot
+  tikzDevice, minpack.lm, boot
 
 apt_packages:
   - libgsl-dev  
