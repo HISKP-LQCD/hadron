@@ -2,7 +2,7 @@
 #
 # See README.md for instructions, or for more configuration options,
 # see the wiki:
-#   https://github.com/craigcitro/r-travis/wiki
+#   https://docs.travis-ci.com/user/languages/r/
 
 language: r
 cache: packages
@@ -11,9 +11,9 @@ r:
   - release 
 
 r_packages:
-  tikzDevice
-  minpack.lm
-  boot
+  - tikzDevice
+  - minpack.lm
+  - boot
 
 apt_packages:
   - libgsl-dev  
