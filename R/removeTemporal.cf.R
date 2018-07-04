@@ -207,5 +207,5 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                     deltat = deltat,
                     forwardshift = forwardshift)
 
-  return(invisible(cf))
+  return(invisible(ret))
 }
