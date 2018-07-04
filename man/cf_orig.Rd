@@ -4,7 +4,7 @@
 \alias{cf_orig}
 \title{Original data CF mixin constructor}
 \usage{
-cf_orig(.cf, cf, icf = NULL)
+cf_orig(.cf = cf(), cf, icf = NULL)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend. Named with a leading period just to distinguish it from the member also named \code{cf}.}
@@ -18,7 +18,7 @@ Original data CF mixin constructor
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}},
+  \code{\link{cf_jackknife}}, \code{\link{cf_meta}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},

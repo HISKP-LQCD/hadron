@@ -4,21 +4,22 @@
 \alias{cf_subtracted}
 \title{Subtracted CF mixin constructor}
 \usage{
-cf_subtracted(cf, subtracted.values, subtracted.ii)
+cf_subtracted(.cf = cf(), subtracted.values, subtracted.ii)
 }
 \arguments{
-\item{cf}{\code{cf} object to extend.}
-
 \item{subtracted.values}{Numeric matrix, TODO}
 
 \item{subtracted.ii}{Integer vector, TODO}
+
+\item{cf}{\code{cf} object to extend.}
 }
 \description{
 Subtracted CF mixin constructor
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
+  \code{\link{cf_jackknife}}, \code{\link{cf_meta}},
+  \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_weighted}}, \code{\link{cf}}

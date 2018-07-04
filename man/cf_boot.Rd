@@ -4,11 +4,9 @@
 \alias{cf_boot}
 \title{Bootstrapped CF mixin constructor}
 \usage{
-cf_boot(cf, boot.R, boot.l, seed, sim, cf.tsboot)
+cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot)
 }
 \arguments{
-\item{cf}{\code{cf} object to extend.}
-
 \item{boot.R}{Integer, number of bootstrap samples used.}
 
 \item{boot.l}{Integer, block length in the time-series bootstrap process.}
@@ -18,6 +16,8 @@ cf_boot(cf, boot.R, boot.l, seed, sim, cf.tsboot)
 \item{sim}{Character, \code{sim} argument of \link{boot::tsboot}.}
 
 \item{cf.tsboot}{List, result from the \link{boot::tsboot} function.}
+
+\item{cf}{\code{cf} object to extend.}
 }
 \description{
 Bootstrapped CF mixin constructor
@@ -32,7 +32,7 @@ The following fields will also be made available:
 }
 \seealso{
 Other cf constructors: \code{\link{cf_jackknife}},
-  \code{\link{cf_orig}},
+  \code{\link{cf_meta}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
