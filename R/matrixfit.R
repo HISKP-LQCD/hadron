@@ -366,7 +366,8 @@ matrixfit <- function(cf, t1, t2,
   return(invisible(res))
 }
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, rep=FALSE, col,...) {
+plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y",
+                           do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col,...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -377,58 +378,85 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, do.qqplot=TRUE, rep
   if(mfit$model == "shifted" && any(names(mfit$cf) == "deltat")) {
     deltat <- mfit$cf$deltat
   }
-  # prevent stray negative values from ruining the plot
-  lbound <- ov.sign.vec*mfit$CF$Cor - 2*mfit$CF$Err
-  lbound <- lbound[ lbound > 0 ]
-  if(missing(ylim)) ylims <- c( min( lbound, na.rm=TRUE ) , max( ov.sign.vec*mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
-  else ylims <- ylim
-
   if(missing(col)){
     col <- c("black",rainbow(n=(mfit$mSize-1)))
   }
-  plotwitherror(x=mfit$CF$t, y=ov.sign.vec*mfit$CF$Cor, 
-                dy=mfit$CF$Err, log="y", ylim=ylims, rep=rep, col=col,...)
+
+  if(missing(ylim)) {
+    if(plot.raw) {
+      ## prevent stray negative values from ruining the plot
+      lbound <- ov.sign.vec*mfit$CF$Cor - 2*mfit$CF$Err
+      lbound <- lbound[ lbound > 0 ]
+      ylims <- c( min( lbound, na.rm=TRUE ) , max( ov.sign.vec*mfit$CF$Cor + 2*mfit$CF$Err, na.rm=TRUE ) )
+    }
+    else ylims <- c(0,3)
+  }
+  else ylims <- ylim
+  
+  if(!rep) {
+    ## generate an empty plot
+    if(plot.raw) plot(NA, log="y", ylim=ylims, xlim=range(mfit$CF$t), xlab=xlab, ylab=ylab, ...)
+    else plot(NA, ylim=ylims, xlim=range(mfit$CF$t), xlab=xlab, ylab=ylab, ...)
+  }
   tx <- seq(mfit$t1, mfit$t2, 0.05)
+
   for(i in 1:mfit$mSize ) {
+    ii <- c(((i-1)*Thalfp1+1):(i*Thalfp1))
+    tt <- mfit$CF$t[ii]
+    
     par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
-
+    
     if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
+    yp <- rep(1, times=length(tt))
+    
+    if(!plot.raw) {
+      if(mfit$model == "shifted") {
+        yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(T-(tt-deltat/2))))
+      }
+      else {
+        yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(T-tt)))
+      }
+    }
+    
+    plotwitherror(x=mfit$CF$t[ii], y=ov.sign.vec[ii]*mfit$CF$Cor[ii]/yp, dy=mfit$CF$Err[ii]/yp,
+                  rep=TRUE, col=col[i])
 
+    lwd <- c(3)
     if(plot.errorband) {
       ## in the following the covariance matrix of the paramters and vectors of derivatives
       ## of the correlation function with respect to these parameters will be computed
       ## there is some level of waste because certain combinations of parameters might
       ## occur multiple times, but the overhead is small and this way is the most convenient
-
+      
       parCov <- cov(mfit$t[,par.ind])
-
+      
       ## 3 by length(tx) array of derivatives of the model with respect to the three parameters
       ## if any parameters are the same, multiplication with the covariance matrix will give
       ## the correct contributions to the derivative
       if(mfit$model == "shifted") div <- deriv.CExp.shifted(par=pars, t=tx, T=T, sign=sgn, deltat)
       else div <- deriv.CExp(par=pars, t=tx, T=T, sign=sgn)
       yvar <- t(div) %*% parCov %*% div
-
+      
       ## yvar is a length(tx) by length(tx) matrix of which only the diagonal elements are of
       ## interest here
       ysd <- sqrt(diag(yvar))
-
+      
       polyval <- c( (y + ysd), rev(y - ysd) )
+      if(!plot.raw) polyval <- polyval/c(y, rev(y))
       polyx <- c(tx,rev(tx))
       polycol <- col2rgb(col[i],alpha=TRUE)/255
       polycol[4] <- 0.65
-
+      
       polygon(x=polyx,y=polyval,col=rgb(red=polycol[1],green=polycol[2],blue=polycol[3],alpha=polycol[4]),border=NA)
-      lines(tx, y, col=col[i], lwd=c(1))
+      lwd <- c(1)
     }
-    else {
-      lines(tx, y, col=col[i], lwd=c(3))
-    }
-  }
 
+    if(plot.raw) lines(tx, y, col=col[i], lwd=lwd)
+    else abline(h=1, lwd=lwd, lty=2)
+  }
   if(do.qqplot){
     if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
       X11()
