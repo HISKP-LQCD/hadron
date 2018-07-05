@@ -4,11 +4,9 @@
 \alias{cf_jackknife}
 \title{Jackknifed CF mixin constructor}
 \usage{
-cf_jackknife(.cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se)
+cf_jackknife(.cf = cf(), boot.l, cf.jackknife, jackknife.se)
 }
 \arguments{
-\item{cf0}{\emph{See above}.}
-
 \item{boot.l}{\emph{See above}.}
 
 \item{cf.jackknife}{List, containing jackknife samples:
@@ -21,6 +19,8 @@ cf_jackknife(.cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se)
 \item{jackknife.se}{Numeric vector, standard error over jackknife samples.}
 
 \item{cf}{\code{cf} object to extend.}
+
+\item{cf0}{\emph{See above}.}
 }
 \description{
 With the \code{cf_jackknife} mixin, it also must have the following fields:

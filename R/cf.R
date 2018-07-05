@@ -105,10 +105,9 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
 #' @family cf constructors
 #'
 #' @export
-cf_jackknife <- function (.cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
-  stopifnot(inherits(.cf, 'cf'))
+cf_jackknife <- function (.cf = cf(), boot.l, cf.jackknife, jackknife.se) {
+  stopifnot(inherits(.cf, 'cf_orig'))
 
-  .cf$cf0 <- cf0
   .cf$boot.l <- boot.l
   .cf$cf.jackknife <- cf.jackknife
   .cf$jackknife.se <- jackknife.se
@@ -125,6 +124,12 @@ cf_jackknife <- function (.cf = cf(), cf0, boot.l, cf.jackknife, jackknife.se) {
 #' @param cf Numeric matrix, original data for all observables and measurements.
 #' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
 #'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `cf0`: Numeric vector, mean of original data.
+#'
 #' @family cf constructors
 #'
 #' @export
@@ -140,6 +145,8 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   else {
     .cf$icf <- icf
   }
+
+  .cf$cf0 = apply(.cf$cf, MARGIN = 2, FUN = mean)
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
@@ -345,7 +352,6 @@ jackknife.cf <- function(cf, boot.l=2) {
                            n=n, N=N, l=boot.l)
 
   cf <- cf_jackknife(cf,
-                     cf0 = apply(cf$cf, MARGIN = 2, FUN = mean),
                      boot.l = boot.l,
                      cf.jackknife = cf.jackknife,
                      jackknife.se = jackknife.se)
