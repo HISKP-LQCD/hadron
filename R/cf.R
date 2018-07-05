@@ -146,7 +146,7 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
     .cf$icf <- icf
   }
 
-  .cf$cf0 = apply(.cf$cf, MARGIN = 2, FUN = mean)
+  .cf$cf0 <- apply(.cf$cf, MARGIN = 2, FUN = mean)
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
@@ -604,6 +604,7 @@ c.cf <- function(...) {
     for (i in 2:length(fcall)) {
       cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
       cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
+      cf$cf0 <- cbind(cf$cf0, fcall[[i]]$cf0)
     }
   }
   cf <- invalidate.samples.cf(cf)
@@ -671,7 +672,6 @@ invalidate.samples.cf <- function(cf){
   cf$boot.l <- NULL
   cf$boot.R <- NULL
   cf$boot.samples <- NULL
-  cf$cf0 <- NULL
   cf$jackknife <- NULL
   cf$jackknife.samples <- NULL
   cf$jackknife.se <- NULL
