@@ -192,6 +192,12 @@ gevp2cf <- function(gevp, id=1) {
   cf <- cf_principal_correlator(cf,
                                 id = id)
 
+  if (inherits(gevp$cf, 'cf_shifted')) {
+    cf <- cf_shifted(cf,
+                     deltat = gevp$cf$deltat,
+                     forwardshift = gevp$cf$forwardshift)
+  }
+
   if (inherits(gevp$cf, 'cf_weighted')) {
     cf <- cf_weighted(cf,
                       weight.factor = gevp$cf$weight.factor,
