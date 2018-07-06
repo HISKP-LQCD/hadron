@@ -175,11 +175,11 @@ onlinemeas <- function(data, t1, t2,
   for(t in t1p1:t2p1) {
     mass <- uwerrderived(pcacsym.online, data=t(W), S=S, pl=FALSE, t=t, T1=T1)
     dpaopp$t[i] <- t-1
-    dpaopp$mass[i] <- mass$value[1]
-    dpaopp$dmass[i] <- mass$dvalue[1]
-    dpaopp$ddmass[i] <- mass$ddvalue[1]
-    dpaopp$tauint[i] <- mass$tauint[1]
-    dpaopp$dtauint[i] <- mass$dtauint[1]
+    dpaopp$mass[i] <- mass$res$value[1]
+    dpaopp$dmass[i] <- mass$res$dvalue[1]
+    dpaopp$ddmass[i] <- mass$res$ddvalue[1]
+    dpaopp$tauint[i] <- mass$res$tauint[1]
+    dpaopp$dtauint[i] <- mass$res$dtauint[1]
     i=i+1
   }
 
