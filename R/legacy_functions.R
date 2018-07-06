@@ -22,11 +22,9 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   for(t in from:to) {
     try(mass <- uwerrderived(f=effmass2, data=t(Z[t:(t+1),]), S=S, pl=F, timeextent=Time, t=t, ...))
 
-   cat(sprintf("Time t=%d\n", t)) 
-       print(str(mass))
-       cat("\n\n")
-
     result$t[i] <- t-1
+    # these are NA, rather than single element vectors containing NA, so we need
+    # to check for their lengths, otherwise the assignments below fail 
     if( length(mass$res$value) > 0 ){
       result$mass[i] <- mass$res$value[1]
     }
