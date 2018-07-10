@@ -123,13 +123,13 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                  symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
                  cf = cf$cf)
-  ret <- cf_boot(cf,
+  ret <- cf_boot(ret,
                  boot.R = cf$boot.R,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
                  cf.tsboot = cf$cf.tsboot)
-  ret <- cf_weighted(cf,
+  ret <- cf_weighted(ret,
                      weight.factor = 1.0,
                      weight.cosh = weight.cosh,
                      mass1 = mass1,
