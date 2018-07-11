@@ -1,4 +1,5 @@
 bootstrap.nlsfit <- function(fn,
+                             gr = NULL,
                              par.guess,
                              errormodel="yerrors",
                              sim="parametric",
