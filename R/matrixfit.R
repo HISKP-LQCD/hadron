@@ -369,6 +369,20 @@ matrixfit <- function(cf, t1, t2,
   return(invisible(res))
 }
 
+#' plot a matrixfit
+#' 
+#' @param mfit an object of class matrixfit
+#' @param plot.errorband Boolean: whether or not to plot an errorband
+#' @param ylim Numeric vector: y-limit of the plot
+#' @param xlab String: label of x-axis
+#' @param ylab String: label of y-axis
+#' @param do.qqplot Boolean: whether or not to plot an QQ-plot
+#' @param plot.raw Boolean: plot the raw data or multiply out the leading exponetial behaviour
+#' @param rep Boolean: whether or not to add to existing plot
+#' @param col String vector: vector of colours for the different correlation functions
+#' 
+#' @seealso \code{\link{matrixfit}}
+
 plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y",
                            do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col,...) {
   par <- mfit$opt.res$par
