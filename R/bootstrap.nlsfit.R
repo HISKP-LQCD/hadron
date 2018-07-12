@@ -17,27 +17,32 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## the chi functions for nls.lm
-  fitchi <- function(par, x, y, dy, fitfun) {
-    (y - fitfun(par=par, x=x)) %*% dy
+  fitchi <- function(par, x, y, dy, fitfun, dfitfun=NULL, ...) {
+    (y - fitfun(par=par, x=x, ...)) %*% dy
   }
-  fitchi.xy <- function(par, y, dy, fitfun, nx) {
+  dfitchi <- function(par, x, y, dy, dfitfun, fitfun=NULL, ...) {
+    -as.vector(t(crossprod(dfitfun(par=par, x=x, ...), dy)))
+  }
+  fitchi.xy <- function(par, y, dy, fitfun, nx, ...) {
     ipx <- length(par)-seq(nx-1,0)
-    (y - c(fitfun(par=par[-ipx], x=par[ipx]), par[ipx])) %*% dy
+    (y - c(fitfun(par=par[-ipx], x=par[ipx], ...), par[ipx])) %*% dy
   }
 
   ## the corresponding chisqr functions
-  fitchisqr <- function(par, x, y, dy, fitfun) {
-    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun)
+  fitchisqr <- function(par, x, y, dy, fitfun, ...) {
+    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, ...)
     return (sum(z * z))
   }
-  fitchisqr.xy <- function(par, y, dy, fitfun, nx) {
-    z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx)
+  fitchisqr.xy <- function(par, y, dy, fitfun, nx, ...) {
+    z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx, ...)
     return (sum(z * z))
   }
 
   ## wrapper functions for apply
-  wrapper.lm <- function(y, par, fitfun, dy, x, ...) {
-    res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x, ...)
+  wrapper.lm <- function(y, par, fitfun, dfitfun, dy, x, ...) {
+    res <- NA
+    if(is.null(dfitfun))  res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x, ...)
+    else res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, jac=dfitchi, dy=dy, x=x, dfitfun=dfitfun, ...)
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
   wrapper.lm.xy <- function(y, par, fitfun, dy, nx, ...) {
@@ -105,18 +110,18 @@ bootstrap.nlsfit <- function(fn,
 
   if(errormodel == "yerrors") {
     if(lm.avail) {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn)
+      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn, dfitfun=gr, ...)
     }
     else {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim, x=x, dy=dY, par=par.guess, fitfun=fn)
+      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim, x=x, dy=dY, par=par.guess, fitfun=fn, ...)
     }
   }
   else { ## xyerrors
     if(lm.avail) {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn)
+      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn, ...)
     }
     else {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn)
+      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn, ...)
     }
   }
 
@@ -128,7 +133,7 @@ bootstrap.nlsfit <- function(fn,
               errormodel=errormodel,
               t0=boot.res[,1],
               t=t(boot.res),
-			  se=errors,
+              se=errors,
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
