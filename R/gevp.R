@@ -72,10 +72,12 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   
   ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
-  for(t in c((t0 + 1):(Thalf), 0:(t0-1))) {
+  for(t in c((t0 + 1):(Thalf), (t0-1):0)) {
     t.sort <- t0+2
-    ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1
-    if((t != t0+1) && !sort.t0) t.sort <- t
+    ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1 for t > t0
+    if((t > t0+1) && !sort.t0) t.sort <- t
+    ## and t.sort <- t + 1 + 1 for t < t0
+    if((t < t0-1) && !sort.t0) t.sort <- t + 2
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
