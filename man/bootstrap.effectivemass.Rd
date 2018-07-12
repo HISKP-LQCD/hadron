@@ -107,7 +107,7 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
 \examples{
 data(samplecf)
 samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
-effmass <- bootstrap.effectivemass(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+effmass <- bootstrap.effectivemass(cf=samplecf)
 summary(effmass)
 plot(effmass, ylim=c(0.14,0.15))
 }
