@@ -48,7 +48,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   }
   ## index array for indexing the linear data
   ii <- c()
-  for(i in 1:Ncor) {
+  for(i in c(1:Ncor)) {
     ii <- c(ii, (i-1)*(Thalf+1)+1)
   }
   ## re-order as to match the input order
@@ -70,12 +70,12 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   L <- chol(cM)
   invL <- solve(L)
   
-  ## now the time dependence for t > t0
+  ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
-  for(t in (t0+1):(Thalf)) {
-    
+  for(t in c((t0 + 1):(Thalf), 0:(t0-1))) {
     t.sort <- t0+2
-    if((t > t0+1) && !sort.t0) t.sort <- t
+    ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1
+    if((t != t0+1) && !sort.t0) t.sort <- t
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
