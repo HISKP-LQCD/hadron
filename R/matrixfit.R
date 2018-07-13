@@ -377,25 +377,36 @@ matrixfit <- function(cf, t1, t2,
   ## we get initial guesses for fit parameters from effective masses
   ## first is the mass
   ## (we currently allow for only one)
-  j <- which(parlist[1,]==1 & parlist[2,]==1)
-  par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$T)
-  ## catch failure of invcosh
-  if(is.na(par[1]) || is.nan(par[1])) par[1] <- 0.2
-  ## the amplitudes we estimate from diagonal elements
-  for(i in 2:length(par)) {
-    j <- which(parlist[1,]==(i-1) & parlist[2,]==(i-1))
-    if(length(j) == 0) {
-      ##if(full.matrix) warning("one diagonal element does not appear in parlist\n")
-      j <- i-1
-    }
-    par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
+  if(pcmodel) {
+    ## the ground state energy
+    par[1] <- log(CF$Cor[t0p1]/CF$Cor[t0p1+1])
+    ## the deltaE
+    par[2] <- log(CF$Cor[t1p1]/CF$Cor[t1p1+1]) - par[1]
+    ## the amplitude
+    par[3] <- 1.
   }
-  cat(par, "\n")
+  else {
+    j <- which(parlist[1,]==1 & parlist[2,]==1)
+    par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$T)
+    ## catch failure of invcosh
+    if(is.na(par[1]) || is.nan(par[1])) par[1] <- 0.2
+    ## the amplitudes we estimate from diagonal elements
+    for(i in 2:length(par)) {
+      j <- which(parlist[1,]==(i-1) & parlist[2,]==(i-1))
+      if(length(j) == 0) {
+        ##if(full.matrix) warning("one diagonal element does not appear in parlist\n")
+        j <- i-1
+      }
+      par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
+    }
+  }
+
   ## for pcmodel we have three parameters
   if(pcmodel) {
-    par[1] <- 0.3470281 
-    par[2] <- 1.8820590 
-    par[3] <- 0.8080735
+    ##par[2] <- 1.8820590 
+    ##par[3] <- 0.8080735
+    par[2] <- 2.
+    par[3] <- 1.
   }
   
   fitfn <- matrixChisqr
@@ -447,7 +458,7 @@ matrixfit <- function(cf, t1, t2,
   if(lm.avail) {
     opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
                       parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], t0=t0p1,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, nprint=1))
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
