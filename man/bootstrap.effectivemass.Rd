@@ -6,24 +6,13 @@
   object of class \code{cf} (a correlation function)
 }
 \usage{
-bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor=1)
+bootstrap.effectivemass(cf, type="solve", weight.factor=1)
 }
 \arguments{
   \item{cf}{
     a correlation function as an object of type \code{cf}, preferably
     after a call to \code{\link{bootstrap.cf}}. If the latter has not
     been called yet, it will be called in this function.
-  }
-  \item{boot.R}{
-    only used if no preceeding call to \code{\link{bootstrap.cf}} has
-    happened and it counts the number of bootstrap samples.
-  }
-  \item{boot.l}{
-    only used if no preceeding call to \code{\link{bootstrap.cf}} has
-    happened and it counts the bootstrap block length.
-  }
-  \item{seed}{
-    the seed used in the bootstrap sample generation (for reproducability).
   }
   \item{type}{
     The function to be used to compute the effective mass
