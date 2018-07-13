@@ -146,7 +146,7 @@ bootstrap.nlsfit <- function(fn,
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
-              Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
+              Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(y) - length(par.guess)),
               chisqr = boot.res[dim(boot.res)[1],1],
               dof = length(y) - length(par.guess),
               tofn=list(...))
