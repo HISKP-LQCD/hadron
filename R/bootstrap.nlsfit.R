@@ -41,12 +41,22 @@ bootstrap.nlsfit <- function(fn,
   ## wrapper functions for apply
   wrapper.lm <- function(y, par, fitfun, dfitfun, dy, x, ...) {
     res <- NA
-    if(is.null(dfitfun))  res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x, ...)
-    else res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, jac=dfitchi, dy=dy, x=x, dfitfun=dfitfun, ...)
+    if(is.null(dfitfun))  res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x,
+                                                    control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
+    else res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, jac=dfitchi, dy=dy, x=x, dfitfun=dfitfun,
+                                   control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
+    if( !(res$info %in% c(1,2,3) ) ){
+      cat(sprintf("Termination reason of nls.lm res$info: %d\n", opt.res$info))
+    }
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
   wrapper.lm.xy <- function(y, par, fitfun, dy, nx, ...) {
-    res <- minpack.lm::nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx, ...)
+    res <- minpack.lm::nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx,
+                              control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500),
+                              ...)
+    if( !(res$info %in% c(1,2,3) ) ){
+      cat(sprintf("Termination reason of nls.lm res$info: %d\n", opt.res$info))
+    }
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
 
@@ -138,7 +148,8 @@ bootstrap.nlsfit <- function(fn,
               invCovMatrix=dY,
               Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(par.guess)),
               chisqr = boot.res[dim(boot.res)[1],1],
-              dof = length(y) - length(par.guess))
+              dof = length(y) - length(par.guess),
+              tofn=list(...))
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
 }
@@ -181,7 +192,7 @@ print.bootstrapfit <- function(x, digits=2, ...) {
   summary.bootstrapfit(object=x, digits=digits, ...)
 }
 
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1)) {
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y") {
   rx <- range(x$x)
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/1000)
   npar <- length(x$par.guess)
@@ -212,27 +223,30 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
     
     ## generate empty plot
     
-    plot(NA, xlim=my.xlim, ylim=my.ylim, ...)
+    plot(NA, xlim=my.xlim, ylim=my.ylim, xlab=xlab, ylab=ylab, ...)
   }
-  
-  if(x$errormodel == "yerrors") {
-    Y <- x$fn(par=x$t0, x=X)
-  }
-  else {
-    Y <- x$fn(par=x$t0[1:npar], x=X)
-  }
+
+  ## to include additional parameter to x$fn originally given as ... to bootstrap.nlsfit
+  ## requires some pull-ups
+  Y <- do.call(what=x$fn, args=c(list(par=x$t0[1:npar], x=X), x$tofn))
+
   ## error band
-  se <- apply(X=apply(X=x$t[, c(1:npar)], MARGIN=1, FUN=x$fn, x=X), MARGIN=1, FUN=sd)
+  ## define a dummy function to be used in apply
+  dummyfn <- function(par, x, object) {
+    return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
+  }
+  se <- apply(X=apply(X=x$t[, c(1:npar)], MARGIN=1, FUN=dummyfn, x=X, object=x), MARGIN=1, FUN=sd)
+  ## plot it
   polygon(x=c(X, rev(X)), y=c(Y+se, rev(Y-se)), col=col.band, lty=0, lwd=0.001, border=col.band)
-  ## fitted curve
+  ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 
-  ## plot data with fitted curve on top of everything
+  ## plot data on top of everything
   if(x$errormodel == "yerrors") {
-    plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=TRUE, ...)
+    plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=TRUE)
   }
   else {
-    plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=TRUE,...)
+    plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=TRUE)
   }
 }
 
