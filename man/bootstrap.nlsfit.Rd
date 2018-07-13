@@ -30,7 +30,8 @@ col.band="gray", lty=c(1), lwd=c(1))
     must be \code{x}, the explaining variable.
   }
   \item{gr}{
-    A function to return the gradient of \code{fn}
+    A function to return the gradient of \code{fn}. It must return an
+    array with \code{length(x)} rows and \code{length(par)} columns.
   }
   \item{par.guess}{
     Initial guess values for the fit parameters.
@@ -134,6 +135,10 @@ col.band="gray", lty=c(1), lwd=c(1))
   \item{chisqr}{the residual chisqr value.}
   \item{dof}{the residual degrees of freedom of the fit.}
   \item{nx}{the number of x-values.}
+  \item{tofn}{
+    the original \code{...} list of parameters to be passed on to the
+    fit function
+  }
 }
 %%\references{
 %% ~put references to the literature/web site here ~
