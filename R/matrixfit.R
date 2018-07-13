@@ -527,7 +527,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
     sgn <- sign.vec[(i-1)*Thalfp1+1]
     
     if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
-    else if(mfit$model == "pc") y <- pcModel(par=par, t=tx, T=T, t0=mfit$t0p1-1)
+    else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, t0=mfit$t0p1-1)
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
     yp <- rep(1, times=length(tt))
     
@@ -535,12 +535,15 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
       if(mfit$model == "shifted") {
         yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(T-(tt-deltat/2))))
       }
+      else if(mfit$model == "pc") {
+        yp <- exp(-par[1]*(tt - mfit$t0p1 + 1))*par[3]
+      }
       else {
         yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(T-tt)))
       }
     }
 
-    lwd <- c(3)
+    lwd <- c(1.5)
     if(plot.errorband) {
       ## in the following the covariance matrix of the paramters and vectors of derivatives
       ## of the correlation function with respect to these parameters will be computed
@@ -567,7 +570,13 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
         polyval[polyval < ylims[1]] <- ylims[1]
         polyval[polyval > ylims[2]] <- ylims[2]
       }
-      if(!plot.raw) polyval <- polyval/c(y, rev(y))
+      if(!plot.raw) {
+        if(mfit$model == "pc") {
+          tmp <- exp(-par[1]*(tx - mfit$t0p1 + 1))*par[3]
+          polyval <- polyval/c(tmp, rev(tmp))
+        }
+        else polyval <- polyval/c(y, rev(y))
+      }
       polyx <- c(tx,rev(tx))
       polycol <- col2rgb(col[i],alpha=TRUE)/255
       polycol[4] <- 0.65
@@ -577,6 +586,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
     }
 
     if(plot.raw) lines(tx, y, col=col[i], lwd=lwd)
+    else if(mfit$model == "pc") lines(tx, y/(exp(-par[1]*(tx - mfit$t0p1 + 1))*par[3]), col=col[i], lwd=lwd)
     else abline(h=1, lwd=lwd, lty=2)
 
     ## plot data last to have them on top of lines and bands
