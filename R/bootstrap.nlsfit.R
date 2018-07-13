@@ -20,18 +20,30 @@ bootstrap.nlsfit <- function(fn,
   fitchi <- function(par, x, y, dy, fitfun, dfitfun=NULL, ...) {
     (y - fitfun(par=par, x=x, ...)) %*% dy
   }
+  ## checked
   dfitchi <- function(par, x, y, dy, dfitfun, fitfun=NULL, ...) {
     -as.vector(t(crossprod(dfitfun(par=par, x=x, ...), dy)))
   }
-  fitchi.xy <- function(par, y, dy, fitfun, nx, ...) {
+  fitchi.xy <- function(par, y, dy, fitfun, dfitfun=NULL, nx, ...) {
     ipx <- length(par)-seq(nx-1,0)
     (y - c(fitfun(par=par[-ipx], x=par[ipx], ...), par[ipx])) %*% dy
   }
+  ## not checked yet
+  dfitchi.xy <- function(par, x, y, dy, dfitfun, fitfun=NULL, nx, ...) {
+    ipx <- length(par)-seq(nx-1,0)
+    -as.vector(t(crossprod(dfitfun(par=par[-ipx], x=x[ipx], ...), dy)))
+    ## pieces missing
+  }
 
   ## the corresponding chisqr functions
-  fitchisqr <- function(par, x, y, dy, fitfun, ...) {
-    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, ...)
+  fitchisqr <- function(par, x, y, dy, fitfun, dfitfun, ...) {
+    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, dfitfun=NULL, ...)
     return (sum(z * z))
+  }
+  dfitchisqr <- function(par, x, y, dy, dfitfun, fitfun, ...) {
+    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, dfitfun=dfitfun, ...)
+    dz <- dfitchi(par=par, x=x, y=y, dy=dy, dfitfun=dfitfun, fitfun=fitfun, ...)
+    return(2*(z %*% array(dz, dim=c(length(x), length(par)))))
   }
   fitchisqr.xy <- function(par, y, dy, fitfun, nx, ...) {
     z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx, ...)
@@ -60,13 +72,16 @@ bootstrap.nlsfit <- function(fn,
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
 
-  wrapper.optim <- function(y, par, fitfun, dy, x, ...) {
-    res <- optim(par=par, fn=fitchisqr, y=y, method=c("BFGS"), fitfun=fitfun, dy=dy, x=x, ...)
-    return (c(res$par, res$rsstrace[length(res$rsstrace)]))
+  wrapper.optim <- function(y, par, fitfun, dy, x, dfitfun, ...) {
+    res <- NA
+    if(is.null(dfitfun)) res <- optim(par=par, fn=fitchisqr, y=y, method=c("BFGS"), fitfun=fitfun, dy=dy, x=x, ...)
+    else res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), fitfun=fitfun, dfitfun=dfitfun, dy=dy, x=x, ...)
+
+    return (c(res$par, res$value))
   }
   wrapper.optim.xy <- function(y, par, fitfun, dy, nx, ...) {
     res <- optim(par=par, fn=fitchisqr.xy, y=y, method=c("BFGS"), fitfun=fitfun, dy=dy, nx=nx, ...)
-    return (c(res$par, res$rsstrace[length(res$rsstrace)]))
+    return (c(res$par, res$value))
   }
 
   crr <- c(1:(boot.R+1))
@@ -123,7 +138,7 @@ bootstrap.nlsfit <- function(fn,
       boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn, dfitfun=gr, ...)
     }
     else {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim, x=x, dy=dY, par=par.guess, fitfun=fn, ...)
+      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim, x=x, dy=dY, par=par.guess, fitfun=fn, dfitfun=gr, ...)
     }
   }
   else { ## xyerrors
