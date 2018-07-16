@@ -52,22 +52,23 @@ bootstrap.nlsfit <- function(fn,
 
   ## wrapper functions for apply
   wrapper.lm <- function(y, par, fitfun, dfitfun, dy, x, ...) {
-    res <- NA
+    res <- list()
     if(is.null(dfitfun))  res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x,
                                                     control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
     else res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, jac=dfitchi, dy=dy, x=x, dfitfun=dfitfun,
                                    control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
     if( !(res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm res$info: %d\n", opt.res$info))
+      cat(sprintf("Termination wrapper.lm reason of nls.lm res$info: %d\n", res$info))
     }
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
   wrapper.lm.xy <- function(y, par, fitfun, dy, nx, ...) {
+    res <- list()
     res <- minpack.lm::nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx,
                               control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500),
                               ...)
     if( !(res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm res$info: %d\n", opt.res$info))
+      cat(sprintf("Termination wrapper.lm.xy reason of nls.lm res$info: %d\n", res$info))
     }
     return (c(res$par, res$rsstrace[length(res$rsstrace)]))
   }
@@ -131,6 +132,9 @@ bootstrap.nlsfit <- function(fn,
       stop("Variance-covariance matrix could not be inverted!")
     }
     dY <- chol(InvCovMatrix)
+  }
+  else {
+    dY <- diag(1./dY)
   }
 
   if(errormodel == "yerrors") {
@@ -212,6 +216,8 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/1000)
   npar <- length(x$par.guess)
   Y <- numeric()
+  my.xlim <- numeric()
+  my.ylim <- numeric()
   if(!missing(xlim)) {
     my.xlim <- xlim
   }
@@ -251,8 +257,15 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
     return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
   }
   se <- apply(X=apply(X=x$t[, c(1:npar)], MARGIN=1, FUN=dummyfn, x=X, object=x), MARGIN=1, FUN=sd)
+
   ## plot it
-  polygon(x=c(X, rev(X)), y=c(Y+se, rev(Y-se)), col=col.band, lty=0, lwd=0.001, border=col.band)
+  polyval <- c(Y+se, rev(Y-se))
+  if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
+    polyval[polyval < my.ylim[1]] <- my.ylim[1]
+    polyval[polyval > my.ylim[2]] <- my.ylim[2]
+  }
+
+  polygon(x=c(X, rev(X)), y=polyval, col=col.band, lty=0, lwd=0.001, border=col.band)
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 
