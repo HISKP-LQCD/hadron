@@ -37,7 +37,7 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #' 
 #' @seealso \code{\link{matrixfit}}
 pcModel <- function(par, t, T, delta1=1, t0) {
-  return( exp(-par[1]*(t-t0))*( par[3] + (1-par[3])*exp(-(par[2])*(t-t0)) ) )
+  return( exp(-(par[1])*(t-t0+1))*( par[3] + (1-par[3])*exp(-((par[2]))*(t-t0+1)) ) )
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, t0=1) {
@@ -96,24 +96,24 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat
 ## deltat is a dummy variable here
 pcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, t0) {
   ## t0 is here in R index convention, hence we have to subtract 1
-  return( (y - exp(-par[1]*(t-t0+1))*( par[3] + (1-par[3])*exp(-(abs(par[2]))*(t-t0+1)) )) %*% L )
+  return( (y - exp(-par[1]*(t-t0+1))*( par[3] + (1-par[3])*exp(-((par[2]))*(t-t0+1)) )) %*% L )
 }
 
 ## deltat is a dummy variable here
 pcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, t0=1) {
   ## t0 is here in R index convention, hence we have to subtract 1
-  z <- (y - exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-t0+1))))
+  z <- (y - exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-t0+1))))
   return( sum(z %*% M %*% z) )
 }
 
 ## deltat is a dummy variable here
 dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, t0) {
   ## t0 is here in R index convention, hence we have to subtract 1
-  zp <- (t-t0+1)*exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-t0+1)))
+  zp <- (t-t0+1)*exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-t0+1)))
   res <- L %*% zp
-  zp <- exp(-par[1]*(t-t0+1))*(1-par[3])*(t-t0+1)*exp(-(abs(par[2]))*(t-t0+1))
+  zp <- exp(-par[1]*(t-t0+1))*(1-par[3])*(t-t0+1)*exp(-((par[2]))*(t-t0+1))
   res <- c(res, L %*% zp)
-  zp <- -exp(-par[1]*(t-t0+1))*(1-exp(-(abs(par[2]))*(t-t0+1)))
+  zp <- -exp(-par[1]*(t-t0+1))*(1-exp(-((par[2]))*(t-t0+1)))
   res <- c(res, L %*% zp)
   return(res)
 }
@@ -122,12 +122,12 @@ dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, t0)
 dpcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, t0) {
   ## t0 is here in R index convention, hence we have to subtract 1
   res <- rep(0., times=length(par))
-  z <- (y - exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-t0+1))))
-  zp <- (t-t0+1)*exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-t0+1)))
+  z <- (y - exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-t0+1))))
+  zp <- (t-t0+1)*exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-t0+1)))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
-  zp <- exp(-par[1]*(t-t0+1))*(1-par[3])*(t-t0+1)*exp(-(abs(par[2]))*(t-t0+1))
+  zp <- exp(-par[1]*(t-t0+1))*(1-par[3])*(t-t0+1)*exp(-((par[2]))*(t-t0+1))
   res[2] <- sum(zp %*% M %*% z + z %*% M %*% zp)
-  zp <- -exp(-par[1]*(t-t0+1))*(1-exp(-(abs(par[2]))*(t-t0+1)))
+  zp <- -exp(-par[1]*(t-t0+1))*(1-exp(-((par[2]))*(t-t0+1)))
   res[3] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   return(res)
 }
@@ -203,9 +203,9 @@ deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
 
 deriv.pcModel <- function(par, t, T, t0) {
   res <- array(0.,dim=c(length(par),length(t)))
-  res[1, ] <- -(t-t0)*exp(-par[1]*(t-t0))*(par[3]+(1-par[3])*exp(-par[2]*(t-t0)))
-  res[2, ] <- -exp(-par[1]*(t-t0))*(1-par[3])*(t-t0)*exp(-(abs(par[2]))*(t-t0))
-  res[3, ] <- exp(-par[1]*(t-t0))*(1-exp(-(abs(par[2]))*(t-t0)))
+  res[1, ] <- -(t-t0+1)*exp(-par[1]*(t-t0+1))*(par[3]+(1-par[3])*exp(-par[2]*(t-t0+1)))
+  res[2, ] <- -exp(-par[1]*(t-t0+1))*(1-par[3])*(t-t0+1)*exp(-((par[2]))*(t-t0+1))
+  res[3, ] <- exp(-par[1]*(t-t0+1))*(1-exp(-((par[2]))*(t-t0+1)))
   return(res)
 
 }
@@ -382,6 +382,7 @@ matrixfit <- function(cf, t1, t2,
     par[1] <- log(CF$Cor[t0p1]/CF$Cor[t0p1+1])
     ## the deltaE
     par[2] <- log(CF$Cor[t1p1]/CF$Cor[t1p1+1]) - par[1]
+    par[2] <- 1.
     ## the amplitude
     par[3] <- 1.
   }
@@ -401,14 +402,6 @@ matrixfit <- function(cf, t1, t2,
     }
   }
 
-  ## for pcmodel we have three parameters
-  if(pcmodel) {
-    ##par[2] <- 1.8820590 
-    ##par[3] <- 0.8080735
-    par[2] <- 2.
-    par[3] <- 1.
-  }
-  
   fitfn <- matrixChisqr
   dfitfn <- dmatrixChisqr
   if(model == "shifted") {
@@ -534,11 +527,12 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
     tt <- mfit$CF$t[ii]
     
     par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])
+    if(mfit$model == "pc") par.ind=c(1,2,3)
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
     
     if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
-    else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, t0=mfit$t0p1-1)
+    else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, t0=mfit$t0p1)
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
     yp <- rep(1, times=length(tt))
     
@@ -562,7 +556,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
       }
       if(mfit$model == "shifted") {
         dummyfn <- function(par, tx, T, sgn, deltat, t0) {
-          pars[2]*pars[3]*( exp(-pars[1]*(tx - deltat/2)) - sgn*exp(-pars[1]*(T-tx*(tx-deltat/2))))
+          pars[2]*pars[3]*( exp(-pars[1]*(tx - deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
         }
       }
       else if(mfit$model == "pc") {
@@ -571,7 +565,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
         }        
       }
 
-      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, t0=mfit$t0p1-1), FUN=sd, MARGIN=1)
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, t0=mfit$t0p1), FUN=sd, MARGIN=1)
       
       polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
@@ -589,8 +583,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
       polyx <- c(tx,rev(tx))
       polycol <- col2rgb(col[i],alpha=TRUE)/255
       polycol[4] <- 0.65
-      
-      polygon(x=polyx,y=polyval,col=rgb(red=polycol[1],green=polycol[2],blue=polycol[3],alpha=polycol[4]),border=NA)
+      ##polygon(x=polyx,y=polyval,col=rgb(red=polycol[1],green=polycol[2],blue=polycol[3],alpha=polycol[4]),border=NA)
+      polygon(x=polyx,y=polyval,col="gray",border=NA)
       lwd <- c(1)
     }
 
