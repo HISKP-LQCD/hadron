@@ -556,26 +556,24 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
 
     lwd <- c(1.5)
     if(plot.errorband) {
-      ## in the following the covariance matrix of the paramters and vectors of derivatives
-      ## of the correlation function with respect to these parameters will be computed
-      ## there is some level of waste because certain combinations of parameters might
-      ## occur multiple times, but the overhead is small and this way is the most convenient
+
+      dummyfn <- function(par, tx, T, sgn, deltat, t0) {
+        0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
+      }
+      if(mfit$model == "shifted") {
+        dummyfn <- function(par, tx, T, sgn, deltat, t0) {
+          pars[2]*pars[3]*( exp(-pars[1]*(tx - deltat/2)) - sgn*exp(-pars[1]*(T-tx*(tx-deltat/2))))
+        }
+      }
+      else if(mfit$model == "pc") {
+        dummyfn <- function(par, tx, T, sgn, deltat, t0) {
+          pcModel(par=par[1:3], t=tx, T=T, t0=t0)
+        }        
+      }
+
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, t0=mfit$t0p1-1), FUN=sd, MARGIN=1)
       
-      parCov <- cov(mfit$t[,par.ind])
-      
-      ## 3 by length(tx) array of derivatives of the model with respect to the three parameters
-      ## if any parameters are the same, multiplication with the covariance matrix will give
-      ## the correct contributions to the derivative
-      if(mfit$model == "shifted") div <- deriv.CExp.shifted(par=pars, t=tx, T=T, sign=sgn, deltat)
-      else if(mfit$model == "pc") div <- deriv.pcModel(par=pars, t=tx, T=t, t0=mfit$t0p1-1)
-      else div <- deriv.CExp(par=pars, t=tx, T=T, sign=sgn)
-      yvar <- t(div) %*% parCov %*% div
-      
-      ## yvar is a length(tx) by length(tx) matrix of which only the diagonal elements are of
-      ## interest here
-      ysd <- sqrt(diag(yvar))
-        
-      polyval <- c( (y + ysd), rev(y - ysd) )
+      polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
       if(any(polyval < ylims[1]) || any(polyval > ylims[2])) {
         polyval[polyval < ylims[1]] <- ylims[1]
@@ -676,7 +674,7 @@ summary.matrixfit <- function(mfit) {
 
 fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1, t0=1) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- nls.lm(par = par, fn = fitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
+    opt.res <- nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
                       deltat=deltat, ov.sign.vec=ov.sign.vec, t0=t0,
                       control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
     if( !(opt.res$info %in% c(1,2,3) ) ){
