@@ -130,7 +130,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                  sim = cf$sim,
                  cf.tsboot = cf$cf.tsboot)
   ret <- cf_weighted(ret,
-                     weight.factor = 1.0,
+                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
                      weight.cosh = weight.cosh,
                      mass1 = mass1,
                      mass2 = mass2)
