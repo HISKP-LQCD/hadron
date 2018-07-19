@@ -192,7 +192,8 @@ gevp2cf <- function(gevp, id=1) {
                 cf.tsboot = cf.tsboot)
 
   cf <- cf_principal_correlator(cf,
-                                id = id)
+                                id = id,
+                                gevp_reference_time = gevp$t0)
 
   if (inherits(gevp$cf, 'cf_shifted')) {
     cf <- cf_shifted(cf,
