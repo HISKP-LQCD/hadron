@@ -118,7 +118,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   }
 
   # We perform a clean copy of the data now to make sure that all invariants
-  # hold and that no new fields have been added.
+  # hold and that no new fields have been added that we are not aware of.
   ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
                  symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
@@ -129,6 +129,9 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                  seed = cf$seed,
                  sim = cf$sim,
                  cf.tsboot = cf$cf.tsboot)
+  ret <- cf_shifted(ret,
+                    deltat = cf$deltat,
+                    forwardshift = cf$forwardshift)
   ret <- cf_weighted(ret,
                      weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
                      weight.cosh = weight.cosh,
