@@ -4,7 +4,7 @@
 \alias{cf_principal_correlator}
 \title{Principal correlator CF mixin constructor}
 \usage{
-cf_principal_correlator(.cf = cf(), id)
+cf_principal_correlator(.cf = cf(), id, gevp_reference_time)
 }
 \arguments{
 \item{id}{Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so \code{id = 1} is the lowest state.}
