@@ -81,55 +81,62 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
-    ## determine eigenvalues and vectors
-
-    variational.solve <- eigen(t(invL) %*% cM %*% invL,
-                               symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
-    ## sort depending on input by values or vectors
-    sortindex <- integer(matrix.size)
-    if(sort.type == "values" || t == t0+1) {
-      sortindex <- order(variational.solve$values, decreasing=TRUE)
-    }
-    else if(sort.type == "vectors") {
-      ## compute the scalar product of eigenvectors with those at t0+1
-      idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-      sortindex <- idx[,1]
-      if(!all(order(sortindex) == c(1:matrix.size))) {
-        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-        sortindex <- idx[,1]
-      }
-      if(!all(order(sortindex) == c(1:matrix.size))) {
-        sortindex <- order(variational.solve$values, decreasing=TRUE)
-      }
+    if(any(is.na(cM))) {
+      evalues[t+1,] <- NA
+      evectors[t+1,,] <- NA
+      amplitudes[t+1,,] <- NA
     }
     else {
-      Perms <- permutations(matrix.size)
-      NPerms <- dim(Perms)[1]
-      DMp <- integer(NPerms)
-      Mp <- matrix(0, nrow=matrix.size, ncol=matrix.size)
-      for(p in c(1:NPerms)) {
-        for(i in c(1:matrix.size)) {
-          ij <- Perms[p,c(1:matrix.size)[-i]]
-          if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
-          else {
-            Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
-          }
-        }
-        DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
+      ## determine eigenvalues and vectors
+      
+      variational.solve <- eigen(t(invL) %*% cM %*% invL,
+                                 symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
+      ## sort depending on input by values or vectors
+      sortindex <- integer(matrix.size)
+      if(sort.type == "values" || t == t0+1) {
+        sortindex <- order(variational.solve$values, decreasing=TRUE)
       }
-      sortindex <- Perms[which.max(DMp),]
+      else if(sort.type == "vectors") {
+        ## compute the scalar product of eigenvectors with those at t0+1
+        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+        sortindex <- idx[,1]
+        if(!all(order(sortindex) == c(1:matrix.size))) {
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+          sortindex <- idx[,1]
+        }
+        if(!all(order(sortindex) == c(1:matrix.size))) {
+          sortindex <- order(variational.solve$values, decreasing=TRUE)
+        }
+      }
+      else {
+        Perms <- permutations(matrix.size)
+        NPerms <- dim(Perms)[1]
+        DMp <- integer(NPerms)
+        Mp <- matrix(0, nrow=matrix.size, ncol=matrix.size)
+        for(p in c(1:NPerms)) {
+          for(i in c(1:matrix.size)) {
+            ij <- Perms[p,c(1:matrix.size)[-i]]
+            if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+            else {
+              Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+            }
+          }
+          DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
+        }
+        sortindex <- Perms[which.max(DMp),]
+      }
+      evalues[t+1,] <- variational.solve$values[sortindex]
+      evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
+      tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
+      ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
+      ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
+      ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
+      ## we set them to NA first
+      d <- diag(t(evectors[t+1,,]) %*% tmp)
+      d[d < 0] <- NA
+      amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
+      rm(tmp)
     }
-    evalues[t+1,] <- variational.solve$values[sortindex]
-    evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
-    tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
-    ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
-    ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
-    ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
-    ## we set them to NA first
-    d <- diag(t(evectors[t+1,,]) %*% tmp)
-    d[d < 0] <- NA
-    amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
-    rm(tmp)
   }
   evalues[t0+1,] <- 1.
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
