@@ -237,8 +237,9 @@ matrixfit <- function(cf, t1, t2,
   t0p1 <- numeric()
   if(!inherits(cf, 'cf_principal_correlator')) {
     t0p1 <- 1
+  } else {
+    t0p1 <- cf$gevp_reference_time + 1
   }
-  else t0p1 <- cf$gevp_reference_time + 1
   
   N <- dim(cf$cf)[1]
   Thalfp1 <- cf$Time/2+1
