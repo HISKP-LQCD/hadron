@@ -1,5 +1,5 @@
 effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
-                             weight.factor=1., deltat=1, tmax=Thalf) {
+                             weight.factor = NULL, deltat=1, tmax=Thalf) {
   if(missing(cf)) {
     stop("cf must be provided to effectivemass.cf! Aborting...\n")
   }
@@ -40,7 +40,10 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "shifted" || type == "weighted") Ratio <- Cor[t+1]/Cor[t]
       else Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
       w <- 1
-      if(type == "weighted") w <- weight.factor
+      if(type == "weighted") {
+        stopifnot(!is.null(weight.factor))
+        w <- weight.factor
+      }
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
         return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
@@ -71,7 +74,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
+bootstrap.effectivemass <- function(cf, type="solve") {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
@@ -94,15 +97,15 @@ bootstrap.effectivemass <- function(cf, type="solve", weight.factor = 1.) {
   }
   nrObs <- floor(Nt/(tmax+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
+  effMass <- effectivemass.cf(cf$cf0, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, deltat=deltat, weight.factor = cf$weight.factor)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, deltat=deltat, weight.factor = cf$weight.factor))
 
   deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed, weight.factor=weight.factor,
+              boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )

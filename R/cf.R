@@ -160,10 +160,11 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 #' @family cf constructors
 #'
 #' @export
-cf_principal_correlator <- function (.cf = cf(), id) {
+cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$id <- id
+  .cf$gevp_reference_time <- gevp_reference_time
 
   class(.cf) <- append(class(.cf), 'cf_principal_correlators')
   return (.cf)

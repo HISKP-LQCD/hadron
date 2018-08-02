@@ -5,11 +5,16 @@
   Performs a factorising fit on a correlation matrix
 }
 \usage{
-matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
-          parlist, sym.vec, neg.vec,
-          useCov = FALSE, seed=12345, model="single",
-          boot.fit = TRUE, fit.method="optim",
-          autoproceed = FALSE)
+matrixfit(cf, t1, t2,
+          parlist,
+          sym.vec,
+          neg.vec,
+          useCov = FALSE,
+          model="single",
+          boot.fit = TRUE,
+          fit.method="optim",
+          autoproceed = FALSE,
+          t0)
 }
 \arguments{
   \item{cf}{
@@ -20,12 +25,6 @@ matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
   }
   \item{t2}{
     upper bound for the fitrange in time (t1,t2). Counting starts with 0.
-  }
-  \item{boot.R}{
-    number of bootstrap samples. Default is \code{400}.
-  }
-  \item{boot.l}{
-    block size for autocorrelation analysis. Default is \code{2}.
   }
   \item{parlist}{
     a two dimensional array of dimension 2 times number of correlators
@@ -52,10 +51,6 @@ matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
     use correlated or uncorrelated chisquare. Default is
     \code{useCov=FALSE}. 
   }
-  \item{seed}{
-    seed for the random number generation used for boostrapping. Default
-    is \code{12345}.
-  }
   \item{boot.fit}{
     If set to \code{FALSE}, the fit is not bootstrapped, even if the bootstrapping 
     parameters have been set and the correlation function has been bootstrapped.
@@ -76,13 +71,21 @@ matrixfit(cf, t1, t2, boot.R=400, boot.l=20,
     to \code{"shifted"}, the fit uses  the function\cr
     \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c* \exp(-E(T-(t+1/2))))}\cr
     which is useful when the original correlation function or matrix is
-    shifted, see e.g. \link{bootstrap.gevp}.
+    shifted, see e.g. \link{bootstrap.gevp}.\cr
+    In case only a single principal correlator from a GEVP is to be fitted the
+    additional model \code{"pc"} is available. It implements\cr
+    \eqn{\exp(-E(t-t_0))(A + (1-A)\exp(-DeltaE(t-t_0))}\cr
+    with \eqn{t_0} the reference timesclice of the GEVP. See
+    \link{bootstrap.gevp} for details.
   }
   \item{autoproceed}{
     When the inversion of the variance-covariance matrix fails, the default
     behaviour is to abort the fit. Setting this to \code{TRUE} means that
     the fit is instead continued with a diagonal inverse of the variance-covariance
     matrix.
+  }
+  \item{t0}{
+    Only for \code{model == "pc"} the reference timeslice used in the GEVP.
   }
 }
 \value{
