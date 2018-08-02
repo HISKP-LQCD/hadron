@@ -218,15 +218,14 @@ matrixfit <- function(cf, t1, t2,
                       model="single",
                       boot.fit=TRUE,
                       fit.method="optim",
-                      autoproceed=FALSE,
-                      t0) {
+                      autoproceed=FALSE) {
 
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   pcmodel <- FALSE
   if(model == "pc") pcmodel <- TRUE
-  if(pcmodel && missing(t0)) {
-    stop('t0 must be provided for two state principal correlator model "pc".')
+  if(pcmodel) {
+    stopifnot(inherits(cf, 'cf_principal_correlator'))
   }
   if(cf$symmetrised == FALSE){
     stop('You must symmetrize and bootstrap the function before fitting.')
@@ -234,11 +233,13 @@ matrixfit <- function(cf, t1, t2,
 
   t1p1 <- t1 + 1
   t2p1 <- t2 + 1
+
   t0p1 <- numeric()
-  if(missing(t0)) {
+  if(!inherits(cf, 'cf_principal_correlator')) {
     t0p1 <- 1
   }
-  else t0p1 <- t0 + 1
+  else t0p1 <- cf$gevp_reference_time + 1
+  
   N <- dim(cf$cf)[1]
   Thalfp1 <- cf$Time/2+1
   t <- c(0:(cf$Time/2))
