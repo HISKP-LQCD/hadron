@@ -60,7 +60,7 @@ col.band="gray", lty=c(1), lwd=c(1))
   }
   \item{bsamples}{
     bootstrap samples of \code{y} (and \code{x}, if applicable). Must be
-    provided as array of dimensions \code{c(boot.R+1, n)} with
+    provided as array of dimensions \code{c(boot.R, n)} with
     \code{n} equals to \code{length(y)} in case of 'yerrors'
     and For 'xyerrors' to \code{length(y) + length(x)}..
   }

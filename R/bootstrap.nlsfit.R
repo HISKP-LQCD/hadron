@@ -78,7 +78,7 @@ bootstrap.nlsfit <- function(fn,
     if(dbs[2] != length(Y)) {
       stop("the provided bootstrap samples do not match the number of data points with errors!")
     }
-    if(boot.R+1 != dbs[1]) {
+    if(boot.R != dbs[1]) {
       stop("boot.R inconsistent with dimension one of bsamples!")
     }
     ## add original data as first row
