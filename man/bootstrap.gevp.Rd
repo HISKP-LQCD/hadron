@@ -93,7 +93,7 @@ plot(pc1.effectivemass)
 
 ## we can also use matrixfit with a special model for a principal
 ## correlators
-pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", t0=t0, useCov=FALSE)
+pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE)
 summary(pc1.matrixfit)
 plot(pc1.matrixfit)
 
