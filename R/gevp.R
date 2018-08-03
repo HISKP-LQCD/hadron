@@ -358,6 +358,8 @@ summary.gevp.amplitude <- function(amp) {
 plot.gevp.amplitude <- function(amp, ...) {
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)
   if(amp$fit) {
+    opw <- getOption("warn")
+    options(warn = -1)
     arrows(x0=amp$t1, y0=amp$meanAmplitude,
            x1=amp$t2, y1=amp$meanAmplitude, col=c("red"), length=0)
     arrows(x0=amp$t1, y0=amp$meanAmplitude+sd(amp$meanAmplitude.tsboot[,1]),
@@ -366,5 +368,6 @@ plot.gevp.amplitude <- function(amp, ...) {
     arrows(x0=amp$t1, y0=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
            x1=amp$t2, y1=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
            col=c("red"), length=0, lwd=c(1))
+    options(warn = opw)
   }
 }
