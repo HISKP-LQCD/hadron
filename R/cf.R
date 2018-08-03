@@ -166,7 +166,7 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
   .cf$id <- id
   .cf$gevp_reference_time <- gevp_reference_time
 
-  class(.cf) <- append(class(.cf), 'cf_principal_correlators')
+  class(.cf) <- append(class(.cf), 'cf_principal_correlator')
   return (.cf)
 }
 
