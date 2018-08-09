@@ -117,6 +117,19 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   return(ret)
 }
 
+fit.constant <- function(M, y) {
+	res <- list()
+	if(is.matrix(M)){ # this is the covariance case
+		m.eff <- sum(M %*% y)/sum(M)
+		res$value <- (y-m.eff) %*% M %*% (y-m.eff)
+	}else{ # this is the uncorrelated case
+		m.eff <- sum(M*y)/sum(M)
+		res$value <- sum(M*(y-m.eff)^2)
+	}
+	res$par <- c(m.eff)
+	return(res)
+}
+
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
   stopifnot(inherits(cf, 'effectivemass'))
 
@@ -224,15 +237,11 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     if( length( ii.remove ) > 0 ) {
       ## if the matrix is diagonal, we simply restrict it
       M <- M[ -ii.remove, -ii.remove]
+	  M <- diag(M)
     }
   }
 
-  par <- c(cf$effMass[t1])
-  opt.res <- optim(par, fn = fn,
-                   method="BFGS", M=M, y = cf$effMass[ii])
-  opt.res <- optim(opt.res$par, fn = fn,
-                   control=list(parscale=1/opt.res$par),
-                   method="BFGS", M=M, y = cf$effMass[ii])
+  opt.res <- fit.constant(M=M, y = cf$effMass[ii])
   par <- opt.res$par
 
   cf$chisqr <- opt.res$value
@@ -243,9 +252,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
     for(i in c(1:cf$boot.R)) {
-      opt <- optim(par, fn = fn,
-                   control=list(parscale=1/par),
-                   method="BFGS", M=M, y = cf$t[i,ii])
+      opt <- fit.constant(M=M, y = cf$t[i,ii])
       massfit.tsboot[i, 1] <- opt$par[1]
       massfit.tsboot[i, 2] <- opt$value
     }
@@ -260,6 +267,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   cf$effmassfit$cf <- cf$cf
   cf$t <- tb.save
 
+  if(!is.matrix(M)){
+	  M <- diag(M)
+  }
   cf$invCovMatrix <- M
   cf$opt.res <- opt.res
   cf$useCov <- useCov
