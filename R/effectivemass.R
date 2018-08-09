@@ -179,9 +179,6 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## otherwise take inverse errors squared
   M <- diag(1/cf$se[ii]^2)
 
-  ## the chisqr function
-  fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
-  
   cf$CovMatrix <- CovMatrix
   cf$effmassfit$CovMatrix <- CovMatrix
   tb.save <- cf$t
