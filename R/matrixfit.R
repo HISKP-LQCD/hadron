@@ -37,7 +37,7 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #' 
 #' @seealso \code{\link{matrixfit}}
 pcModel <- function(par, t, T, delta1=1, reference_time) {
-  return( exp(-(par[1])*(t-reference_time))*( par[3] + (1-par[3])*exp(-((par[2]))*(t-reference_time)) ) )
+  return( exp(-abs(par[1])*(t-reference_time))*( par[3] + (1-par[3])*exp(-(abs(par[2]))*(t-reference_time)) ) )
 }
 
 matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
@@ -95,22 +95,22 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat
 ##
 ## deltat is a dummy variable here
 pcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
-  return( (y - exp(-par[1]*(t-reference_time))*( par[3] + (1-par[3])*exp(-((par[2]))*(t-reference_time)) )) %*% L )
+  return( (y - exp(-abs(par[1])*(t-reference_time))*( par[3] + (1-par[3])*exp(-(abs(par[2]))*(t-reference_time)) )) %*% L )
 }
 
 ## deltat is a dummy variable here
 pcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y - exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-referenece_time))))
+  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-referenece_time))))
   return( sum(z %*% M %*% z) )
 }
 
 ## deltat is a dummy variable here
 dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
-  zp <- (t-reference_time)*exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-reference_time)))
+  zp <- (t-reference_time)*exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time)))
   res <- L %*% zp
-  zp <- exp(-par[1]*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-((par[2]))*(t-reference_time))
+  zp <- exp(-abs(par[1])*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-(abs(par[2]))*(t-reference_time))
   res <- c(res, L %*% zp)
-  zp <- -exp(-par[1]*(t-reference_time))*(1-exp(-((par[2]))*(t-reference_time)))
+  zp <- -exp(-abs(par[1])*(t-reference_time))*(1-exp(-(abs(par[2]))*(t-reference_time)))
   res <- c(res, L %*% zp)
   return(res)
 }
@@ -118,12 +118,12 @@ dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, ref
 ## deltat is a dummy variable here
 dpcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
   res <- rep(0., times=length(par))
-  z <- (y - exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-reference_time))))
-  zp <- (t-reference_time)*exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-((par[2]))*(t-reference_time)))
+  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time))))
+  zp <- (t-reference_time)*exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time)))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
-  zp <- exp(-par[1]*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-((par[2]))*(t-reference_time))
+  zp <- exp(-abs(par[1])*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-(abs(par[2]))*(t-reference_time))
   res[2] <- sum(zp %*% M %*% z + z %*% M %*% zp)
-  zp <- -exp(-par[1]*(t-reference_time))*(1-exp(-((par[2]))*(t-reference_time)))
+  zp <- -exp(-abs(par[1])*(t-reference_time))*(1-exp(-(abs(par[2]))*(t-reference_time)))
   res[3] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   return(res)
 }
@@ -463,6 +463,11 @@ matrixfit <- function(cf, t1, t2,
     rchisqr <- opt.res$value
   }
   Qval <- 1-pchisq(rchisqr, dof)
+  ## we use absolute values in the fit model
+  ## better remove any signs then here!
+  if(pcmodel) {
+    opt.res$par[1:2] <- abs(opt.res$par[1:2])
+  }
   
   opt.tsboot <- NA
   if(boot.fit) {
@@ -474,7 +479,9 @@ matrixfit <- function(cf, t1, t2,
   if(is.null(cf$cf)) {
     N <- cf$N
   }
-
+  if(pcmodel) {
+    opt.tsboot[c(1:2),] <- abs(opt.tsboot[c(1:2),])
+  }
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
@@ -634,9 +641,12 @@ summary.matrixfit <- function(mfit) {
   cat("E \t=\t", mfit$t0[1], "\n")
   cat("dE\t=\t", sd(mfit$t[,1]), "\n")
   if(mfit$model == "pc") {
-    cat("\nDiscarded Delta E:\n")
+    cat("\nFitted Delta E:\n")
     cat("Delta E \t=\t", mfit$t0[2], "\n")
     cat("dDelta E\t=\t", sd(mfit$t[,2]), "\n")
+    cat("\nThis transltes into a second energy level E2 (be careful with interpretation):\n")
+    cat("E2 \t=\t", mfit$t0[2]+mfit$t0[1], "\n")
+    cat("dE2\t=\t", sd(mfit$t[,2]+mfit$t[,1]), "\n")
     cat("Effective Amplitude:\n")
     cat("A\t=\t", mfit$t0[3], "\n")
     cat("dA\t=\t", sd(mfit$t[,3]), "\n")    
