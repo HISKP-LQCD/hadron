@@ -480,7 +480,7 @@ matrixfit <- function(cf, t1, t2,
     N <- cf$N
   }
   if(pcmodel) {
-    opt.tsboot[,c(1:2)] <- abs(opt.tsboot[,c(1:2)])
+    opt.tsboot[c(1:2),] <- abs(opt.tsboot[c(1:2),])
   }
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
