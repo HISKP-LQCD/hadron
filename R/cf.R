@@ -124,12 +124,6 @@ cf_jackknife <- function (.cf = cf(), boot.l, cf.jackknife, jackknife.se) {
 #' @param cf Numeric matrix, original data for all observables and measurements.
 #' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
 #'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `cf0`: Numeric vector, mean of original data.
-#'
 #' @family cf constructors
 #'
 #' @export
@@ -145,8 +139,6 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   else {
     .cf$icf <- icf
   }
-
-  .cf$cf0 <- apply(.cf$cf, MARGIN = 2, FUN = mean)
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
