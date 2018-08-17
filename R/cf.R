@@ -618,8 +618,7 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
     val <- cf$cf0
     err <- cf$jackknife.se
   } else {
-    val <- apply(cf$cf, 2, mean)
-    err <- apply(cf$cf, 2, sd) / sqrt(nrow(cf$cf))
+    stop('A correlation function must be bootstrapped before it can be plotted.')
   }
 
   if(!cf$symmetrised){
