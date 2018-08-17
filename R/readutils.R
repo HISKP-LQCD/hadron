@@ -268,8 +268,6 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
   }
   
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(T/2+1))
   sign <- +1
   if(!sym) sign <- -1
@@ -355,9 +353,6 @@ readbinarycf <- function(files,
     Nop <- 1
     if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(Nop*T))+obs*T
   sign <- +1
   if(!sym) sign <- -1
@@ -431,9 +426,6 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for( i in 1:nosamples ){
     Cf[[i]] <- ftype
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   sign <- +1
   if(!sym) sign <- -1
 
