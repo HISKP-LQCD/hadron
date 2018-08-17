@@ -54,6 +54,7 @@ List of 15
 %%}
 \examples{
 data(samplecf)
-plot(samplecf)
+bootstrapped <- bootstrap.cf(samplecf)
+plot(bootstrapped)
 }
 \keyword{datasets}
