@@ -451,9 +451,6 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
         } else {
           tmp2 <- apply(X=tmp[,1:i],MARGIN=1,FUN=mean)
         }
-        # average over +- t
-        tmp2[i1] <- 0.5 * ( tmp2[i1] + sign * tmp2[i2] )
-        Cf[[i]] <- cbind(Cf[[i]],tmp2[1:(T/2+1)])
       }
     } else if(!file.exists(ifs)) {
       cat("file ", ifs, "does not exist...\n")
@@ -464,6 +461,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for (i in 1:nosamples) {
     ret[[i]] <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
     ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
+    ret[[i]] <- symmetrise.cf(ret[[i]], sign)
   }
 
   return (invisible(ret))
