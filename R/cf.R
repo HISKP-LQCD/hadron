@@ -392,8 +392,8 @@ addConfIndex2cf <- function(cf, conf.index) {
 }
 
 addStat.cf <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_meta'))
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf2, 'cf'))
 
   if (!inherits(cf1, 'cf_orig')) {
     return (invisible(cf2))
@@ -401,6 +401,9 @@ addStat.cf <- function(cf1, cf2) {
   if (!inherits(cf2, 'cf_orig')) {
     return (invisible(cf1))
   }
+
+  stopifnot(inherits(cf1, 'cf_meta'))
+  stopifnot(inherits(cf2, 'cf_meta'))
 
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
@@ -472,8 +475,8 @@ avg.cbt.cf <- function(cf){
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
-  stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_meta'))
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf2, 'cf'))
 
   if (!inherits(cf1, 'cf_orig')) {
     return (cf2)
@@ -481,6 +484,9 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
   if (!inherits(cf2, 'cf_orig')) {
     return (cf1)
   }
+
+  stopifnot(inherits(cf1, 'cf_meta'))
+  stopifnot(inherits(cf2, 'cf_meta'))
 
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
