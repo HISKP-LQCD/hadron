@@ -561,48 +561,50 @@ is.cf <- function(x){
 
 #' Concatenate correlation function objects
 #'
-#' @param ... One or multiple objects of type `cf_orig`.
-c.cf <- function(...) {
-  fcall <- list(...)
+#' @param ... One or multiple objects of type `cf`.
+c.cf <- function (...) {
+  rval <- Reduce(concat.cf, list(...), cf())
+  return (invisible(rval))
+}
 
-  # In case there is only one element, we do not need to do anything.
-  if(length(fcall) == 1) {
-    return(eval(fcall[[1]]))
+#' Concatenate two correlation function objects
+concat.cf <- function (left, right) {
+  stopifnot(inherits(left, 'cf'))
+  stopifnot(inherits(right, 'cf'))
+
+  if (inherits(left, 'cf_boot') || inherits(left, 'cf_jackknife')
+      || inherits(right, 'cf_boot') || inherits(right, 'cf_jackknife')) {
+    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded. If it does not have original data, it will be treated like an empty cf object.')
   }
 
-  # All arguments must be of type `cf`. Since it seems to be a common pattern
-  # to concatenate stuff to an empty `cf` object, this must be supported as
-  # well. We will just ignore these empty objects and concatenate the ones with
-  # data.
-  stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf'))))
-  has_data <- sapply(fcall, function (x) inherits(x, 'cf_orig'))
-  fcall <- fcall[has_data]
-
-  cf <- fcall[[1]]
-  Time <- cf$Time
-  cf$nrObs <- 0
-  cf$sTypes <- 0
-  N <- dim(cf$cf)[1]
-  for (i in 1:length(fcall)) {
-    if (fcall[[i]]$Time != Time) {
-      stop("Times must agree for different objects of type cf\n Aborting\n")
-    }
-    if (dim(fcall[[i]]$cf)[1] != N) {
-      stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
-    }
-    cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
-    cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
+  # In case that one of them does not contain data, the other one is the
+  # result. This satisfies the neutral element axiom of a monoid.
+  if (!inherits(left, 'cf_orig')) {
+    return (right)
   }
-  if (1 < length(fcall)) {
-    for (i in 2:length(fcall)) {
-      cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
-      cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
-      cf$cf0 <- c(cf$cf0, fcall[[i]]$cf0)
-    }
+  if (!inherits(right, 'cf_orig')) {
+    return (left)
   }
-  cf <- invalidate.samples.cf(cf)
 
-  return (invisible(cf))
+  stopifnot(inherits(left, 'cf_meta'))
+  stopifnot(inherits(right, 'cf_meta'))
+
+  # At this point both `cf` objects given here have original data, therefore we
+  # need to concatenate them.
+
+  # A few checks for compatability.
+  stopifnot(left$Time == right$Time)
+  stopifnot(nrow(left$cf) == nrow(right$cf))
+  stopifnot(left$symmetrised == right$symmetrised)
+
+  rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
+                  Time = left$Time,
+                  nrStypes = left$nrStypes, right$nrStypes,
+                  symmetrised = left$symmetrised)
+  rval <- cf_orig(.cf = rval,
+                  cf = cbind(left$cf, right$cf),
+                  icf = cbind(left$icf, right$icf))
+  return (invisible(rval))
 }
 
 plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
