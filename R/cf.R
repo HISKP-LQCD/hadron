@@ -393,9 +393,15 @@ addConfIndex2cf <- function(cf, conf.index) {
 
 addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_orig'))
+
+  if (!inherits(cf1, 'cf_orig')) {
+    return (invisible(cf2))
+  }
+  if (!inherits(cf2, 'cf_orig')) {
+    return (invisible(cf1))
+  }
+
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
   stopifnot(cf1$nrObs == cf2$nrObs )
