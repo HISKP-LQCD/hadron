@@ -605,7 +605,7 @@ c.cf <- function(...) {
     for (i in 2:length(fcall)) {
       cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
       cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
-      cf$cf0 <- cbind(cf$cf0, fcall[[i]]$cf0)
+      cf$cf0 <- c(cf$cf0, fcall[[i]]$cf0)
     }
   }
   cf <- invalidate.samples.cf(cf)
