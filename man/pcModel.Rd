@@ -4,7 +4,7 @@
 \alias{pcModel}
 \title{Principal correlator two state model.}
 \usage{
-pcModel(par, t, T, delta1 = 1, t0)
+pcModel(par, t, T, delta1 = 1, reference_time)
 }
 \arguments{
 \item{par}{Numeric vector: Fit parameters of the model. In an
@@ -15,7 +15,7 @@ object of type \code{matrixfit}, this should be located at
 
 \item{T}{Numeric: Time extent of the lattice.}
 
-\item{t0}{Numeric: GEVP reference t0 value}
+\item{reference_time}{Numeric: GEVP reference time value in physical time convention}
 
 \item{sign.vec}{Numeric vector: Relative sign between forward and
 backwards propagating part. A plus makes it cosh, a minus makes it sinh.}
