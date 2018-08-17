@@ -672,6 +672,7 @@ invalidate.samples.cf <- function(cf){
   cf$sim <- NULL
   cf$tsboot <- NULL
   cf$tsboot.se <- NULL
+  cf$cf0 <- NULL
 
   class(cf) <- setdiff(class(cf), c('cf_boot', 'cf_jackknife'))
 
