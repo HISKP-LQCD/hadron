@@ -389,14 +389,6 @@ readbinarycf <- function(files,
         }
       }
       
-      ## average +-t
-      if(symmetrise) {
-        tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-        Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
-      }else{
-        Cf <- cbind(Cf, tmp[c(1:T)])
-      }
-
       if(!hdf5format) {
         close(to.read)
       }
@@ -409,10 +401,14 @@ readbinarycf <- function(files,
     }
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(Cf)), icf = t(Cf))
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Cf))
 
-  return (invisible(cf))
+  if (symmetrise) {
+    ret <- symmetrise.cf(ret, sign)
+  }
+
+  return (invisible(ret))
 }
 
 
