@@ -485,19 +485,8 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
-'+.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_orig'))
-  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
-  stopifnot(cf1$Time == cf2$Time)
-
-  cf <- cf1
-  cf$cf <- cf1$cf + cf2$cf
-  cf <- invalidate.samples.cf(cf)
-
-  return(cf)
+'+.cf' <- function (cf1, cf2) {
+  add.cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
 '-.cf' <- function(cf1, cf2) {
