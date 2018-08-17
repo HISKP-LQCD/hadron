@@ -269,8 +269,6 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
   
   ii <- c(1:(T/2+1))
-  sign <- +1
-  if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
@@ -311,6 +309,9 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
 
   if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
+
     ret <- symmetrise.cf(ret, sign)
   }
 
@@ -354,8 +355,6 @@ readbinarycf <- function(files,
     if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
   }
   ii <- c(1:(Nop*T))+obs*T
-  sign <- +1
-  if(!sym) sign <- -1
 
   Cf <- complex()
   for(f in files) {
@@ -400,6 +399,8 @@ readbinarycf <- function(files,
   ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Cf))
 
   if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
     ret <- symmetrise.cf(ret, sign)
   }
 
@@ -426,8 +427,6 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for( i in 1:nosamples ){
     Cf[[i]] <- ftype
   }
-  sign <- +1
-  if(!sym) sign <- -1
 
   for(f in files){
     ifs <- paste(path, f, sep="")
@@ -453,6 +452,9 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for (i in 1:nosamples) {
     ret[[i]] <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
     ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
+
+    sign <- +1
+    if (!sym) sign <- -1
     ret[[i]] <- symmetrise.cf(ret[[i]], sign)
   }
 
