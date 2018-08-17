@@ -309,17 +309,14 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     }
   }
   
-  ## average +-t
-  if(symmetrise) {
-    tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
-  }else{
-    ii <- c(1:T)
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1)
+  ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
+
+  if (symmetrise) {
+    ret <- symmetrise.cf(ret, sign)
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(tmp[ii, ])), icf = t(Im(tmp[ii, ])))
-
-  return (invisible(cf))
+  return (invisible(ret))
 }
 
 readbinarycf <- function(files, 
