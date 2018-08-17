@@ -590,7 +590,7 @@ concat.cf <- function (left, right) {
 
   rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
                   Time = left$Time,
-                  nrStypes = left$nrStypes, right$nrStypes,
+                  nrStypes = left$nrStypes + right$nrStypes,
                   symmetrised = left$symmetrised)
   rval <- cf_orig(.cf = rval,
                   cf = cbind(left$cf, right$cf),
