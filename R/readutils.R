@@ -396,7 +396,7 @@ readbinarycf <- function(files,
   }
 
   ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Cf))
+  ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Im(Cf)))
 
   if (symmetrise) {
     sign <- +1
