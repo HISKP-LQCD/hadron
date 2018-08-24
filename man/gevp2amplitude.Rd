@@ -61,18 +61,23 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2,
   \code{\link{gevp}}, \code{\link{gevp2cf}}, \code{\link{computefps}}
 }
 \examples{
-\dontrun{## apply a GEVP analysis}
-\dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
-\dontrun{## extract the first principal correlator}
-\dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
-\dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
-\dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12, t2=23, useCov=TRUE)}
-\dontrun{## now determine the amplitude}
-\dontrun{pion.pc1.amplitude <- gevp2amplitude(pion.cor.gevp, pion.pc1.effectivemass)}
-\dontrun{## compute also the pion decay constant}
-\dontrun{pion.pc1.amplitude <- computefps(pion.pc1.amplitude, Kappa=0.125, mu1=0.003)}
-\dontrun{summary(pion.pc1.amplitude)}
-\dontrun{plot(pion.pc1.amplitude)}
+data(correlatormatrix)
+## bootstrap the correlator matrix
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+## solve the GEVP
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+## extract the ground state and plot
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+## determine the corresponding effective masses
+pc1.effectivemass <- bootstrap.effectivemass(cf=pc1)
+pc1.effectivemass <- fit.effectivemass(cf=pc1.effectivemass, t1=5, t2=15)
+## now determine the amplitude
+pc1.amplitude <- gevp2amplitude(correlatormatrix.gevp, pc1.effectivemass)
+## compute also the pion decay constant
+pc1.amplitude <- computefps(pc1.amplitude, Kappa=0.125, mu1=0.003)
+summary(pc1.amplitude)
+plot(pc1.amplitude)
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}

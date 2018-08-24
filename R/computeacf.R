@@ -45,8 +45,11 @@ plot.hadronacf <- function (Gamma, col = "black", ...)
   plot(Gamma$lags, Gamma$Gamma, ylim = ylim,
        col = col, xlab="t", ylab="Gamma[t]", ...)
   ## errors
+  opw <- getOption("warn")
+  options(warn = -1)
   arrows(Gamma$lags, Gamma$Gamma - Gamma$dGamma, Gamma$lags, Gamma$Gamma + Gamma$dGamma,
          length = 0.01, angle = 90, code = 3, col = col)
+  options(warn = opw)
   # cuttoff and baseline
   abline(h=0, col="red")
   abline(v=Gamma$W, col="red")

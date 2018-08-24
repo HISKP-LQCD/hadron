@@ -31,10 +31,15 @@ gevp2cf(gevp, id=1)
   \code{\link{gevp}}, \code{\link{matrixfit}}, \code{\link{bootstrap.effectivemass}}
 }
 \examples{
-\dontrun{## apply a GEVP analysis}
-\dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
-\dontrun{## extract the first principal correlator}
-\dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
+data(correlatormatrix)
+## bootstrap the correlator matrix
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+## solve the GEVP
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+## extract the ground state and plot
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+plot(pc1, log="y")
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}

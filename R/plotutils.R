@@ -171,32 +171,36 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     plot(x, y, col=col, ...)
   }
 
+  ope <- getOption("show.error.messages")
   options(show.error.messages = FALSE)
   if(!is.null(cumul.dy)) {
     for(cumul.err in list(cumul.dy,cumul.mdy)){
       rng <- 2:ncol(cumul.err)
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
-      # this loop is necessary because the "length" parameter of "arrows" is not vectorial...
-      # so to accomodate the generalisations below, we need to draw the error for each point
-      # individually, it doesn't make it much slower
+      ## this loop is necessary because the "length" parameter of "arrows" is not vectorial...
+      ## so to accomodate the generalisations below, we need to draw the error for each point
+      ## individually, it doesn't make it much slower
       for(rw in 1:length(y)){
-        # the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
+        ## the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
         arwhd.len <- 0.02
         clr <- col
         if(length(col)>1) clr <- col[rw]
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
-          # arrows has a special behaviour here: when start==end, no arrow will be drawn,
-          # this can be exploited to plot points with different numbers of error bars in one go
-          # by supplying 0 errors for those points with fewer error bars
-          # In order to accomodate this, we don't increase
-          # the arrowhead line length in this case to prevent crazy looking error bars.
+          ## arrows has a special behaviour here: when start==end, no arrow will be drawn,
+          ## this can be exploited to plot points with different numbers of error bars in one go
+          ## by supplying 0 errors for those points with fewer error bars
+          ## In order to accomodate this, we don't increase
+          ## the arrowhead line length in this case to prevent crazy looking error bars.
+          opw <- getOption("warn")
+          options(warn = -1)
           arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
           arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
+          options(warn = opw)
         } 
-        # for the linear.quadrature method, show the total error as a line of triple thickness
-        # without drawing any "arrowstems"
+        ## for the linear.quadrature method, show the total error as a line of triple thickness
+        ## without drawing any "arrowstems"
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           # to be consistent, drawX/Ybars uses inches just like arrows
           arwhd.len <- arwhd.len + 0.02
@@ -216,7 +220,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
+          opw <- getOption("warn")
+          options(warn = -1)
           arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
+          options(warn = opw)
           arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
@@ -227,7 +234,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     } 
   }
   
-  options(show.error.messages = TRUE)
+  options(show.error.messages = ope)
   return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
@@ -235,9 +242,12 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
     dm <- dp
   }
+  opw <- getOption("warn")
+  options(warn = -1)
   arrows(x0=x0, y0=m, x1=x1, y1=m, col=col, length=0)
   arrows(x0=x0, y0=m+dp, x1=x1, y1=m+dp, col=col, length=0, lwd=c(1))
   arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
+  options(warn = opw)
 }
 
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
@@ -337,18 +347,27 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
   if(!missing(ff)) {
     plot.massfit(ff, ylab=expression(m[eff]), xlab="t", ...)
     points((ll$t-0.2), ll$mass, pch=1, col="blue")
+    opw <- getOption("warn")
+    options(warn = -1)
     arrows((ll$t-0.2), ll$mass-ll$dmass,
            (ll$t-0.2), ll$mass+ll$dmass, length=0.01,angle=90,code=3)
+    options(warn = opw)
     points((lf$t+0.2), lf$mass, pch=2, col="red")
+    opw <- getOption("warn")
+    options(warn = -1)
     arrows((lf$t+0.2), lf$mass-lf$dmass,
            (lf$t+0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
+    options(warn = opw)
     lines(ll$t, rep(m, times=length(ll$t)))
   }
   else if(!missing(lf)) {
     plot.massfit(ll, ylab=expression(m[eff]), xlab="t", ...)
     points((lf$t-0.2), lf$mass, pch=1, col="blue")
+    opw <- getOption("warn")
+    options(warn = -1)
     arrows((lf$t-0.2), lf$mass-lf$dmass,
            (lf$t-0.2), lf$mass+lf$dmass, length=0.01,angle=90,code=3)
+    options(warn = opw)
     lines(ll$t, rep(m, times=length(ll$t)))
   }
   else {
