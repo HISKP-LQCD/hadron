@@ -593,10 +593,11 @@ concat.cf <- function (left, right) {
   stopifnot(left$Time == right$Time)
   stopifnot(nrow(left$cf) == nrow(right$cf))
   stopifnot(left$symmetrised == right$symmetrised)
+  stopifnot(left$nrStypes == right$nrStypes)
 
   rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
                   Time = left$Time,
-                  nrStypes = left$nrStypes + right$nrStypes,
+                  nrStypes = left$nrStypes,
                   symmetrised = left$symmetrised)
   rval <- cf_orig(.cf = rval,
                   cf = cbind(left$cf, right$cf),
