@@ -355,7 +355,7 @@ matrixfit <- function(cf, t1, t2,
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
-    M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=boot.l, boot.samples=TRUE), silent=TRUE)
+    M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=cf$boot.l, boot.samples=TRUE), silent=TRUE)
     if(inherits(M, "try-error")) {
       if( autoproceed ){
         M <- diag(1/CF$Err[ii]^2)
