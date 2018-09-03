@@ -124,6 +124,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
     stop("Gamma pathological: error^2 <0")
   }
   GammaFbb <- GammaFbb+CFbbopt/N            #Correct for bias
+  dGamma <- gammaerror(Gamma=GammaFbb, N=N , W=Wmax, Lambda=100)
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
   sigmaF <- sqrt(CFbbopt/N) #error of F
   tauintFbb <- cumsum(GammaFbb)/GammaFbb[1]-0.5 # normalised autoccorelation time
@@ -160,7 +161,8 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
               tauint = tauint, dtauint = dtauint,
               Wopt=Wopt, Wmax=Wmax, tauintofW=tauintFbb[1:(Wmax+1)],
               dtauintofW=dtauintofW[1:(Wmax+1)], Qval=Qval, S=S,
-              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=1)
+              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, dGamma = dGamma,
+              primary=1)
 
   attr(res, "class") <- c("uwerr", "list")
   
