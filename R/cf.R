@@ -577,7 +577,7 @@ concat.cf <- function (left, right) {
 
   if (inherits(left, 'cf_boot') || inherits(left, 'cf_jackknife')
       || inherits(right, 'cf_boot') || inherits(right, 'cf_jackknife')) {
-    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded. If it does not have original data, it will be treated like an empty cf object.')
+    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
   }
 
   # In case that one of them does not contain data, the other one is the
