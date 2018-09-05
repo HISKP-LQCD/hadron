@@ -104,4 +104,12 @@ plotwitherror(x, y, dy, ylim, dx, xlim, mdx, mdy,
 }
 \author{Carsten Urbach, \email{urbach@hiskp.uni-bonn.de} \cr
         Bartosz Kostrzewa, \email{bartosz.kostrzewa@desy.de}}
+\examples{
+# Create some random data, set one error to zero.
+x <- 1:50
+y <- runif(50, 0, 1)
+dy <- runif(50, 0.1, 0.2)
+dy[4] <- 0
 
+plotwitherror(x, y, dy)
+}
