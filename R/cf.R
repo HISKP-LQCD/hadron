@@ -411,7 +411,7 @@ addStat.cf <- function(cf1, cf2) {
   if (is_empty.cf(cf1)) {
     return (invisible(cf2))
   }
-  if (is_empty.cf(cf2, 'cf_orig')) {
+  if (is_empty.cf(cf2)) {
     return (invisible(cf1))
   }
 
