@@ -408,10 +408,10 @@ addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
 
-  if (!inherits(cf1, 'cf_orig')) {
+  if (is_empty.cf(cf1)) {
     return (invisible(cf2))
   }
-  if (!inherits(cf2, 'cf_orig')) {
+  if (is_empty.cf(cf2, 'cf_orig')) {
     return (invisible(cf1))
   }
 
@@ -490,17 +490,10 @@ avg.cbt.cf <- function(cf){
 add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
-
-  if (!inherits(cf1, 'cf_orig')) {
-    return (cf2)
-  }
-  if (!inherits(cf2, 'cf_orig')) {
-    return (cf1)
-  }
-
+  stopifnot(inherits(cf1, 'cf_orig'))
+  stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
-
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
 
@@ -520,8 +513,8 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
 
 '/.cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_meta'))
+  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -571,7 +564,7 @@ is.cf <- function(x){
 
 #' Concatenate correlation function objects
 #'
-#' @param ... One or multiple objects of type `cf`.
+#' @param ... Zero or multiple objects of type `cf`.
 c.cf <- function (...) {
   rval <- Reduce(concat.cf, list(...), cf())
   return (invisible(rval))
@@ -589,10 +582,10 @@ concat.cf <- function (left, right) {
 
   # In case that one of them does not contain data, the other one is the
   # result. This satisfies the neutral element axiom of a monoid.
-  if (!inherits(left, 'cf_orig')) {
+  if (is_empty.cf(left)) {
     return (right)
   }
-  if (!inherits(right, 'cf_orig')) {
+  if (is_empty.cf(right)) {
     return (left)
   }
 
