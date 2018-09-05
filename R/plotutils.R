@@ -188,7 +188,7 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
 
-          if (start != end) {
+          if (!is.na(start) && !is.na(end) && start != end) {
             arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
             arwhd.len <- arwhd.len + 0.01
           }
