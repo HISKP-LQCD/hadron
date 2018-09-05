@@ -268,6 +268,19 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
   return (.cf)
 }
 
+#' Checks whether the cf object contains no data
+#'
+#' @examples
+#' # The empty cf object must be empty:
+#' is_empty.cf(cf())
+#'
+#' # The sample cf must not be empty:
+#' is_empty.cf(samplecf)
+is_empty.cf <- function (.cf) {
+  setequal(class(.cf), class(cf())) &&
+    is.null(names(.cf))
+}
+
 gen.block.array <- function(n, R, l, endcorr=TRUE) {
   endpt <- if (endcorr)
              n
