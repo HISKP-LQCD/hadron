@@ -137,7 +137,7 @@ bootstrap.nlsfit <- function(fn,
         dfitchi <- function(par, ...) { -dY * jacobian(par) }
       }
     }
-    dfitchisqr <- function(y, par) { 2 * fitchi(y, par) %*% dfitchi(par) }
+    dfitchisqr <- function(y, par) { 2 * crossprod(fitchi(y, par), dfitchi(par)) }
   }
 
   ## define the wrapper-functions for optimization
