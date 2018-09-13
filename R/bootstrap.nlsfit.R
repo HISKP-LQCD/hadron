@@ -1,5 +1,6 @@
 bootstrap.nlsfit <- function(fn,
                              gr = NULL,
+                             dfn = NULL,
                              par.guess,
                              errormodel="yerrors",
                              sim="parametric",
@@ -7,94 +8,34 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              dy,
                              x,
-                             dx=NULL,
+                             dx = NULL,
                              bsamples,
-                             useCov,
+                             useCov = FALSE,
+                             CovMatrix,
+                             parallel = FALSE,
                              ...) {
 
-  if(missing(y) || missing(dy) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn) || missing(useCov)) {
-    stop("x, y, dy, par.guess, boot.R, useCov and fn must be provided!")
+  if(missing(y) || missing(dy) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn)) {
+    stop("x, y, dy, par.guess, boot.R and fn must be provided!")
   }
 
-  ## the chi functions for nls.lm
-  fitchi <- function(par, x, y, dy, fitfun, dfitfun=NULL, ...) {
-    (y - fitfun(par=par, x=x, ...)) %*% dy
-  }
-  ## checked
-  dfitchi <- function(par, x, y, dy, dfitfun, fitfun=NULL, ...) {
-    -as.vector(t(crossprod(dfitfun(par=par, x=x, ...), dy)))
-  }
-  fitchi.xy <- function(par, y, dy, fitfun, dfitfun=NULL, nx, ...) {
-    ipx <- length(par)-seq(nx-1,0)
-    (y - c(fitfun(par=par[-ipx], x=par[ipx], ...), par[ipx])) %*% dy
-  }
-  ## not checked yet
-  dfitchi.xy <- function(par, x, y, dy, dfitfun, fitfun=NULL, nx, ...) {
-    ipx <- length(par)-seq(nx-1,0)
-    -as.vector(t(crossprod(dfitfun(par=par[-ipx], x=x[ipx], ...), dy)))
-    ## pieces missing
-  }
-
-  ## the corresponding chisqr functions
-  fitchisqr <- function(par, x, y, dy, fitfun, dfitfun, ...) {
-    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, dfitfun=NULL, ...)
-    return (sum(z * z))
-  }
-  dfitchisqr <- function(par, x, y, dy, dfitfun, fitfun, ...) {
-    z <- fitchi(par=par, x=x, y=y, dy=dy, fitfun=fitfun, dfitfun=dfitfun, ...)
-    dz <- dfitchi(par=par, x=x, y=y, dy=dy, dfitfun=dfitfun, fitfun=fitfun, ...)
-    return(2*(z %*% array(dz, dim=c(length(x), length(par)))))
-  }
-  fitchisqr.xy <- function(par, y, dy, fitfun, nx, ...) {
-    z <- fitchi.xy(par=par, y=y, dy=dy, fitfun=fitfun, nx=nx, ...)
-    return (sum(z * z))
-  }
-
-  ## wrapper functions for apply
-  wrapper.lm <- function(y, par, fitfun, dfitfun, dy, x, ...) {
-    res <- list()
-    if(is.null(dfitfun))  res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, dy=dy, x=x,
-                                                    control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
-    else res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, fitfun=fitfun, jac=dfitchi, dy=dy, x=x, dfitfun=dfitfun,
-                                   control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500), ...)
-    if( !(res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination wrapper.lm reason of nls.lm res$info: %d\n", res$info))
-    }
-    return (c(res$par, res$rsstrace[length(res$rsstrace)]))
-  }
-  wrapper.lm.xy <- function(y, par, fitfun, dy, nx, ...) {
-    res <- list()
-    res <- minpack.lm::nls.lm(par=par, fn=fitchi.xy, y=y, fitfun=fitfun, dy=dy, nx=nx,
-                              control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500),
-                              ...)
-    if( !(res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination wrapper.lm.xy reason of nls.lm res$info: %d\n", res$info))
-    }
-    return (c(res$par, res$rsstrace[length(res$rsstrace)]))
-  }
-
-  wrapper.optim <- function(y, par, fitfun, dy, x, dfitfun, ...) {
-    res <- NA
-    if(is.null(dfitfun)) res <- optim(par=par, fn=fitchisqr, y=y, method=c("BFGS"), fitfun=fitfun, dy=dy, x=x, ...)
-    else res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), fitfun=fitfun, dfitfun=dfitfun, dy=dy, x=x, ...)
-
-    return (c(res$par, res$value))
-  }
-  wrapper.optim.xy <- function(y, par, fitfun, dy, nx, ...) {
-    res <- optim(par=par, fn=fitchisqr.xy, y=y, method=c("BFGS"), fitfun=fitfun, dy=dy, nx=nx, ...)
-    return (c(res$par, res$value))
+  lm.avail <- require(minpack.lm)
+  if(parallel){
+    parallel <- require(parallel)
   }
 
   crr <- c(1:(boot.R+1))
   rr <- c(2:(boot.R+1))
-  lm.avail <- require(minpack.lm)
 
   ## cast y and dy to Y and dY, respectively
-  Y <- y
-  dY <- dy
   if(errormodel == "xyerrors") {
     Y <- c(y, x)
     dY <- c(dy, dx)
+    par.Guess <- c(par.guess, x)
+  }else{
+    Y <- y
+    dY <- dy
+    par.Guess <- par.guess
   }
   nx <- length(x)
   
@@ -119,41 +60,113 @@ bootstrap.nlsfit <- function(fn,
 
   ## generate bootstrap samples if needed
   ## and invert covariance matrix, if applicable
-  if(sim == "parametric") {
-    for(i in seq_along(Y)) {
-      bsamples[rr, i] <- rnorm(n=boot.R, mean = Y[i], sd = dY[i])
+  if(useCov) {
+    inversion.worked <- function(InvCovMatrix) {
+      if(inherits(InvCovMatrix, "try-error")) {
+        stop("Variance-covariance matrix could not be inverted!")
+      }
     }
-    dY <- diag(1./dY)
-  }
-  else if(useCov) {
-    CovMatrix <- cov(bsamples)
-    InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l=1, boot.samples=TRUE), silent=TRUE)
-    if(inherits(InvCovMatrix, "try-error")) {
-      stop("Variance-covariance matrix could not be inverted!")
-    }
-    dY <- chol(InvCovMatrix)
-  }
-  else {
-    dY <- diag(1./dY)
-  }
-
-  if(errormodel == "yerrors") {
-    if(lm.avail) {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm, x=x, dy=dY, par=par.guess, fitfun=fn, dfitfun=gr, ...)
-    }
-    else {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim, x=x, dy=dY, par=par.guess, fitfun=fn, dfitfun=gr, ...)
+    if(missing(CovMatrix)){
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l=1, boot.samples=TRUE), silent=TRUE)
+      inversion.worked(InvCovMatrix)
+      dY <- chol(InvCovMatrix)
+    }else{
+      CholCovMatrix <- chol(CovMatrix)
+      InvCovMatrix <- try(solve(CholCovMatrix), silent=TRUE)
+      inversion.worked(InvCovMatrix)
+      dY <- t(InvCovMatrix)
+      if(sim == "parametric"){
+        std.norm.dist <- matrix(rnorm(boot.R*length(Y)), nrow=boot.R)
+        bsamples[rr,] <- matrix(rep(Y,boot.R), nrow=boot.R, byrow=TRUE)
+        bsamples[rr,] <- bsamples[rr,] + std.norm.dist %*% CholCovMatrix
+      }
     }
   }
-  else { ## xyerrors
-    if(lm.avail) {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.lm.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn, ...)
+  else if(sim == "parametric") {
+    if(parallel){
+      bsamples[rr,] <- mcmapply(rnorm, n=boot.R, mean = Y, sd = dY)
+    }else{
+      bsamples[rr,] <- mapply(rnorm, n=boot.R, mean = Y, sd = dY)
     }
-    else {
-      boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper.optim.xy, nx=nx, dy=dY, par=c(par.guess, x), fitfun=fn, ...)
-    }
+  }
+  if(!useCov) {
+    dY <- 1./dY
   }
 
+  ## define the chi-vector, the sum of squares of which has to be minimized
+  ## the definitions depend on the errormodel and the use of covariance
+  ## BUT it always has the same name
+  if(errormodel == "yerrors"){
+    if(useCov){
+      fitchi <- function(y, par) { dY %*% (y - fn(par=par, x=x, ...)) }
+    }else{
+      fitchi <- function(y, par) { dY * (y - fn(par=par, x=x, ...)) }
+    }
+  }else{
+    ipx <- length(par.Guess)-seq(nx-1,0)
+    if(useCov){
+      fitchi <- function(y, par) { dY %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+    }else{
+      fitchi <- function(y, par) { dY * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+    }
+  }
+
+  ## define the derivatives of chi and chi^2
+  if(is.null(gr) || (errormodel == "xyerrors" && is.null(dfn))){
+    ## in case no derivative is known, the functions are set to NULL
+    ## this is the default in the optimization functions anyway
+    dfitchi <- NULL
+    dfitchisqr <- NULL
+  }else{
+    ## the format of gr has to be nrows=length(par), ncols=length(Y)
+    if(errormodel == "yerrors"){
+      if(useCov){
+        dfitchi <- function(par, ...) { -dY %*% gr(par=par, x=x, ...) }
+      }else{
+        dfitchi <- function(par, ...) { -dY * gr(par=par, x=x, ...) }
+      }
+    }else{
+      jacobian <- function(par) {
+        df.dpar <- rbind(gr(par=par[-ipx], x=par[ipx], ...), array(0,dim=c(nx,length(par.guess))))
+        df.dx <- rbind(diag(dfn(par=par[-ipx], x=par[ipx], ...)), diag(1,nx))
+        return(cbind(df.dpar, df.dx))
+      }
+      if(useCov){
+        dfitchi <- function(par, ...) { -dY %*% jacobian(par) }
+      }else{
+        dfitchi <- function(par, ...) { -dY * jacobian(par) }
+      }
+    }
+    dfitchisqr <- function(y, par) { 2 * fitchi(y, par) %*% dfitchi(par) }
+  }
+
+  ## define the wrapper-functions for optimization
+  if(lm.avail){
+    wrapper <- function(y, par) {
+      res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
+                    control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500))
+      if( !(res$info %in% c(1,2,3) ) ){
+        cat(sprintf("Termination wrapper reason of nls.lm res$info: %d\n", res$info))
+      }
+      return (c(res$par, res$rsstrace[length(res$rsstrace)]))
+    }
+  }else{
+    fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
+    wrapper <- function(y, par) {
+      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"))
+      return (c(res$par, res$value))
+    }
+  }
+
+  ## now the actual fit is performed
+  first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
+  if(parallel){
+    boot.list <- mclapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res) })
+    boot.res <- do.call(cbind, boot.list)
+  }else{
+    boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper, par=first.res)
+  }
+  ## the error calculation (this could be parallelized as well, but I don't think this would help)
   errors <- apply(X=boot.res[1:(dim(boot.res)[1]-1),rr], MARGIN=1, FUN=sd)
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
@@ -211,44 +224,24 @@ print.bootstrapfit <- function(x, digits=2, ...) {
   summary.bootstrapfit(object=x, digits=digits, ...)
 }
 
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y") {
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", samples=1000) {
   rx <- range(x$x)
-  X <- seq(rx[1], rx[2], (rx[2]-rx[1])/1000)
+  X <- seq(rx[1], rx[2], (rx[2]-rx[1])/samples)
   npar <- length(x$par.guess)
-  Y <- numeric()
-  my.xlim <- numeric()
-  my.ylim <- numeric()
-  if(!missing(xlim)) {
-    my.xlim <- xlim
+
+  ## use the xylimits computation of plotwitherror
+  if(x$errormodel == "yerrors") {
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, ...)
   }
-  if(!missing(ylim)) {
-    my.ylim <- ylim
+  else {
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, ...)
   }
-  if(!rep) {
-    mylims <- c()
-    ## use the xylimits computation of plotwitherror
-    if(missing(xlim) || missing(ylim)) {
-      if(x$errormodel == "yerrors") {
-        mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
-      }
-      else {
-        mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
-      }
-    }
-    if(missing(xlim)) {
-      my.xlim <- mylims$xlim
-    }
-    if(missing(ylim)) {
-      my.ylim <- mylims$ylim
-    }
-    
-    ## generate empty plot
-    
-    plot(NA, xlim=my.xlim, ylim=my.ylim, xlab=xlab, ylab=ylab, ...)
-  }
+  my.xlim <- mylims$xlim
+  my.ylim <- mylims$ylim
 
   ## to include additional parameter to x$fn originally given as ... to bootstrap.nlsfit
   ## requires some pull-ups
+  Y <- numeric()
   Y <- do.call(what=x$fn, args=c(list(par=x$t0[1:npar], x=X), x$tofn))
 
   ## error band
@@ -264,18 +257,13 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
     polyval[polyval < my.ylim[1]] <- my.ylim[1]
     polyval[polyval > my.ylim[2]] <- my.ylim[2]
   }
+  pcol <- col2rgb(col.band, alpha=TRUE)/255 
+  pcol[4] <- 0.65
+  pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
+  polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
 
-  polygon(x=c(X, rev(X)), y=polyval, col=col.band, lty=0, lwd=0.001, border=col.band)
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
-
-  ## plot data on top of everything
-  if(x$errormodel == "yerrors") {
-    plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=TRUE)
-  }
-  else {
-    plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=TRUE)
-  }
 }
 
   
