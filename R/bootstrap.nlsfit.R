@@ -171,10 +171,10 @@ bootstrap.nlsfit <- function(fn,
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R, sim=sim,
-              bsamples=bsamples,
+              bsamples=bsamples[rr,],
               errormodel=errormodel,
               t0=boot.res[,1],
-              t=t(boot.res),
+              t=t(boot.res[,rr]),
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
@@ -186,12 +186,12 @@ bootstrap.nlsfit <- function(fn,
   return(invisible(res))
 }
 
-summary.bootstrapfit <- function(object, digits=2, ...) {
+summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE, ...) {
 
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
   errors <- object$se
-  values <- object$t[1, 1:(dim(object$t)[2]-1)]
+  values <- object$t0[1:(length(object$t0)-1)]
   npar <- length(object$par.guess)
   
   ## parameters with errors as strings
@@ -207,9 +207,11 @@ summary.bootstrapfit <- function(object, digits=2, ...) {
   ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
   cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
   print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
-  correlation <- cor(object$t[,1:(dim(object$t)[2]-1)], object$t[,1:(dim(object$t)[2]-1)])
-  cat("\n   correlation matrix of the fit parameters\n\n")
-  print(data.frame(correlation))
+  if(print.correlation){
+    correlation <- cor(object$t[,1:(dim(object$t)[2]-1)], object$t[,1:(dim(object$t)[2]-1)])
+    cat("\n   correlation matrix of the fit parameters\n\n")
+    print(data.frame(correlation))
+  }
   if(object$errormodel != "yerrors") {
     cat("\n estimates for x-values with errors, bootstrap bias and 68% confidence interval\n\n")
     ii <- c((npar+1):length(tmp))
