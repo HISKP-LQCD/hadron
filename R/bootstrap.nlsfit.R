@@ -15,8 +15,16 @@ bootstrap.nlsfit <- function(fn,
                              parallel = FALSE,
                              ...) {
 
-  if(missing(y) || missing(dy) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn)) {
-    stop("x, y, dy, par.guess, boot.R and fn must be provided!")
+  if(missing(y) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn)) {
+    stop("x, y, par.guess, boot.R and fn must be provided!")
+  }
+  if(missing(dy)){
+    if(!useCov && sim == "parametric"){
+      stop("dy has to be provided!")
+    }
+    if(missing(bsamples) && missing(CovMatrix)){
+      stop("dy, bsamples or CovMatrix has to be provided!")
+    }
   }
 
   lm.avail <- require(minpack.lm)
@@ -30,11 +38,9 @@ bootstrap.nlsfit <- function(fn,
   ## cast y and dy to Y and dY, respectively
   if(errormodel == "xyerrors") {
     Y <- c(y, x)
-    dY <- c(dy, dx)
     par.Guess <- c(par.guess, x)
   }else{
     Y <- y
-    dY <- dy
     par.Guess <- par.guess
   }
   nx <- length(x)
@@ -54,8 +60,24 @@ bootstrap.nlsfit <- function(fn,
     if(boot.R != dbs[1]) {
       stop("boot.R inconsistent with dimension one of bsamples!")
     }
-    ## add original data as first row
+	## add original data as first row
     bsamples <- rbind(Y, bsamples)
+  }
+  if(!useCov){
+    if(missing(dy)){
+      dY <- apply(X=bsamples, MARGIN=2, FUN=sd)
+      dy <- dY[1:(length(y))]
+      if(errormodel == "xyerrors"){
+        dx <- dY[(length(y)+1):length(Y)]
+      }
+    }else{
+      ## cast dy to dY
+      if(errormodel == "xyerrors") {
+        dY <- c(dy, dx)
+      }else{
+        dY <- dy
+      }
+    }
   }
 
   ## generate bootstrap samples if needed
@@ -81,15 +103,18 @@ bootstrap.nlsfit <- function(fn,
         bsamples[rr,] <- bsamples[rr,] + std.norm.dist %*% CholCovMatrix
       }
     }
-  }
-  else if(sim == "parametric") {
-    if(parallel){
-      bsamples[rr,] <- mcmapply(rnorm, n=boot.R, mean = Y, sd = dY)
-    }else{
-      bsamples[rr,] <- mapply(rnorm, n=boot.R, mean = Y, sd = dY)
+    if(missing(dy)){
+      dy <- 1./diag(dY)[1:(length(y))]
     }
   }
-  if(!useCov) {
+  else{
+    if(sim == "parametric") {
+      if(parallel){
+        bsamples[rr,] <- mcmapply(rnorm, n=boot.R, mean = Y, sd = dY)
+      }else{
+        bsamples[rr,] <- mapply(rnorm, n=boot.R, mean = Y, sd = dY)
+      }
+    }
     dY <- 1./dY
   }
 
