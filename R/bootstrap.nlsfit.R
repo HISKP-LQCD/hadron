@@ -12,6 +12,7 @@ bootstrap.nlsfit <- function(fn,
                              bsamples,
                              useCov = FALSE,
                              CovMatrix,
+                             use.minpack.lm = TRUE,
                              parallel = FALSE,
                              ...) {
 
@@ -27,7 +28,11 @@ bootstrap.nlsfit <- function(fn,
     }
   }
 
-  lm.avail <- require(minpack.lm)
+  if(use.minpack.lm){
+    lm.avail <- require(minpack.lm)
+  }else{
+    lm.avail <- FALSE
+  }
   if(parallel){
     parallel <- require(parallel)
   }
