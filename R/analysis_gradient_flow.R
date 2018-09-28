@@ -102,12 +102,19 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
     abline(v=w0sq)
     lines(x=gradflow$t, y=gradflow$Wsym.value)
     legend(x="topleft",
-           legend=sprintf("$a=%s$\\,fm", 
+           legend=c(sprintf("$(w_0/a)^2 =%s$",
+                            tex.catwitherror(x=w0sq[2],
+                                             dx=0.5*(abs(w0sq[3]-w0sq[2]) + abs(w0sq[2]-w0sq[1])),
+                                             digits=2,
+                                             with.dollar=FALSE)
+                            ),
+                  sprintf("$a=%s$\\,fm", 
                           tex.catwitherror(x=a[2,1],
                                            dx=sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2),
                                            digits=2,
                                            with.dollar=FALSE)
-                          ),
+                          )
+                  ),
            bty='n')
     
     # plot MD history of Wsym at w0
