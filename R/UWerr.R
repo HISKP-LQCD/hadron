@@ -337,7 +337,13 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     }
   }
   
-  res <- list(res=res, Wopt=Wopt, Wmax=Wmax,
+  res <- list(value=res$value,
+              dvalue=res$dvalue,
+              ddvalue=res$ddvalue,
+              tauint=res$tauint,
+              dtauint=res$dtauint,
+              Qval=res$Qval,
+              Wopt=Wopt, Wmax=Wmax,
               tauintofW=tauintofW, dtauintofW=dtauintofW,
               S=S, fgrad=fgrad, datamean=abb,
               N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb,

@@ -25,20 +25,20 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
     result$t[i] <- t-1
     # these are NA, rather than single element vectors containing NA, so we need
     # to check for their lengths, otherwise the assignments below fail 
-    if( length(mass$res$value) > 0 ){
-      result$mass[i] <- mass$res$value[1]
+    if( length(mass$value) > 0 ){
+      result$mass[i] <- mass$value[1]
     }
-    if( length(mass$res$dvalue) > 0 ){
-      result$dmass[i] <- mass$res$dvalue[1]
+    if( length(mass$dvalue) > 0 ){
+      result$dmass[i] <- mass$dvalue[1]
     }
-    if( length(mass$res$ddvalue) > 0 ){
-      result$ddmass[i] <- mass$res$ddvalue[1]
+    if( length(mass$ddvalue) > 0 ){
+      result$ddmass[i] <- mass$ddvalue[1]
     }
-    if( length(mass$res$tauint) > 0 ){
-      result$tauint[i] <- mass$res$tauint[1]
+    if( length(mass$tauint) > 0 ){
+      result$tauint[i] <- mass$tauint[1]
     }
-    if( length(mass$res$dtauint) > 0 ){  
-      result$dtauint[i] <- mass$res$dtauint[1]
+    if( length(mass$dtauint) > 0 ){  
+      result$dtauint[i] <- mass$dtauint[1]
     }
     i = i+1
   }
