@@ -8,18 +8,18 @@
   bootstrap an NLS fit
 }
 \description{
-  performs and bootstraps an non-linear least-squares fit to data with y and x errors.
+  Performs and bootstraps a non-linear least-squares fit to data with y and x errors.
 }
 \usage{
-bootstrap.nlsfit(fn, gr, par.guess, errormodel = "yerrors", sim =
-"parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov, ...)
+bootstrap.nlsfit(fn, gr=NULL, dfn=NULL, par.guess, errormodel = "yerrors", sim =
+"parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov=FALSE, CovMatrix, use.minpack.lm=TRUE, parallel=FALSE, ...)
 
 summary(object, digits=2, ...)
 
 print(x, digits=2, ...)
 
 plot(x, ..., xlim, ylim, rep=FALSE, col.line="black",
-col.band="gray", lty=c(1), lwd=c(1))
+col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000)
 }
 
 %- maybe also 'usage' for other objects documented here.
@@ -30,19 +30,23 @@ col.band="gray", lty=c(1), lwd=c(1))
     must be \code{x}, the explaining variable.
   }
   \item{gr}{
-    A function to return the gradient of \code{fn}. It must return an
+    \code{gr=d(fn) / d(par)} is a function to return the gradient of \code{fn}. It must return an
     array with \code{length(x)} rows and \code{length(par)} columns.
   }
+  \item{dfn}{
+    \code{dfn=d(fn) / dx} is the canonical derivative of \code{fn} by \code{x} and only relevant
+    if x-errors are provided.
+  }
   \item{par.guess}{
-    Initial guess values for the fit parameters.
+    initial guess values for the fit parameters.
   }
   \item{errormodel}{
     can be either "yerrors" for errors only on the y-axis, or "xyerrors"
-    for errors on both axis.
+    for errors on both axes.
   }
   \item{sim}{
     can be "parametric" for a parametric bootstrap approach. Using the
-    values \code{dy} (and \code{dx}, if applicable), bootstrap samples
+    values \code{dy} (and \code{dx} or \code{CovMatrix}, if applicable), bootstrap samples
     are generated assuming a Gaussian error distribution.
   }
   \item{boot.R}{
@@ -56,7 +60,7 @@ col.band="gray", lty=c(1), lwd=c(1))
     errors of \code{y} as a one-dimensional numerical vector.
   }
   \item{x}{
-    Values of the explaining variable in form of a one-dimensional
+    values of the explaining variable in form of a one-dimensional
     numerical vector.
   }
   \item{dx}{
@@ -66,13 +70,22 @@ col.band="gray", lty=c(1), lwd=c(1))
     bootstrap samples of \code{y} (and \code{x}, if applicable). Must be
     provided as array of dimensions \code{c(boot.R, n)} with
     \code{n} equals to \code{length(y)} in case of 'yerrors'
-    and For 'xyerrors' to \code{length(y) + length(x)}..
+    and For 'xyerrors' to \code{length(y) + length(x)}.
   }
   \item{useCov}{
     perform a fully correlated fit by deterining the variance-covariance
-    matrix from the provided bootstrap samples. This works only if
-    bootstrap samples are provided. Otherwise, an uncorrelated fit will
-    be performed.
+    matrix from the provided bootstrap samples or using the covariance matrix \code{CovMatrix} directly.
+  }
+  \item{CovMatrix}{
+    complete variance-covariance matrix of dimensions \code{c(length(y), length(y))}
+    or \code{c(length(y)+length(x), length(y)+length(x))} depending on the errormodel.
+  }
+  \item{use.minpack.lm}{
+    use the \code{minpack.lm} library if available. This is usually faster
+    than the default \code{optim} but somtimes also less stable.
+  }
+  \item{parallel}{
+    parallelise over bootstrap samples.
   }
   \item{\dots}{
     additional parameters to be passed on to the fit function \code{fn}.
@@ -100,11 +113,17 @@ col.band="gray", lty=c(1), lwd=c(1))
   \item{col.band}{
     error band colour.
   }
+  \item{opacity.band}{
+    error band opacity.
+  }
   \item{lwd}{
     line width for fitted curve.
   }
   \item{lty}{
     line type of fitted curve.
+  }
+  \item{supports}{
+    number of supporting points for plotting the function.
   }
   \item{...}{
     arguments to be passed on to \code{fn} and \code{gr} in case of
@@ -125,12 +144,12 @@ col.band="gray", lty=c(1), lwd=c(1))
     the best fit parameters
     obtained on the original data. The last element in \code{t0} is the
     chisquare value.}
-  \item{t}{an array of dimensions \code{(npar+1, boot.R+1)} with
-    \code{npar} as in \code{t0}. The first
-    row is identical to \code{t0}. The other rows contain the individual
+  \item{t}{an array of dimensions \code{(npar+1, boot.R)} with
+    \code{npar} as in \code{t0}. The rows contain the individual
     bootstrap observations.}
   \item{bsamples}{the bootstrap samples used as an array of dimensions
-    \code{(npar+1, boot.R+1)} with \code{npar} as in \code{t0}. }
+    \code{(length(y), boot.R)} or \code{(length(y)+length(x), boot.R)}
+    depending on the error model with \code{npar} as in \code{t0}. }
   \item{Qval}{the p-value of the fit on the original data}
   \item{chisqr}{the residual chisqr value.}
   \item{dof}{the residual degrees of freedom of the fit.}
@@ -144,7 +163,7 @@ col.band="gray", lty=c(1), lwd=c(1))
 %% ~put references to the literature/web site here ~
 %%}
 \author{
-Carsten Urbach, \email{curbach@gmx.de}
+Carsten Urbach, \email{curbach@gmx.de}; Johann Ostmeyer, \email{ostmeyer@hiskp.uni-bonn.de}
 }
 %%\note{
 %%  ~~further notes~~

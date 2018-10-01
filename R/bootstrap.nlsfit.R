@@ -256,9 +256,9 @@ print.bootstrapfit <- function(x, digits=2, ...) {
   summary.bootstrapfit(object=x, digits=digits, ...)
 }
 
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", samples=1000) {
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000) {
   rx <- range(x$x)
-  X <- seq(rx[1], rx[2], (rx[2]-rx[1])/samples)
+  X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
   npar <- length(x$par.guess)
 
   ## use the xylimits computation of plotwitherror
@@ -290,12 +290,10 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
     polyval[polyval > my.ylim[2]] <- my.ylim[2]
   }
   pcol <- col2rgb(col.band, alpha=TRUE)/255 
-  pcol[4] <- 0.65
+  pcol[4] <- opacity.band
   pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
   polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
 
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 }
-
-  
