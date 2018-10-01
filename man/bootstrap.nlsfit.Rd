@@ -11,7 +11,7 @@
   performs and bootstraps an non-linear least-squares fit to data with y and x errors.
 }
 \usage{
-bootstrap.nlsfit(fn, par.guess, errormodel = "yerrors", sim =
+bootstrap.nlsfit(fn, gr, par.guess, errormodel = "yerrors", sim =
 "parametric", boot.R, y, dy, x, dx = NULL, bsamples, useCov, ...)
 
 summary(object, digits=2, ...)
@@ -28,41 +28,45 @@ col.band="gray", lty=c(1), lwd=c(1))
     the (non-linear) function to be fitted to the data. Its first
     argument must be the fit parameters named \code{par}. The second
     must be \code{x}, the explaining variable.
-}
+  }
+  \item{gr}{
+    A function to return the gradient of \code{fn}. It must return an
+    array with \code{length(x)} rows and \code{length(par)} columns.
+  }
   \item{par.guess}{
     Initial guess values for the fit parameters.
-}
+  }
   \item{errormodel}{
     can be either "yerrors" for errors only on the y-axis, or "xyerrors"
     for errors on both axis.
-}
+  }
   \item{sim}{
     can be "parametric" for a parametric bootstrap approach. Using the
     values \code{dy} (and \code{dx}, if applicable), bootstrap samples
     are generated assuming a Gaussian error distribution.
-}
+  }
   \item{boot.R}{
     the number of bootstrap samples to use.
-}
+  }
   \item{y}{
     the data as a one-dimensional numerical vector to be described by
     the fit function. 
-}
+  }
   \item{dy}{
     errors of \code{y} as a one-dimensional numerical vector.
-}
+  }
   \item{x}{
     Values of the explaining variable in form of a one-dimensional
     numerical vector.
-}
+  }
   \item{dx}{
     errors of \code{x} as a one-dimensional numerical vector.
   }
   \item{bsamples}{
     bootstrap samples of \code{y} (and \code{x}, if applicable). Must be
-    provided as array of dimensions \code{(npar+1, boot.R+1)} with
-    \code{npar} equals to \code{length(par.guess)} in case of 'yerrors'
-    and For 'xyerrors' to \code{length(par.guess) + length(x)}..
+    provided as array of dimensions \code{c(boot.R, n)} with
+    \code{n} equals to \code{length(y)} in case of 'yerrors'
+    and For 'xyerrors' to \code{length(y) + length(x)}..
   }
   \item{useCov}{
     perform a fully correlated fit by deterining the variance-covariance
@@ -102,6 +106,11 @@ col.band="gray", lty=c(1), lwd=c(1))
   \item{lty}{
     line type of fitted curve.
   }
+  \item{...}{
+    arguments to be passed on to \code{fn} and \code{gr} in case of
+    \code{bootstrap.nlsfit} or additional general parameters passed on
+    to \code{summary}, \code{print} or \code{plot}.
+  }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -126,6 +135,10 @@ col.band="gray", lty=c(1), lwd=c(1))
   \item{chisqr}{the residual chisqr value.}
   \item{dof}{the residual degrees of freedom of the fit.}
   \item{nx}{the number of x-values.}
+  \item{tofn}{
+    the original \code{...} list of parameters to be passed on to the
+    fit function
+  }
 }
 %%\references{
 %% ~put references to the literature/web site here ~

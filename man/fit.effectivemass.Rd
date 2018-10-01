@@ -82,7 +82,7 @@ fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE,
 \examples{
 data(samplecf)
 samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
-effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556), t1=15, t2=23)
+effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
 summary(effmass)
 plot(effmass, ylim=c(0.14,0.15))
 }

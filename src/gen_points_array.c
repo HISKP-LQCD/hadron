@@ -66,7 +66,7 @@ int gen_points_array(int ** _degnrtDOF, int ** _arrayPmode, const int NPmode, co
       return(-1);
     }
     
-    if(NULL == (arrayPmode= (int *)malloc(NPmode*(DimMAX+10)*3*sizeof(int)))) {
+    if(NULL == (arrayPmode= (int *)malloc(NPmode*(DimMAX+500)*3*sizeof(int)))) {
       printf("Malloc wrong for arrayPmode!\n");
       return(-2);
     }
