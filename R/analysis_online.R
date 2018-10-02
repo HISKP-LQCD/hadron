@@ -110,11 +110,21 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     if(!any(class(pioncor)=='try-error')){
       # the correlation functions have been read externally, taking into account the measurement frequency
       # and possibly missing files. Therefore, skip=0! 
-      onlineout <- onlinemeas(pioncor,t1=t1,t2=t2,kappa=kappa,mu=mul,skip=0,method=method,pl=pl,fit.routine=fit.routine,oldnorm=oldnorm,S=S,
-                              boot.R=boot.R,boot.l=boot.l)
+      onlineout <- onlinemeas(pioncor,
+                              t1=t1,t2=t2,
+                              kappa=kappa,
+                              mu=mul,
+                              skip=0,
+                              method=method,
+                              pl=pl,
+                              fit.routine=fit.routine,
+                              oldnorm=oldnorm,
+                              S=S,
+                              boot.R=boot.R,
+                              boot.l=boot.l)
 
       if(debug){
-        print(onlineout)
+        return(onlineout)
       }
 
       if(trajlabel){
@@ -198,24 +208,25 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       }
       rect(xleft=t1,
            xright=t2,
-           ytop=onlineout$uwerrresultmps$value+onlineout$uwerrresultmps$dvalue,
-           ybottom=onlineout$uwerrresultmps$value-onlineout$uwerrresultmps$dvalue,
-           border=FALSE,col=errorband_color)
-      abline(h=onlineout$uwerrresultmps$value,col="black")
+           ytop=onlineout$uwerrresultmps$value[1]+onlineout$uwerrresultmps$dvalue[1],
+           ybottom=onlineout$uwerrresultmps$value[1]-onlineout$uwerrresultmps$dvalue[1],
+           border=FALSE,
+           col=errorband_color)
+      abline(h=onlineout$uwerrresultmps$value[1],col="black")
       tikz.finalize(tikzfiles)
 
       result$obs$mpi <- t(data.frame(val=abs(onlineout$fitresultpp$par[2]),
-                                    dval=onlineout$uwerrresultmps$dvalue,
-                                    tauint=onlineout$uwerrresultmps$tauint*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultmps$dtauint*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultmps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
+                                    dval=onlineout$uwerrresultmps$dvalue[1],
+                                    tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize,
+                                    dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize,
+                                    Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/
                                          (sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
-                                    dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue,
-                                    tauint=onlineout$uwerrresultfps$tauint*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultfps$dtauint*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultfps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
+                                    dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue[1],
+                                    tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize,
+                                    dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize,
+                                    Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       if(method=="boot" | method=="all"){
         mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/

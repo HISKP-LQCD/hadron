@@ -19,13 +19,13 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
 
     f must have the data vector of length Nalpha as the first
     argument. Further arguments to f can be passed to uwerr via the
-    ... argument.
+    \code{...} argument.
 
-    f must return a scalar object of numeric type.
+    f may return a vector object of numeric type.
   }
   \item{data}{
-    array of data to be analysed. It must be of dimension (Nalpha x N)
-    (i.e. Nalpha rows and N columns),
+    array of data to be analysed. It must be of dimension (N x Nalpha)
+    (i.e. N rows and Nalpha columns),
     where N is the total number of measurements and Nalpha is the number
     of primary observables
   }
@@ -33,7 +33,8 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
     the vector (N1, N2, ...) of replica length N1, N2
   }
   \item{S}{
-    initial guess for tau/tauint
+    initial guess for the ratio tau/tauint, with tau the exponetial
+    autocorrelation length.
   }
   \item{pl}{
     logical: if TRUE, the autocorrelation function, the integrated
@@ -46,7 +47,9 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   }
 }
 \value{
-  returns an object of type uwerr containing
+  In case of a primary observable (\code{uwerrprimary}), an object of
+  class \code{uwerr} with basis class \code{\link{list}} containing the
+  following objects
   \item{value}{
     the expectation value of the obsevable
   }
@@ -62,8 +65,60 @@ uwerrderived(f, data, nrep, S=1.5, pl=FALSE, ...)
   \item{dtauint}{
     error of tauint
   }
+  \item{Qval}{
+    the p-value of the weighted average in case of several replicas
+  }
+  In case of a derived observable (\code{uwerrderived}), i.e. if a
+  function is specified, the above objects are contained in a list
+  called \code{res}.
+
+  \code{uwerrprimary} returns in addition
+  \item{data}{
+    input data
+  }
+  whereas \code{uwerrderived} returns
+  \item{datamean}{
+    (vector of) mean(s) of the (vector of) data
+  }
+  and in addition
+  \item{fgrad}{
+    the estimated gradient of \code{f}
+  }
+  and
+  \item{f}{
+    the input statistics
+  }
+
+  In both cases the return object containes
   \item{Wopt}{
     value of optimal cut-off for the Gamma function integration
+  }
+  \item{Wmax}{
+    maximal value of the cut-off for the Gamma function integration
+  }
+  \item{tauintofW}{
+    integrated autocorrelation time as a function of the cut-off W
+  }
+  \item{dtauintofW}{
+    error of the integrated autocorrelation time as a function of the cut-off W
+  }
+  \item{S}{
+    input parameter S
+  }
+  \item{N}{
+    total number of observations
+  }
+  \item{R}{
+    number of replicas
+  }
+  \item{nrep}{
+    vector of observations per replicum
+  }
+  \item{Gamma}{
+    normalised autocorrelation function
+  }
+  \item{primary}{
+    set to 1 for \code{uwerrprimary} and 0 for \code{uwerrderived}
   }
 }
 %\details{

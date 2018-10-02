@@ -93,7 +93,7 @@ cfunction <- function(data, t1, t2, S=1.5, pl=FALSE, skip=0, cformat="cmi",
   fit.boot <- NULL
   fit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmass, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrm <- uwerr(f=fitmass, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                         fit.routine=fit.routine)
   }
