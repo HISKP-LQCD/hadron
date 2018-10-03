@@ -16,32 +16,44 @@ cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
 
 ## this fit-function works completely analogous to fit.effecitvemass
 ## but it fits the correlator directly to a sum of cosh-terms
-fit.cosh <- function(effMass, t1, t2, useCov=FALSE, replace.na=TRUE, m.init=0.01, par, n.cosh=2, every, ...){
-	stopifnot(inherits(effMass, 'effectivemass'))
-
-	Thalf = effMass$Time/2
-	if(effMass$cf$symmetrised) {
-		tmax <- Thalf
+fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh=2, every, ...){
+	if(missing(effMass) && missing(cf)){
+		stop("effMass or cf has to be provided!\n")
+	}
+	if(!missing(effMass)){
+		stopifnot(inherits(effMass, 'effectivemass'))
+		Thalf = effMass$Time/2
+		use.effmass <- TRUE
 	}else{
-		tmax <- effMass$Time-1
+		stopifnot(inherits(cf, 'cf_boot'))
+		Thalf = cf$Time/2
+		use.effmass <- FALSE
 	}
 
 	stopifnot(t1 < t2)
 	stopifnot(0 <= t1)
-	stopifnot(t2 <= tmax)
 	
 	if(missing(par)){
 		## some initial values, probably not optimal...
 		masses = c(0:(n.cosh-1))
 		masses = masses+m.init
-		amplitudes = effMass$cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+		if(use.effmass){
+			amplitudes = effMass$cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+		}else{
+			amplitudes = cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+		}
 	}else{
 		masses = par[1:n.cosh]
 		amplitudes = par[(n.cosh+1):(2*n.cosh)]
 	}
 
-	cf.save <- effMass$cf$cf.tsboot$t
-	cf0.save <- effMass$cf$cf0
+	if(use.effmass){
+		cf.save <- effMass$cf$cf.tsboot$t
+		cf0.save <- effMass$cf$cf0
+	}else{
+		cf.save <- cf$cf.tsboot$t
+		cf0.save <- cf$cf0
+	}
 
 	## extract the relevant time slices
 	ii <- c((t1+1):(t2+1))
@@ -51,32 +63,6 @@ fit.cosh <- function(effMass, t1, t2, useCov=FALSE, replace.na=TRUE, m.init=0.01
 	if(any(is.na(cf0.save[ii]))){
 		ii.na <- which(is.na(cf0.save[ii]))
 		ii <- ii[-ii.na]
-	}
-	ii.remove <- c()
-	if(replace.na && any(is.na(cf.save))) {
-		for(k in ii) {
-		  if(any(is.na(cf.save[,k]))) {
-			## indices of NA elements
-			jj <- which(is.na(effMass$t[,k]))
-			## if there are more NA elements than non-NA elements, the replacement
-			## below will fail
-			if( length(cf.save[-jj, k]) > length(jj) ) {
-			  ## random indices in the non-NA elements of t
-			  rj <- sample.int(n=length(cf.save[-jj, k]), size=length(jj), replace=FALSE)
-			  ## replace
-			  cf.save[jj, k] <- cf.save[-jj, k][rj]
-			}
-			else {
-			  ## so we remove this column from the analysis below
-			  ii.remove <- c( ii.remove, which( ii == k ) )
-			}
-		  }
-		}
-	}
-	if( length( ii.remove ) > 0 ) {
-		## remove the columns that should be excluded from the fit below
-		ii <- ii[ -ii.remove ]
-		cat("Due to NAs we have removed the time slices", ii.remove-1, " from the fit\n")
 	}
 	tt = ii-1-Thalf
 
@@ -91,8 +77,14 @@ fit.cosh <- function(effMass, t1, t2, useCov=FALSE, replace.na=TRUE, m.init=0.01
 		return(cbind(df.dm, df.da))
 	}
 
-	dy <- effMass$cf$tsboot.se[ii]
-	fit.res <- bootstrap.nlsfit(fn=sum.cosh.fit, gr=sum.cosh.jac, par.guess=c(masses, amplitudes), sim="direct", boot.R=effMass$cf$boot.R, y=cf0.save[ii], dy=dy, x=tt, bsamples=cf.save[,ii], useCov=useCov, use.minpack.lm=FALSE, ...)
+	if(use.effmass){
+		dy <- effMass$cf$tsboot.se[ii]
+		boot.R <- effMass$cf$boot.R
+	}else{
+		dy <- cf$tsboot.se[ii]
+		boot.R <-cf$boot.R
+	}
+	fit.res <- bootstrap.nlsfit(fn=sum.cosh.fit, gr=sum.cosh.jac, par.guess=c(masses, amplitudes), sim="direct", boot.R=boot.R, y=cf0.save[ii], dy=dy, x=tt, bsamples=cf.save[,ii], useCov=useCov, use.minpack.lm=FALSE, ...)
 
 	opt.res <- fit.res$t0[1:(2*n.cosh)]
 	opt.res[1:n.cosh] <- abs(opt.res[1:n.cosh])
@@ -106,6 +98,10 @@ fit.cosh <- function(effMass, t1, t2, useCov=FALSE, replace.na=TRUE, m.init=0.01
 		massfit.tsboot[,1:n.cosh] <- t(apply(massfit.tsboot[,1:n.cosh], FUN=function(res) {res[order(res)]}, MARGIN=1))
 	}
 
+	if(!use.effmass){
+		effMass <- list()
+		effMass$cf <- cf
+	}
 	effMass$coshfit <- list()
 	effMass$coshfit$t0 <- opt.res
     effMass$coshfit$t <- massfit.tsboot
