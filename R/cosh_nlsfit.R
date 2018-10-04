@@ -124,9 +124,16 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
 }
 
 plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr=FALSE, ...) {
-	t.all <- effMass$t.idx
+	stopifnot(inherits(effMass, 'coshfit'))
+	if(!inherits(effMass, 'effectivemass')){
+		plot.mass = FALSE
+		if(missing(plot.corr)){
+			plot.corr = TRUE
+		}
+	}
+
 	t <- c(effMass$t1:effMass$t2)
-	Thalf <- effMass$Time/2
+	Thalf <- effMass$cf$Time/2
 	n.cosh <- effMass$coshfit$n.cosh
 
 	pcol <- col2rgb(col.fitline,alpha=TRUE)/255
@@ -134,6 +141,7 @@ plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr
 	pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
 
 	if(plot.mass){
+		t.all <- effMass$t.idx
 		op <- options()
 		options(warn=-1)
 		plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...)
@@ -158,7 +166,7 @@ plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr
 
 		if(!is.null(effMass$coshfit)){
 			Y <- sum.cosh(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t-Thalf)
-			Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {sum.cosh(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t-Thalf)}, MARGIN=2)
+			Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {sum.cosh(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t-Thalf)}, MARGIN=1)
 			se <- apply(Y.boot, MARGIN=1, FUN=sd, na.rm=TRUE)
 
 			## plot it
@@ -173,10 +181,10 @@ plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr
 
 summary.coshfit <- function(effMass, verbose=FALSE) {
   cat("\n ** Result of", effMass$coshfit$n.cosh, "-fold cosh-fit **\n\n")
-  cat("no. measurements\t=\t", effMass$N, "\n")
-  cat("boot.R\t=\t", effMass$boot.R, "\n")
-  cat("boot.l\t=\t", effMass$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$Time, "\n")
+  cat("no. measurements\t=\t", length(effMass$cf$cf[,1]), "\n")
+  cat("boot.R\t=\t", effMass$cf$boot.R, "\n")
+  cat("boot.l\t=\t", effMass$cf$boot.l, "\n")
+  cat("Time extend\t=\t", effMass$cf$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]))),
       "(",100*length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii])))/ length(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]), "%)\n")
   cat("time range from", effMass$coshfit$t1, " to ", effMass$coshfit$t2, "\n")
