@@ -114,7 +114,6 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
 	effMass$coshfit$ii <- ii
 	effMass$coshfit$useCov <- useCov
 	effMass$coshfit$invCovMatrix <- fit.res$invCovMatrix
-	effMass$coshfit$replace.na <- replace.na
 	effMass$dof <- length(ii)-2*n.cosh
 	effMass$chisqr <- fit.res$chisqr
 	effMass$coshfit$dof <- length(ii)-2*n.cosh
