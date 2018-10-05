@@ -67,6 +67,11 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
   gf_latspacs <- list()
   gf_approx_scales <- list()
   for( i in 1:length(ref_gf_scales) ){
+    # extract colum names of gradflow relevant to the observable currently in the loop
+    nms <- c("t",
+             outer(ref_gf_scales[[i]]$obs, subnames, FUN=function(x,y){ paste(x,y,sep=".") })
+             )
+
     val <- gradflow[,sprintf("%s.value", ref_gf_scales[[i]]$obs)]
     dval <- gradflow[,sprintf("%s.dvalue", ref_gf_scales[[i]]$obs)] 
     gf_scales[[i]] <- c(approx( x=val+dval,y=gradflow$t,xout=0.3)$y, 
@@ -76,7 +81,8 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
     ## determine which discrete value of t is closest to the scale in question
     for( tidx in 1:length(t_vec) ){
       if( t_vec[tidx] >= gf_scales[[i]][2] ){
-        gf_approx_scales[[i]] <- t_vec[tidx]
+        gf_approx_scales[[i]] <- gradflow[tidx,nms]
+        colnames(gf_approx_scales[[i]]) <-  c("t", subnames)
         break
       }
     }
@@ -146,16 +152,29 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
                     ),
              bty='n')
       
-      ### plot MD history of Wsym at t closest to scale
-      approx_idx <- which(raw.gradflow$t==gf_approx_scales[[i]])
+      ### plot MD history of the scale observable at the value of t closest to the scale
+      approx_idx <- which(raw.gradflow$t==gf_approx_scales[[i]]$t)
       tseries <- data.frame(y=raw.gradflow[approx_idx,scale_obs],
                             t=start + c( skip :(skip + 
                                                 length(raw.gradflow[approx_idx,scale_obs]) - 1 ) )*scale )
       plot_timeseries(dat=tseries,
                       ylab=sprintf("%s$|_{t/a^2 = %.2f}$", 
                                    scale_obslabel,
-                                   gf_approx_scales[[i]]),
+                                   gf_approx_scales[[i]]$t),
                       titletext="")
+
+      # indicate integrated autocorrelation time in scaled units
+      legend(x="topleft",
+             bty='n',
+             pch=NA,
+             legend=sprintf("$\\tau_{\\mathrm{int}}($ %s $) = %s$ traj.",
+                            scale_obslabel,
+                            tex.catwitherror(x=gf_approx_scales[[i]]$tauint,
+                                             dx=gf_approx_scales[[i]]$dtauint,
+                                             digits=2,
+                                             with.dollar=FALSE)
+                            )
+             )
     }
    
     if( any(cnames == "Qsym") ){
@@ -178,12 +197,26 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
       lines(x=gradflow$t, y=gradflow$Qsym.value)
       
       # plot MD history of Q at maximal flow time
-      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
-      tseries <- data.frame(y=raw.gradflow[tmax_idx,"Qsym"],
-                            t=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale)
+      tmax_md_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
+      tmax_idx <- which(gradflow$t==max(gradflow$t))
+      tseries <- data.frame(y=raw.gradflow[tmax_md_idx,"Qsym"],
+                            t=start + c( skip :( skip + length(raw.gradflow[tmax_md_idx,"Qsym"]) - 1 ) )*scale)
       plot_timeseries(dat=tseries,
                       ylab=sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
                       titletext="")
+
+      # indicate integrated autocorrelation time in scaled units
+      legend(x="topleft",
+             bty='n',
+             pch=NA,
+             legend=sprintf("$\\tau_{\\mathrm{int}}($ %s $) = %s$ traj.",
+                            sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
+                            tex.catwitherror(x=gradflow[tmax_idx, "Qsym.tauint"],
+                                             dx=gradflow[tmax_idx, "Qsym.dtauint"],
+                                             digits=1,
+                                             with.dollar=FALSE)
+                            )
+             )
     }
     
     tikz.finalize(tikzfiles)
