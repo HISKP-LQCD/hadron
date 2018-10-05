@@ -34,8 +34,8 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
     raw.gradflow <- readgradflow(path=path, skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
   }else{
-    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",basename))
-    load(sprintf("%s.raw.gradflow.Rdata",basename))
+    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
+    load(sprintf("%s.raw.gradflow.Rdata",outputbasename))
   }
   if(dbg==TRUE) print(raw.gradflow)
 
@@ -66,6 +66,7 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
   gf_scales <- list()
   gf_latspacs <- list()
   gf_approx_scales <- list()
+  gradflow_resultsum[[outputbasename]] <- NULL
   for( i in 1:length(ref_gf_scales) ){
     # extract colum names of gradflow relevant to the observable currently in the loop
     nms <- c("t",
@@ -78,6 +79,7 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
                         approx( x=val, y=gradflow$t, xout=0.3 )$y, 
                         approx( x=val-dval, y=gradflow$t, xout=0.3)$y )
 
+
     ## determine which discrete value of t is closest to the scale in question
     for( tidx in 1:length(t_vec) ){
       if( t_vec[tidx] >= gf_scales[[i]][2] ){
@@ -86,6 +88,21 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
         break
       }
     }
+
+    ## summary information about the gradient flow scales:
+    ## observable name, value, stat. errors in + and - directions
+    ## we also add the autocorrelation time and error of the observable
+    ## at the value of t closest to our scale
+    gradflow_resultsum[[outputbasename]] <- 
+      rbind(gradflow_resultsum[[outputbasename]],
+            data.frame(obs=ref_gf_scales[[i]]$obs,
+                       val=gf_scales[[i]][2],
+                       pdval=gf_scales[[i]][2]-gf_scales[[i]][1],
+                       mdval=gf_scales[[i]][3]-gf_scales[[i]][2],
+                       tauint=gf_approx_scales[[i]]$tauint,
+                       dtauint=gf_approx_scales[[i]]$dtauint
+                       )
+            )
 
     # sqrt of our bounds to compute the lattice spacing
     sqrt_gf_scale <- sqrt(gf_scales[[i]])
@@ -97,6 +114,9 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
                                                           dval=0))
     }
   }
+
+  save(gradflow_resultsum,
+       file=resultsfile)
    
   if(pl) {
     tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
