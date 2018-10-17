@@ -16,30 +16,50 @@ cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
 
 ## this fit-function works completely analogous to fit.effecitvemass
 ## but it fits the correlator directly to a sum of cosh-terms
-fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh=2, every, ...){
+fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...){
   if(missing(effMass) && missing(cf)){
     stop("effMass or cf has to be provided!\n")
   }
   if(!missing(effMass)){
     stopifnot(inherits(effMass, 'effectivemass'))
+    cf = effMass$cf
     Thalf = effMass$Time/2
     use.effmass <- TRUE
   }else{
+    stopifnot(inherits(cf, 'cf_meta'))
     stopifnot(inherits(cf, 'cf_boot'))
     Thalf = cf$Time/2
     use.effmass <- FALSE
   }
 
-  stopifnot(t1 < t2)
+  stopifnot(t1+2*n.cosh < t2)
   stopifnot(0 <= t1)
   
   if(missing(par)){
     ## some initial values, probably not optimal...
-    masses = c(0:(n.cosh-1))
-    masses = masses+m.init
-    if(use.effmass){
-      amplitudes = effMass$cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+    if(n.cosh == 2){
+      C1 = cf$cf0[t1+1]
+      C2 = cf$cf0[t2+1]
+      CMiddle = cf$cf0[t1+2]
+      a0 = C2/cosh(m.init*(t2-Thalf))
+      C1 = C1-a0*cosh(m.init*(t1-Thalf))
+      CMiddle = CMiddle-a0*cosh(m.init*(t1+1-Thalf))
+      masses = c(m.init, acosh(C1/CMiddle))
+      amplitudes = c(a0, C1/cosh(masses[[2]]*(t1-Thalf)))
+      if(any(is.na(masses)) || any(is.na(amplitudes))){
+        cat("The higher cosh-term cannot be resolved properly.\nA plateau fit is recommended.\n")
+        if(adjust.n.cosh){
+          cat("Changing number of cosh-terms. Now n.cosh=1.\n")
+          n.cosh = 1
+          masses = c(m.init)
+          amplitudes = c(a0)
+        }else{
+          masses = c(0:(n.cosh-1)) + m.init
+          amplitudes = cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+        }
+      }
     }else{
+      masses = c(0:(n.cosh-1)) + m.init
       amplitudes = cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
     }
   }else{
@@ -47,13 +67,8 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
     amplitudes = par[(n.cosh+1):(2*n.cosh)]
   }
 
-  if(use.effmass){
-    cf.save <- effMass$cf$cf.tsboot$t
-    cf0.save <- effMass$cf$cf0
-  }else{
-    cf.save <- cf$cf.tsboot$t
-    cf0.save <- cf$cf0
-  }
+  cf.save <- cf$cf.tsboot$t
+  cf0.save <- cf$cf0
 
   ## extract the relevant time slices
   ii <- c((t1+1):(t2+1))
@@ -77,13 +92,8 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
     return(cbind(df.dm, df.da))
   }
 
-  if(use.effmass){
-    dy <- effMass$cf$tsboot.se[ii]
-    boot.R <- effMass$cf$boot.R
-  }else{
-    dy <- cf$tsboot.se[ii]
-    boot.R <-cf$boot.R
-  }
+  dy <- cf$tsboot.se[ii]
+  boot.R <-cf$boot.R
   fit.res <- bootstrap.nlsfit(fn=sum.cosh.fit, gr=sum.cosh.jac, par.guess=c(masses, amplitudes), sim="direct", boot.R=boot.R, y=cf0.save[ii], dy=dy, x=tt, bsamples=cf.save[,ii], useCov=useCov, use.minpack.lm=FALSE, ...)
 
   opt.res <- fit.res$t0[1:(2*n.cosh)]
@@ -103,6 +113,7 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
     effMass$cf <- cf
   }
   effMass$coshfit <- list()
+  effMass$coshfit$use.effmass <- use.effmass
   effMass$coshfit$t0 <- opt.res
   effMass$coshfit$t <- massfit.tsboot
   effMass$coshfit$se <- apply(massfit.tsboot, 2, sd)
