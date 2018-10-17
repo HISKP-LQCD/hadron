@@ -449,7 +449,7 @@ matrixfit <- function(cf, t1, t2,
   if(lm.avail) {
     opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
                       parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], reference_time=reference_time,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
@@ -692,7 +692,7 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
   if(lm.avail && !missing(LM)) {
     opt.res <- nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
                       deltat=deltat, ov.sign.vec=ov.sign.vec, reference_time=reference_time,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500))
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
