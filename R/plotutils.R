@@ -9,11 +9,11 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   if(logscale) {
     tmp <- tmp[ tmp > 0 ]
     tmpp <- tmpp[ tmpp > 0 ]
-  }
-  if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
-    warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
-    tmp <- 10^(-6)
-    tmpp <- 10^2
+    if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
+      warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
+      tmp <- 10^(-6)
+      tmpp <- 10^2
+    }
   }
   range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
 }
