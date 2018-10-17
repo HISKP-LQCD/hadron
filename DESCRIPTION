@@ -1,5 +1,5 @@
 Package: hadron
-Version: 2.1.0
+Version: 2.2.0
 Date: 2018-07-19
 Title: package to extract hadronic quantities
 Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
@@ -8,7 +8,9 @@ Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
                   role = c("aut")),
             person("Johann", "Ostmeyer", email = "ostmeyer@hiskp.uni-bonn.de",
                   role = c("aut")))
-Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Carsten Urbach [aut, cre]
+            person("Martin", "Ueding", email = "dev@martin-ueding.de",
+                  role = c("aut")))
+Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: package to extract hadronic quantities from Lattice QCD simulations

@@ -10,7 +10,9 @@ is_empty.cf(.cf)
 Checks whether the cf object contains no data
 }
 \examples{
-# The empty cf object should be empty:
+# The empty cf object must be empty:
 is_empty.cf(cf())
+
+# The sample cf must not be empty:
 is_empty.cf(samplecf)
 }
