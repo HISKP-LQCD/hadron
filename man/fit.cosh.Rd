@@ -11,7 +11,7 @@
   The fit itself is performed by \link{bootstrap.nlsfit}.
 }
 \usage{
-fit.cosh(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...)
+fit.cosh(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...)
 
 summary.coshfit(x, verbose=FALSE)
 

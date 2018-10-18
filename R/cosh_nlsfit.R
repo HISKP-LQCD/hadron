@@ -16,7 +16,7 @@ cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
 
 ## this fit-function works completely analogous to fit.effecitvemass
 ## but it fits the correlator directly to a sum of cosh-terms
-fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...){
+fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...){
   if(missing(effMass) && missing(cf)){
     stop("effMass or cf has to be provided!\n")
   }
@@ -34,13 +34,26 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
 
   stopifnot(t1+2*n.cosh < t2)
   stopifnot(0 <= t1)
+
+  cf.save <- cf$cf.tsboot$t
+  cf0.save <- cf$cf0
   
   if(missing(par)){
     ## some initial values, probably not optimal...
+    if(missing(m.init)){
+      if(use.effmass){
+        m.init = effMass$effMass[t2]
+      }else{
+        m.init = log(cf0.save[t2]/cf0.save[t2+1])
+        if(is.na(m.init)){
+          stop("Please provide m.init or par. The fit does not converge stably otherwise.\n")
+        }
+      }
+    }
     if(n.cosh == 2){
-      C1 = cf$cf0[t1+1]
-      C2 = cf$cf0[t2+1]
-      CMiddle = cf$cf0[t1+2]
+      C1 = cf0.save[t1+1]
+      C2 = cf0.save[t2+1]
+      CMiddle = cf0.save[t1+2]
       a0 = C2/cosh(m.init*(t2-Thalf))
       C1 = C1-a0*cosh(m.init*(t1-Thalf))
       CMiddle = CMiddle-a0*cosh(m.init*(t1+1-Thalf))
@@ -55,20 +68,17 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init=0.01, par, n.cosh
           amplitudes = c(a0)
         }else{
           masses = c(0:(n.cosh-1)) + m.init
-          amplitudes = cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+          amplitudes = cf0.save[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
         }
       }
     }else{
       masses = c(0:(n.cosh-1)) + m.init
-      amplitudes = cf$cf0[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
+      amplitudes = cf0.save[t1+1]/n.cosh/cosh(masses*(t1-Thalf))
     }
   }else{
     masses = par[1:n.cosh]
     amplitudes = par[(n.cosh+1):(2*n.cosh)]
   }
-
-  cf.save <- cf$cf.tsboot$t
-  cf0.save <- cf$cf0
 
   ## extract the relevant time slices
   ii <- c((t1+1):(t2+1))
