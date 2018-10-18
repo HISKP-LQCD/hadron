@@ -82,7 +82,7 @@ for(dir in dirs){
   ## while p is needed for weighting and shifting
   n <- 1
   if(momentum == "p1") p <- c(0,0,1)
-  if(momentum == "p2") p <- c(0,1,1)
+  if(momentum == "p2") p <- c(1,1,0)
   if(momentum == "p3") p <- c(1,1,1)
   if(momentum == "p4") {
     p <- c(0,0,2)
@@ -95,8 +95,7 @@ for(dir in dirs){
     model <- "shifted"
     sym.vec<- c("cosh")
   }
-  type="subtracted"
-  if(frame != "cmf") type="weighted"
+  type <- ifelse(frame == "cmf", "subtracted", "weighted")
 
   cat("\nRunning for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
 
