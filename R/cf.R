@@ -340,19 +340,21 @@ jackknife.cf <- function(cf, boot.l=2) {
   n <- nrow(cf$cf)
   ## number of overlapping blocks
   N <- n-boot.l+1
+  
+  cf$cf0 <- apply(cf$cf, 2, mean)
 
   cf.jackknife <- list()
-  cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
+  cf.jackknife$t <- array(NA, dim=c(N, ncol(cf$cf)))
   cf.jackknife$t0 <- cf$cf0
   cf.jackknife$l <- boot.l
   for (i in 1:N) {
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
     gammai <- apply(cf$cf[-ii,], MARGIN=2L, FUN=mean)
-    cf$cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
+    cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
   }
   ## the jackknife error
-  tmp <- apply(cf$cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
+  tmp <- apply(cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
   jackknife.se <- apply(tmp, MARGIN=1L,
                            FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
