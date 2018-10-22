@@ -352,7 +352,7 @@ jackknife.cf <- function(cf, boot.l=2) {
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
     gammai <- apply(cf$cf[-ii, ], MARGIN=2L, FUN=mean)
-    cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
+    cf.jackknife$t[i, ] <- gammai
   }
   ## the jackknife error
   tmp <- apply(cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
