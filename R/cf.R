@@ -348,9 +348,10 @@ jackknife.cf <- function(cf, boot.l=2) {
   cf.jackknife$t0 <- cf$cf0
   cf.jackknife$l <- boot.l
   for (i in 1:N) {
+    # The measurements that we are going to leave out.
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
-    gammai <- apply(cf$cf[-ii,], MARGIN=2L, FUN=mean)
+    gammai <- apply(cf$cf[-ii, ], MARGIN=2L, FUN=mean)
     cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
   }
   ## the jackknife error
