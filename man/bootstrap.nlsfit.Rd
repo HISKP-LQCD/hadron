@@ -19,7 +19,8 @@ summary(object, digits=2, ...)
 print(x, digits=2, ...)
 
 plot(x, ..., xlim, ylim, rep=FALSE, col.line="black",
-col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000)
+col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1),
+xlab="x", ylab="y", supports=1000, plot.range)
 }
 
 %- maybe also 'usage' for other objects documented here.
@@ -85,10 +86,7 @@ col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000)
     than the default \code{optim} but somtimes also less stable.
   }
   \item{parallel}{
-    parallelise over bootstrap samples.
-  }
-  \item{\dots}{
-    additional parameters to be passed on to the fit function \code{fn}.
+    parallelise over bootstrap samples. The package \code{parallel} is required.
   }
   \item{object}{
     object returned by \code{bootstrap.nlsfit}
@@ -125,7 +123,11 @@ col.band="gray", lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000)
   \item{supports}{
     number of supporting points for plotting the function.
   }
-  \item{...}{
+  \item{plot.range}{
+    vector with two elements \code{c(min,max)} defining the range in which fitline
+    and errorband are plotted. Default is the range of the data.
+  }
+  \item{\dots}{
     arguments to be passed on to \code{fn} and \code{gr} in case of
     \code{bootstrap.nlsfit} or additional general parameters passed on
     to \code{summary}, \code{print} or \code{plot}.

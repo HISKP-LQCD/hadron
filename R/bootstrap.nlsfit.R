@@ -197,7 +197,7 @@ bootstrap.nlsfit <- function(fn,
     boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper, par=first.res)
   }
   ## the error calculation (this could be parallelized as well, but I don't think this would help)
-  errors <- apply(X=boot.res[1:(dim(boot.res)[1]-1),rr], MARGIN=1, FUN=sd)
+  errors <- apply(X=boot.res[1:(length(par.Guess)),rr, drop=FALSE], MARGIN=1, FUN=sd)
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R, sim=sim,
@@ -208,8 +208,8 @@ bootstrap.nlsfit <- function(fn,
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
-              Qval = 1-pchisq(boot.res[dim(boot.res)[1],1], length(y) - length(par.guess)),
-              chisqr = boot.res[dim(boot.res)[1],1],
+              Qval = 1-pchisq(boot.res[length(par.Guess)+1,1], length(y) - length(par.guess)),
+              chisqr = boot.res[length(par.Guess)+1,1],
               dof = length(y) - length(par.guess),
               tofn=list(...))
   attr(res, "class") <- c("bootstrapfit", "list")
@@ -226,7 +226,7 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE, ...) 
   
   ## parameters with errors as strings
   tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=digits, human.readable=FALSE)
-  bias <- object$t0[1:(length(object$t0)-1)]-apply(X=object$t[,1:(dim(object$t)[2]-1)], MARGIN=2, FUN=mean)
+  bias <- object$t0[1:(length(object$t0)-1)]-apply(X=object$t[,1:(length(object$t0)-1), drop=FALSE], MARGIN=2, FUN=mean)
   dim(bias) <- c(length(bias), 1)
   bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
   ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE)
@@ -238,7 +238,7 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE, ...) 
   cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
   print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
   if(print.correlation){
-    correlation <- cor(object$t[,1:(dim(object$t)[2]-1)], object$t[,1:(dim(object$t)[2]-1)])
+    correlation <- cor(object$t[,1:(length(object$t0)-1)], object$t[,1:(length(object$t0)-1)])
     cat("\n   correlation matrix of the fit parameters\n\n")
     print(data.frame(correlation))
   }
@@ -256,8 +256,12 @@ print.bootstrapfit <- function(x, digits=2, ...) {
   summary.bootstrapfit(object=x, digits=digits, ...)
 }
 
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000) {
-  rx <- range(x$x)
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range) {
+  if(missing(plot.range)){
+    rx <- range(x$x)
+  }else{
+    rx <- plot.range
+  }
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
   npar <- length(x$par.guess)
 
@@ -281,7 +285,7 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
   dummyfn <- function(par, x, object) {
     return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
   }
-  se <- apply(X=apply(X=x$t[, c(1:npar)], MARGIN=1, FUN=dummyfn, x=X, object=x), MARGIN=1, FUN=sd)
+  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=sd)
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))
