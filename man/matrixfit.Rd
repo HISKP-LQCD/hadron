@@ -13,7 +13,8 @@ matrixfit(cf, t1, t2,
           model="single",
           boot.fit = TRUE,
           fit.method="optim",
-          autoproceed = FALSE)
+          autoproceed = FALSE,
+          every)
 }
 \arguments{
   \item{cf}{
@@ -82,6 +83,10 @@ matrixfit(cf, t1, t2,
     behaviour is to abort the fit. Setting this to \code{TRUE} means that
     the fit is instead continued with a diagonal inverse of the variance-covariance
     matrix.
+  }
+  \item{every}{
+    Fit only a part of the data points. Indices that are not multiples of \code{every}
+    are skipped. If no value is provided, all points are taken into account.
   }
 }
 \value{
