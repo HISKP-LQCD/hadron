@@ -214,7 +214,8 @@ matrixfit <- function(cf, t1, t2,
                       model="single",
                       boot.fit=TRUE,
                       fit.method="optim",
-                      autoproceed=FALSE) {
+                      autoproceed=FALSE,
+                      every) {
 
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -331,6 +332,10 @@ matrixfit <- function(cf, t1, t2,
   ## for the pc model we have to remove timeslice reference_time, where the error is zero
   if(pcmodel) {
     ii <- ii[which(ii != (reference_time+1))]
+  }
+  ## use only a part of the time slices for better conditioned cov-matrix
+  if(!missing(every)){
+    ii <- ii[which(ii%%every == 0)]
   }
   
   ## parind is the index vector for the matrix elements
@@ -508,7 +513,7 @@ matrixfit <- function(cf, t1, t2,
 #' @seealso \code{\link{matrixfit}}
 
 plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y",
-                           do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col, ...) {
+                           do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col, every, ...) {
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -543,6 +548,9 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
 
   for(i in 1:mfit$mSize ) {
     ii <- c(((i-1)*Thalfp1+1):(i*Thalfp1))
+    if(!missing(every)){
+      ii <- ii[which(ii%%every == 0)]
+    }
     tt <- mfit$CF$t[ii]
     
     par.ind <- c(1,parind[(i-1)*Thalfp1+1,1],parind[(i-1)*Thalfp1+1,2])

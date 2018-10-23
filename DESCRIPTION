@@ -6,14 +6,16 @@ Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
                   role = c("aut", "cre")),
             person("Bartosz", "Kostrzewa", email = "bartosz.kostrzewa@desy.de",
                   role = c("aut")),
+            person("Johann", "Ostmeyer", email = "ostmeyer@hiskp.uni-bonn.de",
+                  role = c("aut")),
             person("Martin", "Ueding", email = "dev@martin-ueding.de",
                   role = c("aut")))
-Author: Bartosz Kostrzewa [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
+Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: package to extract hadronic quantities from Lattice QCD simulations
 Depends: boot
-Suggests: tikzDevice, minpack.lm
+Suggests: tikzDevice, minpack.lm, parallel
 License: GPL 3 or later
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
