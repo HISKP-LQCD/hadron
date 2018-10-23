@@ -357,7 +357,7 @@ jackknife.cf <- function(cf, boot.l=2) {
   ## the jackknife error
   tmp <- apply(cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
   jackknife.se <- apply(tmp, MARGIN=1L,
-                           FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
+                           FUN=function(x, l, n, N) {sqrt( (n-l)/l/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
 
   cf <- cf_jackknife(cf,
