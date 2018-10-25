@@ -171,7 +171,8 @@ for( i in c(1:length(E.cm[1,])) ){
 
 ## Create legend
 ## Warning: Will not work if colors are symbols are used repeatedly
-legend("topleft", legend=labels, bty="n", col=col, pch=pch)
+legend("topleft", legend=labels, bty="n", col=col, pch=pch, cex=0.8, pt.cex=1.)
+text(x=0.7, y=0.1, paste("Mrho", Mrho.res[1,2], "+-", sd(Mrho.res[,2]), "\n", "g", Mrho.res[1,1], "+-", sd(Mrho.res[,1]), "\n", "chi^2", Mrho.res[1,dim(Mrho.res)[2]], "dof", dof, "\n"))
 
 tikz.finalize(tikzfiles=tikzfiles)
 

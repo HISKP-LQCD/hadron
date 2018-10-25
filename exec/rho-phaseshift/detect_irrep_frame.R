@@ -19,9 +19,9 @@ frames <- c("cmf", "mf1", "mf2", "mf3", "mf1")
 frameid <- which(momenta == momentum)
 frame <- frames[frameid]
 
-irreps <- list(c("T1u"), c("A1g", "Ep1g"), c("A1g", "A2g", "A2u"), c("A1g", "Ep1g"), c("A1g"))
+irreps <- list(c("T1u"), c("A1", "E"), c("A1", "B1", "B2"), c("A1", "E"), c("A1", "E"))
 irrepid <- which(irreps[[frameid]] == irrep)
-sizes <- list(c(2), c(8, 4), c(8, 3, 4), c(6, 4), c(0))
+sizes <- list(c(3), c(5, 3), c(4, 3, 4), c(4, 3), c(2, 2))
 
 path <- paste(args$path.to.data, "/", momentum, "/", irrep, "/", sep="")
 
