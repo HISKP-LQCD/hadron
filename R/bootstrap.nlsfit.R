@@ -1,4 +1,4 @@
-#' Parametric bootstrap with optional covariance
+#' Parametric bootstrap
 #'
 #' @param boot_R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
@@ -68,16 +68,14 @@ parametric_nlsfit <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, 
   if (is.null(dx)) {
     values <- y
     errors <- dy
-    errormodel <- 'yerrors'
   } else {
     values <- c(y, x)
     errors <- c(dy, dx)
-    errormodel <- 'xyerrors'
   }
 
   bsamples <- parametric_bootstrap(boot_R, values, errors)
 
-  bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, x, bsamples, cov ...)
+  bootstrap.nlsfit(fn, gr, dfn, par.guess, y, x, bsamples, cov ...)
 }
 
 parametric_nlsfit_cov <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, x, cov) {
@@ -85,17 +83,15 @@ parametric_nlsfit_cov <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R,
 
   if (ncol(cov) == length(y)) {
     values <- y
-    errormodel <- 'yerrors'
   } else if (ncol(cov) == length(y) + length(x)) {
     values <- c(y, x)
-    errormodel <- 'xyerrors'
   } else {
     stop('The covariance matrix must either be as large as `y` or as `y` and `x` together.')
   }
 
   bsamples <- parametric_bootstrap(boot_R, values, cov)
 
-  bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, x, bsamples, cov ...)
+  bootstrap.nlsfit(fn, gr, dfn, par.guess, y, x, bsamples, cov ...)
 }
 
 bootstrap.nlsfit <- function(fn,
