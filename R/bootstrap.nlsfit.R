@@ -32,8 +32,8 @@ parametric_bootstrap <- function (boot_R, x, dx = NULL, cov = NULL) {
     evalues <- evv$values
     evectors <- evv$vectors
 
-    # This is the original matrix now:
-    # evectors %*% diag(evalues) %*% t(evectors) == cov
+    ## This is the original matrix now:
+    ## evectors %*% diag(evalues) %*% t(evectors) == cov
 
     errors <- sqrt(evalues)
     stopifnot(!any(is.complex(errors)))
@@ -49,9 +49,13 @@ parametric_bootstrap <- function (boot_R, x, dx = NULL, cov = NULL) {
 }
 
 parametric_nlsfit <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, dy = NULL, x, dx = NULL, cov = NULL, ...) {
-  # First we need to generate bootstrap samples for the data that the user has
-  # given. The user may have given us errors or a covariance matrix.
-  # Furthermore it could be covariance matrix.
+  stopifnot(length(x) == length(y))
+  stopifnot(is.null(dx) || length(dx) == length(x))
+  stopifnot(is.null(dy) || length(dy) == length(y))
+
+  ## First we need to generate bootstrap samples for the data that the user has
+  ## given. The user may have given us errors or a covariance matrix.
+  ## Furthermore it could be covariance matrix.
   if (is.null(cov)) {
     if (is.null(dy)) {
       stop('You have specified no covariance matrix, therefore you must specify `dy` and possibly `dx`.')
@@ -84,43 +88,35 @@ parametric_nlsfit <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, 
     bsamples <- parametric_bootstrap(boot_R, values, cov = cov)
   }
 
-  bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, dy, x, dx, bsamples, ...)
+  bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, x, bsamples, cov ...)
 }
 
 bootstrap.nlsfit <- function(fn,
                              gr = NULL,
                              dfn = NULL,
                              par.guess,
-                             errormodel="yerrors",
                              y,
-                             dy,
                              x,
-                             dx = NULL,
                              bsamples,
-                             useCov = FALSE,
-                             CovMatrix,
+                             CovMatrix = NULL,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              ...) {
+  stopifnot(!missing(y))
+  stopifnot(!missing(x))
+  stopifnot(!missing(par.guess))
+  stopifnot(!missing(fn))
+  stopifnot(!missing(bsamples))
 
-  if(missing(y) || missing(x) || missing(boot.R) || missing(par.guess) || missing(fn)) {
-    stop("x, y, par.guess, boot.R and fn must be provided!")
-  }
-  if(missing(dy)){
-    if(!useCov && sim == "parametric"){
-      stop("dy has to be provided!")
-    }
-    if(missing(bsamples) && missing(CovMatrix)){
-      stop("dy, bsamples or CovMatrix has to be provided!")
-    }
-  }
+  boot.R <- nrow(bsamples)
 
-  if(use.minpack.lm){
+  if (use.minpack.lm) {
     lm.avail <- require(minpack.lm)
-  }else{
+  } else {
     lm.avail <- FALSE
   }
-  if(parallel){
+
+  if (parallel) {
     parallel <- require(parallel)
   }
 
@@ -128,84 +124,48 @@ bootstrap.nlsfit <- function(fn,
   rr <- c(2:(boot.R+1))
 
   ## cast y and dy to Y and dY, respectively
-  if(errormodel == "xyerrors") {
-    Y <- c(y, x)
-    par.Guess <- c(par.guess, x)
-  }else{
+  if (ncol(bsamples) == length(y)) {
     Y <- y
     par.Guess <- par.guess
+    errormodel <- "yerrors",
+  } else (ncol(bsamples) == length(y) + length(x)) {
+    Y <- c(y, x)
+    par.Guess <- c(par.guess, x)
+    errormodel <- "xyerrors",
+  } else {
+    stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
+
   nx <- length(x)
   
-  ## the bootstrap samples of the input data
-  ## in an array
-  if(missing(bsamples)) {
-    bsamples <- array(NA, dim=c(boot.R+1, length(Y)))
-    bsamples[1,] <- Y
-  }
-  else {
-    ## check consistency
-    dbs <- dim(bsamples)
-    if(dbs[2] != length(Y)) {
-      stop("the provided bootstrap samples do not match the number of data points with errors!")
-    }
-    if(boot.R != dbs[1]) {
-      stop("boot.R inconsistent with dimension one of bsamples!")
-    }
-	## add original data as first row
-    bsamples <- rbind(Y, bsamples)
-  }
-  if(!useCov){
-    if(missing(dy)){
-      dY <- apply(X=bsamples, MARGIN=2, FUN=sd)
-      dy <- dY[1:(length(y))]
-      if(errormodel == "xyerrors"){
-        dx <- dY[(length(y)+1):length(Y)]
-      }
-    }else{
-      ## cast dy to dY
-      if(errormodel == "xyerrors") {
-        dY <- c(dy, dx)
-      }else{
-        dY <- dy
-      }
-    }
-  }
+  ## add original data as first row
+  bsamples <- rbind(Y, bsamples)
 
   ## generate bootstrap samples if needed
   ## and invert covariance matrix, if applicable
-  if(useCov) {
+  if (useCov) {
     inversion.worked <- function(InvCovMatrix) {
-      if(inherits(InvCovMatrix, "try-error")) {
+      if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
       }
     }
-    if(missing(CovMatrix)){
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l=1, boot.samples=TRUE), silent=TRUE)
+
+    if (missing(CovMatrix)) {
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
-    }else{
+    } else {
       CholCovMatrix <- chol(CovMatrix)
-      InvCovMatrix <- try(solve(CholCovMatrix), silent=TRUE)
+      InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- t(InvCovMatrix)
-      if(sim == "parametric"){
-        std.norm.dist <- matrix(rnorm(boot.R*length(Y)), nrow=boot.R)
-        bsamples[rr,] <- matrix(rep(Y,boot.R), nrow=boot.R, byrow=TRUE)
-        bsamples[rr,] <- bsamples[rr,] + std.norm.dist %*% CholCovMatrix
-      }
-    }
-    if(missing(dy)){
-      dy <- 1./diag(dY)[1:(length(y))]
     }
   }
-  else{
-    if(sim == "parametric") {
-      if(parallel){
-        bsamples[rr,] <- mcmapply(rnorm, n=boot.R, mean = Y, sd = dY)
-      }else{
-        bsamples[rr,] <- mapply(rnorm, n=boot.R, mean = Y, sd = dY)
-      }
+  else {
+    dY <- apply(bsamples, 2, sd)
+    dy <- dY[1:(length(y))]
+    if (errormodel == "xyerrors") {
+      dx <- dY[(length(y)+1):length(Y)]
     }
     dY <- 1./dY
   }
