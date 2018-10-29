@@ -3,90 +3,97 @@
 #' @param boot_R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
 #' @param dx numeric vector of the same length as `x` or missing. Errors of the
-#'   values. Either this or `cov` must be  specified. 
-#' @param cov numeric matrix, square, length of `x` or missing. Covariance
-#'   between the various variables in the vector `x`. If this is specified,
-#'   samples will be generated in a correlated way.
+#'   values.
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
 #' as `boot_R`.
 #'
 #' @export
-parametric_bootstrap <- function (boot_R, x, dx = NULL, cov = NULL) {
-  if (!xor(is.null(dx), is.null(cov))) {
-    stop('You must specify either `dx` or `cov`, but neither both or none.')
-  }
+parametric_bootstrap <- function (boot_R, x, dx) {
+  stopifnot(length(x) == length(dx))
 
-  if (missing(cov)) {
-    stopifnot(length(x) == length(dx))
-
-    samples_list <- lapply(dx, function (error) rnorm(boot_R, 0, error))
-    samples <- do.call(cbind, samples_list)
-  } else {
-    stopifnot(nrow(cov) == length(x))
-    stopifnot(ncol(cov) == length(x))
-    stopifnot(isSymmetric(cov))
-
-    evv <- eigen(cov)
-    evalues <- evv$values
-    evectors <- evv$vectors
-
-    ## This is the original matrix now:
-    ## evectors %*% diag(evalues) %*% t(evectors) == cov
-
-    errors <- sqrt(evalues)
-    stopifnot(!any(is.complex(errors)))
-    samples_list <- lapply(errors, function (error) rnorm(boot_R, 0, error))
-    samples <- do.call(cbind, samples_list)
-
-    samples <- samples %*% t(evectors)
-  }
+  samples_list <- lapply(dx, function (error) rnorm(boot_R, 0, error))
+  samples <- do.call(cbind, samples_list)
 
   samples <- t(t(samples) + x)
 
   return (samples)
 }
 
-parametric_nlsfit <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, dy = NULL, x, dx = NULL, cov = NULL, ...) {
+#' Parametric bootstrap with covariance
+#'
+#' @param boot_R numeric. Number of bootstrap samples to generate.
+#' @param x numeric vector. Actual values for the data.
+#' @param cov numeric matrix, square, length of `x` or missing. Covariance
+#'   between the various variables in the vector `x`.
+#'
+#' @return
+#' A matrix with as many columns as there are variables in `x` and as many rows
+#' as `boot_R`.
+#'
+#' @export
+parametric_bootstrap_cov <- function (boot_R, x, cov) {
+  stopifnot(nrow(cov) == length(x))
+  stopifnot(ncol(cov) == length(x))
+  stopifnot(isSymmetric(cov))
+
+  evv <- eigen(cov)
+  evalues <- evv$values
+  evectors <- evv$vectors
+
+  ## This is the original matrix now:
+  ## evectors %*% diag(evalues) %*% t(evectors) == cov
+
+  errors <- sqrt(evalues)
+  stopifnot(!any(is.complex(errors)))
+  samples_list <- lapply(errors, function (error) rnorm(boot_R, 0, error))
+  samples <- do.call(cbind, samples_list)
+
+  samples <- samples %*% t(evectors)
+  samples <- t(t(samples) + x)
+
+  return (samples)
+}
+
+parametric_nlsfit <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, dy = NULL, x, dx = NULL, ...) {
   stopifnot(length(x) == length(y))
   stopifnot(is.null(dx) || length(dx) == length(x))
   stopifnot(is.null(dy) || length(dy) == length(y))
 
-  ## First we need to generate bootstrap samples for the data that the user has
-  ## given. The user may have given us errors or a covariance matrix.
-  ## Furthermore it could be covariance matrix.
-  if (is.null(cov)) {
-    if (is.null(dy)) {
-      stop('You have specified no covariance matrix, therefore you must specify `dy` and possibly `dx`.')
-    }
-
-    if (is.null(dx)) {
-      values <- y
-      errors <- dy
-      errormodel <- 'yerrors'
-    } else {
-      values <- c(y, x)
-      errors <- c(dy, dx)
-      errormodel <- 'xyerrors'
-    }
-
-    bsamples <- parametric_bootstrap(boot_R, values, dx = errors)
-  } else {
-    if (!is.null(dy) || !is.null(dx)) {
-      stop('You have specified a covariance matrix, therefore you must not specify `dy` or `dx`.')
-    }
-
-    if (ncol(cov) == length(y)) {
-      values <- y
-    } else if (ncol(cov) == length(y) + length(x)) {
-      values <- c(y, x)
-    } else {
-      stop('The covariance matrix must either be as large as `y` or as `y` and `x` together.')
-    }
-
-    bsamples <- parametric_bootstrap(boot_R, values, cov = cov)
+  if (is.null(dy)) {
+    stop('You have specified no covariance matrix, therefore you must specify `dy` and possibly `dx`.')
   }
+
+  if (is.null(dx)) {
+    values <- y
+    errors <- dy
+    errormodel <- 'yerrors'
+  } else {
+    values <- c(y, x)
+    errors <- c(dy, dx)
+    errormodel <- 'xyerrors'
+  }
+
+  bsamples <- parametric_bootstrap(boot_R, values, errors)
+
+  bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, x, bsamples, cov ...)
+}
+
+parametric_nlsfit_cov <- function (fn, gr = NULL, dfn = NULL, par.guess, boot_R, y, x, cov) {
+  stopifnot(length(x) == length(y))
+
+  if (ncol(cov) == length(y)) {
+    values <- y
+    errormodel <- 'yerrors'
+  } else if (ncol(cov) == length(y) + length(x)) {
+    values <- c(y, x)
+    errormodel <- 'xyerrors'
+  } else {
+    stop('The covariance matrix must either be as large as `y` or as `y` and `x` together.')
+  }
+
+  bsamples <- parametric_bootstrap(boot_R, values, cov)
 
   bootstrap.nlsfit(fn, gr, dfn, par.guess, errormodel, y, x, bsamples, cov ...)
 }
