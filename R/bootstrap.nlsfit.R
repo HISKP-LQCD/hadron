@@ -120,10 +120,8 @@ parametric_nlsfit_cov <- function (fn, par.guess, boot_R, y, x, cov, ...) {
 #' @param par.guess initial guess values for the fit parameters.
 #' @param y the data as a one-dimensional numerical vector to be described by
 #' the fit function. 
-#' @param dy errors of \code{y} as a one-dimensional numerical vector.
 #' @param x values of the explaining variable in form of a one-dimensional
 #' numerical vector.
-#' @param dx errors of \code{x} as a one-dimensional numerical vector.
 #' @param bsamples bootstrap samples of \code{y} (and \code{x}, if applicable).
 #' Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 #' equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
@@ -256,6 +254,13 @@ bootstrap.nlsfit <- function(fn,
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- t(InvCovMatrix)
+    }
+
+    dy <- 1.0/dY[1:(length(y))]
+    if (errormodel == "xyerrors") {
+      dx <- 1.0/dY[(length(y)+1):length(Y)]
+    } else {
+      dx <- NULL
     }
   }
   else {

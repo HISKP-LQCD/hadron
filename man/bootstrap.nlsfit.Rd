@@ -42,10 +42,6 @@ stable.}
 
 \item{parallel}{parallelise over bootstrap samples. The package
 \code{parallel} is required.}
-
-\item{dy}{errors of \code{y} as a one-dimensional numerical vector.}
-
-\item{dx}{errors of \code{x} as a one-dimensional numerical vector.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input
