@@ -322,40 +322,55 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## define the wrapper-functions for optimization
-  if(lm.avail){
+  if (lm.avail) {
     wrapper <- function(y, par) {
       res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
                     control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500))
+
       if( !(res$info %in% c(1,2,3) ) ){
         cat(sprintf("Termination wrapper reason of nls.lm res$info: %d\n", res$info))
       }
-      return (c(res$par, res$rsstrace[length(res$rsstrace)]))
+
+      list(converged = res$info %in% 1:3,
+           par = res$par,
+           chisq = res$rsstrace[length(res$rsstrace)])
     }
-  }else{
+  } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
     wrapper <- function(y, par) {
       res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"))
-      return (c(res$par, res$value))
+
+      list(converged = TRUE  # TODO: This is a blatant lie.
+           par = res$par,
+           chisq = res$value)
     }
   }
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
-  if(parallel){
-    boot.list <- mclapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res) })
-    boot.res <- do.call(cbind, boot.list)
-  }else{
-    boot.res <- apply(X=bsamples, MARGIN=1, FUN=wrapper, par=first.res)
+
+  if (parallel)
+    my_lapply <- mclapply
+  else {
+    my_lapply <- lapply
   }
-  ## the error calculation (this could be parallelized as well, but I don't think this would help)
-  errors <- apply(X=boot.res[1:(length(par.Guess)),rr, drop=FALSE], MARGIN=1, FUN=sd)
+
+  boot_list <- my_lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res) })
+
+  par_boot <- do.call(rbind, lapply(boot_list, function (elem) elem$par))
+
+  converged <- sapply(boot_list, function (elem) elem$info)
+  par_boot[!converged, ] <- NA
+
+  errors <- apply(X=par_boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=sd)
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
-              bsamples=bsamples[rr,],
+              bsamples=bsamples[rr, ],
               errormodel=errormodel,
-              t0=boot.res[,1],
-              t=t(boot.res[,rr]),
+              converged = converged,
+              t0=par_boot[, 1],
+              t=par_boot[, rr],
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
