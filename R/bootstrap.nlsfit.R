@@ -359,8 +359,11 @@ bootstrap.nlsfit <- function(fn,
 
   par_boot <- do.call(rbind, lapply(boot_list, function (elem) elem$par))
 
-  converged <- sapply(boot_list, function (elem) elem$info)
+  converged <- sapply(boot_list, function (elem) elem$converged)
   par_boot[!converged, ] <- NA
+
+  chisq <- boot_list[[1]]$chisq
+  dof = length(y) - length(par.guess)
 
   errors <- apply(X=par_boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=sd)
 
@@ -369,14 +372,14 @@ bootstrap.nlsfit <- function(fn,
               bsamples=bsamples[rr, ],
               errormodel=errormodel,
               converged = converged,
-              t0=par_boot[, 1],
-              t=par_boot[, rr],
+              t0=par_boot[1, ],
+              t=par_boot[rr, ],
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
-              Qval = 1-pchisq(boot.res[length(par.Guess)+1,1], length(y) - length(par.guess)),
-              chisqr = boot.res[length(par.Guess)+1,1],
-              dof = length(y) - length(par.guess),
+              Qval = 1 - pchisq(chisq, dof),
+              chisqr = chisq,
+              dof = dof,
               tofn=list(...))
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
