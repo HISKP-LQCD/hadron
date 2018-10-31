@@ -190,7 +190,7 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
-                             ...
+                             ...,
                              CovMatrix = NULL,
                              gr = NULL,
                              dfn = NULL,

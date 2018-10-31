@@ -7,7 +7,7 @@
 \method{plot}{bootstrapfit}(x, ..., xlim, ylim, rep = FALSE,
   col.line = "black", col.band = "gray", opacity.band = 0.65,
   lty = c(1), lwd = c(1), xlab = "x", ylab = "y", supports = 1000,
-  plot.range)
+  plot.range, error = sd)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
