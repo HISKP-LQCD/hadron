@@ -466,10 +466,10 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
 
   ## use the xylimits computation of plotwitherror
   if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
   }
   else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
   }
   my.xlim <- mylims$xlim
   my.ylim <- mylims$ylim
