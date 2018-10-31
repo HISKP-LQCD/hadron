@@ -190,12 +190,13 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
+                             ...
                              CovMatrix = NULL,
                              gr = NULL,
                              dfn = NULL,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
-                             ...) {
+                             error = sd) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -264,7 +265,7 @@ bootstrap.nlsfit <- function(fn,
     }
   }
   else {
-    dY <- apply(bsamples, 2, sd)
+    dY <- apply(bsamples, 2, error)
     dy <- dY[1:(length(y))]
     if (errormodel == "xyerrors") {
       dx <- dY[(length(y)+1):length(Y)]
@@ -365,7 +366,7 @@ bootstrap.nlsfit <- function(fn,
   chisq <- boot_list[[1]]$chisq
   dof = length(y) - length(par.guess)
 
-  errors <- apply(X=par_boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=sd)
+  errors <- apply(X=par_boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
@@ -458,7 +459,7 @@ print.bootstrapfit <- function(x, digits=2) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range) {
+plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range, error=sd) {
   if(missing(plot.range)){
     rx <- range(x$x)
   }else{
@@ -487,7 +488,7 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
   dummyfn <- function(par, x, object) {
     return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
   }
-  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=sd)
+  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=error)
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))
