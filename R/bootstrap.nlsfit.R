@@ -190,13 +190,13 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
-                             ...,
                              CovMatrix = NULL,
                              gr = NULL,
                              dfn = NULL,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
-                             error = sd) {
+                             error = sd,
+                             ...) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -381,6 +381,7 @@ bootstrap.nlsfit <- function(fn,
               Qval = 1 - pchisq(chisq, dof),
               chisqr = chisq,
               dof = dof,
+              error_function = error,
               tofn=list(...))
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
