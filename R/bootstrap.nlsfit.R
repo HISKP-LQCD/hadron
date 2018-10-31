@@ -355,7 +355,7 @@ bootstrap.nlsfit <- function(fn,
     my_lapply <- lapply
   }
 
-  boot_list <- my_lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res) })
+  boot_list <- my_lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par) })
 
   par_boot <- do.call(rbind, lapply(boot_list, function (elem) elem$par))
 
