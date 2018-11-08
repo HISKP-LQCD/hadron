@@ -354,7 +354,7 @@ jackknife.cf <- function(cf, boot.l = 2) {
                 seed = 0,
                 sim = 'geom',
                 cf.tsboot = cf.tsboot,
-                resample_method = 'jackknife')
+                resampling_method = 'jackknife')
 
   return (invisible(cf))
 }
