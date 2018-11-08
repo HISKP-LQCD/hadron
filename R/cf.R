@@ -353,7 +353,8 @@ jackknife.cf <- function(cf, boot.l = 2) {
                 boot.l = cf.tsboot$l,
                 seed = 0,
                 sim = 'geom',
-                cf.tsboot = cf.tsboot)
+                cf.tsboot = cf.tsboot,
+                resample_method = 'jackknife')
 
   return (invisible(cf))
 }
