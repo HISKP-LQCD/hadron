@@ -561,8 +561,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
     if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
     else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, reference_time=mfit$reference_time)
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
-    yp <- rep(1, times=length(tt))
     
+    # yp is the physical exponential in case we want to look at the ratio plot
     if(!plot.raw) {
       if(mfit$model == "shifted") {
         yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(T-(tt-deltat/2))))
@@ -573,6 +573,9 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
       else {
         yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(T-tt)))
       }
+    }
+    else {
+      yp <- rep(1, times=length(tt))
     }
 
     lwd <- c(1.5)
@@ -592,7 +595,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
         }        
       }
 
-      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=cf$error_fn, MARGIN=1)
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=mfit$cf$error_fn, MARGIN=1)
       
       polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
