@@ -83,6 +83,8 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
     .cf$error_fn <- jackknife_error
   }
 
+  .cf$resampling_method <- resampling_method
+
   .cf$cf0 <- cf.tsboot$t0
   .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
   .cf$boot.samples <- TRUE
