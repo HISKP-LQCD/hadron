@@ -101,11 +101,22 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' original data, this likely is similar in terms of bias.
 #'
 #' @export
-jackknife_error <- function (samples) {
-    # Number of jackknife samples.
-    N <- length(samples)
+jackknife_error <- function (samples, na.rm = FALSE) {
+  ## Number of jackknife samples.
+  N <- length(samples)
 
-    sqrt((N - 1) / N * sum((samples - mean(samples))^2))
+  if (na.rm) {
+    selection <- !is.na(samples)
+    samples <- samples[selection]
+
+    ## Number of non-NA samples.
+    m <- sum(selection)
+    factor <- N / m
+  } else {
+    factor <- 1.0
+  }
+
+  sqrt(factor * (N - 1) / N * sum((samples - mean(samples))^2))
 }
 
 #' Original data CF mixin constructor
