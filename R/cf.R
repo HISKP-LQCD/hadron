@@ -62,11 +62,12 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' - `cf0`: Numeric vector, mean value of original measurements, convenience copy of `cf.tsboot$t0`.
 #' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
+#' - `error_fn`: Function, takes a vector of samples and computes the error. In the bootstrap case this is just the `sd` function. Use this function instead of a `sd` in order to make the code compatible with jackknife samples.
 #'
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resampling_method = 'bootstrap') {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$boot.R <- boot.R
@@ -75,47 +76,36 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot) {
   .cf$sim <- sim
   .cf$cf.tsboot <- cf.tsboot
 
+  if (resampling_method == 'bootstrap') {
+    .cf$error_fn <- sd
+  }
+  else if (resampling_method == 'jackknife') {
+    .cf$error_fn <- jackknife_error
+  }
+
   .cf$cf0 <- cf.tsboot$t0
-  .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = sd)
+  .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
   .cf$boot.samples <- TRUE
 
   class(.cf) <- append(class(.cf), 'cf_boot')
   return (.cf)
 }
 
-#' Jackknifed CF mixin constructor
+#' Estimates error from jackknife samples
 #'
-#' With the `cf_jackknife` mixin, it also must have the following fields:
-#'
-#' @param cf `cf` object to extend.
-#' @param cf0 _See above_.
-#' @param boot.l _See above_.
-#' @param cf.jackknife List, containing jackknife samples:
-#'   - `t`: Numeric matrix, jackknifed data sets.
-#'   - `t0`: Numeric vector, copy of `cf0`.
-#'   - `l`: Integer, copy of `boot.l`.
-#' @param jackknife.se Numeric vector, standard error over jackknife samples.
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `jackknife.samples`: Logical, indicating whether there are jackknife samples available. This is deprecated and instead the presence of jackknife samples should be queried with `inherits(cf, 'cf_jackknife')`.
-#'
-#' @family cf constructors
+#' Currently this uses the mean over the jackknife samples in order to compute
+#' the error. It would be better in the case of a bias to use the mean over the
+#' original data instead. This would require a second parameter and therefore
+#' is incompatible with the previously used `sd` everywhere for the bootstrap
+#' samples. As the `sd` for the bootstrap samples also does not include the
+#' original data, this likely is similar in terms of bias.
 #'
 #' @export
-cf_jackknife <- function (.cf = cf(), boot.l, cf.jackknife, jackknife.se) {
-  stopifnot(inherits(.cf, 'cf_orig'))
+jackknife_error <- function (samples) {
+    # Number of jackknife samples.
+    N <- length(samples)
 
-  .cf$boot.l <- boot.l
-  .cf$cf.jackknife <- cf.jackknife
-  .cf$jackknife.se <- jackknife.se
-
-  .cf$jackknife.samples <- TRUE
-
-  class(.cf) <- append(class(.cf), 'cf_jackknife')
-  return (.cf)
+    sqrt((N - 1) / N * sum((samples - mean(samples))^2))
 }
 
 #' Original data CF mixin constructor
@@ -329,7 +319,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   return(invisible(cf))
 }
 
-jackknife.cf <- function(cf, boot.l=2) {
+jackknife.cf <- function(cf, boot.l = 2) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   stopifnot(boot.l >= 1)
@@ -343,27 +333,27 @@ jackknife.cf <- function(cf, boot.l=2) {
   
   cf$cf0 <- apply(cf$cf, 2, mean)
 
-  cf.jackknife <- list()
-  cf.jackknife$t <- array(NA, dim=c(N, ncol(cf$cf)))
-  cf.jackknife$t0 <- cf$cf0
-  cf.jackknife$l <- boot.l
+  t <- array(NA, dim = c(N, ncol(cf$cf)))
+  t0 <- cf$cf0
   for (i in 1:N) {
-    # The measurements that we are going to leave out.
+    ## The measurements that we are going to leave out.
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
-    gammai <- apply(cf$cf[-ii, ], MARGIN=2L, FUN=mean)
-    cf.jackknife$t[i, ] <- gammai
+    t[i, ] <- apply(cf$cf[-ii, ], 2L, mean)
   }
-  ## the jackknife error
-  tmp <- apply(cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
-  jackknife.se <- apply(tmp, MARGIN=1L,
-                           FUN=function(x, l, n, N) {sqrt( (n-l)/l/N*sum( x ) ) },
-                           n=n, N=N, l=boot.l)
 
-  cf <- cf_jackknife(cf,
-                     boot.l = boot.l,
-                     cf.jackknife = cf.jackknife,
-                     jackknife.se = jackknife.se)
+  cf.tsboot <- list(t = t,
+                    t0 = t0,
+                    R = N,
+                    l = boot.l)
+
+  cf <- invalidate.samples.cf(cf)
+  cf <- cf_boot(cf,
+                boot.R = cf.tsboot$R,
+                boot.l = cf.tsboot$l,
+                seed = 0,
+                sim = 'geom',
+                cf.tsboot = cf.tsboot)
 
   return (invisible(cf))
 }

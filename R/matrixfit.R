@@ -320,7 +320,7 @@ matrixfit <- function(cf, t1, t2,
     stop("neg.vec does not have the correct length! Aborting\n")
   }
 
-  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
+  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, cf$error_fn))
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
@@ -490,10 +490,10 @@ matrixfit <- function(cf, t1, t2,
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
-              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method)
+              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn)
   res$t <- t(opt.tsboot)
   res$t0 <- c(opt.res$par, opt.res$value)
-  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=sd)
+  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=cf$error_fn)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }
@@ -592,7 +592,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
         }        
       }
 
-      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=sd, MARGIN=1)
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=cf$error_fn, MARGIN=1)
       
       polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
@@ -647,23 +647,23 @@ summary.matrixfit <- function(mfit) {
   cat("\n")
   cat("ground state energy:\n")
   cat("E \t=\t", mfit$t0[1], "\n")
-  cat("dE\t=\t", sd(mfit$t[,1]), "\n")
+  cat("dE\t=\t", mfit$error_fn(mfit$t[,1]), "\n")
   if(mfit$model == "pc") {
     cat("\nFitted Delta E:\n")
     cat("Delta E \t=\t", mfit$t0[2], "\n")
-    cat("dDelta E\t=\t", sd(mfit$t[,2]), "\n")
+    cat("dDelta E\t=\t", mfit$error_fn(mfit$t[,2]), "\n")
     cat("\nThis transltes into a second energy level E2 (be careful with interpretation):\n")
     cat("E2 \t=\t", mfit$t0[2]+mfit$t0[1], "\n")
-    cat("dE2\t=\t", sd(mfit$t[,2]+mfit$t[,1]), "\n")
+    cat("dE2\t=\t", mfit$error_fn(mfit$t[,2]+mfit$t[,1]), "\n")
     cat("Effective Amplitude:\n")
     cat("A\t=\t", mfit$t0[3], "\n")
-    cat("dA\t=\t", sd(mfit$t[,3]), "\n")    
+    cat("dA\t=\t", mfit$error_fn(mfit$t[,3]), "\n")    
   }
   else {
     cat("\nAmplitudes:\n")
     for(i in 2:length(mfit$opt.res$par)) {
       cat("P",i-1,"\t=\t", mfit$t0[i], "\n")
-      cat("dP",i-1,"\t=\t", sd(mfit$t[,i]), "\n")
+      cat("dP",i-1,"\t=\t", mfit$error_fn(mfit$t[,i]), "\n")
     }
   }
   cat("\n")
@@ -683,16 +683,16 @@ summary.matrixfit <- function(mfit) {
     cat("mu2 \t=\t", mfit$mu2, "\n")
     if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
     cat("fps \t=\t", mfit$fps, "\n")
-    cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
+    cat("dfps\t=\t", mfit$error_fn(mfit$fps.tsboot), "\n")
   }
   if(any(names(mfit) == "fpsOS")) {
     cat("\nOS Decay Constant (derived quantity):\n")
     if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
     cat("fps \t=\t", mfit$fpsOS, "\n")
-    cat("dfps\t=\t", sd(mfit$fpsOS.tsboot), "\n")
+    cat("dfps\t=\t", mfit$error_fn(mfit$fpsOS.tsboot), "\n")
     cat("using\n")
     cat("ZA  \t=\t", mfit$ZA, "\n")
-    cat("dZA \t=\t", sd(mfit$ZAboot), "\n")
+    cat("dZA \t=\t", mfit$error_fn(mfit$ZAboot), "\n")
   }
 }
 

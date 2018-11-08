@@ -101,7 +101,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   ## now we do the same on all samples
   effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, deltat=deltat, weight.factor = cf$weight.factor))
 
-  deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
+  deffMass=apply(effMass.tsboot, 2, cf$error_fn, na.rm=TRUE)
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
@@ -112,7 +112,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   ret$cf <- cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
-  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
+  ret$se <- apply(ret$t, MARGIN=2L, FUN=cf$error_fn, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
@@ -260,7 +260,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   } # if(boot.fit)
   cf$effmassfit$t <- cf$massfit.tsboot
   cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
-  cf$effmassfit$se <-  sd(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
+  cf$effmassfit$se <-  cf$error_fn(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
   cf$effmassfit$cf <- cf$cf
   cf$t <- tb.save
 
