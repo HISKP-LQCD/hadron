@@ -677,13 +677,9 @@ invalidate.samples.cf <- function(cf){
   cf$boot.l <- NULL
   cf$boot.R <- NULL
   cf$boot.samples <- NULL
-  cf$cf.jackknife <- NULL
-  cf$jackknife <- NULL
-  cf$jackknife.samples <- NULL
-  cf$jackknife.se <- NULL
   cf$seed <- NULL
   cf$sim <- NULL
-  cf$tsboot <- NULL
+  cf$cf.tsboot <- NULL
   cf$tsboot.se <- NULL
   cf$cf0 <- NULL
 
