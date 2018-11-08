@@ -128,7 +128,8 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
-                 cf.tsboot = cf$cf.tsboot)
+                 cf.tsboot = cf$cf.tsboot,
+                 resampling_method = cf$resampling_method)
   ret <- cf_shifted(ret,
                     deltat = cf$deltat,
                     forwardshift = cf$forwardshift)
@@ -204,7 +205,8 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                    boot.l = cf$boot.l,
                    seed = cf$seed,
                    sim = cf$sim,
-                   cf.tsboot = cf$cf.tsboot)
+                   cf.tsboot = cf$cf.tsboot,
+                   resampling_method = cf$resampling_method)
   }
   ret <- cf_shifted(ret,
                     deltat = deltat,
