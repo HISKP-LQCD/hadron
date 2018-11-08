@@ -196,7 +196,8 @@ gevp2cf <- function(gevp, id=1) {
                 boot.l = gevp$boot.l,
                 seed = gevp$seed,
                 sim = gevp$cf$sim,
-                cf.tsboot = cf.tsboot)
+                cf.tsboot = cf.tsboot,
+                resampling_method = gevp$cf$resampling_method)
 
   cf <- cf_principal_correlator(cf,
                                 id = id,
