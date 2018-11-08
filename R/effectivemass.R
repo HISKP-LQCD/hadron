@@ -260,7 +260,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   } # if(boot.fit)
   cf$effmassfit$t <- cf$massfit.tsboot
   cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
-  cf$effmassfit$se <-  cf$error_fn(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
+  cf$effmassfit$se <-  cf$cf$error_fn(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
   cf$effmassfit$cf <- cf$cf
   cf$t <- tb.save
 
