@@ -34,3 +34,4 @@ Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf}}
 }
+\concept{cf constructors}

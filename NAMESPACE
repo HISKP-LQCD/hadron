@@ -20,6 +20,8 @@ exportPattern("^compute\\..*")
 export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, zetazp, proton, getorderedconfignumbers, fit.effectivemass, invcosh, tex.catwitherror, fit.cosh)
 export(foldr1)
 export(escapeLatexSpecials)
+export(parametric_bootstrap)
+export(parametric_bootstrap_cov)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
 importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
