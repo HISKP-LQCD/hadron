@@ -17,10 +17,10 @@ Summarize a bootstrap NLS fit
 }
 \seealso{
 Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric_bootstrap_cov}},
-  \code{\link{parametric_bootstrap}},
-  \code{\link{parametric_nlsfit_cov}},
-  \code{\link{parametric_nlsfit}},
+  \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{parametric.nlsfit}},
   \code{\link{plot.bootstrapfit}},
   \code{\link{print.bootstrapfit}}
 }
