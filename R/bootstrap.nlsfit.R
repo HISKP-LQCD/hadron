@@ -1,21 +1,21 @@
 #' Parametric bootstrap
 #'
-#' @param boot_R numeric. Number of bootstrap samples to generate.
+#' @param boot.R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
 #' @param dx numeric vector of the same length as `x` or missing. Errors of the
 #'   values.
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
-#' as `boot_R`.
+#' as `boot.R`.
 #'
 #' @export
 #' @family NLS fit functions
-parametric_bootstrap <- function (boot_R, x, dx) {
+parametric.bootstrap <- function (boot.R, x, dx) {
   stopifnot(length(x) == length(dx))
 
-  samples_list <- lapply(dx, function (error) rnorm(boot_R, 0, error))
-  samples <- do.call(cbind, samples_list)
+  samples.list <- lapply(dx, function (error) rnorm(boot.R, 0, error))
+  samples <- do.call(cbind, samples.list)
 
   samples <- t(t(samples) + x)
 
@@ -24,18 +24,18 @@ parametric_bootstrap <- function (boot_R, x, dx) {
 
 #' Parametric bootstrap with covariance
 #'
-#' @param boot_R numeric. Number of bootstrap samples to generate.
+#' @param boot.R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
 #' @param cov numeric matrix, square, length of `x` or missing. Covariance
 #'   between the various variables in the vector `x`.
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
-#' as `boot_R`.
+#' as `boot.R`.
 #'
 #' @export
 #' @family NLS fit functions
-parametric_bootstrap_cov <- function (boot_R, x, cov) {
+parametric.bootstrap.cov <- function (boot.R, x, cov) {
   stopifnot(nrow(cov) == length(x))
   stopifnot(ncol(cov) == length(x))
   stopifnot(isSymmetric(cov))
@@ -49,8 +49,8 @@ parametric_bootstrap_cov <- function (boot_R, x, cov) {
 
   errors <- sqrt(evalues)
   stopifnot(!any(is.complex(errors)))
-  samples_list <- lapply(errors, function (error) rnorm(boot_R, 0, error))
-  samples <- do.call(cbind, samples_list)
+  samples.list <- lapply(errors, function (error) rnorm(boot.R, 0, error))
+  samples <- do.call(cbind, samples.list)
 
   samples <- samples %*% t(evectors)
   samples <- t(t(samples) + x)
@@ -62,7 +62,7 @@ parametric_bootstrap_cov <- function (boot_R, x, cov) {
 #'
 #' @export
 #' @family NLS fit functions
-parametric_nlsfit <- function (fn, par.guess, boot_R, y, dy, x, dx = NULL, ...) {
+parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx = NULL, ...) {
   stopifnot(length(x) == length(y))
   stopifnot(is.null(dx) || length(dx) == length(x))
   stopifnot(is.null(dy) || length(dy) == length(y))
@@ -79,7 +79,7 @@ parametric_nlsfit <- function (fn, par.guess, boot_R, y, dy, x, dx = NULL, ...) 
     errors <- c(dy, dx)
   }
 
-  bsamples <- parametric_bootstrap(boot_R, values, errors)
+  bsamples <- parametric.bootstrap(boot.R, values, errors)
 
   bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ...)
 }
@@ -88,7 +88,7 @@ parametric_nlsfit <- function (fn, par.guess, boot_R, y, dy, x, dx = NULL, ...) 
 #'
 #' @export
 #' @family NLS fit functions
-parametric_nlsfit_cov <- function (fn, par.guess, boot_R, y, x, cov, ...) {
+parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
   stopifnot(length(x) == length(y))
 
   if (ncol(cov) == length(y)) {
@@ -99,7 +99,7 @@ parametric_nlsfit_cov <- function (fn, par.guess, boot_R, y, x, cov, ...) {
     stop('The covariance matrix must either be as large as `y` or as `y` and `x` together.')
   }
 
-  bsamples <- parametric_bootstrap_cov(boot_R, values, cov)
+  bsamples <- parametric.bootstrap.cov(boot.R, values, cov)
 
   bootstrap.nlsfit(fn, par.guess, y, x, bsamples, cov, ...)
 }
@@ -351,37 +351,37 @@ bootstrap.nlsfit <- function(fn,
   first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
 
   if (parallel)
-    my_lapply <- mclapply
+    my.lapply <- mclapply
   else {
-    my_lapply <- lapply
+    my.lapply <- lapply
   }
 
-  boot_list <- my_lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par) })
+  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par) })
 
-  par_boot <- do.call(rbind, lapply(boot_list, function (elem) elem$par))
+  par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
-  converged <- sapply(boot_list, function (elem) elem$converged)
-  par_boot[!converged, ] <- NA
+  converged <- sapply(boot.list, function (elem) elem$converged)
+  par.boot[!converged, ] <- NA
 
-  chisq <- boot_list[[1]]$chisq
+  chisq <- boot.list[[1]]$chisq
   dof = length(y) - length(par.guess)
 
-  errors <- apply(X=par_boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
+  errors <- apply(X=par.boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
 
   res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, ],
               errormodel=errormodel,
               converged = converged,
-              t0=par_boot[1, ],
-              t=par_boot[rr, ],
+              t0=par.boot[1, ],
+              t=par.boot[rr, ],
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1 - pchisq(chisq, dof),
               chisqr = chisq,
               dof = dof,
-              error_function = error,
+              error.function = error,
               tofn=list(...))
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
