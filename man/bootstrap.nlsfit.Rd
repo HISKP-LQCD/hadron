@@ -74,34 +74,31 @@ Performs and bootstraps a non-linear least-squares fit to data with y and x
 errors.
 }
 \examples{
+## Declare some data.
 value <- c(0.1, 0.2, 0.3)
 dvalue <- c(0.01, 0.01, 0.015)
-x <- c(1,2,3)
+x <- c(1, 2, 3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
-## with xy-errors and no correlated fit
-fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="xyerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, dx=dx, useCov=FALSE)
-summary(fitres)
-## with covariance matrix and y-errors
-bootstrapsamples <- array(NA, dim=c(boot.R+1, length(value)))
-bootstrapsamples[1,] <- value
-## some indices
-crr <- c(1:(boot.R+1))
-rr <- c(2:(boot.R+1))
-bootstrapsamples[rr, 1] <- rnorm(n=boot.R, mean = value[1], sd = dvalue[1])
-bootstrapsamples[rr, 2] <- rnorm(n=boot.R, mean = value[2], sd = dvalue[2])
-bootstrapsamples[rr, 3] <- rnorm(n=boot.R, mean = value[3], sd = dvalue[3])
 
-## the fit without correlation and y-errors only
-fitres <- bootstrap.nlsfit(fn=function(par, x) par[1] + par[2]*x, par.guess=c(1,1), errormodel="yerrors", boot.R=boot.R, y=value, dy=dvalue, x=x, useCov=TRUE, bsamples=bootstrapsamples[rr,])
-summary(fitres)
+fn <- function (par, x) par[1] + par[2] * x
+
+## Before we can use the fit with this data, we need to create bootstrap
+## samples. We do not want to use the correlation matrix here. Note that you
+## can simply use the parametric.nlsfit function as a convenient wrapper of
+## the two steps.
+bsamples <- parametric.bootstrap(boot.R, c(value, x), c(dvalue, dx))
+head(bsamples)
+
+fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
+summary(fit.result)
 
 }
 \seealso{
-Other NLS fit functions: \code{\link{parametric_bootstrap_cov}},
-  \code{\link{parametric_bootstrap}},
-  \code{\link{parametric_nlsfit_cov}},
-  \code{\link{parametric_nlsfit}},
+Other NLS fit functions: \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{parametric.nlsfit}},
   \code{\link{plot.bootstrapfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
