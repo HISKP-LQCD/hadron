@@ -11,7 +11,7 @@
 #' @param p1,p2 Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.
 #' @param L Integer, spatial extent of the lattice.
 #' @param lat.disp Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.
-#' @param weight.cosh Logical, whether to use some cosh formula which might work better or something.
+#' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If `weight.cosh` is set, they are removed simulalteously.
 #'
 #' @export
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
@@ -91,8 +91,12 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
       mass2$t <- sqrt( mass2$t^2 + pshift )
     }
   }
-  cosh.factor <- 0.
-  if(weight.cosh) cosh.factor  <- 1.
+  if(weight.cosh) {
+    cosh.factor  <- 1.
+  }
+  else {
+    cosh.factor <- 0.
+  }
   ## multiply with the exponential correction factor
   Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
