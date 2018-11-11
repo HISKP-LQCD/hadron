@@ -104,7 +104,15 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
 
   dy <- cf$tsboot.se[ii]
   boot.R <-cf$boot.R
-  fit.res <- bootstrap.nlsfit(fn=sum.cosh.fit, gr=sum.cosh.jac, par.guess=c(masses, amplitudes), sim="direct", boot.R=boot.R, y=cf0.save[ii], dy=dy, x=tt, bsamples=cf.save[,ii], useCov=useCov, use.minpack.lm=FALSE, ...)
+  fit.res <- bootstrap.nlsfit(fn = sum.cosh.fit,
+                              gr = sum.cosh.jac,
+                              par.guess = c(masses, amplitudes),
+                              y = cf0.save[ii],
+                              x = tt,
+                              bsamples = cf.save[,ii],
+                              CovMatrix = (if (useCov) cov(cf.save[,ii]) else NULL),
+                              use.minpack.lm = FALSE,
+                              ...)
 
   opt.res <- fit.res$t0[1:(2*n.cosh)]
   opt.res[1:n.cosh] <- abs(opt.res[1:n.cosh])
