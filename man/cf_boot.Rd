@@ -4,7 +4,8 @@
 \alias{cf_boot}
 \title{Bootstrapped CF mixin constructor}
 \usage{
-cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot)
+cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
+  resampling_method = "bootstrap")
 }
 \arguments{
 \item{boot.R}{Integer, number of bootstrap samples used.}
@@ -28,13 +29,15 @@ The following fields will also be made available:
 \item \code{cf0}: Numeric vector, mean value of original measurements, convenience copy of \code{cf.tsboot$t0}.
 \item \code{tsboot.se}: Numeric vector, standard deviation over bootstrap samples.
 \item \code{boot.samples}: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with \code{inherits(cf, 'cf_boot')}.
+\item \code{error_fn}: Function, takes a vector of samples and computes the error. In the bootstrap case this is just the \code{sd} function. Use this function instead of a \code{sd} in order to make the code compatible with jackknife samples.
 }
 }
 \seealso{
-Other cf constructors: \code{\link{cf_jackknife}},
-  \code{\link{cf_meta}}, \code{\link{cf_orig}},
+Other cf constructors: \code{\link{cf_meta}},
+  \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
   \code{\link{cf}}
 }
+\concept{cf constructors}
