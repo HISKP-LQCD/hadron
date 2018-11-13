@@ -3,6 +3,8 @@ title: "Jackknife Error Normalization"
 output: html_notebook
 ---
 
+# Standard deviation
+
 The standard deviation over the bootstrap samples $X$ is defined as
 $$ \mathop{\mathrm{sd}}(X) = \sqrt{\frac{1}{N - 1} \sum_{i = 1}^N (x_i - \bar x_.)^2} \,. $$
 
@@ -36,6 +38,7 @@ jackknife_error <- function (samples, na.rm = FALSE) {
 }
 ```
 
+Using a little data set we conclude that we got the factor right.
 
 ```{r}
 N = 10
@@ -47,5 +50,47 @@ expected_factor = sqrt((N-1)^2 / N)
 actual_factor = je / be
 
 actual_factor / expected_factor
+```
+
+# Covariance
+
+The covariance is similarly defined, and we have the same normalization factor that we need to take care of. Since the diagonal elements of the covariance matrix are the variances, we need to apply the same normalization factor. The big complication is that the R `cov` function can either be called with one matrix or two vectors. We need to support both for the jackknife such that it has the same API.
+
+```{r}
+jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
+    factor <- 1.0
+    
+    if (is.null(y)) {
+        N <- nrow(x)
+        if (na.rm) {
+            na_values <- apply(x, 2, function (row) any(is.na(row)))
+            m <- sum(na_values)
+            x <- x[!na_values, ]
+            factor <- N / m
+        }
+    } else {
+        N <- length(x)
+        if (na.rm) {
+        na_values <- is.na(x) | is.na(y)
+            m <- sum(na_values)
+            x <- x[!na_values]
+            y <- y[!na_values]
+            factor <- N / m
+        }
+    }
+    
+    (N-1)^2 / N * factor * cov(x, y, ...)
+}
+```
+
+```{r}
+x <- rnorm(10)
+y <- rnorm(10)
+
+cov(x, y)
+jackknife_cov(x, y)
+
+cov(cbind(x, y))
+jackknife_cov(cbind(x, y))
 ```
 
