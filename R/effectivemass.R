@@ -131,6 +131,8 @@ fit.constant <- function(M, y) {
 }
 
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
+  ## If it wasn't clear from the name, the `cf` argument is of type
+  ## `effectivemass`.
   stopifnot(inherits(cf, 'effectivemass'))
 
   tmax <- cf$Time/2
@@ -174,7 +176,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   }
 
   # cf here is a bootstrapped effective mass and $t is the matrix of bootstrap samples
-  CovMatrix <- cov(cf$t[,ii])
+  CovMatrix <- cf$cf$cov_fn(cf$t[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(1/cf$se[ii]^2)
