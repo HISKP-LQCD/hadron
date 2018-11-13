@@ -353,7 +353,7 @@ matrixfit <- function(cf, t1, t2,
   
   CovMatrix <- NULL
   # we always use the boostrap samples to estimate the covariance matrix 
-  CovMatrix <- cov(cf$cf.tsboot$t[,ii])
+  CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[,ii])
   
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
   M <- diag(1/CF$Err[ii]^2)
