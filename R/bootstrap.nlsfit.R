@@ -403,12 +403,22 @@ bootstrap.nlsfit <- function(fn,
   par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
   converged <- sapply(boot.list, function (elem) elem$converged)
+  ## The fit on the original data must have converged, otherwise the results
+  ## are worthless. We do not check directly after the first fit as the restart
+  ## might have helped it to convergence, and we want to give the original data
+  ## this second chance.
+  stopifnot(converged[1])
+
+  ## If most of the bootstrap samples have failed to converged, something else
+  ## is clearly wrong. We take 50% as the cutoff.
+  stopifnot(mean(converged[2:(boot.R + 1)]) >= 0.5)
+
   par.boot[!converged, ] <- NA
 
   chisq <- boot.list[[1]]$chisq
   dof = length(y) - length(par.guess)
 
-  errors <- apply(X=par.boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
+  errors <- apply(par.boot[rr, 1:(length(par.Guess)), drop=FALSE], 2, error, na.rm = TRUE)
 
   res <- list(y=y, dy=dy, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
