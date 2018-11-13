@@ -78,6 +78,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 
   if (resampling_method == 'bootstrap') {
     .cf$error_fn <- sd
+    .cf$cov_fn <- cov
   }
   else if (resampling_method == 'jackknife') {
     .cf$error_fn <- jackknife_error
@@ -118,7 +119,8 @@ jackknife_error <- function (samples, na.rm = FALSE) {
     factor <- 1.0
   }
 
-  sqrt(factor * (N - 1) / N * sum((samples - mean(samples))^2))
+  sqrt(factor * (N - 1)^2 / N * sd(samples))
+}
 }
 
 #' Original data CF mixin constructor
