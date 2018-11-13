@@ -88,14 +88,10 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 #'
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
-parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx = NULL, ...) {
+parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
   stopifnot(length(x) == length(y))
-  stopifnot(is.null(dx) || length(dx) == length(x))
-  stopifnot(is.null(dy) || length(dy) == length(y))
-
-  if (is.null(dy)) {
-    stop('You have specified no covariance matrix, therefore you must specify `dy` and possibly `dx`.')
-  }
+  stopifnot(missing(dx) || length(dx) == length(x))
+  stopifnot(missing(dy) || length(dy) == length(y))
 
   if (is.null(dx)) {
     values <- y
@@ -107,7 +103,7 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx = NULL, ...) 
 
   bsamples <- parametric.bootstrap(boot.R, values, errors)
 
-  bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ...)
+  bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy)
 }
 
 #' NLS fit with parametric bootstrap and covariance
@@ -213,13 +209,15 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
-                             CovMatrix = NULL,
-                             gr = NULL,
-                             dfn = NULL,
+                             ...
+                             dy,
+                             dx,
+                             CovMatrix,
+                             gr,
+                             dfn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
-                             error = sd,
-                             ...) {
+                             error = sd) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -227,7 +225,7 @@ bootstrap.nlsfit <- function(fn,
   stopifnot(!missing(bsamples))
 
   boot.R <- nrow(bsamples)
-  useCov <- !is.null(CovMatrix)
+  useCov <- !missing(CovMatrix)
 
   if (use.minpack.lm) {
     lm.avail <- require(minpack.lm)
@@ -257,12 +255,13 @@ bootstrap.nlsfit <- function(fn,
 
   nx <- length(x)
   
-  ## add original data as first row
-  bsamples <- rbind(Y, bsamples)
-
   ## generate bootstrap samples if needed
   ## and invert covariance matrix, if applicable
   if (useCov) {
+    if (!missing(dx) || !missing(dy)) {
+      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
+    }
+
     inversion.worked <- function(InvCovMatrix) {
       if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
@@ -279,24 +278,27 @@ bootstrap.nlsfit <- function(fn,
       inversion.worked(InvCovMatrix)
       dY <- t(InvCovMatrix)
     }
-
-    dy <- 1.0/dY[1:(length(y))]
-    if (errormodel == "xyerrors") {
-      dx <- 1.0/dY[(length(y)+1):length(Y)]
-    } else {
-      dx <- NULL
-    }
   }
   else {
-    dY <- apply(bsamples, 2, error)
-    dy <- dY[1:(length(y))]
-    if (errormodel == "xyerrors") {
-      dx <- dY[(length(y)+1):length(Y)]
-    } else {
-      dx <- NULL
+    ## The user did not specify the errors, therefore we simply compute them.
+    if (missing(dx) && missing(dy)) {
+      dY <- 1.0 / apply(bsamples, 2, error)
     }
-    dY <- 1./dY
+    ## The user has specified either one, so we need to make sure that it is
+    ## consistent.
+    else {
+      if (errormodel == 'yerrors' && ncol(bsamples) == length(dy)) {
+        dY <- 1.0 / dy
+      } else if (errormodel == 'xyerrors' && ncol(bsamples) == length(dy) + length(dx)) {
+        dY <- 1.0 / c(dy, dx)
+      } else {
+        stop('You have explicitly passed `dy` and/or `dx`, but their combined length does not match the number of columns of the bootstrap samples.')
+      }
+    }
   }
+
+  ## add original data as first row
+  bsamples <- rbind(Y, bsamples)
 
   ## define the chi-vector, the sum of squares of which has to be minimized
   ## the definitions depend on the errormodel and the use of covariance
@@ -317,7 +319,7 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## define the derivatives of chi and chi^2
-  if(is.null(gr) || (errormodel == "xyerrors" && is.null(dfn))){
+  if(missing(gr) || (errormodel == "xyerrors" && missing(dfn))){
     ## in case no derivative is known, the functions are set to NULL
     ## this is the default in the optimization functions anyway
     dfitchi <- NULL
@@ -391,7 +393,7 @@ bootstrap.nlsfit <- function(fn,
 
   errors <- apply(X=par.boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
 
-  res <- list(y=y, dy=dy, x=x, dx=dx, nx=nx,
+  res <- list(y=y, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, ],
               errormodel=errormodel,
