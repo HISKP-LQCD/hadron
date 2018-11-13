@@ -93,7 +93,7 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
 
-  if (is.null(dx)) {
+  if (missing(dx)) {
     values <- y
     errors <- dy
   } else {
@@ -278,11 +278,28 @@ bootstrap.nlsfit <- function(fn,
       inversion.worked(InvCovMatrix)
       dY <- t(InvCovMatrix)
     }
+
+    dydx <- 1.0 / diag(dY)
+
+    if (errormodel == 'yerrors') {
+      dy <- dydx
+    } else {
+      dy <- dydx[1:length(y)]
+      dx <- dydx[(length(y)+1):length(dydx)]
+    }
   }
   else {
     ## The user did not specify the errors, therefore we simply compute them.
     if (missing(dx) && missing(dy)) {
-      dY <- 1.0 / apply(bsamples, 2, error)
+      dydx <- apply(bsamples, 2, error)
+      dY <- 1.0 / dydx
+
+      if (errormodel == 'yerrors') {
+        dy <- dydx
+      } else {
+        dy <- dydx[1:length(y)]
+        dx <- dydx[(length(y)+1):length(dydx)]
+      }
     }
     ## The user has specified either one, so we need to make sure that it is
     ## consistent.
@@ -393,7 +410,7 @@ bootstrap.nlsfit <- function(fn,
 
   errors <- apply(X=par.boot[rr, 1:(length(par.Guess)), drop=FALSE], MARGIN=2, FUN=error)
 
-  res <- list(y=y, x=x, nx=nx,
+  res <- list(y=y, dy=dy, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, ],
               errormodel=errormodel,
@@ -408,6 +425,11 @@ bootstrap.nlsfit <- function(fn,
               dof = dof,
               error.function = error,
               tofn=list(...))
+
+  if (errormodel == 'xyerrors') {
+    res$dx <- dx
+  }
+
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
 }
