@@ -1,5 +1,6 @@
 ^\.travis\.yml$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-\.git
-\.Rhistory
+^\.git$
+^\.Rhistory$
+^\.vimrc$
