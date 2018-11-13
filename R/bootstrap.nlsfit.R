@@ -184,7 +184,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #'
 #' @examples
 #' ## Declare some data.
-#' value <- c(0.1, 0.2, 0.3)
+#' value <- c(0.1, 0.2, 0.31)
 #' dvalue <- c(0.01, 0.01, 0.015)
 #' x <- c(1, 2, 3)
 #' dx <- c(0.1, 0.1, 0.1)
