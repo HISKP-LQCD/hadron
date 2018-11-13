@@ -364,7 +364,7 @@ bootstrap.nlsfit <- function(fn,
     wrapper <- function(y, par) {
       res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"))
 
-      list(converged = TRUE,  # TODO: This is a blatant lie.
+      list(converged = res$convergence == 0,
            par = res$par,
            chisq = res$value)
     }
