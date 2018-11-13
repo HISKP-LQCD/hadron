@@ -4,7 +4,7 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx = NULL, ...)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...)
 }
 \description{
 NLS fit with parametric bootstrap
