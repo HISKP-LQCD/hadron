@@ -209,7 +209,7 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
-                             ...
+                             ...,
                              dy,
                              dx,
                              CovMatrix,
