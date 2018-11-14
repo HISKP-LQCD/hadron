@@ -381,7 +381,7 @@ bootstrap.nlsfit <- function(fn,
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
     wrapper <- function(y, par) {
-      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"))
+      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=500))
 
       list(converged = res$convergence == 0,
            par = res$par,
