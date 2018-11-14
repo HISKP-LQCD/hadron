@@ -112,7 +112,6 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
                                 bsamples = cf.save[,ii],
                                 gr = sum.cosh.jac,
                                 CovMatrix = cov(cf.save[,ii]),
-                                use.minpack.lm = FALSE,
                                 ...)
   } else {
     fit.res <- bootstrap.nlsfit(fn = sum.cosh.fit,
@@ -121,7 +120,6 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
                                 x = tt,
                                 bsamples = cf.save[,ii],
                                 gr = sum.cosh.jac,
-                                use.minpack.lm = FALSE,
                                 ...)
   }
 
@@ -131,7 +129,7 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   opt.res[1:n.cosh] <- opt.res[1:n.cosh][order(opt.res[1:n.cosh])]
 
     ## now we bootstrap the fit
-  massfit.tsboot <- abs(fit.res$t[,1:(2*n.cosh)])
+  massfit.tsboot <- abs(fit.res$t)
   if(n.cosh >= 2){
     massfit.tsboot[,(n.cosh+1):(2*n.cosh)] <- t(apply(massfit.tsboot, FUN=function(res) {res[(n.cosh+1):(2*n.cosh)][order(res[1:n.cosh])]}, MARGIN=1))
     massfit.tsboot[,1:n.cosh] <- t(apply(massfit.tsboot[,1:n.cosh], FUN=function(res) {res[order(res)]}, MARGIN=1))
@@ -145,7 +143,7 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   effMass$coshfit$use.effmass <- use.effmass
   effMass$coshfit$t0 <- opt.res
   effMass$coshfit$t <- massfit.tsboot
-  effMass$coshfit$se <- apply(massfit.tsboot, 2, sd)
+  effMass$coshfit$se <- fit.res$se
   effMass$coshfit$n.cosh <- n.cosh
   effMass$t1 <- t1
   effMass$coshfit$t1 <- t1
@@ -234,7 +232,7 @@ summary.coshfit <- function(effMass, verbose=FALSE) {
     cat("\namplitudes:\n")
     print(data.frame(a = effMass$coshfit$t0[(effMass$coshfit$n.cosh+1):(2*effMass$coshfit$n.cosh)], da = effMass$coshfit$se[(effMass$coshfit$n.cosh+1):(2*effMass$coshfit$n.cosh)]))
     cat("\ncorrelations:\n")
-    fit.cor <- cor(effMass$coshfit$t[,1:(2*effMass$coshfit$n.cosh)], effMass$coshfit$t[,1:(2*effMass$coshfit$n.cosh)])
+    fit.cor <- cor(effMass$coshfit$t[,1:(2*effMass$coshfit$n.cosh)], effMass$coshfit$t[,1:(2*effMass$coshfit$n.cosh)], use="na.or.complete")
     print(fit.cor)
     cat("\n")
   }else{

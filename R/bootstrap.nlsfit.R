@@ -426,7 +426,7 @@ bootstrap.nlsfit <- function(fn,
   chisq <- boot.list[[1]]$chisq
   dof = length(y) - length(par.guess)
 
-  errors <- apply(par.boot[rr, 1:(length(par.Guess)), drop=FALSE], 2, error, na.rm = TRUE)
+  errors <- apply(par.boot[rr, , drop=FALSE], 2, error, na.rm = TRUE)
 
   res <- list(y=y, dy=dy, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
