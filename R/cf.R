@@ -360,7 +360,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   return(invisible(cf))
 }
 
-jackknife.cf <- function(cf, boot.l = 2) {
+jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   stopifnot(boot.l >= 1)
