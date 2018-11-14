@@ -410,12 +410,16 @@ bootstrap.nlsfit <- function(fn,
   stopifnot(converged[1])
   
   if (any(!converged)) {
-      warning('There were fits that did not converge. Check the `converged` and `info` fields of the return value for more information.')
+      warning('There were fits on the samples that did not converge. Check the `converged.boot` and `info.boot` fields of the return value for more information.')
   }
+  
+  ## We guarantee that the fit on the original data has converged, therefore we can discard this information.
+  converged.boot <- converged[2:(boot.R + 1)]
+  info.boot <- info[2:(boot.R + 1)]
 
   ## If most of the bootstrap samples have failed to converged, something else
   ## is clearly wrong. We take 50% as the cutoff.
-  stopifnot(mean(converged[2:(boot.R + 1)]) >= 0.5)
+  stopifnot(mean(converged.boot) >= 0.5)
 
   par.boot[!converged, ] <- NA
 
@@ -428,7 +432,7 @@ bootstrap.nlsfit <- function(fn,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, ],
               errormodel=errormodel,
-              converged = converged,
+              converged.boot = converged.boot,
               t0=par.boot[1, ],
               t=par.boot[rr, ],
               se=errors,
@@ -438,7 +442,7 @@ bootstrap.nlsfit <- function(fn,
               chisqr = chisq,
               dof = dof,
               error.function = error,
-              info = info,
+              info.boot = info.boot,
               tofn=list(...))
 
   if (errormodel == 'xyerrors') {
@@ -489,6 +493,13 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
   cat("\n   chi^2 and fit quality\n")
   cat("chisqr / dof =", object$chisqr, "/", object$dof, "=", object$chisqr/object$dof, "\n")
   cat("p-value", object$Qval, "\n")
+  cat('\nRatio of converged fits on samples:', sum(object$converged.boot), '/', length(object$converged.boot), '=', mean(object$converged.boot), '\n')
+  if (!all(is.na(object$info.boot))) {
+      cat('Table of nls.lm info values (1, 2, 3 are convergence):\n')
+      df <- as.data.frame(table(object$info.boot))
+      colnames(df) <- c('value', 'frequency')
+      print(df)
+  }
 }
 
 #' Print a bootstrap NLS fit
