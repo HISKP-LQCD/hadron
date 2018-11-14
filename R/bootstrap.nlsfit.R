@@ -370,11 +370,8 @@ bootstrap.nlsfit <- function(fn,
       res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
                     control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500))
 
-      if( !(res$info %in% c(1,2,3) ) ){
-        cat(sprintf("Termination wrapper reason of nls.lm res$info: %d\n", res$info))
-      }
-
       list(converged = res$info %in% 1:3,
+           info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
     }
@@ -384,6 +381,7 @@ bootstrap.nlsfit <- function(fn,
       res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=500))
 
       list(converged = res$convergence == 0,
+           info = NA,
            par = res$par,
            chisq = res$value)
     }
@@ -403,11 +401,17 @@ bootstrap.nlsfit <- function(fn,
   par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
   converged <- sapply(boot.list, function (elem) elem$converged)
+  info <- sapply(boot.list, function (elem) elem$info)
+  
   ## The fit on the original data must have converged, otherwise the results
   ## are worthless. We do not check directly after the first fit as the restart
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
   stopifnot(converged[1])
+  
+  if (any(!converged)) {
+      warning('There were fits that did not converge. Check the `converged` and `info` fields of the return value for more information.')
+  }
 
   ## If most of the bootstrap samples have failed to converged, something else
   ## is clearly wrong. We take 50% as the cutoff.
@@ -434,6 +438,7 @@ bootstrap.nlsfit <- function(fn,
               chisqr = chisq,
               dof = dof,
               error.function = error,
+              info = info,
               tofn=list(...))
 
   if (errormodel == 'xyerrors') {
