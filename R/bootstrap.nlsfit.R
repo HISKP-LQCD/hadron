@@ -367,8 +367,9 @@ bootstrap.nlsfit <- function(fn,
   ## define the wrapper-functions for optimization
   if (lm.avail) {
     wrapper <- function(y, par) {
-      res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
-                    control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500))
+      suppressWarnings(
+        res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
+                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500)))
 
       list(converged = res$info %in% 1:3,
            info = res$info,
