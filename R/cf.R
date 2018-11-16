@@ -120,7 +120,7 @@ jackknife_error <- function (samples, na.rm = FALSE) {
     factor <- 1.0
   }
 
-  sqrt(factor * (N - 1)^2 / N * sd(samples))
+  sqrt(factor * (N - 1)^2 / N) * sd(samples)
 }
 
 #' @export
