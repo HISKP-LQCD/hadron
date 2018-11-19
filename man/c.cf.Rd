@@ -7,7 +7,7 @@
 \method{c}{cf}(...)
 }
 \arguments{
-\item{...}{One or multiple objects of type \code{cf_orig}.}
+\item{...}{Zero or multiple objects of type \code{cf}.}
 }
 \description{
 Concatenate correlation function objects

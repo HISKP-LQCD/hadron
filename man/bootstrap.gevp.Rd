@@ -93,14 +93,14 @@ plot(pc1.effectivemass)
 
 ## we can also use matrixfit with a special model for a principal
 ## correlators
-pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", t0=t0, useCov=FALSE)
+pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE)
 summary(pc1.matrixfit)
 plot(pc1.matrixfit)
 
 ## the same can be achieved using bootstrap.nlsfit
 model <- function(par, x, t0) return(exp(-par[1]*(x-t0))*(par[3]+(1-par[3])*exp(-par[2]*(x-t0))))
 ii <- c(2:4, 6:25)
-fitres <- bootstrap.nlsfit(fn=model, par.guess=c(0.5, 1, .9), y=pc1$cf0[ii], dy=pc1$tsboot.se[ii], x=ii-1, useCov=FALSE, boot.R=pc1$boot.R, t0=t0)
+fitres <- parametric.nlsfit(fn=model, par.guess=c(0.5, 1, .9), y=pc1$cf0[ii], dy=pc1$tsboot.se[ii], x=ii-1, boot.R=pc1$boot.R, t0=t0)
 summary(fitres)
 plot(fitres, log="y")
 }

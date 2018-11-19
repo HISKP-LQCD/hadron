@@ -124,12 +124,6 @@ cf_jackknife <- function (.cf = cf(), boot.l, cf.jackknife, jackknife.se) {
 #' @param cf Numeric matrix, original data for all observables and measurements.
 #' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
 #'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `cf0`: Numeric vector, mean of original data.
-#'
 #' @family cf constructors
 #'
 #' @export
@@ -145,8 +139,6 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   else {
     .cf$icf <- icf
   }
-
-  .cf$cf0 <- apply(.cf$cf, MARGIN = 2, FUN = mean)
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
@@ -166,7 +158,7 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
   .cf$id <- id
   .cf$gevp_reference_time <- gevp_reference_time
 
-  class(.cf) <- append(class(.cf), 'cf_principal_correlators')
+  class(.cf) <- append(class(.cf), 'cf_principal_correlator')
   return (.cf)
 }
 
@@ -276,6 +268,19 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
   return (.cf)
 }
 
+#' Checks whether the cf object contains no data
+#'
+#' @examples
+#' # The empty cf object must be empty:
+#' is_empty.cf(cf())
+#'
+#' # The sample cf must not be empty:
+#' is_empty.cf(samplecf)
+is_empty.cf <- function (.cf) {
+  setequal(class(.cf), class(cf())) &&
+    is.null(names(.cf))
+}
+
 gen.block.array <- function(n, R, l, endcorr=TRUE) {
   endpt <- if (endcorr)
              n
@@ -335,21 +340,24 @@ jackknife.cf <- function(cf, boot.l=2) {
   n <- nrow(cf$cf)
   ## number of overlapping blocks
   N <- n-boot.l+1
+  
+  cf$cf0 <- apply(cf$cf, 2, mean)
 
   cf.jackknife <- list()
-  cf.jackknife$t<- array(NA, dim=c(N,ncol(cf$cf)))
+  cf.jackknife$t <- array(NA, dim=c(N, ncol(cf$cf)))
   cf.jackknife$t0 <- cf$cf0
   cf.jackknife$l <- boot.l
   for (i in 1:N) {
+    # The measurements that we are going to leave out.
     ii <- c(i:(i+boot.l-1))
     ## jackknife replications of the mean
-    gammai <- apply(cf$cf[-ii,], MARGIN=2L, FUN=mean)
-    cf$cf.jackknife$t[i, ] <- (n*cf$cf0 - (n - boot.l)*gammai)/boot.l
+    gammai <- apply(cf$cf[-ii, ], MARGIN=2L, FUN=mean)
+    cf.jackknife$t[i, ] <- gammai
   }
   ## the jackknife error
-  tmp <- apply(cf$cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
+  tmp <- apply(cf.jackknife$t, MARGIN=1L, FUN=function(x,y){(x-y)^2}, y=cf$cf0)
   jackknife.se <- apply(tmp, MARGIN=1L,
-                           FUN=function(x, l, n, N) {sqrt( l/(n-l)/N*sum( x ) ) },
+                           FUN=function(x, l, n, N) {sqrt( (n-l)/l/N*sum( x ) ) },
                            n=n, N=N, l=boot.l)
 
   cf <- cf_jackknife(cf,
@@ -400,10 +408,19 @@ addConfIndex2cf <- function(cf, conf.index) {
 }
 
 addStat.cf <- function(cf1, cf2) {
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf2, 'cf'))
+
+  if (is_empty.cf(cf1)) {
+    return (invisible(cf2))
+  }
+  if (is_empty.cf(cf2)) {
+    return (invisible(cf1))
+  }
+
   stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_orig'))
+
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
   stopifnot(cf1$nrObs == cf2$nrObs )
@@ -474,10 +491,12 @@ avg.cbt.cf <- function(cf){
 
 ## this is intended for instance for adding diconnected diagrams to connected ones
 add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
-  stopifnot(inherits(cf1, 'cf_meta'))
+  stopifnot(inherits(cf1, 'cf'))
+  stopifnot(inherits(cf2, 'cf'))
   stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_orig'))
+  stopifnot(inherits(cf1, 'cf_meta'))
+  stopifnot(inherits(cf2, 'cf_meta'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
 
@@ -487,39 +506,18 @@ add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
-'+.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_orig'))
-  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
-  stopifnot(cf1$Time == cf2$Time)
-
-  cf <- cf1
-  cf$cf <- cf1$cf + cf2$cf
-  cf <- invalidate.samples.cf(cf)
-
-  return(cf)
+'+.cf' <- function (cf1, cf2) {
+  add.cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
 '-.cf' <- function(cf1, cf2) {
-  stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
-  stopifnot(inherits(cf2, 'cf_meta'))
-  stopifnot(inherits(cf2, 'cf_orig'))
-  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
-  stopifnot(cf1$Time == cf2$Time)
-
-  cf <- cf1
-  cf$cf <- cf1$cf - cf2$cf
-  cf <- invalidate.samples.cf(cf)
-  return(cf)
+  add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
 '/.cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
-  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_meta'))
+  stopifnot(inherits(cf1, 'cf_orig'))
   stopifnot(inherits(cf2, 'cf_orig'))
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
@@ -569,48 +567,51 @@ is.cf <- function(x){
 
 #' Concatenate correlation function objects
 #'
-#' @param ... One or multiple objects of type `cf_orig`.
-c.cf <- function(...) {
-  fcall <- list(...)
+#' @param ... Zero or multiple objects of type `cf`.
+c.cf <- function (...) {
+  rval <- Reduce(concat.cf, list(...), cf())
+  return (invisible(rval))
+}
 
-  # In case there is only one element, we do not need to do anything.
-  if(length(fcall) == 1) {
-    return(eval(fcall[[1]]))
+#' Concatenate two correlation function objects
+concat.cf <- function (left, right) {
+  stopifnot(inherits(left, 'cf'))
+  stopifnot(inherits(right, 'cf'))
+
+  if (inherits(left, 'cf_boot') || inherits(left, 'cf_jackknife')
+      || inherits(right, 'cf_boot') || inherits(right, 'cf_jackknife')) {
+    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
   }
 
-  # All arguments must be of type `cf`. Since it seems to be a common pattern
-  # to concatenate stuff to an empty `cf` object, this must be supported as
-  # well. We will just ignore these empty objects and concatenate the ones with
-  # data.
-  stopifnot(all(sapply(fcall, function (x) inherits(x, 'cf'))))
-  has_data <- sapply(fcall, function (x) inherits(x, 'cf_orig'))
-  fcall <- fcall[has_data]
-
-  cf <- fcall[[1]]
-  Time <- cf$Time
-  cf$nrObs <- 0
-  cf$sTypes <- 0
-  N <- dim(cf$cf)[1]
-  for (i in 1:length(fcall)) {
-    if (fcall[[i]]$Time != Time) {
-      stop("Times must agree for different objects of type cf\n Aborting\n")
-    }
-    if (dim(fcall[[i]]$cf)[1] != N) {
-      stop("Number of measurements must agree for different objects of type cf\n Aborting\n")
-    }
-    cf$nrObs <- cf$nrObs + fcall[[i]]$nrObs
-    cf$sTypes <- cf$sTypes + fcall[[i]]$sTypes
+  # In case that one of them does not contain data, the other one is the
+  # result. This satisfies the neutral element axiom of a monoid.
+  if (is_empty.cf(left)) {
+    return (right)
   }
-  if (1 < length(fcall)) {
-    for (i in 2:length(fcall)) {
-      cf$cf <- cbind(cf$cf, fcall[[i]]$cf)
-      cf$icf <- cbind(cf$icf, fcall[[i]]$icf)
-      cf$cf0 <- cbind(cf$cf0, fcall[[i]]$cf0)
-    }
+  if (is_empty.cf(right)) {
+    return (left)
   }
-  cf <- invalidate.samples.cf(cf)
 
-  return (invisible(cf))
+  stopifnot(inherits(left, 'cf_meta'))
+  stopifnot(inherits(right, 'cf_meta'))
+
+  # At this point both `cf` objects given here have original data, therefore we
+  # need to concatenate them.
+
+  # A few checks for compatability.
+  stopifnot(left$Time == right$Time)
+  stopifnot(nrow(left$cf) == nrow(right$cf))
+  stopifnot(left$symmetrised == right$symmetrised)
+  stopifnot(left$nrStypes == right$nrStypes)
+
+  rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
+                  Time = left$Time,
+                  nrStypes = left$nrStypes,
+                  symmetrised = left$symmetrised)
+  rval <- cf_orig(.cf = rval,
+                  cf = cbind(left$cf, right$cf),
+                  icf = cbind(left$icf, right$icf))
+  return (invisible(rval))
 }
 
 plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
@@ -624,8 +625,7 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
     val <- cf$cf0
     err <- cf$jackknife.se
   } else {
-    val <- apply(cf$cf, 2, mean)
-    err <- apply(cf$cf, 2, sd) / sqrt(nrow(cf$cf))
+    stop('A correlation function must be bootstrapped before it can be plotted.')
   }
 
   if(!cf$symmetrised){
@@ -673,6 +673,7 @@ invalidate.samples.cf <- function(cf){
   cf$boot.l <- NULL
   cf$boot.R <- NULL
   cf$boot.samples <- NULL
+  cf$cf.jackknife <- NULL
   cf$jackknife <- NULL
   cf$jackknife.samples <- NULL
   cf$jackknife.se <- NULL
@@ -680,6 +681,7 @@ invalidate.samples.cf <- function(cf){
   cf$sim <- NULL
   cf$tsboot <- NULL
   cf$tsboot.se <- NULL
+  cf$cf0 <- NULL
 
   class(cf) <- setdiff(class(cf), c('cf_boot', 'cf_jackknife'))
 

@@ -41,6 +41,7 @@ bootstrap.analysis(data, skip=0, boot.R=100, tsboot.sim="geom", pl=FALSE, boot.l
   that only data is kept in exact multiples of the block length.
 }
 \examples{
+data()
 data(plaq.sample)
 plaq.boot <- bootstrap.analysis(plaq.sample, pl=TRUE)
 }

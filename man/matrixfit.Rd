@@ -14,7 +14,7 @@ matrixfit(cf, t1, t2,
           boot.fit = TRUE,
           fit.method="optim",
           autoproceed = FALSE,
-          t0)
+          every)
 }
 \arguments{
   \item{cf}{
@@ -84,8 +84,9 @@ matrixfit(cf, t1, t2,
     the fit is instead continued with a diagonal inverse of the variance-covariance
     matrix.
   }
-  \item{t0}{
-    Only for \code{model == "pc"} the reference timeslice used in the GEVP.
+  \item{every}{
+    Fit only a part of the data points. Indices that are not multiples of \code{every}
+    are skipped. If no value is provided, all points are taken into account.
   }
 }
 \value{
@@ -177,6 +178,9 @@ matrixfit(cf, t1, t2,
   }
   \item{fit.method}{
     see input.
+  }
+  \item{reference_time}{
+    The GEVP reference time for the principal correlator model
   }
 }
 \details{

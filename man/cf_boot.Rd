@@ -38,3 +38,4 @@ Other cf constructors: \code{\link{cf_jackknife}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
   \code{\link{cf}}
 }
+\concept{cf constructors}

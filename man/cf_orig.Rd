@@ -16,12 +16,6 @@ cf_orig(.cf = cf(), cf, icf = NULL)
 \description{
 Original data CF mixin constructor
 }
-\details{
-The following fields will also be made available:
-\itemize{
-\item \code{cf0}: Numeric vector, mean of original data.
-}
-}
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_jackknife}}, \code{\link{cf_meta}},
@@ -30,3 +24,4 @@ Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
   \code{\link{cf}}
 }
+\concept{cf constructors}

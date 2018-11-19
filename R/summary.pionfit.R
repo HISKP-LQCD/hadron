@@ -48,66 +48,66 @@ summary.pionfit <- function(fit) {
   if(!is.null(fit$uwerrresultmps)) {
     cat("\n--- Autocorrelation analysis for m_ps ---\n")
     cat("\nS        = ", fit$uwerrresultmps$S, "\n")
-    cat("mps      = ", fit$uwerrresultmps$value, "\n")
-    cat("dmps     = ", fit$uwerrresultmps$dvalue, "\n")
-    cat("ddmps    = ", fit$uwerrresultmps$ddvalue, "\n")
-    cat("tauint   = ", fit$uwerrresultmps$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultmps$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultmps$Wopt, "\n")
+    cat("mps      = ", fit$uwerrresultmps$value[1], "\n")
+    cat("dmps     = ", fit$uwerrresultmps$dvalue[1], "\n")
+    cat("ddmps    = ", fit$uwerrresultmps$ddvalue[1], "\n")
+    cat("tauint   = ", fit$uwerrresultmps$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultmps$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultmps$Wopt[[1]], "\n")
     if(fit$uwerrresultmps$R>1) {
-      cat("Qval     =", fit$uwerrresultmps$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultmps$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultmps2)) {
     cat("\n--- Autocorrelation analysis for m_ps ---\n")
     cat("\nS        = ", fit$uwerrresultmps2$S, "\n")
-    cat("mps2     = ", fit$uwerrresultmps2$value, "\n")
-    cat("dmps     = ", fit$uwerrresultmps2$dvalue, "\n")
-    cat("ddmps    = ", fit$uwerrresultmps2$ddvalue, "\n")
-    cat("tauint   = ", fit$uwerrresultmps2$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultmps2$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultmps2$Wopt, "\n")
+    cat("mps2     = ", fit$uwerrresultmps2$value[1], "\n")
+    cat("dmps     = ", fit$uwerrresultmps2$dvalue[1], "\n")
+    cat("ddmps    = ", fit$uwerrresultmps2$ddvalue[1], "\n")
+    cat("tauint   = ", fit$uwerrresultmps2$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultmps2$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultmps2$Wopt[[1]], "\n")
     if(fit$uwerrresultmps2$R>1) {
-      cat("Qval     =", fit$uwerrresultmps2$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultmps2$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultmps3)) {
     cat("\n--- Autocorrelation analysis for m_ps ---\n")
     cat("\nS        = ", fit$uwerrresultmps3$S, "\n")
-    cat("mps3     = ", fit$uwerrresultmps3$value, "\n")
-    cat("dmps     = ", fit$uwerrresultmps3$dvalue, "\n")
-    cat("ddmps    = ", fit$uwerrresultmps3$ddvalue, "\n")
-    cat("tauint   = ", fit$uwerrresultmps3$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultmps3$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultmps3$Wopt, "\n")
+    cat("mps3     = ", fit$uwerrresultmps3$value[1], "\n")
+    cat("dmps     = ", fit$uwerrresultmps3$dvalue[1], "\n")
+    cat("ddmps    = ", fit$uwerrresultmps3$ddvalue[1], "\n")
+    cat("tauint   = ", fit$uwerrresultmps3$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultmps3$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultmps3$Wopt[[1]], "\n")
     if(fit$uwerrresultmps3$R>1) {
-      cat("Qval     =", fit$uwerrresultmps3$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultmps3$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultfps)) {
     cat("\n--- Autocorrelation analysis for f_ps ---\n")    
     cat("\nS        = ", fit$uwerrresultfps$S, "\n")
-    cat("fps      = ", fit$uwerrresultfps$value*2*kappa*2*mu/sqrt(2), "\n")
-    cat("dfps     = ", fit$uwerrresultfps$dvalue*2*kappa*2*mu/sqrt(2), "\n")
-    cat("ddfps    = ", fit$uwerrresultfps$ddvalue*2*kappa*2*mu/sqrt(2), "\n")
-    cat("tauint   = ", fit$uwerrresultfps$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultfps$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultfps$Wopt, "\n")
+    cat("fps      = ", fit$uwerrresultfps$value[1]*2*kappa*2*mu/sqrt(2), "\n")
+    cat("dfps     = ", fit$uwerrresultfps$dvalue[1]*2*kappa*2*mu/sqrt(2), "\n")
+    cat("ddfps    = ", fit$uwerrresultfps$ddvalue[1]*2*kappa*2*mu/sqrt(2), "\n")
+    cat("tauint   = ", fit$uwerrresultfps$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultfps$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultfps$Wopt[[1]], "\n")
     if(fit$uwerrresultfps$R>1) {
-      cat("Qval     =", fit$uwerrresultfps$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultfps$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultmpcac)) {
     cat("\n--- Autocorrelation analysis for m_pcac ---\n")
     cat("\nS        = ", fit$uwerrresultmpcac$S, "\n")
-    cat("mpcac    = ", fit$uwerrresultmpcac$value, "\n")
-    cat("dmpcac   = ", fit$uwerrresultmpcac$dvalue, "\n")
-    cat("ddmpcac  = ", fit$uwerrresultmpcac$ddvalue, "\n")
-    cat("tauint   = ", fit$uwerrresultmpcac$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultmpcac$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultmpcac$Wopt, "\n")
+    cat("mpcac    = ", fit$uwerrresultmpcac$value[1], "\n")
+    cat("dmpcac   = ", fit$uwerrresultmpcac$dvalue[1], "\n")
+    cat("ddmpcac  = ", fit$uwerrresultmpcac$ddvalue[1], "\n")
+    cat("tauint   = ", fit$uwerrresultmpcac$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultmpcac$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultmpcac$Wopt[[1]], "\n")
     if(fit$uwerrresultmpcac$R>1) {
-      cat("Qval     =", fit$uwerrresultmpcac$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultmpcac$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultzv)) {

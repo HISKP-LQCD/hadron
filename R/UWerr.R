@@ -1,5 +1,3 @@
-# $Id$
-#
 # this is a more or less line by line translation of
 # U. Wolffs UWerr.m for R: The R Project for Statistical Computing
 #
@@ -71,12 +69,12 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   if( S == 0 ) {
     Wmax <- 0
     Wopt <- 0
-    flag <- 0
+    flag <- FALSE
   }
   else {
     Wmax <- floor(min(nrep)/2)
     Gint <- 0.
-    flag <- 1
+    flag <- TRUE
   }
 
   GammaFbb <- rep(0., times=Wmax)
@@ -108,7 +106,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
       if(gW < 0) {
         Wopt <- W
         Wmax <- min(Wmax,2*Wopt)
-        flag <- 0
+        flag <- FALSE
       }
     }
     W <- W+1
@@ -124,6 +122,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
     stop("Gamma pathological: error^2 <0")
   }
   GammaFbb <- GammaFbb+CFbbopt/N            #Correct for bias
+  dGamma <- gammaerror(Gamma=GammaFbb, N=N , W=Wmax, Lambda=100)
   CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
   sigmaF <- sqrt(CFbbopt/N) #error of F
   tauintFbb <- cumsum(GammaFbb)/GammaFbb[1]-0.5 # normalised autoccorelation time
@@ -160,7 +159,8 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
               tauint = tauint, dtauint = dtauint,
               Wopt=Wopt, Wmax=Wmax, tauintofW=tauintFbb[1:(Wmax+1)],
               dtauintofW=dtauintofW[1:(Wmax+1)], Qval=Qval, S=S,
-              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=1)
+              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, dGamma = dGamma,
+              primary=1)
 
   attr(res, "class") <- c("uwerr", "list")
   
@@ -172,8 +172,6 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
 }
 
 uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
-  ## for improving performance we should transpose data!
-  data <- t(data)
   Nalpha <- dim(data)[2]
   N <- dim(data)[1]
   if(missing(nrep)) {
@@ -196,36 +194,39 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   Fbb <- f(abb, ...)
   ## f evaluated on single replicas
   Fbr <- apply(abr, MARGIN=1L, FUN=f, ...)
-  Fb <- sum(Fbr*nrep)/N;  # weighted mean of replica means
+  if(is.null(dim(Fbr))) {
+    dim(Fbr) <- c(1,length(Fbr))
+  }
+  Fb <- apply(Fbr, MARGIN=1L, FUN=function(x, nrep, N) sum(x*nrep)/N, nrep=nrep, N=N);  # weighted mean of replica means
 
-  fgrad <- rep(0., times=Nalpha)
+
   h <- apply(data, MARGIN=2L, FUN=sd)/sqrt(N)
 
+  fgrad <- array(0., dim=c(Nalpha, length(Fbb)))
   ainc <- abb
-
   for (alpha in 1:Nalpha) {
     if (h[alpha] == 0) {
       ## Data for this observable do not fluctuate
-      fgrad[alpha]=0
+      fgrad[alpha,]=0
     }
     else {
       ainc[alpha] <- abb[alpha]+h[alpha]
-      fgrad[alpha] <- f(ainc, ...)
+      fgrad[alpha,] <- f(ainc, ...)
       ainc[alpha] <- abb[alpha]-h[alpha]
       brg <- f(ainc, ...)
-      fgrad[alpha] <- fgrad[alpha]-brg
+      fgrad[alpha,] <- fgrad[alpha,]-brg
       ainc[alpha]  <- abb[alpha];
-      fgrad[alpha] <- fgrad[alpha]/(2*h[alpha])
+      fgrad[alpha,] <- fgrad[alpha,]/(2*h[alpha])
     }
   }
 
   ## projected deviations: 
-  delpro <- crossprod(t(data), fgrad) - rep(abb %*% fgrad, times=N)
+  delpro <- t(apply(data, MARGIN=1L, FUN=function(x, abb) x-abb, abb=abb)) %*% fgrad
 
-  GammaFbb<-numeric()
-  GammaFbb[1] <- mean(delpro^2)
+  if(is.null(dim(delpro))) dim(delpro) <- c(1, length(delpro))
+  GammaFbb <- as.list(apply(delpro^2, MARGIN=2L, FUN=mean))
   if(!any(is.na(GammaFbb))) {
-    if(GammaFbb[1] == 0) {
+    if(any(GammaFbb == 0)) {
       warning("no fluctuations!")
     }
   }
@@ -240,98 +241,116 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     options(error = NULL)
     return(invisible(res))
   }
+  Wopt <- as.list(rep(0, times=length(GammaFbb)))
+  Wmax <- Wopt
+  tauintofW <- Wopt
+  dtauintofW <- Wopt
+  res <- data.frame(value=rep(NA, times=length(GammaFbb)),
+                    dvalue=rep(NA, times=length(GammaFbb)),
+                    ddvalue=rep(NA, times=length(GammaFbb)),
+                    tauint=rep(NA, times=length(GammaFbb)),
+                    dtauint=rep(NA, times=length(GammaFbb)),
+                    Qval=rep(NA, times=length(GammaFbb))
+                    )
 
-  if(S==0) {
-    Wopt <- 0
-    Wmax <- 0
-    flag <- 0
-  }
-  else {
-    Wmax <- floor(min(nrep)/2)
-    Gint <- 0.
-    flag <- 1
-  }
-  
-  W<-1
-  while(W <= Wmax) {
-    GammaFbb[W+1] <- 0
-    i0 <- 1
-    for(r in 1:R) {
-      i1 <-  i0-1+nrep[r]
-      GammaFbb[W+1] <- GammaFbb[W+1] + sum(delpro[i0:(i1-W)]*delpro[(i0+W):i1])
-      i0 <- i0+nrep[r]
-    }    
-    GammaFbb[W+1] <- GammaFbb[W+1]/(N-R*W)
-    #GammaFbb[(W+1)] <- sum(delpro[1:(N-W)]*delpro[(1+W):N])/(N-W)
-    if(flag) {
-      Gint <- Gint+GammaFbb[(W+1)]/GammaFbb[1]
-      if(Gint<0) {
-        tauW <- 5.e-16
-      }
-      else {
-        tauW <- S/(log((Gint+1)/Gint))
-      }
-      gW <- exp(-W/tauW)-tauW/sqrt(W*N)
-      if(gW < 0) {
-        Wopt <- W
-        Wmax <- min(Wmax,2*W)
-        flag=0
-      }
+  for(i in c(1:length(GammaFbb))) {
+    if(S==0) {
+      Wopt[[i]] <- 0
+      Wmax[[i]] <- 0
+      flag <- FALSE
     }
-    W=W+1
-  }
-
-  if(flag) {
-    warning("Windowing condition failed!")
-    Wopt <- Wmax
-  }
-  
-  CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)])
-  if(CFbbopt <= 0) {
-    ##stop("Gamma pathological, estimated error^2 <0\n")
-    warning("Gamma pathological, estimated error^2 <0\n")
-  }
-  GammaFbb <- GammaFbb+CFbbopt/N # bias in Gamma corrected
-  CFbbopt <- GammaFbb[1] + 2*sum(GammaFbb[2:(Wopt+1)]) #refined estimate
-  sigmaF <- sqrt(abs(CFbbopt)/N) #error of F
-  rho <- GammaFbb/GammaFbb[1]
-  tauintFbb <- cumsum(rho)-0.5 #normalised autocorrelation
-
-  ## bias cancellation for the mean value
-
-  if(R >= 2) {
-    bF <- (Fb-Fbb)/(R-1);
-    Fbb <- Fbb - bF;
-    if(abs(bF) > sigmaF/4) {
-      warning("a %.1f sigma bias of the mean has been cancelled", bF/sigmaF)
+    else {
+      Wmax[[i]] <- floor(min(nrep)/2)
+      Gint <- 0.
+      flag <- TRUE
     }
     
-    Fbr = Fbr - bF*N/nrep;
-    Fb  = Fb  - bF*R;
-  }
+    W <- 1
+    while(W <= Wmax[[i]]) {
+      GammaFbb[[i]][W+1] <- 0
+      i0 <- 1
+      for(r in 1:R) {
+        i1 <-  i0-1+nrep[r]
+        GammaFbb[[i]][W+1] <- GammaFbb[[i]][W+1] + sum(delpro[i0:(i1-W), i]*delpro[(i0+W):i1, i])
+        i0 <- i0+nrep[r]
+      }
+      GammaFbb[[i]][W+1] <- GammaFbb[[i]][W+1]/(N-R*W)
+      ##GammaFbb[(W+1)] <- sum(delpro[1:(N-W)]*delpro[(1+W):N])/(N-W)
+      if(flag) {
+        Gint <- Gint+GammaFbb[[i]][(W+1)]/GammaFbb[[i]][1]
+        if(Gint<0) {
+          tauW <- 5.e-16
+        }
+        else {
+          tauW <- S/(log((Gint+1)/Gint))
+        }
+        gW <- exp(-W/tauW)-tauW/sqrt(W*N)
+        if(gW < 0) {
+          Wopt[[i]] <- W
+          Wmax[[i]] <- min(Wmax[[i]],2*W)
+          flag <- FALSE
+        }
+      }
+      W=W+1
+    }
+    
+    if(flag) {
+      warning("Windowing condition failed!")
+      Wopt[[i]] <- Wmax[[i]]
+    }
+    
+    CFbbopt <- GammaFbb[[i]][1] + 2*sum(GammaFbb[[i]][2:(Wopt[[i]]+1)])
+    if(CFbbopt <= 0) {
+      ##stop("Gamma pathological, estimated error^2 <0\n")
+      warning("Gamma pathological, estimated error^2 <0\n")
+    }
+    GammaFbb[[i]] <- GammaFbb[[i]] + CFbbopt/N # bias in Gamma corrected
+    CFbbopt <- GammaFbb[[i]][1] + 2*sum(GammaFbb[[i]][2:(Wopt[[i]]+1)]) #refined estimate
+    sigmaF <- sqrt(abs(CFbbopt)/N) #error of F
+    rho <- GammaFbb[[i]]/GammaFbb[[i]][1]
+    tauintFbb <- cumsum(rho)-0.5 #normalised autocorrelation
+    
+    ## bias cancellation for the mean value
+    
+    if(R >= 2) {
+      bF <- (Fb[i]-Fbb[i])/(R-1);
+      Fbb <- Fbb[i] - bF;
+      if(abs(bF) > sigmaF/4) {
+        warning("a %.1f sigma bias of the mean has been cancelled", bF/sigmaF)
+      }
+      
+      Fbr[i] = Fbr[i] - bF*N/nrep;
+      Fb[i]  = Fb[i]  - bF*R;
+    }
+    
+    res$value[i] <- Fbb[i]
+    res$dvalue[i] <- sigmaF
+    res$ddvalue[i] <- sigmaF*sqrt((Wopt[[i]]+0.5)/N)
+    res$tauint[i]  <- tauintFbb[(Wopt[[i]]+1)]
+    res$dtauint[i] = res$tauint[i]*2*sqrt((Wopt[[i]]-res$tauint[i]+0.5)/N)
 
-  value <- Fbb
-  dvalue <- sigmaF
-  ddvalue <- sigmaF*sqrt((Wopt+0.5)/N)
-  tauint  <- tauintFbb[(Wopt+1)]
-  dtauint = tauint*2*sqrt((Wopt-tauint+0.5)/N)
-  dtauintofW <- tauintFbb[1:(Wmax+1)]*sqrt(c(0:Wmax)/N)*2 
-  
-  # Q value for replica distribution if R>=2
-  if(R>1) {
-    chisqr <- sum((Fbr-Fb)^2*nrep)/CFbbopt
-    Qval <- 1-pgamma(chisqr/2, (R-1)/2)
-  }
-  else {
-    Qval <- NULL
-  }
-  
-  res <- list(value = value, dvalue = dvalue, ddvalue = ddvalue,
-              tauint = tauint, dtauint = dtauint, Wopt=Wopt, Wmax=Wmax,
-              tauintofW=tauintFbb[1:(Wmax+1)], dtauintofW=dtauintofW[1:(Wmax+1)],
-              Qval=Qval, S=S, fgrad=fgrad,
-              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb, primary=0)
+    tauintofW[[i]] <- tauintFbb[1:(Wmax[[i]]+1)]
+    dtauintofW[[i]] <- tauintFbb[1:(Wmax[[i]]+1)]*sqrt(c(0:Wmax[[i]])/N)*2 
 
+    ## Q value for replica distribution if R>=2
+    if(R>1) {
+      chisqr <- sum((Fbr[i]-Fb[i])^2*nrep)/CFbbopt
+      res$Qval[i] <- 1-pgamma(chisqr/2, (R-1)/2)
+    }
+  }
+  
+  res <- list(value=res$value,
+              dvalue=res$dvalue,
+              ddvalue=res$ddvalue,
+              tauint=res$tauint,
+              dtauint=res$dtauint,
+              Qval=res$Qval,
+              Wopt=Wopt, Wmax=Wmax,
+              tauintofW=tauintofW, dtauintofW=dtauintofW,
+              S=S, fgrad=fgrad, datamean=abb,
+              N=N, R=R, nrep=nrep, data=data, Gamma=GammaFbb,
+              f=f, primary=0)
+  
   attr(res, "class") <- c("uwerr", "list")
   
   if(pl) {
@@ -344,23 +363,30 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 }
 
 summary.uwerr <- function(uwerr) {
+
   cat("Error analysis with Gamma method\n")
   cat("based on", uwerr$N, "measurements\n")
   if(uwerr$R>1) {
     cat("split in", uwerr$R, "replica with (", uwerr$nrep, ") measurements, respectively\n")
   }
-  cat("The Gamma function was summed up until Wopt=", uwerr$Wopt, "\n\n")
-  cat("value    =", uwerr$value, "\n")
-  cat("dvalue   =", uwerr$dvalue, "\n")
-  cat("ddvalue  =", uwerr$ddvalue, "\n")
-  cat("tauint   =", uwerr$tauint, "\n")
-  cat("dtauint  =", uwerr$dtauint, "\n")
-  if(uwerr$R>1) {
-    cat("Qval     =", uwerr$Qval, "\n")
+  if(uwerr$primary == 1) {
+    cat("The Gamma function was summed up until Wopt=", uwerr$Wopt, "\n\n")
+    cat("value    =", uwerr$value, "\n")
+    cat("dvalue   =", uwerr$dvalue, "\n")
+    cat("ddvalue  =", uwerr$ddvalue, "\n")
+    cat("tauint   =", uwerr$tauint, "\n")
+    cat("dtauint  =", uwerr$dtauint, "\n")
+    if(uwerr$R>1) {
+      cat("Qval     =", uwerr$Qval, "\n")
+    }
+  }
+  else {
+    cat("The Gamma function was summed up until Wopt=", unlist(uwerr$Wopt), "for the ", length(uwerr$Wopt), "observable(s)\n\n")
+    print(uwerr$res) 
   }
 }
 
-plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE) {
+plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lambda=100) {
   if(x$primary && plot.hist) {
     if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
               X11()
@@ -368,21 +394,37 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE) {
     hist(x$data, main = paste("Histogram of" , main))
   }
   if(!is.null(x$Gamma)) {
-    GammaFbb <- x$Gamma/x$Gamma[1]
-    Gamma.err <- gammaerror(Gamma=GammaFbb, N=x$N , W=x$Wmax, Lambda=100)
+    GammaFbb <- NULL
+    Gamma.err <- NULL
+    Wopt <- numeric()
+    Wmax <- numeric()
+    if(x$primary == 1) {
+      GammaFbb <- x$Gamma/x$Gamma[1]
+      Gamma.err <- gammaerror(Gamma=GammaFbb, N=x$N , W=x$Wmax, Lambda=Lambda)
+      Wopt <- x$Wopt
+      Wmax <- x$Wmax
+    }
+    else {
+      GammaFbb <- x$Gamma[[index]]/x$Gamma[[index]][1]
+      Gamma.err <- gammaerror(Gamma=GammaFbb, N=x$N , W=x$Wmax[[index]], Lambda=Lambda)
+      Wopt <- x$Wopt[[index]]
+      Wmax <- x$Wmax[[index]]
+    }
     if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
               X11()
             }
-    plotwitherror(c(0:x$Wmax),GammaFbb[1:(x$Wmax+1)],
-                  Gamma.err[1:(x$Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
-    abline(v=x$Wopt+1)
+    plotwitherror(x=c(0:Wmax),y=GammaFbb[1:(Wmax+1)],
+                  dy=Gamma.err[1:(Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
+    abline(v=Wopt+1)
     abline(h=0)
   }
   if(x11) if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
             X11()
           }
-  tauintplot(x$tauintofW, x$dtauintofW, x$Wmax, x$Wopt, main=main)  
-  return(invisible(data.frame(t=c(0:x$Wmax),Gamma=GammaFbb[1:(x$Wmax+1)],dGamma=Gamma.err[1:(x$Wmax+1)])))
+
+  if(x$primary == 1) tauintplot(ti=x$tauintofW, dti=x$dtauintofW, Wmax=Wmax, Wopt=Wopt, main=main)  
+  else tauintplot(ti=x$tauintofW[[index]], dti=x$dtauintofW[[index]], Wmax=Wmax, Wopt=Wopt, main=main)  
+  return(invisible(data.frame(t=c(0:Wmax),Gamma=GammaFbb[1:(Wmax+1)],dGamma=Gamma.err[1:(Wmax+1)])))
 }
 
 # compute the error of the autocorrelation function using the approximate formula
