@@ -24,8 +24,7 @@ And last but not least, these are the fields that are used somewhere in the libr
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}}, \code{\link{cf_meta}},
-  \code{\link{cf_orig}},
+  \code{\link{cf_meta}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}}

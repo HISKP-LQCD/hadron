@@ -320,7 +320,7 @@ matrixfit <- function(cf, t1, t2,
     stop("neg.vec does not have the correct length! Aborting\n")
   }
 
-  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, sd))
+  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, cf$error_fn))
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
@@ -353,14 +353,14 @@ matrixfit <- function(cf, t1, t2,
   
   CovMatrix <- NULL
   # we always use the boostrap samples to estimate the covariance matrix 
-  CovMatrix <- cov(cf$cf.tsboot$t[,ii])
+  CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[,ii])
   
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
   M <- diag(1/CF$Err[ii]^2)
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
-    M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=cf$boot.l, boot.samples=TRUE), silent=TRUE)
+    M <- try(invertCovMatrix(cf$cf.tsboot$t[,ii], boot.l=cf$boot.l, boot.samples=TRUE, cov_fn=cf$cov_fn), silent=TRUE)
     if(inherits(M, "try-error")) {
       if( autoproceed ){
         M <- diag(1/CF$Err[ii]^2)
@@ -490,10 +490,10 @@ matrixfit <- function(cf, t1, t2,
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
-              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method)
+              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn)
   res$t <- t(opt.tsboot)
   res$t0 <- c(opt.res$par, opt.res$value)
-  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=sd)
+  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=cf$error_fn)
   attr(res, "class") <- c("matrixfit", "list")
   return(invisible(res))
 }
@@ -561,8 +561,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
     if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
     else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, reference_time=mfit$reference_time)
     else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
-    yp <- rep(1, times=length(tt))
     
+    # yp is the physical exponential in case we want to look at the ratio plot
     if(!plot.raw) {
       if(mfit$model == "shifted") {
         yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(T-(tt-deltat/2))))
@@ -573,6 +573,9 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
       else {
         yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(T-tt)))
       }
+    }
+    else {
+      yp <- rep(1, times=length(tt))
     }
 
     lwd <- c(1.5)
@@ -592,7 +595,7 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
         }        
       }
 
-      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=sd, MARGIN=1)
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=mfit$cf$error_fn, MARGIN=1)
       
       polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
@@ -647,23 +650,23 @@ summary.matrixfit <- function(mfit) {
   cat("\n")
   cat("ground state energy:\n")
   cat("E \t=\t", mfit$t0[1], "\n")
-  cat("dE\t=\t", sd(mfit$t[,1]), "\n")
+  cat("dE\t=\t", mfit$error_fn(mfit$t[,1]), "\n")
   if(mfit$model == "pc") {
     cat("\nFitted Delta E:\n")
     cat("Delta E \t=\t", mfit$t0[2], "\n")
-    cat("dDelta E\t=\t", sd(mfit$t[,2]), "\n")
+    cat("dDelta E\t=\t", mfit$error_fn(mfit$t[,2]), "\n")
     cat("\nThis transltes into a second energy level E2 (be careful with interpretation):\n")
     cat("E2 \t=\t", mfit$t0[2]+mfit$t0[1], "\n")
-    cat("dE2\t=\t", sd(mfit$t[,2]+mfit$t[,1]), "\n")
+    cat("dE2\t=\t", mfit$error_fn(mfit$t[,2]+mfit$t[,1]), "\n")
     cat("Effective Amplitude:\n")
     cat("A\t=\t", mfit$t0[3], "\n")
-    cat("dA\t=\t", sd(mfit$t[,3]), "\n")    
+    cat("dA\t=\t", mfit$error_fn(mfit$t[,3]), "\n")    
   }
   else {
     cat("\nAmplitudes:\n")
     for(i in 2:length(mfit$opt.res$par)) {
       cat("P",i-1,"\t=\t", mfit$t0[i], "\n")
-      cat("dP",i-1,"\t=\t", sd(mfit$t[,i]), "\n")
+      cat("dP",i-1,"\t=\t", mfit$error_fn(mfit$t[,i]), "\n")
     }
   }
   cat("\n")
@@ -683,16 +686,16 @@ summary.matrixfit <- function(mfit) {
     cat("mu2 \t=\t", mfit$mu2, "\n")
     if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
     cat("fps \t=\t", mfit$fps, "\n")
-    cat("dfps\t=\t", sd(mfit$fps.tsboot), "\n")
+    cat("dfps\t=\t", mfit$error_fn(mfit$fps.tsboot), "\n")
   }
   if(any(names(mfit) == "fpsOS")) {
     cat("\nOS Decay Constant (derived quantity):\n")
     if(mfit$normalisation == "cmi") cat("kappa\t=\t", mfit$kappa,"\n")
     cat("fps \t=\t", mfit$fpsOS, "\n")
-    cat("dfps\t=\t", sd(mfit$fpsOS.tsboot), "\n")
+    cat("dfps\t=\t", mfit$error_fn(mfit$fpsOS.tsboot), "\n")
     cat("using\n")
     cat("ZA  \t=\t", mfit$ZA, "\n")
-    cat("dZA \t=\t", sd(mfit$ZAboot), "\n")
+    cat("dZA \t=\t", mfit$error_fn(mfit$ZAboot), "\n")
   }
 }
 
