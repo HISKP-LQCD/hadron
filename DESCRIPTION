@@ -15,7 +15,11 @@ Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: package to extract hadronic quantities from Lattice QCD simulations
 Depends: boot
-Suggests: tikzDevice, minpack.lm, parallel
+Suggests: 
+    tikzDevice,
+    minpack.lm,
+    parallel,
+    testthat
 License: GPL 3 or later
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
