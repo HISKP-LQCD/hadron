@@ -225,12 +225,8 @@ new_matrixfit <- function(cf,
       cf$n_particles
   }
 
-  # we always use the boostrap samples to estimate the covariance matrix
-  CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
-
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
-  M <- diag(1 / CF$Err[ii]^2)
-  if(useCov) {
+  if (useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
     ## see C. Michael hep-lat/9412087
     M <- try(invertCovMatrix(cf$cf.tsboot$t[, ii], boot.l = cf$boot.l, boot.samples = TRUE, cov_fn = cf$cov_fn), silent = TRUE)
@@ -243,6 +239,8 @@ new_matrixfit <- function(cf,
         stop("[matrixfit] inversion of variance covariance matrix failed!")
       }
     }
+  } else {
+    M <- diag(1 / CF$Err[ii]^2)
   }
 
   par <- numeric(max(parind))
@@ -316,7 +314,7 @@ new_matrixfit <- function(cf,
     opt.tsboot[c(1:2),] <- abs(opt.tsboot[c(1:2),])
   }
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
-              boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
+              boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
               parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn)
   res$t <- t(opt.tsboot)
