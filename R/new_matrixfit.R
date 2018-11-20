@@ -225,24 +225,6 @@ new_matrixfit <- function(cf,
       cf$n_particles
   }
 
-  ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
-  if (useCov) {
-    ## compute correlation matrix and compute the correctly normalised inverse
-    ## see C. Michael hep-lat/9412087
-    M <- try(invertCovMatrix(cf$cf.tsboot$t[, ii], boot.l = cf$boot.l, boot.samples = TRUE, cov_fn = cf$cov_fn), silent = TRUE)
-    if (inherits(M, "try-error")) {
-      if (autoproceed) {
-        M <- diag(1/CF$Err[ii]^2)
-        warning("[matrixfit] inversion of variance covariance matrix failed, continuing with uncorrelated chi^2")
-        useCov <- FALSE
-      } else {
-        stop("[matrixfit] inversion of variance covariance matrix failed!")
-      }
-    }
-  } else {
-    M <- diag(1 / CF$Err[ii]^2)
-  }
-
   par <- numeric(max(parind))
   ## we get initial guesses for fit parameters from effective masses
   ## first is the mass
@@ -272,11 +254,17 @@ new_matrixfit <- function(cf,
     }
   }
 
-  bootstrap.nlsfit(fn = model_object$prediction,
-                   par.guess = par,
-                   y = CF$Cor[ii],
-                   x = CF$t[ii],
-                   bsamples = cf$cf.tsboot$t[, ii],
-                   use.minpack.lm = fit.method == 'lm',
-                   error = cf$error_fn)
+  args <- list(fn = model_object$prediction,
+               par.guess = par,
+               y = CF$Cor[ii],
+               x = CF$t[ii],
+               bsamples = cf$cf.tsboot$t[, ii],
+               use.minpack.lm = fit.method == 'lm',
+               error = cf$error_fn)
+
+  if (useCov) {
+    args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
+  }
+
+  do.call(bootstrap.nlsfit, args)
 }
