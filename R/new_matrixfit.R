@@ -14,7 +14,8 @@ Model <- R6Class(
 
 SingleModel <- R6Class(
     'SingleModel',
-    list(
+    inherit = Model,
+    public = list(
         initialize = function (time_extent, parind, sign_vec, ov_sign_vec) {
             self$time_extent <- time_extent
             self$parind <- parind
@@ -50,7 +51,7 @@ SingleModel <- R6Class(
             return (res)
         }
     ),
-    list(
+    private = list(
         time_extent = NA,
         parind = NA,
         sign_vec = NA,
@@ -60,7 +61,8 @@ SingleModel <- R6Class(
 
 Phi4Model <- R6Class(
     'Phi4Model',
-    list(
+    inherit = Model,
+    public = list(
         initialize = function (time_extent, sign_vec, ov_sign_vec, n_particle) {
             self$time_extent <- time_extent
             self$sign_vec <- sign_vec
@@ -71,7 +73,7 @@ Phi4Model <- R6Class(
             return (10 + self$n_particle)
         }
     ),
-    list(
+    private = list(
         time_extent = NA,
         sign_vec = NA,
         ov_sign_vec = NA,
