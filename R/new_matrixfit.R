@@ -181,7 +181,7 @@ new_matrixfit <- function(cf,
     stop("neg.vec does not have the correct length! Aborting\n")
   }
 
-  CF <- data.frame(t=t, Cor=cf$cf0, Err=apply(cf$cf.tsboot$t, 2, cf$error_fn))
+  CF <- data.frame(t = t, Cor = cf$cf0, Err = apply(cf$cf.tsboot$t, 2, cf$error_fn))
 
   ## index vector for timeslices to be fitted
   ii <- c((t1p1):(t2p1))
@@ -272,54 +272,11 @@ new_matrixfit <- function(cf,
     }
   }
 
-  ## check out constrOptim
-  ## now perform minimisation
-  dof <- (length(CF$t[ii])-length(par))
-  opt.res <- NA
-  rchisqr <- 0.
-  if(lm.avail) {
-    opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
-                      parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], reference_time=reference_time,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
-    if( !(opt.res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
-    }
-    rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
-  }
-  else {
-    opt.res <- optim(par, fn = fitfn, gr = dfitfn,
-                     method="BFGS", control=list(maxit=500, parscale=par, ndeps=rep(1.e-8, times=length(par)), REPORT=50),
-                     t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], reference_time=reference_time,
-                     ov.sign.vec=ov.sign.vec[ii], deltat=deltat)
-    rchisqr <- opt.res$value
-  }
-  Qval <- 1-pchisq(rchisqr, dof)
-  ## we use absolute values in the fit model
-  ## better remove any signs then here!
-  if(pcmodel) {
-    opt.res$par[1:2] <- abs(opt.res$par[1:2])
-  }
-
-  opt.tsboot <- NA
-  if(boot.fit) {
-    opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii], deltat=deltat,
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii],
-                        L=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn, reference_time=reference_time)
-  }
-  N <- length(cf$cf[,1])
-  if(is.null(cf$cf)) {
-    N <- cf$N
-  }
-  if(pcmodel) {
-    opt.tsboot[c(1:2),] <- abs(opt.tsboot[c(1:2),])
-  }
-  res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
-              boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, invCovMatrix=M, seed=cf$seed,
-              Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
-              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn)
-  res$t <- t(opt.tsboot)
-  res$t0 <- c(opt.res$par, opt.res$value)
-  res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=cf$error_fn)
-  attr(res, "class") <- c("matrixfit", "list")
-  return(invisible(res))
+  bootstrap.nlsfit(fn = model_object$prediction,
+                   par.guess = par,
+                   y = CF$Cor[ii],
+                   x = CF$t[ii],
+                   bsamples = cf$cf.tsboot$t[, ii],
+                   use.minpack.lm = fit.method == 'lm',
+                   error = cf$error_fn)
 }
