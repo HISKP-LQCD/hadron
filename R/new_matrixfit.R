@@ -28,26 +28,26 @@ SingleModel <- R6Class(
         },
         prediction_gradient = function (par, t) {
             ## Derivative with respect to the mass, `par[1]`.
-            zp <- -self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] * 
+            zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
                 (-t * exp(-par[1] * t) -
                      (self$time_extent-t) * self$sign_vec * exp(-par[1] * (self$time_extent-t)))
-            res <- L %*% zp
-            
+            res <- zp
+
             ## Derivatives with respect to the amplitudes.
             for (i in 2:length(par)) {
                 zp1 <- rep(0, length(zp))
                 j <- which(parind[, 1] == i)
                 zp1[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 2]] *
                     (exp(-par[1] * t[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-t[j])))
-                
+
                 zp2 <- rep(0, length(zp))
                 j <- which(parind[, 2] == i)
                 zp2[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 1]] *
                     (exp(-par[1] * t[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-t[j])))
-                
-                res <- c(res, L %*% (zp1 + zp2))
+
+                res <- c(res, zp1 + zp2)
             }
-            
+
             return (res)
         }
     ),
@@ -94,26 +94,26 @@ new_matrixfit <- function(cf,
                           every) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-  
+
   if(model == 'pc') {
     stopifnot(inherits(cf, 'cf_principal_correlator'))
   }
-  
+
   stopifnot(cf$symmetrised == TRUE)
 
   t1p1 <- t1 + 1
   t2p1 <- t2 + 1
-  
+
   N <- dim(cf$cf)[1]
   Thalfp1 <- cf$Time/2 + 1
   t <- c(0:(cf$Time/2))
-  
+
   ## This is the number of correlators in cf
   if(!is.null(dim(cf$cf)))
     mSize <- dim(cf$cf)[2] / Thalfp1
   else
     mSize <- dim(cf$cf.tsboot$t)[2] / Thalfp1
-  
+
   if (model == 'pc' && mSize != 1) {
     stop('For model pc only a 1x1 matrix is allowed.')
   }
@@ -150,7 +150,7 @@ new_matrixfit <- function(cf,
     if (mSize == 1) {
       neg.vec <- c(1)
       warning("missing neg.vec, using default (correlator positive)!")
-    } 
+    }
     else if (mSize == 4) {
       neg.vec <- c(1, 1, 1, 1)
       warning("missing neg.vec, using default (all correlators positive)!")
@@ -169,7 +169,7 @@ new_matrixfit <- function(cf,
       stop("not all parameters are used in the fit!")
     }
   }
-  
+
   if (dim(parlist)[2] != mSize) {
     cat(mSize, dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
@@ -198,10 +198,10 @@ new_matrixfit <- function(cf,
   if (!missing(every)) {
     ii <- ii[ii %% every == 0]
   }
-  
+
   ## parind is the index vector for the matrix elements
   ## signvec decides on cosh or sinh
-  ## ov.sign.vec indicates the overall sign 
+  ## ov.sign.vec indicates the overall sign
   parind <- array(1, dim = c(length(CF$Cor), 2))
   sign.vec <- rep(1, times = length(CF$Cor))
   ov.sign.vec <- rep(1, times = length(CF$Cor))
@@ -214,7 +214,7 @@ new_matrixfit <- function(cf,
     if (neg.vec[i] == -1)
         ov.sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
   }
-  
+
   if (model == 'single') {
       model_object <- SingleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
   } else if (model == 'shifted') {
@@ -224,10 +224,10 @@ new_matrixfit <- function(cf,
   } else if (model == 'n_particles') {
       cf$n_particles
   }
-  
-  # we always use the boostrap samples to estimate the covariance matrix 
+
+  # we always use the boostrap samples to estimate the covariance matrix
   CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
-  
+
   ## for uncorrelated chi^2 use diagonal matrix with inverse sd^2
   M <- diag(1 / CF$Err[ii]^2)
   if(useCov) {
@@ -273,7 +273,7 @@ new_matrixfit <- function(cf,
       par[i] <- sqrt(abs(CF$Cor[t1p1+(j-1)*Thalfp1])/0.5/exp(-par[1]*t1))
     }
   }
-  
+
   ## check out constrOptim
   ## now perform minimisation
   dof <- (length(CF$t[ii])-length(par))
@@ -301,7 +301,7 @@ new_matrixfit <- function(cf,
   if(pcmodel) {
     opt.res$par[1:2] <- abs(opt.res$par[1:2])
   }
-  
+
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii], deltat=deltat,
