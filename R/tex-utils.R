@@ -57,3 +57,10 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
   return(ret)
 }
+
+escape_underscore <- function(x){
+  gsub(pattern="_",
+       replacement="\\_",
+       x=x,
+       fixed=TRUE)
+}
