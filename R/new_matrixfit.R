@@ -257,7 +257,7 @@ new_matrixfit <- function(cf,
   }
 
   args <- list(fn = model_object$prediction,
-               par.guess = model_object$initial_guess(CF$Cor)
+               par.guess = model_object$initial_guess(CF$Cor),
                y = CF$Cor[ii],
                x = CF$t[ii],
                bsamples = cf$cf.tsboot$t[, ii],
