@@ -84,12 +84,12 @@ TwoStateModel <- R6Class(
       par = numeric(3)
 
       ## the ground state energy
-      par[1] <- log(corr[reference_time+1]/corr[reference_time+2])
+      par[1] <- log(corr[self$reference_time+1]/corr[self$reference_time+2])
       ## the deltaE
-      par[2] <- log(corr[reference_time+1]/corr[reference_time+2]) - par[1]
-      par[2] <- 1.
+      par[2] <- log(corr[self$reference_time+1]/corr[self$reference_time+2]) - par[1]
+      par[2] <- 1.0
       ## the amplitude
-      par[3] <- 1.
+      par[3] <- 1.0
 
       return (par)
     }
