@@ -371,11 +371,13 @@ bootstrap.nlsfit <- function(fn,
       suppressWarnings(
         res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
                       control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500)))
-
-      list(converged = res$info %in% 1:3,
+      
+      ret <- list(converged = res$info %in% 1:3,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
+      
+      return (ret)
     }
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
@@ -390,7 +392,8 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
+  first.res <- wrapper(Y, par.Guess)
+  stopifnot(!is.null(first.res$par))
 
   if (parallel)
     my.lapply <- mclapply
