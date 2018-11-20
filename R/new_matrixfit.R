@@ -33,7 +33,11 @@ MatrixModel <- R6Class(
       }
 
       return (par)
-    }
+    },
+    time_extent = NA,
+    parind = NA,
+    sign_vec = NA,
+    ov_sign_vec = NA
   )
 )
 
@@ -92,7 +96,8 @@ TwoStateModel <- R6Class(
       par[3] <- 1.0
 
       return (par)
-    }
+    },
+    reference_time = NA
   )
 )
 
@@ -106,7 +111,8 @@ Phi4Model <- R6Class(
     },
     prediction = function (par, t) {
       return (10 + self$n_particle)
-    }
+    },
+    n_particle = NA
   ),
 )
 
