@@ -260,7 +260,8 @@ new_matrixfit <- function(cf,
                x = CF$t[ii],
                bsamples = cf$cf.tsboot$t[, ii],
                use.minpack.lm = fit.method == 'lm',
-               error = cf$error_fn)
+               error = cf$error_fn,
+               cov_fn = cf$cov_fn)
 
   if (useCov) {
     args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
