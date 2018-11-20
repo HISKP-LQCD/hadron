@@ -9,16 +9,20 @@ MatrixModel <- R6Class(
       self$sign_vec <- sign_vec
       self$ov_sign_vec <- ov_sign_vec
     },
-    prediction = function (par, t) {
+    prediction = function (par, x) {
       stop('This is an abstract function.')
     },
-    prediction_jacobian = function (par, t) {
+    prediction_jacobian = function (par, x) {
       stop('This is an abstract function.')
     },
-    initial_guess = function (corr) {
+    initial_guess = function (corr, parlist, t1, t2) {
+      t1p1 <- t1 + 1
+      t2p1 <- t2 + 1
+      Thalfp1 <- self$time_extent / 2 + 1
+      
       par <- numeric(max(self$parind))
       j <- which(parlist[1, ] == 1 & parlist[2, ] == 1)
-      par[1] <- invcosh(corr[t1p1 + (j-1) * Thalfp1] / CF$Cor[t1p1 + (j-1) * Thalfp1 + 1], t = t1p1, cf$T)
+      par[1] <- invcosh(corr[t1p1 + (j-1) * Thalfp1] / corr[t1p1 + (j-1) * Thalfp1 + 1], t = t1p1, self$time_extent)
       ## catch failure of invcosh
       if(is.na(par[1]) || is.nan(par[1]))
         par[1] <- 0.2
@@ -45,15 +49,15 @@ SingleModel <- R6Class(
   'SingleModel',
   inherit = MatrixModel,
   public = list(
-    prediction = function (par, t) {
+    prediction = function (par, x) {
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (exp(-par[1] * t) + self$sign_vec * exp(-par[1] * (self$time_extent - t)))
+        (exp(-par[1] * x) + self$sign_vec * exp(-par[1] * (self$time_extent - x)))
     },
-    prediction_gradient = function (par, t) {
+    prediction_gradient = function (par, x) {
       ## Derivative with respect to the mass, `par[1]`.
       zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
-        (-t * exp(-par[1] * t) -
-           (self$time_extent-t) * self$sign_vec * exp(-par[1] * (self$time_extent-t)))
+        (-t * exp(-par[1] * x) -
+           (self$time_extent-x) * self$sign_vec * exp(-par[1] * (self$time_extent-x)))
       res <- zp
       
       ## Derivatives with respect to the amplitudes.
@@ -61,12 +65,12 @@ SingleModel <- R6Class(
         zp1 <- rep(0, length(zp))
         j <- which(parind[, 1] == i)
         zp1[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 2]] *
-          (exp(-par[1] * t[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-t[j])))
+          (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         zp2 <- rep(0, length(zp))
         j <- which(parind[, 2] == i)
         zp2[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 1]] *
-          (exp(-par[1] * t[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-t[j])))
+          (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         res <- c(res, zp1 + zp2)
       }
@@ -84,7 +88,7 @@ TwoStateModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$reference_time <- reference_time
     },
-    initial_guess = function (corr) {
+    initial_guess = function (corr, parlist, t1, t2) {
       par = numeric(3)
 
       ## the ground state energy
@@ -109,7 +113,7 @@ Phi4Model <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$n_particle <- n_particle
     },
-    prediction = function (par, t) {
+    prediction = function (par, x) {
       return (10 + self$n_particle)
     },
     n_particle = NA
@@ -263,7 +267,7 @@ new_matrixfit <- function(cf,
   }
 
   args <- list(fn = model_object$prediction,
-               par.guess = model_object$initial_guess(CF$Cor),
+               par.guess = model_object$initial_guess(CF$Cor, parlist, t1, t2),
                y = CF$Cor[ii],
                x = CF$t[ii],
                bsamples = cf$cf.tsboot$t[, ii],
