@@ -256,10 +256,8 @@ new_matrixfit <- function(cf,
     cf$n_particles
   }
 
-  par <- model_object$initial_guess(CF$Cor)
-  
   args <- list(fn = model_object$prediction,
-               par.guess = par,
+               par.guess = model_object$initial_guess(CF$Cor)
                y = CF$Cor[ii],
                x = CF$t[ii],
                bsamples = cf$cf.tsboot$t[, ii],
