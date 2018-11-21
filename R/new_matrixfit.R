@@ -12,7 +12,7 @@ MatrixModel <- R6Class(
     prediction = function (par, x) {
       stop('MatrixModel$prediction is an abstract function.')
     },
-    prediction_jacobian = function (par, x) {
+    prediction_jacobian = function (par, x, ...) {
       stop('MatrixModel$prediction_jacobian is an abstract function.')
     },
     initial_guess = function (corr, parlist, t1, t2) {
@@ -56,9 +56,9 @@ SingleModel <- R6Class(
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * x) + self$sign_vec * exp(-par[1] * (self$time_extent - x)))
     },
-    prediction_gradient = function (par, x) {
+    prediction_jacobian = function (par, x, ...) {
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (-x * exp(-par[1] * x) -
            (self$time_extent-x) * self$sign_vec * exp(-par[1] * (self$time_extent-x)))
       res <- zp
@@ -66,13 +66,13 @@ SingleModel <- R6Class(
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
         zp1 <- rep(0, length(zp))
-        j <- which(parind[, 1] == i)
-        zp1[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 2]] *
+        j <- which(self$parind[, 1] == i)
+        zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
           (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         zp2 <- rep(0, length(zp))
-        j <- which(parind[, 2] == i)
-        zp2[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 1]] *
+        j <- which(self$parind[, 2] == i)
+        zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
           (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         res <- c(res, zp1 + zp2)
@@ -95,9 +95,9 @@ ShiftedModel <- R6Class(
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
     },
-    prediction_gradient = function (par, x) {
+    prediction_jacobian = function (par, x, ...) {
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (-(x - self$delta_t/2) * exp(-par[1] * (x - self$delta_t/2)) -
            (self$time_extent - (x - self$delta_t/2)) * self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
       res <- zp
@@ -105,13 +105,13 @@ ShiftedModel <- R6Class(
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
         zp1 <- rep(0, length(zp))
-        j <- which(parind[, 1] == i)
-        zp1[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 2]] *
+        j <- which(self$parind[, 1] == i)
+        zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
           (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
         
         zp2 <- rep(0, length(zp))
-        j <- which(parind[, 2] == i)
-        zp2[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 1]] *
+        j <- which(self$parind[, 2] == i)
+        zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
           (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
         
         res <- c(res, zp1 + zp2)
@@ -135,13 +135,13 @@ TwoStateModel <- R6Class(
       xx <- x - self$reference_time
       exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-(abs(par[2])) * xx))
     },
-    prediction_gradient = function (par, x) {
-      xx <- t - self$reference_time
+    prediction_jacobian = function (par, x, ...) {
+      xx <- x - self$reference_time
       
-      res <- array(0.0, dim = c(length(par), length(x)))
-      res[1, ] <- -xx * exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-abs(par[2]) * xx))
-      res[2, ] <- -exp(-abs(par[1]) * xx) * (1 - par[3]) * xx * exp(-abs(par[2]) * xx)
-      res[3, ] <- exp(-abs(par[1]) * xx) * (1 - exp(-abs(par[2]) * xx))
+      res <- array(0.0, dim = c(length(x), length(par)))
+      res[, 1] <- -xx * exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-abs(par[2]) * xx))
+      res[, 2] <- -exp(-abs(par[1]) * xx) * (1 - par[3]) * xx * exp(-abs(par[2]) * xx)
+      res[, 3] <- exp(-abs(par[1]) * xx) * (1 - exp(-abs(par[2]) * xx))
       return(res)
     },
     initial_guess = function (corr, parlist, t1, t2) {
@@ -335,6 +335,7 @@ new_matrixfit <- function(cf,
   par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
 
   args <- list(fn = model_object$prediction,
+               gr = model_object$prediction_jacobian,
                par.guess = par.guess,
                y = CF$Cor[ii],
                x = CF$t[ii],
