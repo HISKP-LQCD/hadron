@@ -91,33 +91,76 @@ ShiftedModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$delta_t <- delta_t
     },
+    
     prediction = function (par, x) {
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
     },
+    
     prediction_jacobian = function (par, x, ...) {
+      xx <- x - self$delta_t/2
+      
+      res <- matrix(0.0, nrow = length(x), ncol = length(par))
+      
       ## Derivative with respect to the mass, `par[1]`.
       zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (-(x - self$delta_t/2) * exp(-par[1] * (x - self$delta_t/2)) -
-           (self$time_extent - (x - self$delta_t/2)) * self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
-      res <- zp
+        (-xx * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
+           exp(-par[1] * (self$time_extent - xx)))
+      stopifnot(length(zp) == nrow(res))
+      res[, 1] <- zp
       
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
-        zp1 <- rep(0, length(zp))
-        j <- which(self$parind[, 1] == i)
-        zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
-          (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+          #zp1 <- rep(0, length(zp))
+          j <- which(self$parind[, 1] == i)
+          zp1 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
+            (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
+            exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
         
-        zp2 <- rep(0, length(zp))
-        j <- which(self$parind[, 2] == i)
-        zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
-          (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+          #zp2 <- rep(0, length(zp))
+          j <- which(self$parind[, 2] == i)
+          zp2 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
+            (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
+            exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+          
+          stopifnot(length(zp1) == nrow(res))
+          stopifnot(length(zp2) == nrow(res))
         
-        res <- c(res, zp1 + zp2)
+          res[, i] <- (zp1 + zp2)
       }
       
       return (res)
+      
+      
+      
+      
+        
+        
+        
+        
+      
+      ## Derivative with respect to the mass, `par[1]`.
+      #zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
+      #  (-(x - self$delta_t/2) * exp(-par[1] * (x - self$delta_t/2)) -
+      #     (self$time_extent - (x - self$delta_t/2)) * self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
+      #res <- zp
+      
+      ## Derivatives with respect to the amplitudes.
+      #for (i in 2:length(par)) {
+      #  zp1 <- rep(0, length(zp))
+      #  j <- which(self$parind[, 1] == i)
+      #  zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
+      #    (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+        
+      #  zp2 <- rep(0, length(zp))
+      #  j <- which(self$parind[, 2] == i)
+      #  zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
+      #    (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+        
+      #  res <- c(res, zp1 + zp2)
+      #}
+      
+      #return (res)
     },
     delta_t = NA
   )
@@ -306,19 +349,20 @@ new_matrixfit <- function(cf,
   ## parind is the index vector for the matrix elements
   ## signvec decides on cosh or sinh
   ## ov.sign.vec indicates the overall sign
-  parind <- array(1, dim = c(length(CF$Cor), 2))
-  sign.vec <- rep(1, times = length(CF$Cor))
-  ov.sign.vec <- rep(1, times = length(CF$Cor))
+  len_t <- length(t1:t2)
+  parind <- array(1, dim = c(len_t, 2))
+  sign.vec <- rep(1, times = len_t)
+  ov.sign.vec <- rep(1, times = len_t)
   for (i in 1:mSize) {
-    parind[((i-1)*Thalfp1+1):(i*Thalfp1),] <- t(array(parlist[,i]+1, dim=c(2,Thalfp1)))
+    parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
 
     if (sym.vec[i] == "sinh")
-      sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
+      sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
     else if (sym.vec[i] == "exp")
-      sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- 0
+      sign.vec[((i-1)*len_t+1):(i*len_t)] <- 0
 
     if (neg.vec[i] == -1)
-      ov.sign.vec[((i-1)*Thalfp1+1):(i*Thalfp1)] <- -1
+      ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
   }
   
   if (model == 'single') {
