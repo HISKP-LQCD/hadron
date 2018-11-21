@@ -322,6 +322,93 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return (invisible(cf))
 }
 
+readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,
+                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE, spinstructures=c("P5P5"),nmasses=16,nmasses1=c(0),nmasses2=c(0),r1=c(0),r2=c(0)) {
+  stopifnot(!missing(file))
+  stopifnot(T >= 1)
+  require(Rcpp)
+  sourceCpp("src/read_nissa_correlation.cpp")
+
+  tmp <- reading_nissa_corr(spinstructures,
+                            configinit,
+                            confnumber,
+                            confsteps,
+                            T,
+                            directory,
+                            nsmearing,
+                            nmasses,
+                            nmasses1,
+                            nmasses2,
+                            r1,
+                            r2); 
+
+  if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
+    stop("T in function call does not match the one in the file, aborting...\n")
+  }
+
+
+  i1 <- rep(c(2:(T/2)),ncol(tmp)/(2*T))+ rep(seq(0,ncol(tmp)/2,T),each=length(c(2:T/2)))
+  i2 <- c(T:(T/2+2))
+  ii <- c(1:(T/2+1))
+  sign <- +1
+  if(!sym) sign <- -1
+
+  if( (sparsity > 1 | avg > 1) & (nrow(tmp) %% (sparsity*avg) != 0) ){
+    if(autotruncate){
+      cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,nrow(tmp)))
+      cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      cat("readtextcf: Reducing the number of total measurements to fit!\n")
+      nmeas <- as.integer( (sparsity*avg)*floor( nrow(tmp)/(sparsity*avg) ))
+      if( nmeas/(sparsity*avg) >= Nmin ){
+        tmp <- tmp[1:nmeas,]
+      } else {
+        cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        sparsity <- 1
+        avg <- 1
+      }
+    } else {
+      stop("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+    }
+  }
+
+  ## sparsify data
+  if(sparsity > 1){
+    sp.idx <- seq(from=1,to=nrow(tmp),by=sparsity)
+    tmp <- tmp[sp.idx,]
+  }
+  # average over 'avg' measurements sequentially
+  if(avg > 1){
+    tmp2 <- tmp
+    tmp <- array(0, dim=c(nrow(tmp2)/avg),ncol(tmp))
+    for( i in c(1:nrow(tmp)) ){
+      tmp[i,] <- (1.0/avg)*apply(X=tmp2[((i-1)*avg+1):(i*avg),],
+                                 MARGIN=2,
+                                 FUN=sum)
+    }
+  }
+
+  rcft <- tmp[,seq(1, ncol(tt), 2)]
+  icft <- tmp[,seq(1, ncol(tt), 2)]
+  ## average +-t
+
+  i1 <- rep(c(2:(T/2))  ,ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(2:32)))
+  i2 <- rep(c(T:(T/2+2)),ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(T:(T/2+2))))
+  ii <- rep(c(1:(T/2+1)),ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(1:(T/2+1))))
+
+  if(symmetrise) {
+    tmp[,i1] <- 0.5*(tmp[,i1] + sign * tmp[,i2])
+  }else{
+    ii <- c(1:T)
+  }
+
+  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  cf <- cf_orig(cf, cf = rcft[,ii], icf = icft[,ii])
+
+
+  return (invisible(cf))
+}
+
+
 readbinarycf <- function(files, 
                          T, 
                          obs=5, 
