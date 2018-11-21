@@ -38,6 +38,9 @@ MatrixModel <- R6Class(
 
       return (par)
     },
+    post_process_par = function (par) {
+      par
+    },
     time_extent = NA,
     parind = NA,
     sign_vec = NA,
@@ -136,22 +139,30 @@ TwoStateModel <- R6Class(
       xx <- t - self$reference_time
       
       res <- array(0.0, dim = c(length(par), length(x)))
-      res[1, ] <- -xx * exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-par[2] * xx))
-      res[2, ] <- -exp(-par[1] * xx) * (1 - par[3]) * xx * exp(-par[2] * xx)
-      res[3, ] <- exp(-par[1] * xx) * (1 - exp(-par[2] * xx))
+      res[1, ] <- -xx * exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-abs(par[2]) * xx))
+      res[2, ] <- -exp(-abs(par[1]) * xx) * (1 - par[3]) * xx * exp(-abs(par[2]) * xx)
+      res[3, ] <- exp(-abs(par[1]) * xx) * (1 - exp(-abs(par[2]) * xx))
       return(res)
     },
     initial_guess = function (corr, parlist, t1, t2) {
       par = numeric(3)
 
       ## the ground state energy
-      par[1] <- log(corr[self$reference_time+1]/corr[self$reference_time+2])
+      par[1] <- log(corr[self$reference_time + 1] / corr[self$reference_time + 2])
       ## the deltaE
-      par[2] <- log(corr[self$reference_time+1]/corr[self$reference_time+2]) - par[1]
+      par[2] <- log(corr[self$reference_time + 1] / corr[self$reference_time + 2]) - par[1]
       par[2] <- 1.0
       ## the amplitude
       par[3] <- 1.0
 
+      return (par)
+    },
+    post_process_par = function (par) {
+      ## The energy and energy difference parameter enters the model only in its
+      ## absolute value, therefore it can become negative. We need to fix that
+      ## here.
+      par[1] <- abs(par[1])
+      par[2] <- abs(par[2])
       return (par)
     },
     reference_time = NA
@@ -335,5 +346,15 @@ new_matrixfit <- function(cf,
     args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
   }
   
-  do.call(bootstrap.nlsfit, args)
+  res <- do.call(bootstrap.nlsfit, args)
+  
+  ## Some fit models have parameters in the absolute value. This means that in
+  ## `res` they can be negative and we need to let the model fix that.
+  res$t0 <- model_object$post_process_par(res$t0)
+  
+  old_dim = dim(res$t)
+  res$t <- t(apply(res$t, 1, model_object$post_process_par))
+  stopifnot(all(old_dim == dim(res$t)))
+  
+  return (res)
 }
