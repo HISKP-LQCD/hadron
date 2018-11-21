@@ -1,6 +1,5 @@
 context('new_matrixfit')
 
-
 test_that('SimpleModel', {
   samplecf_boot <- bootstrap.cf(samplecf, 100)
   
