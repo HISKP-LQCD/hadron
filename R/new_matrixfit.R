@@ -324,6 +324,7 @@ new_matrixfit <- function(cf,
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
   } else if (model == 'shifted') {
+    stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
   } else if (model == 'pc') {
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)

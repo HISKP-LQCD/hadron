@@ -18,11 +18,11 @@ test_that('SimpleModel', {
 })
 
 test_that('ShiftedModel', {
-  samplecf_shited <- hadron::shift.cf(samplecf, 1)
+  samplecf_shited <- takeTimeDiff.cf(samplecf, 1)
   samplecf_boot <- bootstrap.cf(samplecf_shited, 100)
   
-  fit_old <- matrixfit(samplecf_boot, 10, 15, model = 'shifted', fit.method = 'lm')
-  fit_new <- new_matrixfit(samplecf_boot, 10, 15, model = 'shifted', fit.method = 'lm')
+  fit_old <- matrixfit(samplecf_boot, 5, 10, model = 'shifted', fit.method = 'lm', sym.vec = 'sinh')
+  fit_new <- new_matrixfit(samplecf_boot, 5, 10, model = 'shifted', fit.method = 'lm', sym.vec = 'sinh')
   
   expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-4)
   
