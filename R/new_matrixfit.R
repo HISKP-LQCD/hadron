@@ -10,10 +10,10 @@ MatrixModel <- R6Class(
       self$ov_sign_vec <- ov_sign_vec
     },
     prediction = function (par, x) {
-      stop('This is an abstract function.')
+      stop('MatrixModel$prediction is an abstract function.')
     },
     prediction_jacobian = function (par, x) {
-      stop('This is an abstract function.')
+      stop('MatrixModel$prediction_jacobian is an abstract function.')
     },
     initial_guess = function (corr, parlist, t1, t2) {
       t1p1 <- t1 + 1
@@ -56,7 +56,7 @@ SingleModel <- R6Class(
     prediction_gradient = function (par, x) {
       ## Derivative with respect to the mass, `par[1]`.
       zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
-        (-t * exp(-par[1] * x) -
+        (-x * exp(-par[1] * x) -
            (self$time_extent-x) * self$sign_vec * exp(-par[1] * (self$time_extent-x)))
       res <- zp
       
@@ -80,6 +80,46 @@ SingleModel <- R6Class(
   )
 )
 
+ShiftedModel <- R6Class(
+  'ShiftedModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t) {
+      super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
+      self$delta_t <- delta_t
+    },
+    prediction = function (par, x) {
+      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
+        (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
+    },
+    prediction_gradient = function (par, x) {
+      ## Derivative with respect to the mass, `par[1]`.
+      zp <- self$ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+        (-(x - self$delta_t/2) * exp(-par[1] * (x - self$delta_t/2)) -
+           (self$time_extent - (x - self$delta_t/2)) * self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
+      res <- zp
+      
+      ## Derivatives with respect to the amplitudes.
+      for (i in 2:length(par)) {
+        zp1 <- rep(0, length(zp))
+        j <- which(parind[, 1] == i)
+        zp1[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 2]] *
+          (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+        
+        zp2 <- rep(0, length(zp))
+        j <- which(parind[, 2] == i)
+        zp2[j] <- -self$ov_sign_vec * 0.5 * par[parind[j, 1]] *
+          (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+        
+        res <- c(res, zp1 + zp2)
+      }
+      
+      return (res)
+    },
+    delta_t = NA
+  )
+)
+
 TwoStateModel <- R6Class(
   'TwoStateModel',
   inherit = MatrixModel,
@@ -87,6 +127,19 @@ TwoStateModel <- R6Class(
     initialize = function (time_extent, parind, sign_vec, ov_sign_vec, reference_time) {
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$reference_time <- reference_time
+    },
+    prediction = function (par, x) {
+      xx <- x - self$reference_time
+      exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-(abs(par[2])) * xx))
+    },
+    prediction_gradient = function (par, x) {
+      xx <- t - self$reference_time
+      
+      res <- array(0.0, dim = c(length(par), length(x)))
+      res[1, ] <- -xx * exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-par[2] * xx))
+      res[2, ] <- -exp(-par[1] * xx) * (1 - par[3]) * xx * exp(-par[2] * xx)
+      res[3, ] <- exp(-par[1] * xx) * (1 - exp(-par[2] * xx))
+      return(res)
     },
     initial_guess = function (corr, parlist, t1, t2) {
       par = numeric(3)
@@ -120,6 +173,7 @@ Phi4Model <- R6Class(
   ),
 )
 
+#' @export
 new_matrixfit <- function(cf,
                           t1, t2,
                           parlist,
@@ -134,7 +188,7 @@ new_matrixfit <- function(cf,
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
-  if(model == 'pc') {
+  if (model == 'pc') {
     stopifnot(inherits(cf, 'cf_principal_correlator'))
   }
   
@@ -148,7 +202,7 @@ new_matrixfit <- function(cf,
   t <- c(0:(cf$Time/2))
   
   ## This is the number of correlators in cf
-  if(!is.null(dim(cf$cf)))
+  if (!is.null(dim(cf$cf)))
     mSize <- dim(cf$cf)[2] / Thalfp1
   else
     mSize <- dim(cf$cf.tsboot$t)[2] / Thalfp1
@@ -231,7 +285,7 @@ new_matrixfit <- function(cf,
   }
   ## for the pc model we have to remove timeslice reference_time, where the error is zero
   if (model == 'pc') {
-    ii <- ii[ii != (reference_time+1)]
+    ii <- ii[ii != (cf$gevp_reference_time + 1)]
   }
   ## use only a part of the time slices for better conditioned cov-matrix
   if (!missing(every)) {
@@ -259,11 +313,11 @@ new_matrixfit <- function(cf,
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
   } else if (model == 'shifted') {
-    cf$deltat
+    model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
   } else if (model == 'pc') {
-    cf$gevp_reference_time
+    model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
-    cf$n_particles
+    model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$n_particles)
   }
   
   par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)

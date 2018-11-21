@@ -35,8 +35,9 @@ test_that('ShiftedModel', {
 })
 
 test_that('TwoStateModel', {
-  samplecf_boot <- bootstrap.cf(samplecf, 100)
-  gevp <- bootstrap.gevp(samplecf_boot, t0 = 13, element.order = 1:4)
+  samplecf_boot <- bootstrap.cf(correlatormatrix, 100)
+  summary(correlatormatrix)
+  gevp <- bootstrap.gevp(samplecf_boot, t0 = 2, element.order = 1:4)
   pc <- gevp2cf(gevp, 1)
   
   fit_old <- matrixfit(pc, 10, 15, model = 'pc', fit.method = 'lm')
@@ -46,7 +47,7 @@ test_that('TwoStateModel', {
   
   ## The `matrixfit` function gives the chi² as part of the bootstrap samples,
   ## we do not want this here. Therefore we need to cut.
-  expect_equal(fit_old$t[, 1:2], fit_new$t, tolerance = 1e-4)
+  expect_equal(fit_old$t[, 1:3], fit_new$t, tolerance = 1e-4)
   expect_equal(fit_old$dof, fit_new$dof)
   expect_equal(fit_old$chisqr, fit_new$chisqr)
   expect_equal(fit_old$Qval, fit_new$Qval)
