@@ -2,9 +2,9 @@
 #include<numeric>
 #include <fstream>
 #include <iostream>
-#include <string.h>
+#include <string>
 
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
 
 using namespace Rcpp;
 using namespace std;
@@ -24,8 +24,13 @@ inline void readFile(std::istream &is,double Nt,vector<double> &real,vector<doub
   }
 }
 
-// [[Rcpp::export]]
-NumericVector reading_nissa_corr(CharacterVector spinstructures,int confstart,int confnumber,int confsteps,int Nt,string dirname,int nsmearing,int nmasses,IntegerVector nmasses1,IntegerVector nmasses2,IntegerVector r1,IntegerVector r2){
+//[[Rcpp::export]]
+
+
+NumericVector reading_nissa_corr(CharacterVector spinstructures,int confstart,int confnumber,int confsteps,int Nt,std::string dirname,int nsmearing,int nmasses,IntegerVector nmasses1,IntegerVector nmasses2,IntegerVector r1,IntegerVector r2){
+
+
+//SEXP reading_nissa_corr(SEXP spinstructures,SEXP confstart,SEXP confnumber,SEXP confsteps,SEXP Nt,SEXP dirname,SEXP nsmearing,SEXP nmasses,SEXP nmasses1,SEXP nmasses2,SEXP r1,SEXP r2){
    std::filebuf fb;
    int tindex;
    int confindex;
@@ -142,14 +147,14 @@ NumericVector reading_nissa_corr(CharacterVector spinstructures,int confstart,in
    for (int ii=0,confindex=confstart;ii<confnumber;++ii,confindex+=confsteps){
      int store_index=0;
      for(CharacterVector::iterator smearing = localsmeared.begin(); smearing != localsmeared.end(); ++smearing){
-       string temporary=(string)(*smearing);
+       std::string temporary=(string)(*smearing);
        sprintf(filename,"%s/%04d/mes_contr_2pts_%s",dirname.c_str(),confindex,temporary.c_str());
        for(CharacterVector::iterator spin = spinstructures.begin(); spin != spinstructures.end(); ++spin) {
          fb.open(filename,std::ios::in);
          std::istream is(&fb);
          int line_number=0;
          int spinindex=gammastructures[(string)*spin];
-         string line;
+         std::string line;
          for (int mindex=0; mindex<nmasses1.size(); ++mindex){
            if (nmasses1[mindex] > nmasses2[mindex]){
              stop("Order of masses is not correct\n");

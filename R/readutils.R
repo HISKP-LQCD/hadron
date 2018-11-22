@@ -322,14 +322,16 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return (invisible(cf))
 }
 
-readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,
-                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE, spinstructures=c("P5P5"),nmasses=16,nmasses1=c(0),nmasses2=c(0),r1=c(0),r2=c(0)) {
+readtextcf_nissa <- function(directory,configinit,confnumber,confsteps,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,sparsity=1, avg=1, Nmin=4, autotruncate=TRUE,nmasses,nmasses1,nmasses2,r1,r2){
   stopifnot(!missing(directory))
   stopifnot(T >= 1)
+  print("Testing nissa routing")
 
-  tmp <- reading_nissa_corr(spinstructures,
+#  require(Rcpp)
+#  sourceCpp("../src/read_nissa_correlation.cpp")
+  tmp <- reading_nissa_corr(c("P5P5"),
                             configinit,
-                            confnumber,
+                            confnumber, 
                             confsteps,
                             T,
                             directory,
@@ -338,16 +340,13 @@ readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=
                             nmasses1,
                             nmasses2,
                             r1,
-                            r2); 
+                            r2)
 
   if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
     stop("T in function call does not match the one in the file, aborting...\n")
   }
 
 
-  i1 <- rep(c(2:(T/2)),ncol(tmp)/(2*T))+ rep(seq(0,ncol(tmp)/2,T),each=length(c(2:T/2)))
-  i2 <- c(T:(T/2+2))
-  ii <- c(1:(T/2+1))
   sign <- +1
   if(!sym) sign <- -1
 
@@ -385,8 +384,8 @@ readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=
     }
   }
 
-  rcft <- tmp[,seq(1, ncol(tt), 2)]
-  icft <- tmp[,seq(1, ncol(tt), 2)]
+  rcft <- tmp[,seq(1, ncol(tmp), 2)]
+  icft <- tmp[,seq(2, ncol(tmp), 2)]
   ## average +-t
 
   i1 <- rep(c(2:(T/2))  ,ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(2:32)))
