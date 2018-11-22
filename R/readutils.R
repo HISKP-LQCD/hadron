@@ -324,7 +324,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 
 readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,
                        sparsity=1, avg=1, Nmin=4, autotruncate=TRUE, spinstructures=c("P5P5"),nmasses=16,nmasses1=c(0),nmasses2=c(0),r1=c(0),r2=c(0)) {
-  stopifnot(!missing(file))
+  stopifnot(!missing(directory))
   stopifnot(T >= 1)
   require(Rcpp)
   sourceCpp("src/read_nissa_correlation.cpp")
