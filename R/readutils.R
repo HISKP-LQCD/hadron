@@ -326,8 +326,6 @@ readtextcf_nissa <- function(directory,configinit,confstep,confnumber,nsmearing=
                        sparsity=1, avg=1, Nmin=4, autotruncate=TRUE, spinstructures=c("P5P5"),nmasses=16,nmasses1=c(0),nmasses2=c(0),r1=c(0),r2=c(0)) {
   stopifnot(!missing(directory))
   stopifnot(T >= 1)
-  require(Rcpp)
-  sourceCpp("src/read_nissa_correlation.cpp")
 
   tmp <- reading_nissa_corr(spinstructures,
                             configinit,

@@ -2,6 +2,4 @@ CXX1X=clang-omp++
 CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXX11FLAGS`
 PKG_LIBS=-lgsl -lgslcblas
 PKG_CFLAGS=-O3 -Wall
-PKG_CPPFLAGS= -I/hadron/pittler/R/x86_64-pc-linux-gnu-library/3.4/Rcpp/include/
-
-
+#PKG_CPPFLAGS= -I/hadron/pittler/R/x86_64-pc-linux-gnu-library/3.4/Rcpp/include/
