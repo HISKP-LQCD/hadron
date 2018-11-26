@@ -416,6 +416,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   if(missing(files)) {
     stop("files must be given! Aborting...\n")
   }
+  stopifnot(length(files) > 0)
+
   if(T < 1) {
     stop("T must be larger than 0 and integer, aborting...\n")
   }
