@@ -7,7 +7,7 @@
 }
 \usage{
 fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE, 
-                  boot.fit = TRUE, autoproceed = FALSE)
+                  boot.fit = TRUE, autoproceed = FALSE, every)
 }
 \arguments{
   \item{cf}{
@@ -44,6 +44,10 @@ fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE,
     behaviour is to abort the fit. Setting this to \code{TRUE} means that
     the fit is instead continued with a diagonal inverse of the variance-covariance
     matrix.
+  }
+  \item{every}{
+    Fit only a part of the data points. Indices that are not multiples of \code{every}
+    are skipped. If no value is provided, all points are taken into account.
   }
 }
 \value{

@@ -196,7 +196,8 @@ gevp2cf <- function(gevp, id=1) {
                 boot.l = gevp$boot.l,
                 seed = gevp$seed,
                 sim = gevp$cf$sim,
-                cf.tsboot = cf.tsboot)
+                cf.tsboot = cf.tsboot,
+                resampling_method = gevp$cf$resampling_method)
 
   cf <- cf_principal_correlator(cf,
                                 id = id,
@@ -269,7 +270,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   for(i in c(1:gevp$boot.R)) {
     amplitude.tsboot[i,] <- abs(gevp$gevp.tsboot[i,tt])/sqrt(.5*(exp(-m[i]*t)+ sign*exp(-m[i]*(T-t))))
   }
-  damplitude <- apply(amplitude.tsboot, 2, sd)
+  damplitude <- apply(amplitude.tsboot, 2, gevp$cf$error_fn)
   
   ## now we perform a constant fit
   ii <- c((t1+1):(t2+1))
@@ -321,7 +322,8 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
               boot.R=gevp$boot.R, boot.l=gevp$boot.l, seed=gevp$seed,
               id=id, op.id=op.id,
               Time=T, m0=m0, m0.tsboot=m, useCov=useCov,
-              Qval=1-pchisq(opt.res$value, t2-t1)
+              Qval=1-pchisq(opt.res$value, t2-t1,
+              error_fn = gevp$cf$error_fn)
               )
   attr(res, "class") <- c("gevp.amplitude", class(res))
   return(invisible(res))
@@ -332,12 +334,12 @@ summary.gevp.amplitude <- function(amp) {
   cat("time range from", amp$t1, " to ", amp$t2, "\n")
   cat("mass:\n")
   cat("m \t=\t", amp$m0, "\n")
-  cat("dm\t=\t", sd(amp$m0.tsboot), "\n")
+  cat("dm\t=\t", amp$error_fn(amp$m0.tsboot), "\n")
   cat("\nAmplitude:\n")
   cat("operator id:", amp$op.id, "\n")
   cat("state id   :", amp$id, "\n")
   cat(" P[", amp$id, ",", amp$op.id, "] = ", amp$meanAmplitude, "\n")
-  cat("dP[", amp$id, ",", amp$op.id, "] = ", sd(amp$meanAmplitude.tsboot[,1]), "\n")
+  cat("dP[", amp$id, ",", amp$op.id, "] = ", amp$error_fn(amp$meanAmplitude.tsboot[,1]), "\n")
   cat("\n")
   cat("boot.R\t=\t", amp$gevp$boot.R, "\n")
   cat("boot.l\t=\t", amp$gevp$boot.l, "\n")
@@ -351,7 +353,7 @@ summary.gevp.amplitude <- function(amp) {
     cat("mu2 \t=\t", amp$mu2, "\n")
     if(amp$normalisation == "cmi") cat("kappa\t=\t", amp$kappa,"\n")
     cat("fps \t=\t", amp$fps, "\n")
-    cat("dfps\t=\t", sd(amp$fps.tsboot), "\n")
+    cat("dfps\t=\t", amp$error_fn(amp$fps.tsboot), "\n")
   }
 }
 
@@ -360,11 +362,11 @@ plot.gevp.amplitude <- function(amp, ...) {
   if(amp$fit) {
     arrows(x0=amp$t1, y0=amp$meanAmplitude,
            x1=amp$t2, y1=amp$meanAmplitude, col=c("red"), length=0)
-    arrows(x0=amp$t1, y0=amp$meanAmplitude+sd(amp$meanAmplitude.tsboot[,1]),
-           x1=amp$t2, y1=amp$meanAmplitude+sd(amp$meanAmplitude.tsboot[,1]),
+    arrows(x0=amp$t1, y0=amp$meanAmplitude+amp$error_fn(amp$meanAmplitude.tsboot[,1]),
+           x1=amp$t2, y1=amp$meanAmplitude+amp$error_fn(amp$meanAmplitude.tsboot[,1]),
            col=c("red"), length=0, lwd=c(1))
-    arrows(x0=amp$t1, y0=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
-           x1=amp$t2, y1=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
+    arrows(x0=amp$t1, y0=amp$meanAmplitude-amp$error_fn(amp$meanAmplitude.tsboot[,1]),
+           x1=amp$t2, y1=amp$meanAmplitude-amp$error_fn(amp$meanAmplitude.tsboot[,1]),
            col=c("red"), length=0, lwd=c(1))
   }
 }

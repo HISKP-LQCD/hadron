@@ -264,9 +264,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   tidx <- NULL
   if( plaquette || dH || trajtime || acc ) {
     # read output.data
-    # determine maximum number of columns in output.data (when the mass preconditioning is changed,
+    # in the first line of output.data which we want to consider 
+    # (when the mass preconditioning is changed,
     # the number of columns may change so we need to be able to deal with that)
-    no_columns <- max(count.fields(outfile))
+    no_columns <- max(count.fields(outfile,
+                                   skip=skip))
 
     # if we have a rectange in the gauge action, the number of columns is different
     # in output.data
@@ -286,7 +288,12 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       col.names <- c("traj","P","dH","expdH",paste("V",5:(no_columns-accshift),sep=""),tailvec)
     }
 
-    outdat <- read.table(outfile, fill=TRUE, col.names=col.names)
+    # read the entire file and then resize the number of columns to the target number
+    # hopefully below, longer or short rows will be skipped because one generally skips
+    # to the point where the trajectories become consistent 
+    outdat <- read.table(outfile, fill=TRUE)
+    outdat <- outdat[,1:no_columns]
+    colnames(outdat) <- col.names
 
     tidx <- which(outdat$traj > skip)
     if(debug) print(outdat)

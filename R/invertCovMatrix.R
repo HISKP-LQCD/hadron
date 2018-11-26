@@ -1,4 +1,4 @@
-invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
+invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE, cov_fn = cov) {
   ## compute compute the correctly normalised inverse of a noisy covariance matrix
   ## see C. Michael hep-lat/9412087
 
@@ -9,7 +9,7 @@ invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE) {
     ncf <- block.ts(cf, l=boot.l)
   }
   ## compute covariance matrix and invert
-  CovMatrix <- cov(ncf)
+  CovMatrix <- cov_fn(ncf)
   ## we have a real, symmetric square matrix with dimension n=length(ncf[1,])
   n <- length(ncf[1,])
   ## the number of observations

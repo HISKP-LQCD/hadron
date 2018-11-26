@@ -1,0 +1,13 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+devtools::load_all()
+```
+
+```{r}
+
+```
+
