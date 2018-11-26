@@ -268,11 +268,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
   }
   
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(T/2+1))
-  sign <- +1
-  if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
@@ -309,17 +305,17 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     }
   }
   
-  ## average +-t
-  if(symmetrise) {
-    tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
-  }else{
-    ii <- c(1:T)
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1)
+  ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
+
+  if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
+
+    ret <- symmetrise.cf(ret, sign)
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(tmp[ii, ])), icf = t(Im(tmp[ii, ])))
-
-  return (invisible(cf))
+  return (invisible(ret))
 }
 
 readbinarycf <- function(files, 
@@ -358,12 +354,7 @@ readbinarycf <- function(files,
     Nop <- 1
     if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(Nop*T))+obs*T
-  sign <- +1
-  if(!sym) sign <- -1
 
   Cf <- complex()
   for(f in files) {
@@ -392,14 +383,6 @@ readbinarycf <- function(files,
         }
       }
       
-      ## average +-t
-      if(symmetrise) {
-        tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-        Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
-      }else{
-        Cf <- cbind(Cf, tmp[c(1:T)])
-      }
-
       if(!hdf5format) {
         close(to.read)
       }
@@ -412,10 +395,16 @@ readbinarycf <- function(files,
     }
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(Cf)), icf = t(Cf))
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Im(Cf)))
 
-  return (invisible(cf))
+  if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
+    ret <- symmetrise.cf(ret, sign)
+  }
+
+  return (invisible(ret))
 }
 
 
@@ -427,6 +416,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   if(missing(files)) {
     stop("files must be given! Aborting...\n")
   }
+  stopifnot(length(files) > 0)
+
   if(T < 1) {
     stop("T must be larger than 0 and integer, aborting...\n")
   }
@@ -438,11 +429,6 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for( i in 1:nosamples ){
     Cf[[i]] <- ftype
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
-  sign <- +1
-  if(!sym) sign <- -1
 
   for(f in files){
     ifs <- paste(path, f, sep="")
@@ -458,9 +444,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
         } else {
           tmp2 <- apply(X=tmp[,1:i],MARGIN=1,FUN=mean)
         }
-        # average over +- t
-        tmp2[i1] <- 0.5 * ( tmp2[i1] + sign * tmp2[i2] )
-        Cf[[i]] <- cbind(Cf[[i]],tmp2[1:(T/2+1)])
+        Cf[[i]] <- cbind(Cf[[i]], tmp2)
       }
     } else if(!file.exists(ifs)) {
       cat("file ", ifs, "does not exist...\n")
@@ -469,8 +453,12 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for (i in 1:nosamples) {
-    ret[[i]] <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-    ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
+    ret[[i]] <- cf_meta(nrObs = 1, Time = T, nrStypes = 1, symmetrised = FALSE)
+    ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Im(Cf[[i]])))
+
+    sign <- +1
+    if (!sym) sign <- -1
+    ret[[i]] <- symmetrise.cf(ret[[i]], sign)
   }
 
   return (invisible(ret))
@@ -544,11 +532,11 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 
   cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
   cf <- cf_orig(cf,
-                cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
+                cf = array(ldata[, ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                icf = array(ldata[, ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
   cf <- cf_smeared(cf,
-                   scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                   sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   scf = array(ldata[, ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   sicf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
