@@ -4,11 +4,13 @@ output: html_notebook
 ---
 
 ```{r setup}
+devtools::load_all()
 ```
 
 ```{r}
-devtools::load_all()
-
-samples <- readbinarysamples(Sys.glob('../hadron_example_data/ppcor.samples.01.*'))
+samples <- readbinarysamples(
+    files = Sys.glob('../hadron_example_data/pionff/cA2.60.32/vector_ff.samples.00.*'),
+    T = 48,
+    nosamples = 4)
 ```
 
