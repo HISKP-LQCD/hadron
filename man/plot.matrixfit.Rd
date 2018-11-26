@@ -4,9 +4,9 @@
 \alias{plot.matrixfit}
 \title{plot a matrixfit}
 \usage{
-\method{plot}{matrixfit}(mfit, plot.errorband = FALSE, ylim, xlab = "t/a",
-  ylab = "y", do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col,
-  every, ...)
+\method{plot}{matrixfit}(mfit, plot.errorband = FALSE, ylim,
+  xlab = "t/a", ylab = "y", do.qqplot = TRUE, plot.raw = TRUE,
+  rep = FALSE, col, every, ...)
 }
 \arguments{
 \item{mfit}{an object of class matrixfit}
