@@ -10,19 +10,26 @@
 #' In case `single.cf1` is missing, no weighting is performed. Instead it is assumed that the user only wants to have a simple shifting. Then this function just calls `takeTimeDiff.cf`.
 #' @param p1,p2 Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.
 #' @param L Integer, spatial extent of the lattice.
+#' @param deltat Integer, difference in lattice time for which the shift is applied.
 #' @param lat.disp Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.
 #' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If `weight.cosh` is set, they are removed simulalteously.
 #'
 #' @export
-removeTemporal.cf <- function(cf, single.cf1, single.cf2,
-                              p1=c(0,0,0), p2=c(0,0,0), L,
-                              lat.disp=TRUE, weight.cosh=FALSE) {
+removeTemporal.cf <- function(cf, 
+                              single.cf1, 
+                              single.cf2,
+                              p1=c(0,0,0), 
+                              p2=c(0,0,0), 
+                              L,
+                              deltat = 1,
+                              lat.disp=TRUE, 
+                              weight.cosh=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
   if(missing(single.cf1)) {
     ## take the differences of C(t+1) and C(t)
-    cf <- takeTimeDiff.cf(cf)
+    cf <- takeTimeDiff.cf(cf, deltat)
     return(invisible(cf))
   }
 
@@ -97,7 +104,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   else {
     cosh.factor <- 0.
   }
-  ## multiply with the exponential correction factor
+  ## Multiply with the exponential correction factor
   Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
@@ -107,18 +114,18 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
-  ## take the differences of C(t+1) and C(t)
-  cf <- takeTimeDiff.cf(cf)
+  ## Take the differences of C(t+1) and C(t)
+  cf <- takeTimeDiff.cf(cf, deltat)
 
-  ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
+  ## Multiply with the exponential inverse
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-deltat:(Time/2-deltat))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-deltat:(Time/2-deltat))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-deltat:(Time/2-deltat))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-deltat:(Time/2-deltat)))) )
   }
 
   # We perform a clean copy of the data now to make sure that all invariants
