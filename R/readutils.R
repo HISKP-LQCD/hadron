@@ -451,7 +451,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for (i in 1:nosamples) {
-    ret[[i]] <- cf_meta(nrObs = 1, Time = T, nrStypes = 1, symmetrised = TRUE)
+    ret[[i]] <- cf_meta(nrObs = 1, Time = T, nrStypes = 1, symmetrised = FALSE)
     ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Im(Cf[[i]])))
 
     sign <- +1
