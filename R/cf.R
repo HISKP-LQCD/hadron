@@ -721,8 +721,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   if(cf$symmetrised){
-    message("symmetrise.cf: cf was already symmetrised\n")
-    return(invisible(cf))
+    stop("symmetrise.cf: cf was already symmetrised")
   }
 
   if( cf$nrObs > 1 & length(sym.vec) == 1 ){
