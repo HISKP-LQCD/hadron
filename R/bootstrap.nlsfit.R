@@ -389,7 +389,7 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
+  first.res <- wrapper(Y, par.Guess)
 
   if (parallel)
     my.lapply <- mclapply
