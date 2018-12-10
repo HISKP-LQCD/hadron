@@ -25,6 +25,8 @@ export(parametric.bootstrap)
 export(parametric.bootstrap.cov)
 export(parametric.nlsfit)
 export(parametric.nlsfit.cov)
+export(jackknife_cov)
+export(jackknife_error)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
 importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
