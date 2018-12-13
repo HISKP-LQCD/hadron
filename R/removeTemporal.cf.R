@@ -114,10 +114,12 @@ removeTemporal.cf <- function(cf,
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
-  ## Take the differences of C(t+1) and C(t)
+  ## Take the differences C(t) - C(t + deltat)
   cf <- takeTimeDiff.cf(cf, deltat)
 
   ## Multiply with the exponential inverse
+  ## The time has to be shifted by deltat because the first deltat timeslices are filled 
+  ## up with NaN by takeTimeDiff()
   Exptt <- exp(-(mass2$t0-mass1$t0)*c(-deltat:(Time/2-deltat))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-deltat:(Time/2-deltat))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
@@ -145,7 +147,7 @@ removeTemporal.cf <- function(cf,
                     deltat = cf$deltat,
                     forwardshift = cf$forwardshift)
   ret <- cf_weighted(ret,
-                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
+                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * deltat),
                      weight.cosh = weight.cosh,
                      mass1 = mass1,
                      mass2 = mass2)
