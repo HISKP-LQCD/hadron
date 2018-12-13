@@ -382,6 +382,8 @@ readbinarycf <- function(files,
           tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
         }
       }
+
+      Cf <- cbind(Cf, tmp[1:T])
       
       if(!hdf5format) {
         close(to.read)
