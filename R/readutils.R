@@ -382,6 +382,8 @@ readbinarycf <- function(files,
           tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
         }
       }
+
+      Cf <- cbind(Cf, tmp[1:T])
       
       if(!hdf5format) {
         close(to.read)
@@ -395,7 +397,7 @@ readbinarycf <- function(files,
     }
   }
 
-  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = FALSE)
   ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Im(Cf)))
 
   if (symmetrise) {
