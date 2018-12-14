@@ -18,10 +18,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
-                            stat_skip=0,
+                            stat_skip=0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
                             omeas.start=0, omeas.stepsize=1, 
                             evals.start=0, evals.stepsize=1,
-                            boot.R=1500, boot.l=2)
+                            boot.R=1500, boot.l=2,
+                            outname_suffix="", verbose=FALSE)
 {
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
@@ -79,6 +80,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   }
   
   filelabel <- rundir
+  if(nchar(outname_suffix)>0){
+    filelabel <- sprintf("%s_%s", filelabel, outname_suffix)
+  }
       
   titletext <- NULL
   if(title) {
@@ -98,10 +102,17 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6)
     # when the online measurements start later than traj 0 and we want to skip 'skip'
     # trajectories, the following should correspond to the correact indexing
-    omeas.idx   <- c((1+as.integer(ceiling((skip-omeas.start)/omeas.stepsize))):length(omeas.files))
+    omeas.idx   <- c((1+as.integer(
+                        (omeas.samples*ceiling((skip-omeas.start)/omeas.stepsize)))):length(omeas.files))
     omeas.files <- omeas.files[omeas.idx]
     omeas.cnums <- omeas.cnums[omeas.idx]
-    pioncor <- readcmidatafiles( files=omeas.files, skip=0 )
+    pioncor <- readcmidatafiles( files=omeas.files, skip=0, 
+                                 avg=omeas.avg, stride=omeas.stride, verbose=verbose )
+
+    # when dealing with multi-sample online measurements, we need to thin out
+    # the configuration numbers extracted above by stepping through them
+    # with a stride of omeas.samples
+    omeas.cnums <- omeas.cnums[seq(1, length(omeas.cnums), omeas.samples)]
     # add unique trajectory identifiers to the correlators
     pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(T/2+1) ) )
 
@@ -128,9 +139,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       }
 
       if(trajlabel){
-        filelabel <- sprintf("%s_traj%06d-%06d",rundir,min(omeas.cnums),max(omeas.cnums))
-      } else {
-        filelabel <- rundir
+        filelabel <- sprintf("%s_traj%06d-%06d",filelabel,min(omeas.cnums),max(omeas.cnums))
       }
       cat("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
       save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
