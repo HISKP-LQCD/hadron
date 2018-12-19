@@ -22,7 +22,7 @@ In case \code{single.cf1} is missing, no weighting is performed. Instead it is a
 
 \item{lat.disp}{Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.}
 
-\item{weight.cosh}{Logical, whether to use some cosh formula which might work better or something.}
+\item{weight.cosh}{Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If \code{weight.cosh} is set, they are removed simulalteously.}
 }
 \description{
 Performs weighting and shifting in the rest and moving frames.
