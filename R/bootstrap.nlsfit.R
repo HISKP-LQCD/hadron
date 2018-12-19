@@ -133,7 +133,11 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #'
 #' @param fn the (non-linear) function to be fitted to the data. Its first
 #' argument must be the fit parameters named \code{par}. The second must be
-#' \code{x}, the explaining variable.
+#' \code{x}, the explaining variable. Additional parameters might be passed to
+#' the function. Currently we pass `boot_r` which is `NA` for the original data
+#' and the ID of the bootstrap sample otherwise. As more parameters might be
+#' added in the future it is recommended that the fit function accepts `...` as
+#' the last parameter to be forward compatible.
 #' @param gr \code{gr=d(fn) / d(par)} is a function to return the gradient of
 #' \code{fn}. It must return an array with \code{length(x)} rows and
 #' \code{length(par)} columns.
