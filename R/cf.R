@@ -551,8 +551,18 @@ avg.cbt.cf <- function(cf){
   return(invisible(cf))
 }
 
-## this is intended for instance for adding diconnected diagrams to connected ones
-add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
+#' Arithmetically adds two correlation functions
+#'
+#' @param cf1,cf2 `cf` object.
+#' @param a,b Numeric. Factors that multiply the correlation function before
+#' the addition.
+#'
+#' @return
+#' The value is
+#' \deqn{a C_1 + b C_2 \,.}
+#'
+#' @export
+add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
   stopifnot(inherits(cf1, 'cf_orig'))
@@ -623,7 +633,12 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   return (cf)
 }
 
-is.cf <- function(x){
+#' Checks whether an object is a cf
+#'
+#' @param x Object, possibly of class `cf`.
+#'
+#' @export
+is.cf <- function (x) {
   inherits(x, "cf")
 }
 

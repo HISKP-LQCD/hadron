@@ -357,6 +357,10 @@ plot.effmass <- function (x, ll, lf, ff, ...) {
 }
 
 
+#' Plots averx data
+#'
+#' @param x `averx` object
+#' @param ... ignored
 plot.averx <- function(x, ...) {
   averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
