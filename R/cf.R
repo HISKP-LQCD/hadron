@@ -342,8 +342,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   ## we set the seed for reproducability and correlation
   set.seed(seed)
   ## now we bootstrap the correlators
-  cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                         R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+  cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
 
   cf <- cf_boot(cf,
                 boot.R = boot.R,
