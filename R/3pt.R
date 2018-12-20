@@ -55,8 +55,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l)
   Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
 
-  plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
-  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
+  plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, useCov=useCov)
+  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, useCov=useCov)
 
   res <- list(Cf2ptratio=Cf2pt, Cf3ptratio=Cf3pt, Cf2ptp0=Cf2ptp0,
               Cf2ptp=Cf2ptp, Cf3ptp0=Cf3ptp0, Cf3ptp=Cf3ptp,
