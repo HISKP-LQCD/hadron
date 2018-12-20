@@ -108,6 +108,25 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' samples. As the `sd` for the bootstrap samples also does not include the
 #' original data, this likely is similar in terms of bias.
 #'
+#' @param samples Numeric vector.
+#' @param na.rm Logical. Determines whether `NA` values shall be removed, see
+#' Description for details.
+#'
+#' @description
+#' Computes the jackknife error which is just
+#' \deqn{\sum_{i=0}^N (x_i - \bar x)^2 \,.}
+#' Internally we use
+#' \deqn{\frac{(N-1)^2}{N} \mathop{\mathrm{sd}}(X)}
+#' in order to benefit from the optimized standard deviation function.
+#'
+#' The width of the bootstrap distribution does not change with the number of
+#' elements. The jackknife distribution crucially depends on the number of
+#' measurements that one started with. Therefore we cannot just drop the NA
+#' values and are done with it. Instead we need to rescale with the
+#' \eqn{\sqrt{N / m}} where \eqn{N} is the number of original measurements and
+#' \eqn{m} is the number of non-NA values. With NA values removed we would
+#' otherwise underestimate the uncertainty.
+#'
 #' @export
 jackknife_error <- function (samples, na.rm = FALSE) {
   ## Number of jackknife samples.
@@ -309,6 +328,8 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
 }
 
 #' Checks whether the cf object contains no data
+#'
+#' @param .cf `cf` object.
 #'
 #' @examples
 #' # The empty cf object must be empty:
@@ -711,8 +732,12 @@ shift.cf <- function(cf, places) {
 
 #' Invalidate samples
 #'
-#' When a correlation function is modified, any resampling should be invalidated. We could instead also choose to properly work with the samples, but most computations are done with the original data anyway.
-invalidate.samples.cf <- function(cf){
+#' @param cf `cf` object.
+#'
+#' When a correlation function is modified, any resampling should be
+#' invalidated. We could instead also choose to properly work with the samples,
+#' but most computations are done with the original data anyway.
+invalidate.samples.cf <- function (cf) {
   cf$boot.l <- NULL
   cf$boot.R <- NULL
   cf$boot.samples <- NULL
