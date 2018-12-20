@@ -21,6 +21,6 @@ URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Encoding: UTF-8
-Remotes: bioc::3.8/Rhdf5lib, bioc::3.8/rhdf5
+Remotes: bioc::release/Rhdf5lib, bioc::release/rhdf5
