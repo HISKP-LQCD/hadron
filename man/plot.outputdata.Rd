@@ -6,7 +6,7 @@
   the plaquette history and the history of \eqn{\Delta H}{Delta H}
 }
 \usage{
-plot(data, skip=0, ...)
+\method{plot}{outputdata}(data, skip=0, ...)
 }
 \arguments{
   \item{data}{

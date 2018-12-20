@@ -5,7 +5,7 @@
   Plot Command For Class UWerr
 }
 \usage{
-plot(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
+\method{plot}{uwerr}(x, ..., main="x", x11=TRUE, plot.hist=TRUE)
 }
 \arguments{
   \item{x}{
