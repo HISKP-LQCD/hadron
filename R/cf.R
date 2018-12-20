@@ -26,6 +26,7 @@ cf <- function () {
 
 #' CF metadata mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
 #' @param Time Integer, full time extent.
 #' @param nrStypes Integer, number of smearing types.
@@ -48,7 +49,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 
 #' Bootstrapped CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
@@ -177,7 +178,7 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 
 #' Principal correlator CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param id Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
 #'
 #' @family cf constructors
@@ -195,6 +196,7 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
 
 #' Shifted CF mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param deltat TODO
 #' @param forwardshift Logical, TODO
 #'
@@ -221,6 +223,7 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
 
 #' Smeared CF mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param scf Like `cf`, but with the smeared data.
 #' @param iscf Like `icf`, but with the smeared data.
 #' @param nrSamples TODO
@@ -251,7 +254,7 @@ cf_smeared <- function (.cf = cf(), scf, iscf, nrSamples, obs) {
 
 #' Subtracted CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param subtracted.values Numeric matrix, TODO
 #' @param subtracted.ii Integer vector, TODO
 #'
@@ -270,7 +273,7 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 
 #' Weighted CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param weight.factor TODO
 #' @param weight.cosh TODO
 #' @param mass1 TODO

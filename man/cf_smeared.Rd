@@ -7,6 +7,8 @@
 cf_smeared(.cf = cf(), scf, iscf, nrSamples, obs)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{scf}{Like \code{cf}, but with the smeared data.}
 
 \item{iscf}{Like \code{icf}, but with the smeared data.}

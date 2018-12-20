@@ -8,6 +8,8 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
   resampling_method = "bootstrap")
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{boot.R}{Integer, number of bootstrap samples used.}
 
 \item{boot.l}{Integer, block length in the time-series bootstrap process.}
@@ -17,8 +19,6 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{sim}{Character, \code{sim} argument of \link{boot::tsboot}.}
 
 \item{cf.tsboot}{List, result from the \link{boot::tsboot} function.}
-
-\item{cf}{\code{cf} object to extend.}
 }
 \description{
 Bootstrapped CF mixin constructor
