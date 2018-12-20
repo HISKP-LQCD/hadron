@@ -10,7 +10,11 @@ bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
 \arguments{
 \item{fn}{the (non-linear) function to be fitted to the data. Its first
 argument must be the fit parameters named \code{par}. The second must be
-\code{x}, the explaining variable.}
+\code{x}, the explaining variable. Additional parameters might be passed to
+the function. Currently we pass \code{boot_r} which is \code{NA} for the original data
+and the ID of the bootstrap sample otherwise. As more parameters might be
+added in the future it is recommended that the fit function accepts \code{...} as
+the last parameter to be forward compatible.}
 
 \item{par.guess}{initial guess values for the fit parameters.}
 
@@ -24,6 +28,15 @@ numerical vector.}
 Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 \code{length(y) + length(x)}.}
+
+\item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{dy, dx}{Numeric vector. Errors of the dependent and independent
+variable, respectively. These do not need to be specified as they can be
+computed from the bootstrap samples. In the case of parametric bootstrap it
+might would lead to a loss of information if they were computed from the
+pseudo-bootstrap samples. They must not be specified if a covariance matrix
+is given.}
 
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
@@ -42,6 +55,10 @@ stable.}
 
 \item{parallel}{parallelise over bootstrap samples. The package
 \code{parallel} is required.}
+
+\item{error}{Function that takes a sample vector and returns the error
+estimate. This is a parameter in order to support different resampling
+methods like jackknife.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input
