@@ -55,6 +55,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param seed Integer, random number generator seed used in bootstrap.
 #' @param sim Character, `sim` argument of \link{boot::tsboot}.
 #' @param cf.tsboot List, result from the \link{boot::tsboot} function.
+#' @param resampling_method Character, either 'bootstrap' or 'jackknife'
 #'
 #' @details
 #'

@@ -19,6 +19,8 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{sim}{Character, \code{sim} argument of \link{boot::tsboot}.}
 
 \item{cf.tsboot}{List, result from the \link{boot::tsboot} function.}
+
+\item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }
 \description{
 Bootstrapped CF mixin constructor
