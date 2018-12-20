@@ -38,13 +38,6 @@ fit.cosh(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, adjust.n.cosh
   \item{useCov}{
     Use the correlated chisquare. This works only for not too noisy data.
   }
-  \item{replace.na}{
-    The functions inverted to determine the effective mass values might,
-    due to fluctuations, return \code{NA}. If \code{replace.na=TRUE},
-    these are reaplaced in the bootstrap samples by randomly chosen
-    values from the distribution that are not \code{NA}. Otherwise the
-    fits in which the \code{NA} values occur will fail.
-  }
   \item{m.init}{
     Initial guess of the effective mass, i.e. the smallest m_i.
   }
