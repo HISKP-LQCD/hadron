@@ -322,9 +322,8 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
               boot.R=gevp$boot.R, boot.l=gevp$boot.l, seed=gevp$seed,
               id=id, op.id=op.id,
               Time=T, m0=m0, m0.tsboot=m, useCov=useCov,
-              Qval=1-pchisq(opt.res$value, t2-t1,
+              Qval=1-pchisq(opt.res$value, t2-t1),
               error_fn = gevp$cf$error_fn)
-              )
   attr(res, "class") <- c("gevp.amplitude", class(res))
   return(invisible(res))
 }
