@@ -7,12 +7,10 @@
 invalidate.samples.cf(cf)
 }
 \arguments{
-\item{cf}{\code{cf} object.
-
-When a correlation function is modified, any resampling should be
-invalidated. We could instead also choose to properly work with the samples,
-but most computations are done with the original data anyway.}
+\item{cf}{\code{cf} object.}
 }
 \description{
-Invalidate samples
+When a correlation function is modified, any resampling should be
+invalidated. We could instead also choose to properly work with the samples,
+but most computations are done with the original data anyway.
 }
