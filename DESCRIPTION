@@ -23,4 +23,4 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.0
 Encoding: UTF-8
-Remotes: bioc::release/rhdf5
+Remotes: bioc::3.8/rhdf5
