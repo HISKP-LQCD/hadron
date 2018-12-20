@@ -56,7 +56,7 @@ fit.cosh(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, adjust.n.cosh
     Fit only a part of the data points. Indices that are not multiples of \code{every}
     are skipped. If no value is provided, all points are taken into account.
   }
-  \item{...} {
+  \item{...}{
     Additional parameters passed to the fit function. But the fit function is fixed and does not accept any arguments, so it will just crash. Therefore, don't use this!
   }
   \item{x}{
