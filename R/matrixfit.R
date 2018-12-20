@@ -100,7 +100,7 @@ pcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, refe
 
 ## deltat is a dummy variable here
 pcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-referenece_time))))
+  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time))))
   return( sum(z %*% M %*% z) )
 }
 
