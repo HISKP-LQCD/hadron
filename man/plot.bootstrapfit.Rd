@@ -11,7 +11,7 @@
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
 
-\item{...}{Additional parameters passed to the generic \code{plot} function.}
+\item{...}{Additional parameters passed to the \code{plotwitherror} function.}
 
 \item{col.line}{line colour.}
 

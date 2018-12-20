@@ -500,7 +500,6 @@ matrixfit <- function(cf, t1, t2,
 #' @param col String vector: vector of colours for the different correlation functions
 #' 
 #' @seealso \code{\link{matrixfit}}
-
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
                             do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
   mfit <- x

@@ -477,6 +477,9 @@ bootstrap.nlsfit <- function(fn,
 #'
 #' @param object object returned by \code{bootstrap.nlsfit}
 #' @param digits number of significant digits to print in summary or print.
+#' @param print.correlation Logical. Whether to show the correlation between of
+#' the fit parameters.
+#' @param ... ignored
 #'
 #' @export
 #' @family NLS fit functions
@@ -526,6 +529,7 @@ summary.bootstrapfit <- function(object, digits = 2, print.correlation = TRUE, .
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
 #' @param digits number of significant digits to print in summary or print.
+#' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
 #'
 #' @family NLS fit functions
 print.bootstrapfit <- function(x, digits = 2, ...) {
@@ -544,7 +548,7 @@ print.bootstrapfit <- function(x, digits = 2, ...) {
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
 #' range in which fitline and errorband are plotted. Default is the range of
 #' the data.
-#' @param ... Additional parameters passed to the generic `plot` function.
+#' @param ... Additional parameters passed to the `plotwitherror` function.
 #'
 #' @export
 #' @family NLS fit functions

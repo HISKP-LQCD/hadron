@@ -11,6 +11,11 @@
 \item{object}{object returned by \code{bootstrap.nlsfit}}
 
 \item{digits}{number of significant digits to print in summary or print.}
+
+\item{print.correlation}{Logical. Whether to show the correlation between of
+the fit parameters.}
+
+\item{...}{ignored}
 }
 \description{
 Summarize a bootstrap NLS fit
