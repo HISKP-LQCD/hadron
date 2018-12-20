@@ -413,14 +413,7 @@ matrixfit <- function(cf, t1, t2,
   }
   if(model == "weighted") {
     if(any(names(cf) == "weighted")) {
-      if(cf$weighted) {
-        fitfn <- matrixChisqr.weighted
-        dfitfn <- dmatrixChisqr.weighted
-      }
-      else {
-        model <- "single"
-        warning("model chosen to be weighted, but weighting information not available in cf. Falling back to model=single\n")
-      }
+      stop('Weighted model is not implemented.')
     }
   }
   if(pcmodel) {
@@ -434,10 +427,6 @@ matrixfit <- function(cf, t1, t2,
     if(model == "shifted") {
       fitfn <- matrixChi.shifted
       dfitfn <- dmatrixChi.shifted
-    }
-    if(model == "weighted") {
-      fitfn <- matrixChi.weighted
-      dfitfn <- dmatrixChi.weighted
     }
     if(pcmodel) {
       fitfn <- pcChi
