@@ -13,7 +13,7 @@ Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
 Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
-Description: Package to extract hadronic quantities from Lattice QCD simulations. It contains functionality for IO, plotting, bootstrap and jackknife resampling, fitting, GEVP solving, error and autocorrelation estimation as well as other areas.
+Description: Toolkit to extract hadronic quantities from Lattice QCD simulations. It contains functionality for IO, plotting, bootstrap and jackknife resampling, fitting, GEVP solving, error and autocorrelation estimation as well as other areas.
 Depends: boot
 Suggests: tikzDevice, minpack.lm, parallel
 License: GPL 3 or later
