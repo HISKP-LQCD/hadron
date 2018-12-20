@@ -112,7 +112,7 @@ averx <- function(data3pt, data2pt, pionfit,
 
   ## now a cosh fit to the 2pt correlator
   if(missing(pionfit)) {
-    pionfit <- matrixfit(Cf2pt, t1=piont1, t2=piont2, symmetrise=TRUE, useCov=useCov,
+    pionfit <- matrixfit(Cf2pt, t1=piont1, t2=piont2, useCov=useCov,
                          parlist=array(c(1,1), dim=c(2,1)))
   }
 
