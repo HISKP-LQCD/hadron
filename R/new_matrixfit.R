@@ -1,5 +1,6 @@
 library(R6)
 
+
 MatrixModel <- R6Class(
   'MatrixModel',
   public = list(
@@ -111,13 +112,13 @@ ShiftedModel <- R6Class(
       
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
-          #zp1 <- rep(0, length(zp))
+          zp1 <- rep(0, length(zp))##
           j <- which(self$parind[, 1] == i)
           zp1 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
             (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
             exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
         
-          #zp2 <- rep(0, length(zp))
+          zp2 <- rep(0, length(zp))##
           j <- which(self$parind[, 2] == i)
           zp2 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
             (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
@@ -131,13 +132,6 @@ ShiftedModel <- R6Class(
       
       return (res)
       
-      
-      
-      
-        
-        
-        
-        
       
       ## Derivative with respect to the mass, `par[1]`.
       #zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
@@ -212,20 +206,87 @@ TwoStateModel <- R6Class(
   )
 )
 
+
+## 3 particle correlation function in phi^4 theory:
+## C_3 (t) = 0.5*A_1^(3)*A_2^(3)*(exp(-E_3*(T-t))+exp(-E_3*t)) (3-particle correlator)
+##            + 0.5*A_3^(3)*A_4^(3)*exp(-(2/3)*E_3*(T/2)) * (exp(-(1/3)*E_3*(T-t)) + exp(-(1/3)*E_3*t)) (thermal pollution)
+
 Phi4Model <- R6Class(
   'Phi4Model',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, n_particle) {
+    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t) {
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
-      self$n_particle <- n_particle
+      self$delta_t <- delta_t
     },
+    
     prediction = function (par, x) {
-      return (10 + self$n_particle)
+      
+      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
+      (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2)))) +
+      self$ov_sign_vec*par[self$parind[,3]]*par[self$parind[,4]]*exp(-(par[1]*(2/3))*(self$time_extent/2))*
+      (exp(-(par[1]*(1/3))*(x-self$delta_t/2)) + self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-(x-self$delta_t/2))))
     },
-    n_particle = NA
-  ),
+    
+    prediction_jacobian = function (par, x, ...) {
+      xx <- x - self$delta_t/2
+      
+      res <- matrix(0.0, nrow = length(x), ncol = length(par))
+      
+      ## Derivative with respect to the mass, `par[1]`.
+      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
+            ((-xx) * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
+            exp(-par[1] * (self$time_extent - xx))) + self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]] *
+            (-2/3)*(self$time_extent/2)*exp(-(par[1]*(-2/3))*(self$time_extent/2))*(exp(-(par[1]*(1/3))*xx) +      
+            self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-xx))) +
+            self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]]*exp(-(par[1]*(2/3))*
+            (self$time_extent/2))*(-(1/3)*xx*exp(-(par[1]*(1/3))*xx) +
+            self$sign_vec*(-1/3)*(self$time_extent-xx)*exp(-(par[1]*(1/3))*(self$time_extent-xx)))
+      
+      stopifnot(length(zp) == nrow(res))
+      res[, 1] <- zp
+      
+      ## Derivatives with respect to the amplitudes.
+      for (i in 2:length(par)) {
+        
+        zp1 <- rep(0, length(zp))
+        j <- which(self$parind[,1]==i)
+        zp1 <- -self$ov_sign_vec*0.5*par[self$parind[j,2]] *
+               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
+        
+        zp2 <- rep(0, length(zp))
+        j <- which(self$parind[,2]==i)
+        zp2 <- -self$ov_sign_vec*0.5*par[self$parind[j,1]] *
+               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
+        
+        zp3 <- rep(0, length(zp))
+        j <- which(self$parind[,3]==i)
+        zp3 <- -self$ov_sign_vec[j]*par[self$parind[j,4]] * 
+               exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
+               self$sign_vec[j]*exp(-(par[1]*(1/3)) * (self$time_extent-(x[j]-self$delta_t/2))))
+        
+        zp4 <- rep(0, length(zp))
+        j <- which(self$parind[,4]==i)
+             zp4 <- -self$ov_sign_vec[j]*par[self$parind[j,3]]*
+             exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
+             self$sign_vec[j]*exp(-(par[1]*(1/3))*(self$time_extent-(x[j]-self$delta_t/2))))
+        
+        
+        stopifnot(length(zp1) == nrow(res))
+        stopifnot(length(zp2) == nrow(res))
+        stopifnot(length(zp3) == nrow(res))
+        stopifnot(length(zp4) == nrow(res))
+        
+        res[, i] <- (zp1 + zp2 + zp3 + zp4)
+      }
+      return(res)
+    },
+    # n_particle = NA
+    delta_t = NA
+  )
 )
+
+
 
 #' @export
 new_matrixfit <- function(cf,
@@ -254,6 +315,11 @@ new_matrixfit <- function(cf,
   N <- dim(cf$cf)[1]
   Thalfp1 <- cf$Time/2 + 1
   t <- c(0:(cf$Time/2))
+  
+  deltat <- 1
+  if(model == "shifted" && any(names(cf) == "deltat")) {
+    deltat <- cf$deltat
+  }
   
   ## This is the number of correlators in cf
   if (!is.null(dim(cf$cf)))
@@ -373,7 +439,7 @@ new_matrixfit <- function(cf,
   } else if (model == 'pc') {
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
-    model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$n_particles)
+    model_object <- Phi4Model$new(cf$Time, parind, sign.vec, ov.sign.vec)#cf$n_particles)
   }
   
   par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
