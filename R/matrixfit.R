@@ -487,9 +487,9 @@ matrixfit <- function(cf, t1, t2,
   return(invisible(res))
 }
 
-#' plot a matrixfit
+#' Plot a matrixfit
 #' 
-#' @param mfit an object of class matrixfit
+#' @param x an object of class matrixfit
 #' @param plot.errorband Boolean: whether or not to plot an errorband
 #' @param ylim Numeric vector: y-limit of the plot
 #' @param xlab String: label of x-axis
