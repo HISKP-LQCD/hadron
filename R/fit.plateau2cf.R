@@ -15,8 +15,7 @@ fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
 
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    ##M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.samples=TRUE)
-    M <- invertCovMatrix(cf$cf[,ii], boot.samples=boot.samples, boot.l=boot.l)
+    M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.samples = TRUE)
   }
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
 
