@@ -535,11 +535,6 @@ print.bootstrapfit <- function(x, digits = 2, ...) {
 #' Plot a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
-#' @param xlim x limits of the plot.
-#' @param ylim y limits of the plot.
-#' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
-#' adding points with error bars to the current plot. Switches the underlying
-#' plotting routine from \code{plot} to \code{points}.
 #' @param col.line line colour.
 #' @param col.band error band colour.
 #' @param opacity.band error band opacity.
@@ -553,7 +548,7 @@ print.bootstrapfit <- function(x, digits = 2, ...) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
   if(missing(plot.range)){
     rx <- range(x$x)
   }else{
@@ -564,10 +559,10 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
 
   ## use the xylimits computation of plotwitherror
   if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
   }
   else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
   }
   my.xlim <- mylims$xlim
   my.ylim <- mylims$ylim
