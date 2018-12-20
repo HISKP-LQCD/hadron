@@ -72,11 +72,13 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 
 #' NLS fit with parametric bootstrap
 #'
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap
+#'
 #' @export
 #' @family NLS fit functions
 #' 
 #' @examples
-#'
 #' ## Declare some data.
 #' value <- c(0.1, 0.2, 0.3)
 #' dvalue <- c(0.01, 0.01, 0.015)
@@ -107,6 +109,9 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 }
 
 #' NLS fit with parametric bootstrap and covariance
+#'
+#' @inheritParams bootstrap.nlsfit.cov
+#' @inheritParams parametric.bootstrap
 #'
 #' @export
 #' @family NLS fit functions

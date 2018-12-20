@@ -6,11 +6,45 @@
 \usage{
 parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...)
 }
+\arguments{
+\item{fn}{the (non-linear) function to be fitted to the data. Its first
+argument must be the fit parameters named \code{par}. The second must be
+\code{x}, the explaining variable. Additional parameters might be passed to
+the function. Currently we pass \code{boot_r} which is \code{NA} for the original data
+and the ID of the bootstrap sample otherwise. As more parameters might be
+added in the future it is recommended that the fit function accepts \code{...} as
+the last parameter to be forward compatible.}
+
+\item{par.guess}{initial guess values for the fit parameters.}
+
+\item{boot.R}{numeric. Number of bootstrap samples to generate.}
+
+\item{y}{the data as a one-dimensional numerical vector to be described by
+the fit function.}
+
+\item{dy}{Numeric vector. Errors of the dependent and independent
+variable, respectively. These do not need to be specified as they can be
+computed from the bootstrap samples. In the case of parametric bootstrap it
+might would lead to a loss of information if they were computed from the
+pseudo-bootstrap samples. They must not be specified if a covariance matrix
+is given.}
+
+\item{x}{values of the explaining variable in form of a one-dimensional
+numerical vector.}
+
+\item{dx}{Numeric vector. Errors of the dependent and independent
+variable, respectively. These do not need to be specified as they can be
+computed from the bootstrap samples. In the case of parametric bootstrap it
+might would lead to a loss of information if they were computed from the
+pseudo-bootstrap samples. They must not be specified if a covariance matrix
+is given.}
+
+\item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+}
 \description{
 NLS fit with parametric bootstrap
 }
 \examples{
-
 ## Declare some data.
 value <- c(0.1, 0.2, 0.3)
 dvalue <- c(0.01, 0.01, 0.015)
