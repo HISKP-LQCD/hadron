@@ -97,8 +97,6 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 \references{
   arXiv:1203.6041
 }
-\examples{
-}
 \seealso{
   \code{\link{bootstrap.effectivemass}}
 }

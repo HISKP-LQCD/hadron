@@ -100,8 +100,5 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 \seealso{
   \code{boostrap.gevp}, \code{extract.obs}
 }
-\examples{
-
-}
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}
