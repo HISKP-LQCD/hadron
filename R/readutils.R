@@ -538,7 +538,7 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                 icf = array(ldata[, ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
   cf <- cf_smeared(cf,
                    scf = array(ldata[, ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                   sicf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   iscf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
