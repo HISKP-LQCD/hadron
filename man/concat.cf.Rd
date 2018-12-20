@@ -6,6 +6,9 @@
 \usage{
 concat.cf(left, right)
 }
+\arguments{
+\item{left, right}{\code{cf} objects to concatenate.}
+}
 \description{
 Concatenate two correlation function objects
 }

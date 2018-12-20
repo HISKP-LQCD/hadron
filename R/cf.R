@@ -182,7 +182,10 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 #' Principal correlator CF mixin constructor
 #'
 #' @param .cf `cf` object to extend.
-#' @param id Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
+#' @param id Integer, number of the principal correlator from the GEVP.
+#' Ascending with eigenvalue, so `id = 1` is the lowest state.
+#' @param gevp_reference_time Integer, reference time \eqn{t_0} that has been
+#' used in the GEVP.
 #'
 #' @family cf constructors
 #'
@@ -612,6 +615,8 @@ c.cf <- function (...) {
 }
 
 #' Concatenate two correlation function objects
+#'
+#' @param left,right `cf` objects to concatenate.
 concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))

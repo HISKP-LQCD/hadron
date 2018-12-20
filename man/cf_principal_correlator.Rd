@@ -9,7 +9,11 @@ cf_principal_correlator(.cf = cf(), id, gevp_reference_time)
 \arguments{
 \item{.cf}{\code{cf} object to extend.}
 
-\item{id}{Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so \code{id = 1} is the lowest state.}
+\item{id}{Integer, number of the principal correlator from the GEVP.
+Ascending with eigenvalue, so \code{id = 1} is the lowest state.}
+
+\item{gevp_reference_time}{Integer, reference time \eqn{t_0} that has been
+used in the GEVP.}
 }
 \description{
 Principal correlator CF mixin constructor
