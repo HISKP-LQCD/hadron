@@ -131,7 +131,7 @@ averx <- function(data3pt, data2pt, pionfit,
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(w^2)
-  lm.avail <- require("minpack.lm")
+  lm.avail <- requireNamespace('minpack.lm')
   
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
@@ -144,7 +144,7 @@ averx <- function(data3pt, data2pt, pionfit,
   
   par <- Cf3pt$cf0[Cf2pt$Time/4]
   if(lm.avail && !force.optim) {
-    opt.res <- nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf0[ii])
+    opt.res <- minpack.lm::nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf0[ii])
     chisq <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
@@ -160,7 +160,7 @@ averx <- function(data3pt, data2pt, pionfit,
   plateau.tsboot <- array(NA, dim=c(boot.R,2))
   for(i in 1:boot.R) {
     if(lm.avail && !force.optim) {
-      opt <- nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf.tsboot$t[i,ii])
+      opt <- minpack.lm::nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf.tsboot$t[i,ii])
       plateau.tsboot[i,2] <- opt$rsstrace[length(opt$rsstrace)]
     }
     else {

@@ -232,13 +232,13 @@ bootstrap.nlsfit <- function(fn,
   useCov <- !missing(CovMatrix)
 
   if (use.minpack.lm) {
-    lm.avail <- require(minpack.lm)
+    lm.avail <- requireNamespace('minpack.lm')
   } else {
     lm.avail <- FALSE
   }
 
   if (parallel) {
-    parallel <- require(parallel)
+    parallel <- requireNamespace('parallel')
   }
 
   crr <- c(1:(boot.R+1))
@@ -372,8 +372,8 @@ bootstrap.nlsfit <- function(fn,
   if (lm.avail) {
     wrapper <- function(y, par) {
       suppressWarnings(
-        res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500)))
+        res <- minpack.lm::nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
+                      control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500)))
 
       list(converged = res$info %in% 1:3,
            info = res$info,
@@ -396,7 +396,7 @@ bootstrap.nlsfit <- function(fn,
   first.res <- wrapper(Y, par.Guess)
 
   if (parallel)
-    my.lapply <- mclapply
+    my.lapply <- parallel::mclapply
   else {
     my.lapply <- lapply
   }
