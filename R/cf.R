@@ -621,8 +621,7 @@ concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
 
-  if (inherits(left, 'cf_boot') || inherits(left, 'cf_jackknife')
-      || inherits(right, 'cf_boot') || inherits(right, 'cf_jackknife')) {
+  if (inherits(left, 'cf_boot') || inherits(right, 'cf_boot')) {
     warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
   }
 
