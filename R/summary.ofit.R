@@ -1,8 +1,9 @@
-print.ofit <- function(fit) {
-  summary(fit)
+print.ofit <- function (x, ...) {
+  summary(x, ...)
 }
 
-summary.ofit <- function(fit) {
+summary.ofit <- function (object, ...) {
+  fit <- object
   kappa <- fit$kappa
   mu <- fit$mu
   t1 <- fit$t1

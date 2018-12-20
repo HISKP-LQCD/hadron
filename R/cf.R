@@ -646,7 +646,8 @@ concat.cf <- function (left, right) {
   return (invisible(rval))
 }
 
-plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+  cf <- x
   stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
   stopifnot(inherits(cf, 'cf_meta'))
 
@@ -756,7 +757,8 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 }
 
 
-summary.cf <- function(cf, ...) {
+summary.cf <- function(object, ...) {
+  cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
 
   cat("T = ", cf$Time, "\n")
@@ -790,6 +792,6 @@ summary.cf <- function(cf, ...) {
   }
 }
 
-print.cf <- function(cf, ...) {
-  summary(cf, ...)
+print.cf <- function (x, ...) {
+  summary(x, ...)
 }

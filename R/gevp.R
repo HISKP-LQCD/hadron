@@ -328,7 +328,8 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   return(invisible(res))
 }
 
-summary.gevp.amplitude <- function(amp) {
+summary.gevp.amplitude <- function (object, ...) {
+  amp <- object
   cat("\n ** Result of a GEVP analysis for the amplitude **\n\n")
   cat("time range from", amp$t1, " to ", amp$t2, "\n")
   cat("mass:\n")
@@ -356,7 +357,8 @@ summary.gevp.amplitude <- function(amp) {
   }
 }
 
-plot.gevp.amplitude <- function(amp, ...) {
+plot.gevp.amplitude <- function (x, ...) {
+  amp <- x
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)
   if(amp$fit) {
     arrows(x0=amp$t1, y0=amp$meanAmplitude,

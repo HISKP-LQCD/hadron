@@ -5,7 +5,7 @@
 \title{Summarize a bootstrap NLS fit}
 \usage{
 \method{summary}{bootstrapfit}(object, digits = 2,
-  print.correlation = TRUE)
+  print.correlation = TRUE, ...)
 }
 \arguments{
 \item{object}{object returned by \code{bootstrap.nlsfit}}

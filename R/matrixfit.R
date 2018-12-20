@@ -512,8 +512,9 @@ matrixfit <- function(cf, t1, t2,
 #' 
 #' @seealso \code{\link{matrixfit}}
 
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y",
-                           do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col, every, ...) {
+plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
+                            do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
+  mfit <- x
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -637,7 +638,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
 }
 
 
-summary.matrixfit <- function(mfit) {
+summary.matrixfit <- function (object, ...) {
+  mfit <- object
   if(mfit$model == "pc") {
     cat("\n ** Result of two state exponential fit to principal correlator **\n\n")
   }

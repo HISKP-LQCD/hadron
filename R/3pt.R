@@ -68,7 +68,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   return(invisible(res))
 }
 
-summary.pionff <- function(ff, ...) {
+summary.pionff <- function (object, ...) {
+  ff <- object
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
 
@@ -194,7 +195,8 @@ averx <- function(data3pt, data2pt, pionfit,
   return(invisible(res))
 }
 
-summary.averx <- function(averx, ...) {
+summary.averx <- function(object, ...) {
+  averx <- object
   cat("\n")
   summary(averx$matrixfit)
   cat("\nAnalysis for <x>\n\n")
@@ -221,7 +223,7 @@ summary.averx <- function(averx, ...) {
   cat("error    =", averx$daverx.wm, "\n")  
 }
 
-print.averx <- function(averx, ...) {
-  summary.averx(averx)
+print.averx <- function(x, ...) {
+  summary.averx(x, ...)
 }
 

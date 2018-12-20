@@ -34,8 +34,8 @@ computeacf <- function(tseries, W.max, Lambda=100) {
 }
 
 ## generic function to plot an object of class "myGamma"
-plot.hadronacf <- function (Gamma, col = "black", ...)
-{
+plot.hadronacf <- function (x, col = "black", ...) {
+  Gamma <- x
   ## this is to avoid a warning
   Gamma$dGamma[1] <- 0.001
   ## determine ylimits from data
@@ -53,7 +53,8 @@ plot.hadronacf <- function (Gamma, col = "black", ...)
 }
 
 ## generic summary function for an object of class "myGamma"
-summary.hadronacf <- function(Gamma) {
+summary.hadronacf <- function (object, ...) {
+  Gamma <- object
   cat("Analysis based on Autocorrelation function\n")
   cat("cut-off parameter W:\t", Gamma$W, "\n")
   cat("tauint:\t\t\t", Gamma$tau, "\n")

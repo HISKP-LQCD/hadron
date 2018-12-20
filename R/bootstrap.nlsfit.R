@@ -465,7 +465,7 @@ bootstrap.nlsfit <- function(fn,
 #'
 #' @export
 #' @family NLS fit functions
-summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
+summary.bootstrapfit <- function(object, digits = 2, print.correlation = TRUE, ...) {
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
   errors <- object$se
@@ -513,7 +513,7 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
 #' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
-print.bootstrapfit <- function(x, digits=2) {
+print.bootstrapfit <- function(x, digits = 2, ...) {
   summary.bootstrapfit(object=x, digits=digits)
 }
 

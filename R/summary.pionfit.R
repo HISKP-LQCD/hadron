@@ -1,8 +1,9 @@
-print.pionfit <- function(fit) {
-  summary(fit)
+print.pionfit <- function (x, ...) {
+  summary(x, ...)
 }
 
-summary.pionfit <- function(fit) {
+summary.pionfit <- function (object, ...) {
+  fit <- object
   kappa <- fit$kappa
   mu <- fit$mu
   t1 <- fit$t1

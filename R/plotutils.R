@@ -327,7 +327,8 @@ plot.cfit <- function(x, ...) {
   }
 }
 
-plot.effmass <- function(m, ll, lf, ff, ...) {
+plot.effmass <- function (x, ll, lf, ff, ...) {
+  m <- x
 
   if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
     X11()
@@ -356,7 +357,8 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx, ...) {
+plot.averx <- function(x, ...) {
+  averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
@@ -386,7 +388,8 @@ plot.averx <- function(averx, ...) {
          )
 }
 
-plot.pionff <- function(ff, ...) {
+plot.pionff <- function (x, ...) {
+  ff <- x
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
@@ -402,7 +405,8 @@ plot.pionff <- function(ff, ...) {
 }
 
 
-plot.outputdata <- function(data, skip=0, ...) {
+plot.outputdata <- function (x, skip = 0, ...) {
+  data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])
   dH.res <- uwerrprimary( exp(-data$V3[skip:length(data$V3)]))
   plot(data$V1, data$V2, type="l",
