@@ -18,7 +18,7 @@ x <- c(1, 2, 3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
 
-fn <- function (par, x) par[1] + par[2] * x
+fn <- function (par, x, ...) par[1] + par[2] * x
 
 fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 summary(fit.result)
