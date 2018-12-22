@@ -322,14 +322,14 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return (invisible(cf))
 }
 
-readtextcf_nissa <- function(directory,configinit,confnumber,confsteps,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,sparsity=1, avg=1, Nmin=4, autotruncate=TRUE,nmasses,nmasses1,nmasses2,r1,r2){
+readtextcf_nissa <- function(spinstructures,directory,configinit,confnumber,confsteps,nsmearing=4, T=48, sym=TRUE, path="", skip=1, check.t=0, symmetrise=TRUE,sparsity=1, avg=1, Nmin=4, autotruncate=TRUE,nmasses,nmasses1,nmasses2,r1,r2){
   stopifnot(!missing(directory))
   stopifnot(T >= 1)
-  print("Testing nissa routing")
+  print("Testing nissa reading")
 
 #  require(Rcpp)
 #  sourceCpp("../src/read_nissa_correlation.cpp")
-  tmp <- reading_nissa_corr(c("P5P5"),
+  tmp <- reading_nissa_corr(spinstructures,
                             configinit,
                             confnumber, 
                             confsteps,
@@ -387,15 +387,14 @@ readtextcf_nissa <- function(directory,configinit,confnumber,confsteps,nsmearing
   rcft <- tmp[,seq(1, ncol(tmp), 2)]
   icft <- tmp[,seq(2, ncol(tmp), 2)]
   ## average +-t
-
-  i1 <- rep(c(2:(T/2))  ,ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(2:32)))
+  i1 <- rep(c(2:(T/2))  ,ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=T/2-1)
   i2 <- rep(c(T:(T/2+2)),ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(T:(T/2+2))))
   ii <- rep(c(1:(T/2+1)),ncol(rcft)/T)+ rep(seq(0,ncol(rcft)-1,T),each=length(c(1:(T/2+1))))
 
   if(symmetrise) {
     tmp[,i1] <- 0.5*(tmp[,i1] + sign * tmp[,i2])
   }else{
-    ii <- c(1:T)
+    ii <- c(1:ncol(rcft))
   }
 
   cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
