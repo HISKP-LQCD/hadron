@@ -676,6 +676,7 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
 }
 
 #' shift a correlation function by 'places' time-slices
+#'
 #'   C'(t) = C(t+places)
 #' where places can be positive or negative as required and periodic boundary conditions
 #' in time are assumed

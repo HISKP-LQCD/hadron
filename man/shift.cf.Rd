@@ -2,10 +2,7 @@
 % Please edit documentation in R/cf.R
 \name{shift.cf}
 \alias{shift.cf}
-\title{shift a correlation function by 'places' time-slices
-C'(t) = C(t+places)
-where places can be positive or negative as required and periodic boundary conditions
-in time are assumed}
+\title{shift a correlation function by 'places' time-slices}
 \usage{
 shift.cf(cf, places)
 }
@@ -15,7 +12,6 @@ shift.cf(cf, places)
 \item{places}{integer number of time-slices for backward (negative) or forward (positive) shifts}
 }
 \description{
-shift a correlation function by 'places' time-slices
 C'(t) = C(t+places)
 where places can be positive or negative as required and periodic boundary conditions
 in time are assumed
