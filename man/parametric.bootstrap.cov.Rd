@@ -37,4 +37,3 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
-\concept{NLS fit functions}
