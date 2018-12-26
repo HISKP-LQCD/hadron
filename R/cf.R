@@ -675,33 +675,44 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
   return(invisible(df))
 }
 
-# shift a correlation function by 'places' time-slices
-#   C'(t) = C(t+places)
-# where places can be positive or negative as required
-# this will of course mix smearings and observables
-# and must be taken into account externally by
-# invalidating the affected time-slices
+#' shift a correlation function by 'places' time-slices
+#'   C'(t) = C(t+places)
+#' where places can be positive or negative as required and periodic boundary conditions
+#' in time are assumed
+#' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins required)
+#' @param places integer number of time-slices for backward (negative) or forward (positive) shifts
 shift.cf <- function(cf, places) {
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
+  if( cf$symmetrised ){
+    stop("A correlation function can only be time-shifted if it is not symmetrised!")
+  }  
+
   if(places == 0){
     return(invisible(cf))
   }
 
   cf <- invalidate.samples.cf(cf)
-  n <- ncol(cf$cf)
+  n <- cf$Time
 
-  if( places < 0 ){
-    cf$cf <- cbind( cf$cf[, (n - abs(places) + 1):n, drop=FALSE], cf$cf[, 1:(n-abs(places)), drop=FALSE] )
-    if( !is.null(cf$icf) ){
-      cf$icf <- cbind( cf$icf[, (n - abs(places) + 1):n, drop=FALSE], cf$icf[, 1:(n-abs(places)), drop=FALSE] )
-    }
-  } else {
-    cf$cf <- cbind( cf$cf[, (places+1):n, drop=FALSE], cf$cf[, 1:places, drop=FALSE] )
-    if( !is.null(cf$icf) ){
-      cf$icf <- cbind( cf$icf[, (places+1):n, drop=FALSE], cf$icf[, 1:places, drop=FALSE] )
+  for( iobs in 0:(cf$nrObs-1) ){
+    for( ismear in 0:(cf$nrStypes-1) ){
+      istart <- cf$Time*cf$nrStypes*iobs + cf$Time*ismear + 1
+      iend <- istart + cf$Time - 1
+
+      if( places < 0 ){
+        ishift <- c( (iend - abs(places) + 1):iend,
+                     (istart:(iend-abs(places))) )
+      } else {
+        ishift <- c( (istart+places):iend,
+                      istart:(istart+places-1) )
+      }
+      cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
+      if( !is.null(cf$icf) ){
+        cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
+      }
     }
   }
-
   return(invisible(cf))
 }
 
