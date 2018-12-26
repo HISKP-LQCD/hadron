@@ -696,9 +696,9 @@ shift.cf <- function(cf, places) {
   cf <- invalidate.samples.cf(cf)
   n <- cf$Time
 
-  for( iobs in 0:(cf$nrObs-1) ){
-    for( ismear in 0:(cf$nrStypes-1) ){
-      istart <- cf$Time*cf$nrStypes*iobs + cf$Time*ismear + 1
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      istart <- cf$Time*cf$nrStypes*oidx + cf$Time*sidx + 1
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
