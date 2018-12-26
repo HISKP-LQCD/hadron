@@ -4,13 +4,17 @@
 \alias{bootstrap.nlsfit}
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
-bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
-  dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd)
+bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr, dfn,
+  use.minpack.lm = TRUE, parallel = FALSE, error = sd)
 }
 \arguments{
 \item{fn}{the (non-linear) function to be fitted to the data. Its first
 argument must be the fit parameters named \code{par}. The second must be
-\code{x}, the explaining variable.}
+\code{x}, the explaining variable. Additional parameters might be passed to
+the function. Currently we pass \code{boot_r} which is \code{NA} for the original data
+and the ID of the bootstrap sample otherwise. As more parameters might be
+added in the future it is recommended that the fit function accepts \code{...} as
+the last parameter to be forward compatible.}
 
 \item{par.guess}{initial guess values for the fit parameters.}
 
@@ -102,4 +106,3 @@ Other NLS fit functions: \code{\link{parametric.bootstrap.cov}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
-\concept{NLS fit functions}
