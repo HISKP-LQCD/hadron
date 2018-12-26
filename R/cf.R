@@ -683,16 +683,23 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
 # invalidating the affected time-slices
 shift.cf <- function(cf, places) {
   stopifnot(inherits(cf, 'cf_orig'))
+  if(places == 0){
+    return(invisible(cf))
+  }
 
   cf <- invalidate.samples.cf(cf)
   n <- ncol(cf$cf)
 
-  if(places == 0){
-    cf$cf <- cf$cf
-  } else if ( places < 0 ){
-    cf$cf <- cbind( cf$cf[, (n - abs(places) + 1):n], cf$cf[, 1:(n-abs(places))] )
+  if( places < 0 ){
+    cf$cf <- cbind( cf$cf[, (n - abs(places) + 1):n, drop=FALSE], cf$cf[, 1:(n-abs(places)), drop=FALSE] )
+    if( !is.null(cf$icf) ){
+      cf$icf <- cbind( cf$icf[, (n - abs(places) + 1):n, drop=FALSE], cf$icf[, 1:(n-abs(places)), drop=FALSE] )
+    }
   } else {
-    cf$cf <- cbind( cf$cf[, (places+1):n], cf$cf[, 1:places] )
+    cf$cf <- cbind( cf$cf[, (places+1):n, drop=FALSE], cf$cf[, 1:places, drop=FALSE] )
+    if( !is.null(cf$icf) ){
+      cf$icf <- cbind( cf$icf[, (places+1):n, drop=FALSE], cf$icf[, 1:places, drop=FALSE] )
+    }
   }
 
   return(invisible(cf))
