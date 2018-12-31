@@ -6,8 +6,8 @@
 \usage{
 \method{plot}{bootstrapfit}(x, ..., xlim, ylim, rep = FALSE,
   col.line = "black", col.band = "gray", opacity.band = 0.65,
-  lty = c(1), lwd = c(1), xlab = "x", ylab = "y",
-  supports = 1000, plot.range, error = sd)
+  lty = c(1), lwd = c(1), xlab = "x", ylab = "y", supports = 1000,
+  plot.range, error = sd)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
@@ -50,4 +50,3 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
-\concept{NLS fit functions}
