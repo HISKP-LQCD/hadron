@@ -273,11 +273,22 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   tidx <- NULL
   if( plaquette || dH || trajtime || acc ) {
     # read output.data
+    
+    # skip 'skip' lines. Hopefully the trajectory counter doesn't start at something much larger than 0
+    # because otherwise we'll probably miss trajectories in the filtering below
+    outdat <- read.table(outfile, skip=skip, fill=TRUE)
+    no_rows <- nrow(outdat)
+
+    # count the number of columns in the penultimate line of output.data
     # in the first line of output.data which we want to consider 
     # (when the mass preconditioning is changed,
     # the number of columns may change so we need to be able to deal with that)
     no_columns <- max(count.fields(outfile,
-                                   skip=skip))
+                                   skip=skip+no_rows-1))
+    
+    # restrict any outliers in outdat. Inconsistent lines will almost certainly
+    # be filtered out below 
+    outdat <- outdat[,1:no_columns]
 
     # if we have a rectange in the gauge action, the number of columns is different
     # in output.data
@@ -297,13 +308,10 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       col.names <- c("traj","P","dH","expdH",paste("V",5:(no_columns-accshift),sep=""),tailvec)
     }
 
-    # read the entire file and then resize the number of columns to the target number
-    # hopefully below, longer or short rows will be skipped because one generally skips
-    # to the point where the trajectories become consistent 
-    outdat <- read.table(outfile, fill=TRUE)
-    outdat <- outdat[,1:no_columns]
     colnames(outdat) <- col.names
 
+    # restrict to the lines which are definitely the trajectories we want to 
+    # analyse
     tidx <- which(outdat$traj > skip)
     if(debug) print(outdat)
   }
