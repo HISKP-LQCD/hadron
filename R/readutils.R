@@ -56,7 +56,7 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 }
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
-                         colClasses, obs=NULL, obs.index, avg, stride) {
+                         colClasses, obs=NULL, obs.index, avg=1, stride=1) {
   if(missing(files)) {
     stop("readcmifiles: filelist missing, aborting...\n")
   }
@@ -268,18 +268,18 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
 }
 
 readhlcor <- function(filename) {
-  return(invisible(read.table(filename, header=F,
+  return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
 }
 
 readoutputdata <- function(filename) {
-  data <- read.table(filename, header=F)
+  data <- read.table(filename, header=FALSE)
   attr(data, "class") <- c("outputdata", "data.frame")  
   return(invisible(data))
 }
 
 readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
-                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE) {
+                       stride=1, avg=1, Nmin=4, autotruncate=TRUE) {
   stopifnot(!missing(file))
   stopifnot(T >= 1)
 
@@ -297,17 +297,17 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   ii <- c(1:(T/2+1))
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
-  if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
+  if( (stride > 1 | avg > 1) & (ncol(tmp) %% (stride*avg) != 0) ){
     if(autotruncate){
-      cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,ncol(tmp)))
+      cat(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
       cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
       cat("readtextcf: Reducing the number of total measurements to fit!\n")
-      nmeas <- as.integer( (sparsity*avg)*floor( ncol(tmp)/(sparsity*avg) ))
-      if( nmeas/(sparsity*avg) >= Nmin ){
+      nmeas <- as.integer( (stride*avg)*floor( ncol(tmp)/(stride*avg) ))
+      if( nmeas/(stride*avg) >= Nmin ){
         tmp <- tmp[,1:nmeas]
       } else {
         cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
-        sparsity <- 1
+        stride <- 1
         avg <- 1
       }
     } else {
@@ -316,8 +316,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
 
   ## sparsify data
-  if(sparsity > 1){
-    sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
+  if(stride > 1){
+    sp.idx <- seq(from=1,to=ncol(tmp),by=stride)
     tmp <- tmp[,sp.idx]
   } 
   # average over 'avg' measurements sequentially
