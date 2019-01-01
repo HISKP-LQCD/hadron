@@ -491,7 +491,8 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
 # "close-by-times" averaging replaces the value of the correlation function at t
 # with the "hypercubic" average with the values at the neighbouring time-slices
 # with weights 0.25, 0.5 and 0.25
-# it then invalidates the boundary timeslices (for all smearing types and observables)
+#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
+# where periodic boundary conditions are assumed in shift.cf
 avg.cbt.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -503,19 +504,6 @@ avg.cbt.cf <- function(cf){
   # average over shifted correlation functions
   for( p in c(-1,1) ){
     cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
-  }
-  # invalidate time slices with incorrect contributions
-  for( oidx in 0:(cf$nrObs-1) ){
-    for( sidx in 0:(cf$nrStypes-1) ){
-      nts <- cf$Time/2+1
-      if(!cf$symmetrised){
-        nts <- cf$Time
-      }
-      istart <- oidx*cf$nrStypes*nts + sidx*nts + 1
-      iend <- istart+nts
-      ii <- c(istart,iend-1)
-      cf$cf[,ii] <- NA
-    }
   }
   cf <- invalidate.samples.cf(cf)
   return(invisible(cf))
@@ -675,26 +663,45 @@ plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, .
   return(invisible(df))
 }
 
-# shift a correlation function by 'places' time-slices
-#   C'(t) = C(t+places)
-# where places can be positive or negative as required
-# this will of course mix smearings and observables
-# and must be taken into account externally by
-# invalidating the affected time-slices
+#' shift a correlation function by 'places' time-slices
+#'
+#'   C'(t) = C(t+places)
+#' where places can be positive or negative as required and periodic boundary conditions
+#' in time are assumed
+#' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins required)
+#' @param places integer number of time-slices for backward (negative) or forward (positive) shifts
 shift.cf <- function(cf, places) {
+  stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
-
-  cf <- invalidate.samples.cf(cf)
-  n <- ncol(cf$cf)
+  if( cf$symmetrised ){
+    stop("A correlation function can only be time-shifted if it is not symmetrised!")
+  }  
 
   if(places == 0){
-    cf$cf <- cf$cf
-  } else if ( places < 0 ){
-    cf$cf <- cbind( cf$cf[, (n - abs(places) + 1):n], cf$cf[, 1:(n-abs(places))] )
-  } else {
-    cf$cf <- cbind( cf$cf[, (places+1):n], cf$cf[, 1:places] )
+    return(invisible(cf))
   }
 
+  cf <- invalidate.samples.cf(cf)
+  n <- cf$Time
+
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      istart <- cf$Time*cf$nrStypes*oidx + cf$Time*sidx + 1
+      iend <- istart + cf$Time - 1
+
+      if( places < 0 ){
+        ishift <- c( (iend - abs(places) + 1):iend,
+                     (istart:(iend-abs(places))) )
+      } else {
+        ishift <- c( (istart+places):iend,
+                      istart:(istart+places-1) )
+      }
+      cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
+      if( !is.null(cf$icf) ){
+        cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
+      }
+    }
+  }
   return(invisible(cf))
 }
 
