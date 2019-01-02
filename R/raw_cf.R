@@ -109,7 +109,6 @@ uwerr.raw_cf <- function(cf){
 
   # get the index matrix for the correlator tensor
   idcs <- idx_matrix.raw_cf(cf)
-  print(idcs)
   stepping <- dims[1]
   nsteps <- as.integer( nrow(idcs) / stepping )
   for( step in 0:(nsteps-1) ){
@@ -361,7 +360,8 @@ is_empty.raw_cf <- function(.raw_cf){
 #}
 #
 
-plot.raw_cf <- function(cf, plot_im = FALSE, plot_im_same = FALSE, return_only = FALSE, ...) {
+plot.raw_cf <- function(x, plot_im = FALSE, plot_im_same = FALSE, return_only = FALSE, ...) {
+  cf <- x
   stopifnot(any(inherits(cf, c('raw_cf_data'))))
   stopifnot(inherits(cf, 'raw_cf_meta'))
 
@@ -380,8 +380,8 @@ plot.raw_cf <- function(cf, plot_im = FALSE, plot_im_same = FALSE, return_only =
 
   tmax <- cf$nts-1
  
+  # construct a return value of the plotted data
   plotdf <- list()
-
   for( i in 0:(prod(cf$dim)-1) ){
     istart <- i*cf$nrStypes*cf$nrObs*cf$nts + 1
     iend <- istart + cf$nrStypes*cf$nrObs*cf$nts - 1
@@ -395,25 +395,22 @@ plot.raw_cf <- function(cf, plot_im = FALSE, plot_im_same = FALSE, return_only =
     #clr_imag[ which( Im(data$value[iselect]) < 0) ] <- "purple"
 
     plotdf[[length(plotdf)+1]] <-
-      list(t = rep(x=0:tmax, times=cf$nrStypes*cf$nrObs),
+      list(t = rep(0:tmax, times=cf$nrStypes*cf$nrObs),
            real = data.frame(CF = data$value$real[iselect],
                              Err = data$dvalue$real[iselect] ),
            imag = data.frame(CF = data$value$imag[iselect],
                              Err = data$dvalue$imag[iselect] )
            )
-    print(str(plotdf[[length(plotdf)]]))
 
     if( ! return_only ){
       if( plot_im & plot_im_same ){
-        plotwitherror(x = rep(x=plotdf[[length(plotdf)]]$t, times=2), 
+        plotwitherror(x = rep(plotdf[[length(plotdf)]]$t, times=2), 
                       y = c(plotdf[[length(plotdf)]]$real$CF, plotdf[[length(plotdf)]]$imag$CF), 
                       dy = c(plotdf[[length(plotdf)]]$real$Err, plotdf[[length(plotdf)]]$imag$Err),
                       col = c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
                               rep("red", cf$nrStypes*cf$nrObs*cf$nts)),
                       ...)
       } else {
-        print(length(plotdf[[length(plotdf)]]$t))
-        print(length(plotdf[[length(plotdf)]]$real$CF))
         plotwitherror(x = plotdf[[length(plotdf)]]$t, 
                       y = plotdf[[length(plotdf)]]$real$CF, 
                       dy = plotdf[[length(plotdf)]]$real$Err,
