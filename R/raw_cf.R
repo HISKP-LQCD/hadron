@@ -1,19 +1,12 @@
-#' Correlation function container
+#' @title Container for raw correlation functions
 #'
-#' This function `raw_cf()` creates containers for raw correlation functions
-#' of class `raw_cf`. This class is particularly designed to deal with
-#' correlation functions emerging in statistical and quantum field theory
-#' simulations. Arithmetic operations are defined for this class in
+#' @description
+#' This function \code{raw_cf()} creates containers for raw correlation functions
+#' of class \code{raw_cf}. This class is particularly designed to deal with
+#' complex and matrix-valued correlation functions emerging in statistical
+#' mechanics and quantum field theory simulations. 
+#' Arithmetic operations are defined for this class in
 #' several ways, as well as concatenation and \link{is.raw_cf} and \link{as.raw_cf}.
-#'
-#' @details
-#'
-#' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
-#'
-#' - `conf.index`: TODO
-#' - `N`: Integer, number of measurements.
-#' - `blockind`: TODO
-#' - `jack.boot.se`: TODO
 #'
 #' @family raw_cf constructors
 #'
@@ -24,21 +17,24 @@ raw_cf <- function () {
   return (cf)
 }
 
-#' RAW_CF metadata mixin constructor
+#' @title RAW_CF metadata mixin constructor
 #'
-#' @param nrObs Integer, number of different observables assembled in the data field of this container. One can use \link{c.raw_cf} to add multiple observables into one container.
+#' @param nrObs Integer, number of different observables assembled in the data field of this container. 
 #' @param Time Integer, full time extent.
+#' @param nts Integer, number of time separations actually stored in the data field.
 #' @param nrStypes Integer, number of smearing types.
-#' @param dim Integer vector of "internal" dimensions for matrix-valued correlation functions.
+#' @param dim Integer vector of "internal" dimensions for matrix-valued correlation functions. 
+#'            For a scalar correlation, this should be specified as \code{c(1,1)}.
 #'
 #' @family raw_cf constructors
 #'
 #' @export
-raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=c(1) ) {
+raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=c(1,1), nts = Time ) {
   stopifnot(inherits(cf, 'raw_cf'))
   
   cf$nrObs <- nrObs
   cf$Time <- Time
+  cf$nts <- nts
   cf$nrStypes <- nrStypes
   cf$dim <- dim
 
@@ -46,7 +42,7 @@ raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=
   return (cf)
 }
 
-#' Original data RAW_CF mixin constructor
+#' @title Original data RAW_CF mixin constructor
 #'
 #' @param cf `raw_cf` object to extend.
 #' @param data Numeric or complex array, original data for all observables and measurements. 
@@ -77,27 +73,45 @@ raw_cf_data <- function (cf, data) {
   return (cf)
 }
 
-# Gamma method analysis on all time-slices in a 'raw_cf' object
+#' @title Add Gamma-method error analysis to existing `raw_cf` container
+#' 
+#' @param cf Correlation function container of class 'raw_cf'
+#' @family raw_cf constructors
+#' 
+#' @export
+raw_cf_uwerr <- function(cf){
+  stopifnot(inherits(cf, 'raw_cf_data'))
+  stopifnot(inherits(cf, 'raw_cf_meta'))
+  cf$uwerr <- uwerr.raw_cf(cf)
+  class(cf) <- append(class(cf), 'raw_cf_uwerr')
+  return(cf)
+}
+
+#' @title Gamma method analysis on all time-slices in a 'raw_cf' object
+#'
+#' @param cf Correlation function container of class 'raw_cf'  
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))
   
   dims <- dim(cf$data)
-  
-  # get the index set for the correlator tensor
-  idcs <- index_set.raw_cf(cf)
-  stepping <- dims[1]
-  nsteps <- as.integer( nrow(idcs) / stepping )
-
   # prepare some output tensors which are reduced over the first
   # dimension (the measurements)
-  value <- array(as.complex(NA), dim=dims[2:length(dims)]) 
-  dvalue <- array(as.complex(NA), dim=dims[2:length(dims)]) 
-  ddvalue <- array(as.complex(NA), dim=dims[2:length(dims)]) 
-  tauint_real <- array(as.numeric(NA), dim=dims[2:length(dims)])
-  tauint_imag <- array(as.numeric(NA), dim=dims[2:length(dims)])
-  dtauint_real <- array(as.numeric(NA), dim=dims[2:length(dims)])
-  dtauint_imag <- array(as.numeric(NA), dim=dims[2:length(dims)])
+  na_array <- array(as.numeric(NA), dim=c(1,dims[2:length(dims)]))
 
+  value <- list(real = na_array, imag = na_array)
+  dvalue <- list(real = na_array, imag = na_array)
+  ddvalue <- list(real = na_array, imag = na_array)
+  tauint <- list(real = na_array, imag = na_array)
+  dtauint <- list(real = na_array, imag = na_array)
+
+  # the measurements are the fastest running dimension so we can easily
+  # perform the Gamma method analysis by stepping through the index matrix
+
+  # get the index matrix for the correlator tensor
+  idcs <- idx_matrix.raw_cf(cf)
+  print(idcs)
+  stepping <- dims[1]
+  nsteps <- as.integer( nrow(idcs) / stepping )
   for( step in 0:(nsteps-1) ){
     istart <- step*stepping + 1
     iend <- istart + stepping - 1
@@ -107,30 +121,28 @@ uwerr.raw_cf <- function(cf){
     ts <- cf$data[ idcs[istart:iend,] ]
     uw_real <- try(uwerrprimary(data = Re(ts)), silent=TRUE)
     uw_imag <- try(uwerrprimary(data = Im(ts)), silent=TRUE)
-    if( (!any(class(uw_real) == 'try-error')) &
-        (!any(class(uw_imag) == 'try-error')) ){
-      value[out_idcs] <- complex(real = uw_real$value,
-                                 imaginary = uw_imag$value)
-      dvalue[out_idcs] <- complex(real = uw_real$dvalue,
-                                  imaginary = uw_imag$dvalue)
-      ddvalue[out_idcs] <- complex(real = uw_real$ddvalue,
-                                   imaginary = uw_imag$ddvalue)
 
-      tauint_real[out_idcs] <- uw_real$tauint
-      dtauint_real[out_idcs] <- uw_real$dtauint
+    if(!inherits(uw_real,'try-error')){
+        value$real[out_idcs] <- uw_real$value
+       dvalue$real[out_idcs] <- uw_real$dvalue
+      ddvalue$real[out_idcs] <- uw_real$ddvalue
+       tauint$real[out_idcs] <- uw_real$tauint
+      dtauint$real[out_idcs] <- uw_real$dtauint
+    }
 
-      tauint_imag[out_idcs] <- uw_imag$tauint
-      dtauint_imag[out_idcs] <- uw_imag$dtauint
-    } 
+    if(!inherits(uw_imag, 'try-error')){
+        value$imag[out_idcs] <- uw_imag$value
+       dvalue$imag[out_idcs] <- uw_imag$dvalue
+      ddvalue$imag[out_idcs] <- uw_imag$ddvalue
+       tauint$imag[out_idcs] <- uw_imag$tauint
+      dtauint$imag[out_idcs] <- uw_imag$dtauint
+    }
   }
-  return(list(t = array( rep(0:(cf$Time-1), times=nsteps), dim=dims[2:length(dims)] ),
-              value = value,
+  return(list(value = value,
               dvalue = dvalue,
               ddvalue = ddvalue,
-              tauint_real = tauint_real,
-              tauint_imag = tauint_imag,
-              dtauint_real = dtauint_real,
-              dtauint_imag = dtauint_imag)) 
+              tauint = tauint,
+              dtauint = dtauint)) 
 }
 
 #addConfIndex2cf <- function(cf, conf.index) {
@@ -140,11 +152,58 @@ uwerr.raw_cf <- function(cf){
 #  return(cf)
 #}
 
-block.raw_cf <- function(cf){
-  stopifnot(inherits(cf1, 'raw_cf'))
-  stopifnot(inherits(cf2, 'raw_cf'))
+#' @title Block average correlation function data
+#' @description Block `block_length` measurements of the correlation
+#'              function together. This occurs, for example, when multiple
+#'              stochastic noise vectors are used per measurement or multiple
+#'              source locations. Alternatively, it can also be used to
+#'              account for auto-correlations in the data.
+#'
+#' @param cf `raw_cf` object
+#' @param block_length Integer, number of successive measurements to average over.
+block.raw_cf <- function(cf, block_length){
+  stopifnot(inherits(cf, 'raw_cf'))
+  stopifnot(inherits(cf, 'raw_cf_data'))
+
+  idcs <- idx_matrix.raw_cf(cf)
+  dims <- dim(cf$data)
+
+  nelem <- as.integer( nrow(idcs) / dims[1] )
+  nblocks <- as.integer( dims[1] / block_length )
+
+  for( elem in 0:(nelem-1) ){
+    for( block in 0:(nblocks-1) ){ 
+      istart <- elem*dims[1] + block*block_length + 1
+      iend <- istart + block_length - 1
+      # place block average into first slot
+      cf$data[ idcs[istart,] ] <- mean( cf$data[ idcs[istart:iend,] ] )
+    }
+  }
+  # subset the block averages
+  iselect <- seq(from = 1, to = dims[1], by = block_length)
+  args <- list()
+  args[[1]] <- iselect
+  args[[2]] <- 1:(cf$nts*cf$nrObs*cf$nrStypes)
+  for( d in cf$dim ){
+    args[[length(args)+1]] <- 1:d
+  }
+  idcs <- as.matrix(do.call(expand.grid, args))
+  # replace the data member by the blocked data
+  cf$data <- array(cf$data[idcs],
+                   dim=c(length(iselect), cf$nts*cf$nrObs*cf$nrStypes, cf$dim))
+  return(cf)
 }
 
+#' @title Extend statistics of an existing `raw_cf` container
+#' 
+#' @param cf1 `raw_cf` container with or without 'data' and 'meta' mixins
+#' @param cf2 `raw_cf` container with or without 'data' and 'meta' mixins
+#'
+#' @details 
+#' When either of `cf1` or `cf2` does not contain any data,
+#' the other object is returned. (allows empty `raw_cf` to be extended).
+#' If the dimensions (except for the measurements) of the `data` fields of the
+#' two containers match, they are concatenated along the measurement dimension.
 addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -162,6 +221,10 @@ addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(cf1$nrObs == cf2$nrObs )
   stopifnot(cf1$nrStypes == cf2$nrStypes)
+
+  stopifnot(inherits(cf1, 'raw_cf_data'))
+  stopifnot(inherits(cf2, 'raw_cf_data'))
+
   stopifnot( all(dim(cf1$data)[2:length(dim(cf2$data))] == dim(cf2$data)[2:length(dim(cf2$data))] ) )
 
   cf <- cf1
@@ -297,42 +360,86 @@ is_empty.raw_cf <- function(.raw_cf){
 #  return (invisible(rval))
 #}
 #
-#plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
-#  stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
-#  stopifnot(inherits(cf, 'cf_meta'))
-#
-#  if (inherits(cf, 'cf_boot')) {
-#    val <- cf$cf0
-#    err <- cf$tsboot.se
-#  } else if (inherits(cf, 'cf_jackknife')) {
-#    val <- cf$cf0
-#    err <- cf$jackknife.se
-#  } else {
-#    stop('A correlation function must be bootstrapped before it can be plotted.')
-#  }
-#
-#  if(!cf$symmetrised){
-#    tmax <- cf$Time - 1
-#  } else {
-#    tmax <- cf$Time / 2
-#  }
-#
-#  df <- data.frame(t = rep(c(0:tmax), times = length(val)/(tmax+1)),
-#                   CF = val,
-#                   Err = err)
-#
-#  plotwitherror(x = df$t, y = neg.vec * df$CF, dy = df$Err, rep = rep, ...)
-#
-#  return(invisible(df))
-#}
-#
 
-# shift a correlation function by 'places' time-slices
-#   C'(t) = C(t+places)
-# where places can be positive or negative as required
-# this will of course mix smearings and observables
-# and must be taken into account externally by
-# invalidating the affected time-slices
+plot.raw_cf <- function(cf, plot_im = FALSE, plot_im_same = FALSE, return_only = FALSE, ...) {
+  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_meta'))
+
+  if( !inherits(cf, 'raw_cf_uwerr') ){
+    data <- uwerr.raw_cf(cf)
+  } else {
+    data <- cf$uwerr
+  }
+
+  dims <- dim(data$value$real)
+  args <- list()
+  for( d in dims ){
+    args[[length(args)+1]] <- 1:d
+  }
+  idcs <- as.matrix(do.call(expand.grid, args))
+
+  tmax <- cf$nts-1
+ 
+  plotdf <- list()
+
+  for( i in 0:(prod(cf$dim)-1) ){
+    istart <- i*cf$nrStypes*cf$nrObs*cf$nts + 1
+    iend <- istart + cf$nrStypes*cf$nrObs*cf$nts - 1
+   
+    iselect <- idcs[istart:iend,]
+
+    #clr_real <- rep("black", times=cf$nrStypes*cf$nrObs*cf$nts)
+    #clr_real[ which( Re(data$value[iselect]) < 0) ] <- "red"
+
+    #clr_imag <- rep("blue", times=cf$nrStypes*cf$nrObs*cf$nts)
+    #clr_imag[ which( Im(data$value[iselect]) < 0) ] <- "purple"
+
+    plotdf[[length(plotdf)+1]] <-
+      list(t = rep(x=0:tmax, times=cf$nrStypes*cf$nrObs),
+           real = data.frame(CF = data$value$real[iselect],
+                             Err = data$dvalue$real[iselect] ),
+           imag = data.frame(CF = data$value$imag[iselect],
+                             Err = data$dvalue$imag[iselect] )
+           )
+    print(str(plotdf[[length(plotdf)]]))
+
+    if( ! return_only ){
+      if( plot_im & plot_im_same ){
+        plotwitherror(x = rep(x=plotdf[[length(plotdf)]]$t, times=2), 
+                      y = c(plotdf[[length(plotdf)]]$real$CF, plotdf[[length(plotdf)]]$imag$CF), 
+                      dy = c(plotdf[[length(plotdf)]]$real$Err, plotdf[[length(plotdf)]]$imag$Err),
+                      col = c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
+                              rep("red", cf$nrStypes*cf$nrObs*cf$nts)),
+                      ...)
+      } else {
+        print(length(plotdf[[length(plotdf)]]$t))
+        print(length(plotdf[[length(plotdf)]]$real$CF))
+        plotwitherror(x = plotdf[[length(plotdf)]]$t, 
+                      y = plotdf[[length(plotdf)]]$real$CF, 
+                      dy = plotdf[[length(plotdf)]]$real$Err,
+                      ...)
+        if( plot_im ){
+          plotwitherror(x = plotdf[[length(plotdf)]]$t, 
+                        y = plotdf[[length(plotdf)]]$real$CF, 
+                        dy = plotdf[[length(plotdf)]]$real$Err,
+                        ...)
+        }
+      }
+    }
+  }
+  return(invisible(plotdf))
+}
+
+
+#' @title shift a \code{raw_cf} correlation function by 'places' time-slices
+#' @param cf \code{raw_cf} container
+#' @param places Integer, number of time slices that the correlation function
+#'               should be shifted by. Can be positive or negative.
+#' @details
+#' The correlation funtion \eqn{C(t)} is shifted in time to produce:
+#'   \deqn{C'(t) = C(t+places)}
+#' using periodic boundary conditions in time.
+#' @export
 shift.raw_cf <- function(cf, places) {
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -377,10 +484,9 @@ shift.raw_cf <- function(cf, places) {
   return(invisible(cf))
 }
 
-#' construct the tensor index set for the entire raw correlator
-#'
+#' @title Construct the tensor index set for the entire raw correlator
 #' @param cf 'raw_cf' container with data and meta-data
-index_set.raw_cf <- function(cf){
+idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
  
@@ -392,8 +498,9 @@ index_set.raw_cf <- function(cf){
   as.matrix(do.call(expand.grid, args))
 }
 
-#' construct tensor index set for the internal degrees of freedom
-int_index_set.raw_cf <- function(cf){
+#' @title Construct tensor index set for the internal degrees of freedom
+#' @param cf `raw_cf` container
+int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
   args <- list()
