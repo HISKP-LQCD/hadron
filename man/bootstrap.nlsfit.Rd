@@ -4,8 +4,8 @@
 \alias{bootstrap.nlsfit}
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
-bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr, dfn,
-  use.minpack.lm = TRUE, parallel = FALSE, error = sd)
+bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
+  dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd)
 }
 \arguments{
 \item{fn}{the (non-linear) function to be fitted to the data. Its first
@@ -106,3 +106,4 @@ Other NLS fit functions: \code{\link{parametric.bootstrap.cov}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
+\concept{NLS fit functions}
