@@ -507,7 +507,7 @@ int_idx_matrix.raw_cf <- function(cf){
   for( d in cf$dim ){
     args[[length(args)+1]] <- 1:d
   }
-  as.matrix(do.call(exapnd.grid, args))
+  as.matrix(do.call(expand.grid, args))
 }
 
 #
