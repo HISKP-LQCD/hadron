@@ -2,7 +2,7 @@
 % Please edit documentation in R/raw_cf.R
 \name{raw_cf_meta}
 \alias{raw_cf_meta}
-\title{RAW_CF metadata mixin constructor}
+\title{\code{raw_cf} metadata mixin constructor}
 \usage{
 raw_cf_meta(cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1,
   dim = c(1, 1), nts = Time)
@@ -20,7 +20,7 @@ For a scalar correlation, this should be specified as \code{c(1,1)}.}
 \item{nts}{Integer, number of time separations actually stored in the data field.}
 }
 \description{
-RAW_CF metadata mixin constructor
+\code{raw_cf} metadata mixin constructor
 }
 \seealso{
 Other raw_cf constructors: \code{\link{raw_cf_data}},

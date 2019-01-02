@@ -17,7 +17,7 @@ raw_cf <- function () {
   return (cf)
 }
 
-#' @title RAW_CF metadata mixin constructor
+#' @title \code{raw_cf} metadata mixin constructor
 #'
 #' @param nrObs Integer, number of different observables assembled in the data field of this container. 
 #' @param Time Integer, full time extent.
