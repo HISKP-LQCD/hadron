@@ -89,13 +89,16 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     stop("plotwitherror: if any dx, mdx, dy or mdy is a simple vector, it must be of the same length as the corresponing x/y, multiple errors must ALWAYS be specified in the form of arrays/data frames/matrices")
   }
 
+  # if no plotting limits are passed, we calculate them automatically
+  # for this to work properly, we need to know if any of the axes
+  # are requested in log scale
   dots <- list(...)
   ylog <- FALSE
   xlog <- FALSE
-  if(any(names(dots) == "log")) {
-    logidx <- which(names(dots) == "log")
-    if(any(dots[logidx] == "y")){ ylog <- TRUE }
-    if(any(dots[logidx] == "x")){ xlog <- TRUE }
+  if( 'log' %in% names(dots) ) {
+    logidx <- which(names(dots) == 'log')
+    if(any( grepl('y', dots[logidx]) ) ){ ylog <- TRUE }
+    if(any( grepl('x', dots[logidx]) ) ){ xlog <- TRUE }
   }
   my.xlim <- c()
   my.ylim <- c()
