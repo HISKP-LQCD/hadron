@@ -42,7 +42,7 @@ raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=
   return (cf)
 }
 
-#' @title Original data RAW_CF mixin constructor
+#' @title Original data RAW_val mixin constructor
 #'
 #' @param cf `raw_cf` object to extend.
 #' @param data Numeric or complex array, original data for all observables and measurements. 
@@ -96,13 +96,20 @@ uwerr.raw_cf <- function(cf){
   dims <- dim(cf$data)
   # prepare some output tensors which are reduced over the first
   # dimension (the measurements)
-  na_array <- array(as.numeric(NA), dim=c(1,dims[2:length(dims)]))
+  na_array <- array(as.numeric(NA), dim=dims[2:length(dims)])
 
   value <- list(real = na_array, imag = na_array)
   dvalue <- list(real = na_array, imag = na_array)
   ddvalue <- list(real = na_array, imag = na_array)
   tauint <- list(real = na_array, imag = na_array)
   dtauint <- list(real = na_array, imag = na_array)
+
+  # generate an index matrix for this reduced tensor
+  args <- list()
+  for( d in dim(na_array) ){
+    args[[length(args)+1]] <- 1:d
+  }
+  idx_matrix_uwerr <- as.matrix(do.call(expand.grid, args))
 
   # the measurements are the fastest running dimension so we can easily
   # perform the Gamma method analysis by stepping through the index matrix
@@ -115,11 +122,11 @@ uwerr.raw_cf <- function(cf){
     istart <- step*stepping + 1
     iend <- istart + stepping - 1
 
-    out_idcs <- idcs[istart, 2:ncol(idcs)]
+    out_idcs <- idx_matrix_uwerr[step+1,]
 
-    ts <- cf$data[ idcs[istart:iend,] ]
-    uw_real <- try(uwerrprimary(data = Re(ts)), silent=TRUE)
-    uw_imag <- try(uwerrprimary(data = Im(ts)), silent=TRUE)
+    tseries <- cf$data[ idcs[istart:iend,] ]
+    uw_real <- try(uwerrprimary(data = Re(tseries)), silent=TRUE)
+    uw_imag <- try(uwerrprimary(data = Im(tseries)), silent=TRUE)
 
     if(!inherits(uw_real,'try-error')){
         value$real[out_idcs] <- uw_real$value
@@ -141,7 +148,8 @@ uwerr.raw_cf <- function(cf){
               dvalue = dvalue,
               ddvalue = ddvalue,
               tauint = tauint,
-              dtauint = dtauint)) 
+              dtauint = dtauint,
+              idx_matrix = idx_matrix_uwerr)) 
 }
 
 #addConfIndex2cf <- function(cf, conf.index) {
@@ -164,32 +172,42 @@ block.raw_cf <- function(cf, block_length){
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_data'))
 
+  if( block_length == 1 ){
+    return(cf)
+  }
+
   idcs <- idx_matrix.raw_cf(cf)
   dims <- dim(cf$data)
 
-  nelem <- as.integer( nrow(idcs) / dims[1] )
   nblocks <- as.integer( dims[1] / block_length )
+  nelem <- as.integer( nrow(idcs) / dims[1] )
 
+  # array for blocked data as well as an index matrix for this array
+  out <- array(as.complex(NA),
+               dim = c(nblocks, cf$nts*cf$nrObs*cf$nrStypes, cf$dim))
+  args <- list()
+  for( d in dim(out) ){
+    args[[length(args)+1]] <- 1:d
+  }
+  idcs_out <- as.matrix(do.call(expand.grid, args))
+
+  iout <- 1
   for( elem in 0:(nelem-1) ){
     for( block in 0:(nblocks-1) ){ 
       istart <- elem*dims[1] + block*block_length + 1
       iend <- istart + block_length - 1
-      # place block average into first slot
-      cf$data[ idcs[istart,] ] <- mean( cf$data[ idcs[istart:iend,] ] )
+
+      # select block of measurements
+      idcs_in <- idcs[istart:iend,]
+      # place block average into element of 'out' array
+      # be mindful of automatic dropping of dimensions!!
+      idx_out <- idcs_out[iout:iout,,drop=FALSE]
+      out[idx_out] <- mean( cf$data[ idcs_in ] )
+      iout <- iout+1
     }
   }
-  # subset the block averages
-  iselect <- seq(from = 1, to = dims[1], by = block_length)
-  args <- list()
-  args[[1]] <- iselect
-  args[[2]] <- 1:(cf$nts*cf$nrObs*cf$nrStypes)
-  for( d in cf$dim ){
-    args[[length(args)+1]] <- 1:d
-  }
-  idcs <- as.matrix(do.call(expand.grid, args))
   # replace the data member by the blocked data
-  cf$data <- array(cf$data[idcs],
-                   dim=c(length(iselect), cf$nts*cf$nrObs*cf$nrStypes, cf$dim))
+  cf$data <- out
   return(cf)
 }
 
@@ -360,10 +378,23 @@ is_empty.raw_cf <- function(.raw_cf){
 #}
 #
 
-plot.raw_cf <- function(x, plot_im = FALSE, plot_im_same = FALSE, return_only = FALSE, ...) {
-  cf <- x
+overview_plot_raw_cf <- function(cf, 
+                                 plot_reim = 'real', 
+                                 plot_reim_same = FALSE,
+                                 plot_relerr = FALSE,
+                                 plot_tauint = FALSE,
+                                 return_only = FALSE,
+                                 logplot = '',
+                                 title = '') {
   stopifnot(any(inherits(cf, c('raw_cf_data'))))
   stopifnot(inherits(cf, 'raw_cf_meta'))
+
+  if( !(plot_reim %in% c('real','imag','both') ) ){
+    stop("'plot_reim' must be one of 'real', 'imag' or 'both'")
+  }
+  if( plot_reim_same & !(plot_reim == 'both') ){
+    stop("'plot_reim_same' can only be true if 'plot_reim' is 'both'")
+  } 
 
   if( !inherits(cf, 'raw_cf_uwerr') ){
     data <- uwerr.raw_cf(cf)
@@ -371,56 +402,126 @@ plot.raw_cf <- function(x, plot_im = FALSE, plot_im_same = FALSE, return_only = 
     data <- cf$uwerr
   }
 
-  dims <- dim(data$value$real)
-  args <- list()
-  for( d in dims ){
-    args[[length(args)+1]] <- 1:d
-  }
-  idcs <- as.matrix(do.call(expand.grid, args))
-
   tmax <- cf$nts-1
  
   # construct a return value of the plotted data
   plotdf <- list()
+
+  # loop over the internal dimensions
   for( i in 0:(prod(cf$dim)-1) ){
     istart <- i*cf$nrStypes*cf$nrObs*cf$nts + 1
     iend <- istart + cf$nrStypes*cf$nrObs*cf$nts - 1
-   
-    iselect <- idcs[istart:iend,]
-
+  
+    # subset of the index matrix for the internal dimension which is about to be plotted 
+    iselect <- data$idx_matrix[istart:iend,]
+    
     #clr_real <- rep("black", times=cf$nrStypes*cf$nrObs*cf$nts)
     #clr_real[ which( Re(data$value[iselect]) < 0) ] <- "red"
 
     #clr_imag <- rep("blue", times=cf$nrStypes*cf$nrObs*cf$nts)
     #clr_imag[ which( Im(data$value[iselect]) < 0) ] <- "purple"
 
-    plotdf[[length(plotdf)+1]] <-
-      list(t = rep(0:tmax, times=cf$nrStypes*cf$nrObs),
-           real = data.frame(CF = data$value$real[iselect],
-                             Err = data$dvalue$real[iselect] ),
-           imag = data.frame(CF = data$value$imag[iselect],
-                             Err = data$dvalue$imag[iselect] )
-           )
-
+    lidx <- length(plotdf)+1
+    plotdf[[lidx]] <- list()
+    if( plot_reim %in% c('real','both') ){
+      # ensure that we append to the end in the right order
+      plotdf[[lidx]] <- append(plotdf[[lidx]],
+                               list(real = 
+                                    list(val = data$value$real[iselect],
+                                         dval = data$dvalue$real[iselect],
+                                         ylab = "Re(C(t))",
+                                         same_ylab = "Re/Im(C(t))",
+                                         logplot = logplot )
+                                    )
+                               )
+    }
+    if( plot_reim %in% c('imag','both') ){
+      plotdf[[lidx]] <- append(plotdf[[lidx]],
+                               list(imag = 
+                                    list(val = data$value$imag[iselect],
+                                         dval = data$dvalue$imag[iselect],
+                                         ylab = "Im(C(t))",
+                                         same_ylab = "Re/Im(C(t))",
+                                         logplot = logplot )
+                                    )
+                               )
+    }
+    if( plot_relerr ){
+      if( plot_reim %in% c('real','both') ){
+        plotdf[[lidx]] <- append(plotdf[[lidx]],
+                                 list(relerr_real =
+                                      list(val = abs(data$dvalue$real[iselect] / data$value$real[iselect]),
+                                           dval = data$ddvalue$real[iselect],
+                                           ylab = "Re(dC(t))/Re(C(t))",
+                                           same_ylab = "Re/Im(dC(t))/Re/Im(C(t))",
+                                           logplot = '')
+                                      )
+                                 )
+      }
+      if( plot_reim %in% c('imag','both') ){
+        plotdf[[lidx]] <- append(plotdf[[lidx]],
+                                 list(relerr_imag =
+                                      list(val = abs(data$dvalue$imag[iselect] / data$value$imag[iselect]),
+                                           dval = data$ddvalue$imag[iselect],
+                                           ylab = "Im(dC(t))/Im(C(t))",
+                                           same_ylab = "Re/Im(dC(t))/Re/Im(C(t))",
+                                           logplot = '')
+                                      )
+                                 )
+      }
+    }
+    if( plot_tauint ){
+      if( plot_reim %in% c('real','both') ){
+        plotdf[[lidx]] <- append(plotdf[[lidx]],
+                                 list(tauint_real =
+                                      list(val = data$tauint$real[iselect],
+                                           dval = data$dtauint$real[iselect],
+                                           ylab = "tauint[ Re(C(t)) ]",
+                                           same_ylab = "tauint[ Re/Im(C(t)) ]",
+                                           logplot = '')
+                                      )
+                                 )
+      }
+      if( plot_reim %in% c('imag', 'both') ){
+        plotdf[[lidx]] <- append(plotdf[[lidx]],
+                                 list(tauint_imag =
+                                      list(val = data$tauint$imag[iselect],
+                                           dval = data$dtauint$imag[iselect],
+                                           ylab = "tauint[ Im(C(t)) ]",
+                                           same_ylab = "tauint[ Re/Im(C(t)) ]",
+                                           logplot = '')
+                                      )
+                                 )
+      }
+    }
     if( ! return_only ){
-      if( plot_im & plot_im_same ){
-        plotwitherror(x = rep(plotdf[[length(plotdf)]]$t, times=2), 
-                      y = c(plotdf[[length(plotdf)]]$real$CF, plotdf[[length(plotdf)]]$imag$CF), 
-                      dy = c(plotdf[[length(plotdf)]]$real$Err, plotdf[[length(plotdf)]]$imag$Err),
-                      col = c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
-                              rep("red", cf$nrStypes*cf$nrObs*cf$nts)),
-                      ...)
-      } else {
-        plotwitherror(x = plotdf[[length(plotdf)]]$t, 
-                      y = plotdf[[length(plotdf)]]$real$CF, 
-                      dy = plotdf[[length(plotdf)]]$real$Err,
-                      ...)
-        if( plot_im ){
-          plotwitherror(x = plotdf[[length(plotdf)]]$t, 
-                        y = plotdf[[length(plotdf)]]$real$CF, 
-                        dy = plotdf[[length(plotdf)]]$real$Err,
-                        ...)
+      ts <- rep(0:tmax, times=cf$nrStypes*cf$nrObs)
+      if( plot_reim_same ){
+        ts <- rep(ts,times=2)
+      }
+      step <- 1
+      if( plot_reim_same ) step <- 2
+      for( qidx in seq(1,length(plotdf[[lidx]]),step) ){
+        args <- list()
+        args$x <- ts
+        if( any(names(plotdf[[lidx]][[qidx]]) == "ylim") ){
+          args$ylim <- plotdf[[lidx]][[qidx]]$ylim
         }
+        args$xlab <- "t/a"
+        args$log <- plotdf[[lidx]][[qidx]]$logplot
+        args$main <- title
+        if( plot_reim_same ){
+          args$y <- c(plotdf[[lidx]][[qidx]]$val, plotdf[[lidx]][[qidx+1]]$val)
+          args$dy <- c(plotdf[[lidx]][[qidx]]$dval, plotdf[[lidx]][[qidx+1]]$dval)
+          args$col <- c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
+                        rep("red", cf$nrStypes*cf$nrObs*cf$nts))
+          args$ylab <- plotdf[[lidx]][[qidx]]$same_ylab
+        } else {
+          args$y <- plotdf[[lidx]][[qidx]]$val
+          args$dy <- plotdf[[lidx]][[qidx]]$dval
+          args$ylab <- plotdf[[lidx]][[qidx]]$ylab
+        }
+        do.call(plotwitherror, args)
       }
     }
   }
