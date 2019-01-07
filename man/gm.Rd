@@ -27,9 +27,6 @@ The index mapping is as follows
 The function \code{\link{gm_mu}} can be used to access its elements using a more
 "natural" indexing.
 }
-\concept{
-Dirac
-
-gamma
-}
+\concept{Dirac}
+\concept{gamma}
 \keyword{datasets}
