@@ -133,7 +133,11 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #'
 #' @param fn the (non-linear) function to be fitted to the data. Its first
 #' argument must be the fit parameters named \code{par}. The second must be
-#' \code{x}, the explaining variable.
+#' \code{x}, the explaining variable. Additional parameters might be passed to
+#' the function. Currently we pass `boot_r` which is `NA` for the original data
+#' and the ID of the bootstrap sample otherwise. As more parameters might be
+#' added in the future it is recommended that the fit function accepts `...` as
+#' the last parameter to be forward compatible.
 #' @param gr \code{gr=d(fn) / d(par)} is a function to return the gradient of
 #' \code{fn}. It must return an array with \code{length(x)} rows and
 #' \code{length(par)} columns.
@@ -389,7 +393,11 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess)[1:(length(par.Guess))]
+  first.res <- wrapper(Y, par.Guess)
+
+  if (!first.res$converged) {
+    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+  }
 
   if (parallel)
     my.lapply <- mclapply
@@ -408,7 +416,9 @@ bootstrap.nlsfit <- function(fn,
   ## are worthless. We do not check directly after the first fit as the restart
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
-  stopifnot(converged[1])
+  if (!converged[1]) {
+    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+  }
   
   if (any(!converged)) {
       warning('There were fits on the samples that did not converge. Check the `converged.boot` and `info.boot` fields of the return value for more information.')
@@ -431,11 +441,11 @@ bootstrap.nlsfit <- function(fn,
 
   res <- list(y=y, dy=dy, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
-              bsamples=bsamples[rr, ],
+              bsamples=bsamples[rr, , drop=FALSE],
               errormodel=errormodel,
               converged.boot = converged.boot,
               t0=par.boot[1, ],
-              t=par.boot[rr, ],
+              t=par.boot[rr, , drop=FALSE],
               se=errors,
               useCov=useCov,
               invCovMatrix=dY,
