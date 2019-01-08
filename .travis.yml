@@ -19,10 +19,10 @@ apt_packages:
   - libgsl-dev  
 
 sudo: required
-
 dist: trusty
 
 warnings_are_errors: false
+use_bioc: true
 
 notifications:
   email:

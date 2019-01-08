@@ -51,7 +51,5 @@ jab.cf(cf, m=1)
 \seealso{
   \code{\link{bootstrap.cf}}, \code{\link{cf}}, \code{\link{jackknife.cf}}
 }
-\examples{
-}
 \author{Carsten Urbach \email{curbach@gmx.de}}
 \keyword{bootstrap, jackknife, boostrap-after-jackknife, error of error}

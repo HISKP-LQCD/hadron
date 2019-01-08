@@ -72,11 +72,13 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 
 #' NLS fit with parametric bootstrap
 #'
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap
+#'
 #' @export
 #' @family NLS fit functions
 #' 
 #' @examples
-#'
 #' ## Declare some data.
 #' value <- c(0.1, 0.2, 0.3)
 #' dvalue <- c(0.01, 0.01, 0.015)
@@ -107,6 +109,9 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 }
 
 #' NLS fit with parametric bootstrap and covariance
+#'
+#' @inheritParams bootstrap.nlsfit.cov
+#' @inheritParams parametric.bootstrap
 #'
 #' @export
 #' @family NLS fit functions
@@ -153,6 +158,13 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 #' equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 #' \code{length(y) + length(x)}.
+#' @param ... Additional parameters passed to `fn`, `gr` and `dfn`.
+#' @param dy,dx Numeric vector. Errors of the dependent and independent
+#' variable, respectively. These do not need to be specified as they can be
+#' computed from the bootstrap samples. In the case of parametric bootstrap it
+#' might would lead to a loss of information if they were computed from the
+#' pseudo-bootstrap samples. They must not be specified if a covariance matrix
+#' is given.
 #' @param CovMatrix complete variance-covariance matrix of dimensions
 #' \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 #' length(y)+length(x))} depending on the errormodel.
@@ -161,6 +173,9 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' stable.
 #' @param parallel parallelise over bootstrap samples. The package
 #' \code{parallel} is required.
+#' @param error Function that takes a sample vector and returns the error
+#' estimate. This is a parameter in order to support different resampling
+#' methods like jackknife.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -233,13 +248,13 @@ bootstrap.nlsfit <- function(fn,
   useCov <- !missing(CovMatrix)
 
   if (use.minpack.lm) {
-    lm.avail <- require(minpack.lm)
+    lm.avail <- requireNamespace('minpack.lm')
   } else {
     lm.avail <- FALSE
   }
 
   if (parallel) {
-    parallel <- require(parallel)
+    parallel <- requireNamespace('parallel')
   }
 
   crr <- c(1:(boot.R+1))
@@ -373,9 +388,10 @@ bootstrap.nlsfit <- function(fn,
   if (lm.avail) {
     wrapper <- function(y, par, ...) {
       suppressWarnings(
-        res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500),
-                      ...))
+        res <- minpack.lm::nls.lm(
+          par=par, fn=fitchi, y=y, jac=dfitchi,
+          control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500),
+          ...))
 
       list(converged = res$info %in% 1:3,
            info = res$info,
@@ -397,8 +413,12 @@ bootstrap.nlsfit <- function(fn,
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = NA, ...)
 
+  if (!first.res$converged) {
+    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+  }
+
   if (parallel)
-    my.lapply <- mclapply
+    my.lapply <- parallel::mclapply
   else {
     my.lapply <- lapply
   }
@@ -414,7 +434,9 @@ bootstrap.nlsfit <- function(fn,
   ## are worthless. We do not check directly after the first fit as the restart
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
-  stopifnot(converged[1])
+  if (!converged[1]) {
+    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+  }
   
   if (any(!converged)) {
       warning('There were fits on the samples that did not converge. Check the `converged.boot` and `info.boot` fields of the return value for more information.')
@@ -463,11 +485,14 @@ bootstrap.nlsfit <- function(fn,
 #' Summarize a bootstrap NLS fit
 #'
 #' @param object object returned by \code{bootstrap.nlsfit}
+#' @param ... ignored
 #' @param digits number of significant digits to print in summary or print.
+#' @param print.correlation Logical. Whether to show the correlation between of
+#' the fit parameters.
 #'
 #' @export
 #' @family NLS fit functions
-summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
+summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TRUE) {
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
   errors <- object$se
@@ -512,21 +537,17 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
 #' Print a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
+#' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
 #' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
-print.bootstrapfit <- function(x, digits=2) {
+print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
 
 #' Plot a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
-#' @param xlim x limits of the plot.
-#' @param ylim y limits of the plot.
-#' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
-#' adding points with error bars to the current plot. Switches the underlying
-#' plotting routine from \code{plot} to \code{points}.
 #' @param col.line line colour.
 #' @param col.band error band colour.
 #' @param opacity.band error band opacity.
@@ -536,11 +557,11 @@ print.bootstrapfit <- function(x, digits=2) {
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
 #' range in which fitline and errorband are plotted. Default is the range of
 #' the data.
-#' @param ... Additional parameters passed to the generic `plot` function.
+#' @param ... Additional parameters passed to the `plotwitherror` function.
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
   if(missing(plot.range)){
     rx <- range(x$x)
   }else{
@@ -551,10 +572,10 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
 
   ## use the xylimits computation of plotwitherror
   if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
   }
   else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
   }
   my.xlim <- mylims$xlim
   my.ylim <- mylims$ylim

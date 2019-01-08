@@ -18,8 +18,5 @@ gm_mu(mu)
 Retrieve the entries of the \code{\link[hadron]{gm}} three-index array containing various
 gamma structures in a natural indexing.
 }
-\concept{
-Dirac
-
-gamma
-}
+\concept{Dirac}
+\concept{gamma}

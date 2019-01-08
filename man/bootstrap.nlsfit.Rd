@@ -29,6 +29,15 @@ Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 \code{length(y) + length(x)}.}
 
+\item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{dy, dx}{Numeric vector. Errors of the dependent and independent
+variable, respectively. These do not need to be specified as they can be
+computed from the bootstrap samples. In the case of parametric bootstrap it
+might would lead to a loss of information if they were computed from the
+pseudo-bootstrap samples. They must not be specified if a covariance matrix
+is given.}
+
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 length(y)+length(x))} depending on the errormodel.}
@@ -47,6 +56,10 @@ stable.}
 
 \item{parallel}{parallelise over bootstrap samples. The package
 \code{parallel} is required.}
+
+\item{error}{Function that takes a sample vector and returns the error
+estimate. This is a parameter in order to support different resampling
+methods like jackknife.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input

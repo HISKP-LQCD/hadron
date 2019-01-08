@@ -16,11 +16,6 @@ object of type \code{matrixfit}, this should be located at
 \item{T}{Numeric: Time extent of the lattice.}
 
 \item{reference_time}{Numeric: GEVP reference time value in physical time convention}
-
-\item{sign.vec}{Numeric vector: Relative sign between forward and
-backwards propagating part. A plus makes it cosh, a minus makes it sinh.}
-
-\item{deltat}{Numeric: time shift.}
 }
 \description{
 Principal correlator two state model.

@@ -41,8 +41,8 @@ no_masses=1, prec=c(1.e-10,1.e-4))
 \details{
   This function calls the multifit solver of the Gnu Scientific
   Library (GSL). The function to be minimised is specific for the functions
-  \code{\link{pion}} and \code{\link{rho}}. For details see
-  \code{\link{pion}} and \code{\link{rho}}. 
+  \code{\link{pion}} and \code{rho}. For details see
+  \code{\link{pion}} and \code{rho}. 
 }
 \references{
   See GSL webpage \code{http://www.gnu.org/software/gsl/}
