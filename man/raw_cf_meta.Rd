@@ -24,6 +24,6 @@ For a scalar correlation, this should be specified as \code{c(1,1)}.}
 }
 \seealso{
 Other raw_cf constructors: \code{\link{raw_cf_data}},
-  \code{\link{raw_cf_uwerr}}, \code{\link{raw_cf}}
+  \code{\link{raw_cf}}
 }
 \concept{raw_cf constructors}

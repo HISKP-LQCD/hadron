@@ -2,7 +2,7 @@
 % Please edit documentation in R/raw_cf.R
 \name{raw_cf_data}
 \alias{raw_cf_data}
-\title{Original data RAW_CF mixin constructor}
+\title{Original data RAW_val mixin constructor}
 \usage{
 raw_cf_data(cf, data)
 }
@@ -16,10 +16,10 @@ different transformations to be applied to different observables in the same
 container more easily.}
 }
 \description{
-Original data RAW_CF mixin constructor
+Original data RAW_val mixin constructor
 }
 \seealso{
 Other raw_cf constructors: \code{\link{raw_cf_meta}},
-  \code{\link{raw_cf_uwerr}}, \code{\link{raw_cf}}
+  \code{\link{raw_cf}}
 }
 \concept{raw_cf constructors}

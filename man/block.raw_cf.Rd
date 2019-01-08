@@ -12,9 +12,11 @@ block.raw_cf(cf, block_length)
 \item{block_length}{Integer, number of successive measurements to average over.}
 }
 \description{
-Block \code{block_length} measurements of the correlation
+Block \code{block_length} sequential measurements of the correlation
 function together. This occurs, for example, when multiple
 stochastic noise vectors are used per measurement or multiple
 source locations. Alternatively, it can also be used to
-account for auto-correlations in the data.
+account for auto-correlations in the data. If the total numbers
+of measurements is not divisible by \code{block_length}, the last
+measurements are discarded.
 }

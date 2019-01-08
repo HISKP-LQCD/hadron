@@ -16,6 +16,6 @@ several ways, as well as concatenation and \link{is.raw_cf} and \link{as.raw_cf}
 }
 \seealso{
 Other raw_cf constructors: \code{\link{raw_cf_data}},
-  \code{\link{raw_cf_meta}}, \code{\link{raw_cf_uwerr}}
+  \code{\link{raw_cf_meta}}
 }
 \concept{raw_cf constructors}
