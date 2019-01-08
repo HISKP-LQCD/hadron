@@ -9,9 +9,9 @@
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
 
-\item{digits}{number of significant digits to print in summary or print.}
-
 \item{...}{Additional parameters passed to the \code{summary.bootstrapfit} function.}
+
+\item{digits}{number of significant digits to print in summary or print.}
 }
 \description{
 Print a bootstrap NLS fit
