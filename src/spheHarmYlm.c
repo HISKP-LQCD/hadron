@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <complex.h>
-
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_sf_legendre.h>
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_sf_legendre.h>
+#include <R.h>
+#include <Rinternals.h>
+
+#include <complex.h>
+#include <math.h>
 
 //Calculating the spherical harmonics Y_lm(theta,phi).
 //x=cos(theta);
@@ -19,11 +19,11 @@ complex double spheHarm(const int l, const int m, const double x, const double p
   if(status == 0) {
     Ylm = pow(-1.0,m)*result.val*cos(m*phi*M_PI/180.0) + I*pow(-1.0,m)*result.val*sin(m*phi*M_PI/180.0);
     (*rstatus) = 0;
-    //printf("Y_%d%d = %.12f\n", l, m, result.val);
+    //Rprintf("Y_%d%d = %.12f\n", l, m, result.val);
     return Ylm;
   }
   else {
-    fprintf(stderr,"Spherical Harmonics not calculated, GSL error code %d corresponding to \"%s\"!\n", status, gsl_strerror(status));
+    error("Spherical Harmonics not calculated, GSL error code %d corresponding to \"%s\"!\n", status, gsl_strerror(status));
     (*rstatus) = status;
     return(0.);
   }

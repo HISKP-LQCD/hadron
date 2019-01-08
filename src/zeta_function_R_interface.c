@@ -1,12 +1,12 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include "luscherZeta.h"
+
 #include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <Rdefines.h>
 
-#include "luscherZeta.h"
+#include <math.h>
+
 void pmode_free_arrays();
 
 SEXP LuscherZetaArray(SEXP qsq_, SEXP n_, SEXP l_, SEXP m_, SEXP dvec_, SEXP gamma_, SEXP lambda_, SEXP tol_, SEXP verbose_) {

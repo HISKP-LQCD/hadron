@@ -1,5 +1,9 @@
-#ifndef _FSCDH_H
-#define _FSCDH_H
+#pragma once
+
+#include <R.h>
+#include <Rinternals.h>
+#include <Rmath.h>
+#include <Rdefines.h>
 
 double g1(double x);
 int g1array(double * x, double * res, const int n);
@@ -11,4 +15,3 @@ static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLam
 static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double aLamb3, double aLamb4,
 	      double aF0, int * L, double * ampiV, double *afpiV, double *a2B0mu, 
 	      const int n, double * mpiFV, double * fpiFV, const int printit);
-#endif

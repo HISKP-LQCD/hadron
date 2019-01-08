@@ -1,6 +1,7 @@
-#include <math.h>
 #include <R.h>
 #include <Rinternals.h>
+
+#include <math.h>
 
 SEXP invcosh(SEXP ratio, SEXP timeextent, SEXP t, SEXP eps, SEXP maxiter) {
 

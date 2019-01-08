@@ -1,12 +1,13 @@
-#include <stdio.h>
-#include <math.h>
-#include <complex.h>
+#include "zetaFunc.h"
 
-//#include <gsl/gsl_integration.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_dawson.h>
+#include <R.h>
+#include <Rinternals.h>
 
-#include "zetaFunc.h"
+#include <complex.h>
+#include <math.h>
+
 /***************************************************
  * This program calculates the second part of the 
  * zeta function:
@@ -40,7 +41,7 @@ double complex secondPart(const int l, const double gamma, const double Lambda,
   }
   *rstatus = s1 + s2;
   if(verbose) {
-    printf("Second term = (%e, %e)\n", creal(secondPartInt), cimag(secondPartInt));
+    Rprintf("Second term = (%e, %e)\n", creal(secondPartInt), cimag(secondPartInt));
   }
   return secondPartInt;
 }

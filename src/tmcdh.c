@@ -1,17 +1,15 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <R.h>
-#include <Rinternals.h>
-#include <Rmath.h>
-#include <Rdefines.h>
-#include <complex.h>
+#include "cdh.h"
 
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_sf_bessel.h>
+#include <R.h>
+#include <Rdefines.h>
+#include <Rinternals.h>
+#include <Rmath.h>
 
-#include "cdh.h"
+#include <complex.h>
+#include <math.h>
 
 gsl_error_handler_t * old_handler;
 const double N=16.*M_PI*M_PI;

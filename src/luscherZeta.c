@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <complex.h>
-#include <gsl/gsl_errno.h>
 #include "zetaFunc.h"
 #include "luscherZeta.h"
+
+#include <gsl/gsl_errno.h>
+
+#include <complex.h>
 
 void luscherZeta(double * res, const double qsq, const int l, const int m, const double gamma, const double lambda, 
                  double * const dvec, const double tol, const int verbose, int * rstatus) {
@@ -19,5 +19,4 @@ void luscherZeta(double * res, const double qsq, const int l, const int m, const
   res[1] = cimag(sum);
 
   gsl_set_error_handler (handler);
-  return;
 }

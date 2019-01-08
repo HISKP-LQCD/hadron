@@ -1,11 +1,12 @@
-#include <stdio.h>
-#include <math.h>
-#include <float.h>
-#include <complex.h>
-#include <stdlib.h>
-#include <gsl/gsl_errno.h>
-
 #include "zetaFunc.h"
+
+#include <gsl/gsl_errno.h>
+#include <R.h>
+#include <Rinternals.h>
+
+#include <complex.h>
+#include <float.h>
+#include <math.h>
 
 double complex firstPart(const double Tolerance, const int l, const int m, 
 			 const double * dVec, const double gamma, 
@@ -31,17 +32,17 @@ double complex firstPart(const double Tolerance, const int l, const int m,
   genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 
   if(genReturn != 0){
-    printf("Generated the points wrongly in firstPart!");
+    Rprintf("Generated the points wrongly in firstPart!");
     *rstatus = 1000;
     return(firstPartSum);
   }
   
-  if(verbose*0){
+  if(verbose && 0){
     for(int i = 0; i < npmode[0]; i++){
       if(degnrtDOF[i] == 0)
-	printf("pmodeSqur=%d has no corresponding points.\n", i);
+	Rprintf("pmodeSqur=%d has no corresponding points.\n", i);
       else
-	printf("pmodeSqur=%d have %d degenaration DOF.\n", i, degnrtDOF[i]);
+	Rprintf("pmodeSqur=%d have %d degenaration DOF.\n", i, degnrtDOF[i]);
     }
   }
   
@@ -53,16 +54,16 @@ double complex firstPart(const double Tolerance, const int l, const int m,
       i_npmode++;
       get_npmode(npmode, i_npmode);
       genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
-      if(verbose) fprintf(stderr, "increased i_npmode to %d in firstPart %d %d\n", i_npmode, npmode[0], npmode[1]);
+      if(verbose) REprintf("increased i_npmode to %d in firstPart %d %d\n", i_npmode, npmode[0], npmode[1]);
 
       if(genReturn != 0){
-	printf("Generated the points wrongly in firstPart!");
+	Rprintf("Generated the points wrongly in firstPart!");
         *rstatus = 1000;
         return(firstPartSum);
       }
 
       if(i_npmode > 4) {
-	if(verbose) fprintf(stderr, "NPmode and DimMax need to be larger than available in firstPart! Aborting...!\n");
+	if(verbose) REprintf("NPmode and DimMax need to be larger than available in firstPart! Aborting...!\n");
         *rstatus = 2000;
         return(firstPartSum);
       }
@@ -117,7 +118,7 @@ double complex firstPart(const double Tolerance, const int l, const int m,
         / (pow(r[0],2.0) - qSqur);
 
       if(*rstatus != 0) {
-	fprintf(stderr, "spheHarm produced error code \"%s\"\n", gsl_strerror(*rstatus)); 
+	REprintf("spheHarm produced error code \"%s\"\n", gsl_strerror(*rstatus)); 
 	return(firstPartSum);
       }
 
@@ -134,7 +135,7 @@ double complex firstPart(const double Tolerance, const int l, const int m,
       error = cabs(pmodeSum) / cabs(firstPartSum);
     
     if(verbose)
-      printf("first term: pmode %d error: %.16f result (%e, %e)\n", pmodeSqur , error, creal(firstPartSum), cimag(firstPartSum));
+      Rprintf("first term: pmode %d error: %.16f result (%e, %e)\n", pmodeSqur , error, creal(firstPartSum), cimag(firstPartSum));
     
     // if the result is still zero after 4 iterations it is assumed to stay zero
     if (cabs(firstPartSum) < DBL_EPSILON && niter > 4)
@@ -144,7 +145,7 @@ double complex firstPart(const double Tolerance, const int l, const int m,
     
   }//end of while.
   if(verbose) {
-    printf("First term = (%e, %e)\n", creal(firstPartSum), cimag(firstPartSum));
+    Rprintf("First term = (%e, %e)\n", creal(firstPartSum), cimag(firstPartSum));
   }
 
   return firstPartSum;

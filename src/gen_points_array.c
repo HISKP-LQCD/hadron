@@ -1,4 +1,6 @@
-#include <stdio.h>
+#include <R.h>
+#include <Rinternals.h>
+
 #include <math.h>
 #include <stdlib.h>
 
@@ -67,7 +69,7 @@ int gen_points_array(int ** _degnrtDOF, int ** _arrayPmode, const int NPmode, co
     }
     
     if(NULL == (arrayPmode= (int *)malloc(NPmode*(DimMAX+500)*3*sizeof(int)))) {
-      printf("Malloc wrong for arrayPmode!\n");
+      Rprintf("Malloc wrong for arrayPmode!\n");
       return(-2);
     }
     pmodes_initialised = 1;

@@ -1,13 +1,12 @@
-#ifndef ZETA_FUNC_H
-#define ZETA_FUNC_H
+#pragma once
 
+#include <complex.h>
 
 //Main func:
 
 int read_i(char *src, int *data);
 int read_d(char *src, double *data);
 int read_a(char *src, double *data);
-
 
 void get_npmode(int * pair, const int i);
 int gen_points_array(int ** degnrtDOF, int ** arrayPmode, const int npmod, const int dimmax);
@@ -34,8 +33,3 @@ double integrandPart3(const double t, void * const params);
 double trdInteFunc(const double Lamda, double * const dVec, const int l, const double qSqur, int * const nVec, const double gamma, int * const rstatus);
 
 double complex thirdPart(const double Tolerance, const int l, const int m, double * const dVec, const double gamma, const double Lamda, const double qSqur, const int verbose, int * const rstatus);
-
-#endif
-
-
-

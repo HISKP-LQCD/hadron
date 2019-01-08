@@ -1,10 +1,11 @@
-#include <stdio.h>
+#include "zetaFunc.h"
+
+#include <R.h>
+#include <Rinternals.h>
+#include <gsl/gsl_math.h>
+
 #include <math.h>
 #include <complex.h>
-#include <stdlib.h>
-
-#include <gsl/gsl_math.h>
-#include "zetaFunc.h"
 
 double complex thirdPart(const double Tolerance, const int l, const int m, double * const dVec, 
                          const double gamma, const double Lamda, const double qSqur, const int verbose,
@@ -34,7 +35,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
   genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 	
   if(genReturn != 0){
-    printf("Generated the points wrongly in thirdPart!");
+    Rprintf("Generated the points wrongly in thirdPart!");
     *rstatus = 1000;
     return(thirdPartSum);
   }
@@ -46,18 +47,18 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 
     if(pmodeSqur > npmode[0]){
       i_npmode++;
-      if(verbose) fprintf(stderr, "increased i_npmode to %ud in thirdPart\n", i_npmode);
+      if(verbose) warning("increased i_npmode to %ud in thirdPart\n", i_npmode);
       get_npmode(npmode, i_npmode);
       genReturn = gen_points_array(&degnrtDOF, &arrayPmode, npmode[0], npmode[1]);
 
       if(genReturn != 0){
-	printf("Generated the points wrongly in thirdPart!");
+	Rprintf("Generated the points wrongly in thirdPart!");
         *rstatus = 1000;
         return(thirdPartSum);
       }
 
       if(i_npmode > 4) {
-	if(verbose) fprintf(stderr, "NPmode and DimMax need to be larger than available in thirdPart! Aborting...!\n");
+	if(verbose) warning("NPmode and DimMax need to be larger than available in thirdPart! Aborting...!\n");
         *rstatus = 2000;
         return(thirdPartSum);
       }
@@ -110,9 +111,9 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 	  if(fabs(cosPolarAngle) > 1) {
 	    // cosPolarAngle must not become larger than 1 
 	    // we check for this here and drop a warning if unexpectedly large
-	    if(fabs(1-cosPolarAngle) > DBL_EPSILON*10) fprintf(stderr, "Warning, cosPolarAngle > 1 by %e in thirdPart\n", 1-cosPolarAngle);
+	    if(fabs(1-cosPolarAngle) > DBL_EPSILON*10) warning("cosPolarAngle > 1 by %e in thirdPart\n", 1-cosPolarAngle);
 	    if(fabs(1-fabs(cosPolarAngle)) > DBL_EPSILON*100) {
-	      fprintf(stderr, "wVecMod: %e\n", wVecMod);
+	      warning("wVecMod: %e\n", wVecMod);
 	      *rstatus = 13;
 	      return(thirdPartSum);
 	    }
@@ -143,7 +144,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
       error = cabs(pmodeSum) / cabs(thirdPartSum);
     
     if(verbose)
-      printf("third term: pmode=%d error: %.16f result (%e, %e)\n",pmodeSqur , error, creal(thirdPartSum), cimag(thirdPartSum));
+      Rprintf("third term: pmode=%d error: %.16f result (%e, %e)\n",pmodeSqur , error, creal(thirdPartSum), cimag(thirdPartSum));
     
     // if the result is still zero after 4 iterations it is assumed to stay zero
     if (cabs(thirdPartSum) < DBL_EPSILON && niter > 4)
@@ -154,7 +155,7 @@ double complex thirdPart(const double Tolerance, const int l, const int m, doubl
 	
   *rstatus = s1 + s2;
   if(verbose) {
-    printf("Third term = (%e, %e)\n", creal(thirdPartSum), cimag(thirdPartSum));
+    Rprintf("Third term = (%e, %e)\n", creal(thirdPartSum), cimag(thirdPartSum));
   }
 
   return thirdPartSum;

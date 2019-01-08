@@ -1,11 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <Rdefines.h>
 
+#include <math.h>
 
 SEXP alphas(SEXP mu_, SEXP nl_, SEXP lam0_, SEXP Nc_, SEXP Nf_) {
 

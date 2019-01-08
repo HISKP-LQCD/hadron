@@ -1,14 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <R.h>
-#include <Rinternals.h>
-#include <Rmath.h>
-#include <Rdefines.h>
+#include "cdh.h"
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_bessel.h>
-#include "cdh.h"
+
+#include <math.h>
 
 gsl_error_handler_t * old_handler;
 
@@ -146,15 +141,15 @@ static R_INLINE void fscdh(double rev, double aLamb1, double aLamb2, double aLam
     fpiFV[i] = afpiV[i]*(1. + rev * (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
   }
   if(printit) {
-    printf("Rmpi ");
+    Rprintf("Rmpi ");
     for(i = 0; i < n; i++) {
-      printf("%e ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i] + xi_P[i]*xi_P[i] * I6mpi[i]));
+      Rprintf("%e ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i] + xi_P[i]*xi_P[i] * I6mpi[i]));
     }
-    printf("\nRfpi ");
+    Rprintf("\nRfpi ");
     for(i = 0; i < n; i++) {
-      printf("%e ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
+      Rprintf("%e ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
     }
-    printf("\n");
+    Rprintf("\n");
   }
 
   Free(lb1); Free(lb2); Free(lb3); Free(lb4); Free(lpi);
@@ -244,15 +239,15 @@ static R_INLINE void fscdhnew(double rev, double aLamb1, double aLamb2, double a
   }
 
   if(printit) {
-    printf("Rmpi ");
+    Rprintf("Rmpi ");
     for(i = 0; i < n; i++) {
-      printf("%f ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i]));
+      Rprintf("%f ", -(xi_P[i]/2.) * (I2mpi[i] + xi_P[i] * I4mpi[i]));
     }
-    printf("\nRfpi ");
+    Rprintf("\nRfpi ");
     for(i = 0; i < n; i++) {
-      printf("%f ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
+      Rprintf("%f ", (xi_P[i])   * (I2fpi[i] + xi_P[i] * I4fpi[i]));
     }
-    printf("\n");
+    Rprintf("\n");
   }
 
   Free(lb1); Free(lb2); Free(lb3); Free(lb4);

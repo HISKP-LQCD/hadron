@@ -1,8 +1,10 @@
-#include <stdio.h>
-#include <math.h>
-
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
+#include <R.h>
+#include <Rinternals.h>
+#include <Rdefines.h>
+
+#include <math.h>
 
 /******************************************
  *
@@ -46,7 +48,7 @@ double sndInteFunc(const double Lamda, const double qSqur, int * const rstatus)
   *rstatus = gsl_integration_qags(&FuncPart2, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
   //gsl_integration_qag(&FuncPart2, 0, Lamda, 0, EPSREL, WSNUM, 2, w, &result, &error);
   if(*rstatus != GSL_SUCCESS) {
-    fprintf(stderr, "gsl_integration_qags in sndInteFunc error code \"%s\"\n", gsl_strerror(*rstatus));
+    warning("gsl_integration_qags in sndInteFunc error code \"%s\"\n", gsl_strerror(*rstatus));
   }
   gsl_integration_workspace_free (w);
 
@@ -105,7 +107,7 @@ double trdInteFunc(const double Lamda, double * const dVec, const int l, const d
   
   *rstatus = gsl_integration_qags(&FuncPart3, 0, Lamda, 0, EPSREL, WSNUM, w, &result, &error);
   if(*rstatus != GSL_SUCCESS) {
-    fprintf(stderr, "gsl_integration_qags in trdInteFunc error code \"%s\"\n", gsl_strerror(*rstatus));
+    warning("gsl_integration_qags in trdInteFunc error code \"%s\"\n", gsl_strerror(*rstatus));
   }
   gsl_integration_workspace_free (w);
   
