@@ -156,16 +156,21 @@ TwoStateModel <- R6Class(
       self$reference_time <- reference_time
     },
     prediction = function (par, x) {
+      par[1] <- abs(par[1])
+      par[2] <- abs(par[2])
       xx <- x - self$reference_time
-      exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-(abs(par[2])) * xx))
+
+      exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-(par[2]) * xx))
     },
     prediction_jacobian = function (par, x, ...) {
+      par[1] <- abs(par[1])
+      par[2] <- abs(par[2])
       xx <- x - self$reference_time
       
       res <- array(0.0, dim = c(length(x), length(par)))
-      res[, 1] <- -xx * exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-abs(par[2]) * xx))
-      res[, 2] <- -exp(-abs(par[1]) * xx) * (1 - par[3]) * xx * exp(-abs(par[2]) * xx)
-      res[, 3] <- exp(-abs(par[1]) * xx) * (1 - exp(-abs(par[2]) * xx))
+      res[, 1] <- -xx * exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-par[2] * xx))
+      res[, 2] <- -exp(-par[1] * xx) * (1 - par[3]) * xx * exp(-par[2] * xx)
+      res[, 3] <- exp(-par[1] * xx) * (1 - exp(-par[2] * xx))
       return(res)
     },
     initial_guess = function (corr, parlist, t1, t2) {
