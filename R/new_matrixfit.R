@@ -19,7 +19,7 @@ MatrixModel <- R6Class(
     initial_guess = function (corr, parlist, t1, t2) {
       t1p1 <- t1 + 1
       t2p1 <- t2 + 1
-      Thalfp1 <- self$time_extent / 2 + 1
+      Thalfp1 <- (self$time_extent / 2) + 1
       
       par <- numeric(max(self$parind))
       j <- which(parlist[1, ] == 1 & parlist[2, ] == 1)
@@ -96,6 +96,7 @@ ShiftedModel <- R6Class(
     prediction = function (par, x) {
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
+      
     },
     
     prediction_jacobian = function (par, x, ...) {
@@ -108,19 +109,20 @@ ShiftedModel <- R6Class(
         (-xx * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
            exp(-par[1] * (self$time_extent - xx)))
       stopifnot(length(zp) == nrow(res))
+      
       res[, 1] <- zp
       
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
           zp1 <- rep(0, length(zp))##
           j <- which(self$parind[, 1] == i)
-          zp1 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
+          zp1[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
             (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
             exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
         
           zp2 <- rep(0, length(zp))##
           j <- which(self$parind[, 2] == i)
-          zp2 <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
+          zp2[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
             (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
             exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
           
@@ -131,30 +133,6 @@ ShiftedModel <- R6Class(
       }
       
       return (res)
-      
-      
-      ## Derivative with respect to the mass, `par[1]`.
-      #zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-      #  (-(x - self$delta_t/2) * exp(-par[1] * (x - self$delta_t/2)) -
-      #     (self$time_extent - (x - self$delta_t/2)) * self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
-      #res <- zp
-      
-      ## Derivatives with respect to the amplitudes.
-      #for (i in 2:length(par)) {
-      #  zp1 <- rep(0, length(zp))
-      #  j <- which(self$parind[, 1] == i)
-      #  zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
-      #    (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
-        
-      #  zp2 <- rep(0, length(zp))
-      #  j <- which(self$parind[, 2] == i)
-      #  zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
-      #    (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] * exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
-        
-      #  res <- c(res, zp1 + zp2)
-      #}
-      
-      #return (res)
     },
     delta_t = NA
   )
@@ -431,6 +409,9 @@ new_matrixfit <- function(cf,
       ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
   }
   
+  
+  ## perform the bootstrap non-linear least-squares fit (NLS fit):
+  
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
   } else if (model == 'shifted') {
@@ -444,8 +425,8 @@ new_matrixfit <- function(cf,
   
   par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
 
-  args <- list(fn = model_object$prediction,
-               gr = model_object$prediction_jacobian,
+  args <- list(fn = model_object$prediction,            # function
+               gr = model_object$prediction_jacobian,   # gradient
                par.guess = par.guess,
                y = CF$Cor[ii],
                x = CF$t[ii],
@@ -460,6 +441,7 @@ new_matrixfit <- function(cf,
   
   res <- do.call(bootstrap.nlsfit, args)
   
+
   ## Some fit models have parameters in the absolute value. This means that in
   ## `res` they can be negative and we need to let the model fix that.
   res$t0 <- model_object$post_process_par(res$t0)
@@ -469,4 +451,5 @@ new_matrixfit <- function(cf,
   stopifnot(all(old_dim == dim(res$t)))
   
   return (res)
+  
 }
