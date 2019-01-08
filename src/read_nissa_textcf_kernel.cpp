@@ -1,204 +1,169 @@
-#include<Rcpp.h>
-#include<numeric>
+#include <Rcpp.h>
+#include <numeric>
 #include <fstream>
 #include <iostream>
 #include <string>
-
-//#include<bits/stdc++.h>
+#include <vector>
+#include <cstring>
+#include <cstdlib>
 
 using namespace Rcpp;
-using namespace std;
 
-//Todo: Comments
-//      Warning for not consistent order
-inline void readFile(std::istream &is,double Nt,vector<double> &real,vector<double> &imag)
+/**
+ * @brief read 2*Nt doubles from a std::ifstream 
+ *
+ * @param ifs input stream
+ * @param Nt unsigned integer: number of 'time slices' -> number of values to read from
+ *                             file
+ * @param real pre-allocated output vector for real part
+ * @param imag pre-allocated output vector for imaginary part
+ */
+inline void read_correl(std::ifstream &ifs, const unsigned int Nt, std::vector<double> &real, std::vector<double> &imag)
 {
-  for(int i=0;i<Nt;++i)
+  if( !ifs.good() ){
+    stop("read_correl: input file stream not in a good state!");
+  }
+  for(unsigned int i=0; i<Nt; ++i)
   {
-    double number_real;
-    double number_imag;
-    is>>number_real;
-    is>>number_imag;
-    real[i]=number_real;
-    imag[i]=number_imag;
+    ifs >> real[i];
+    ifs >> imag[i];
   }
 }
 
-//[[Rcpp::export]]
+inline std::string make_key_2pt(unsigned int m1, unsigned int m2, unsigned int r1, unsigned int r2, std::string spin_comb)
+{
+  char ckey[100];
+  snprintf(ckey, 100, "m1-%u_m2-%u_r1-%u_r2-%u_%s",
+           m1, m2, r1, r2, spin_comb.c_str());
+  return std::string(ckey);
+}
 
+inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::pos_type> & filemap){
+  if( !ifs.good() ){
+    stop("map_file: input file stream not in a good state!");
+  }
 
-NumericVector reading_nissa_corr(CharacterVector spinstructures,int confstart,int confnumber,int confsteps,int Nt,std::string dirname,int nsmearing,int nmasses,IntegerVector nmasses1,IntegerVector nmasses2,IntegerVector r1,IntegerVector r2){
+  std::string linebuf;
+  std::string::size_type find_pos;
 
+  // currently the key for a two-point function consists of four unsigned integer (two mass and two r indices)
+  // and a generalisation of the reader will have to modify this as well as the key construction
+  unsigned int key_components[4];
 
-//SEXP reading_nissa_corr(SEXP spinstructures,SEXP confstart,SEXP confnumber,SEXP confsteps,SEXP Nt,SEXP dirname,SEXP nsmearing,SEXP nmasses,SEXP nmasses1,SEXP nmasses2,SEXP r1,SEXP r2){
-   std::filebuf fb;
-   int tindex;
-   int confindex;
-   int r1idx,r2idx;
-   int N_muindex1,N_muindex2;
-   char filename[100];
-   CharacterVector gamma_names(61);
-   NumericVector gammastructures(61);
-   int sizem1=nmasses1.size();
-   int sizem2=nmasses2.size();
-   int sizer1=r1.size();
-   int sizer2=r2.size();
-   if ((sizem1 != sizem2) || (sizem1 != sizer1) || (sizem1 != sizer2)){
-     stop("Error the size of m1,m2,r2,r1 arrays has to be the same");
-   }
-   for (int i=0; i<61; i++) { gammastructures[i] = i; };
-   gamma_names[0]="P5S0";
-   gamma_names[1]="P5V1";
-   gamma_names[2]="P5V2";
-   gamma_names[3]="P5V3";
-   gamma_names[4]="P5V0";
-   gamma_names[5]="P5P5";
-   gamma_names[6]="P5A1";
-   gamma_names[7]="P5A2";
-   gamma_names[8]="P5A3";
-   gamma_names[9]="P5A0";
-   gamma_names[10]="P5T1";
-   gamma_names[11]="P5T2";
-   gamma_names[12]="P5T3";
-   gamma_names[13]="P5B1";
-   gamma_names[14]="P5B2";
-   gamma_names[15]="P5B3";
-   gamma_names[16]="S0P5";
-   gamma_names[17]="V1P5";
-   gamma_names[18]="V2P5";
-   gamma_names[19]="V3P5";
-   gamma_names[20]="V0P5";
-   gamma_names[21]="P5P5";
-   gamma_names[22]="A1P5";
-   gamma_names[23]="A2P5";
-   gamma_names[24]="A3P5";
-   gamma_names[25]="A0P5";
-   gamma_names[26]="T1P5";
-   gamma_names[27]="T2P5";
-   gamma_names[28]="T3P5";
-   gamma_names[29]="B1P5";
-   gamma_names[30]="B2P5";
-   gamma_names[31]="B3P5";
-   gamma_names[32]="S0S0";
-   gamma_names[33]="V0V0";
-   gamma_names[34]="A0A0";
-   gamma_names[35]="V1V1";
-   gamma_names[36]="V2V2";
-   gamma_names[37]="V3V3";
-   gamma_names[38]="A1A1";
-   gamma_names[39]="A2A2";
-   gamma_names[40]="A3A3";
-   gamma_names[41]="T1T1";
-   gamma_names[42]="T2T2";
-   gamma_names[43]="T3T3";
-   gamma_names[44]="V1T1";
-   gamma_names[45]="V2T2";
-   gamma_names[46]="V3T3";
-   gamma_names[47]="T1V1";
-   gamma_names[48]="T2V2";
-   gamma_names[49]="T3V3";
-   gamma_names[50]="B1B1";
-   gamma_names[51]="B2B2";
-   gamma_names[52]="B3B3";
-   gamma_names[53]="A1B1";
-   gamma_names[54]="A2B2";
-   gamma_names[55]="A3B3";
-   gamma_names[56]="B1A1";
-   gamma_names[57]="B2A2";
-   gamma_names[58]="B3A3";
-   gamma_names[59]="V0S0";
-   gamma_names[60]="S0V0";
-   gammastructures.names()=gamma_names;
-   vector<double> matreal(Nt);
-   vector<double> matimag(Nt);
-   
-   CharacterVector localsmeared(4);
-   if (nsmearing==1){
-     localsmeared.erase(0);
-     localsmeared.erase(0);
-     localsmeared.erase(0);
-     localsmeared[0]="ll";
-   }
-   else if (nsmearing == 2){
-     localsmeared.erase(0);
-     localsmeared.erase(0);
-     localsmeared[0]="ll";
-     localsmeared[1]="ls";
-   }
-   else if (nsmearing == 4){
-     localsmeared[0]="ll";
-     localsmeared[1]="ls";
-     localsmeared[2]="sl";
-     localsmeared[3]="ss";
-   }
+  while( ifs.good() ){
+    std::getline(ifs, linebuf);
+    // we search for commented lines
+    find_pos = linebuf.find("#");
+    if( find_pos != std::string::npos ){
+      // in these commented lines, we extract either
+      // the current set of mass / r parameter combinations
+      // or the current spin combination
+      // the line looks like so:
+      // " # Contraction of S0_th0_m0_r0_ll ^ \dag and S0_th0_m0_r0_ll"
+      std::string::size_type contr_pos = linebuf.find("Contraction");
+      if( contr_pos != std::string::npos ){
+        std::vector<char> lbcopy( linebuf.size() + 1 );
+        lbcopy[ linebuf.size() ] = '\0';
+        memcpy( lbcopy.data(), linebuf.c_str(), linebuf.size() );
+        unsigned int key_components_counter = 0;
+        char * token = strtok(lbcopy.data(), "_");
+        while( key_components_counter != 4 | token != NULL ){
+          if( token[0] == 'm' || token[0] == 'r'){
+            key_components[key_components_counter] = atoi(token+1);
+            key_components_counter++;
+          }
+          token = strtok(NULL, "_");
+        }
+      } else {
+        // the line looks like so:
+        // " # P5S0"
+        std::string::size_type last_space_pos = linebuf.find_last_of(" ");
+        std::string spin_comb = linebuf.substr(last_space_pos+1);
+        // now we can build the key
+        std::string key = make_key_2pt(key_components[0], key_components[2], key_components[1], key_components[3], spin_comb);
+        // and store the position after the current newline as the starting point
+        // of the present correlator
+        filemap[ key ] = ifs.tellg();
+      }
+    }
+  }
+}
 
-   NumericMatrix matR(confnumber,Nt*spinstructures.size()*nmasses1.size()*2*localsmeared.size());
+// [[Rcpp::export]]
+NumericMatrix read_nissa_textcf_kernel(
+    CharacterVector files_to_read,
+    CharacterVector smear_combs_to_read,
+    const unsigned int Nt,
+    DataFrame combs_to_read)
+{
+  typedef NumericVector::iterator num_vec_iter;
+  typedef CharacterVector::iterator char_vec_iter;
 
-   int summ=0;
-   int indextable[nmasses][nmasses][2][2];
-   for ( int mu2 =0; mu2 < nmasses ; mu2++) // Nmu is the number of mu values
-     for ( int r1i = 0; r1i <=1; r1i++) // Wilson p a r a m e t e r r = -1 ,1
-       for ( int mu1 =0; mu1 <= mu2 ; mu1++) // !!!! careful to the ending of the loop
-         for ( int r2i = 0; r2i <=1; r2i++){
-           indextable[mu2][mu1][r1i][r2i]=summ;
-           summ++;
-         }
+  const unsigned int n_correls = combs_to_read.nrows();
+  const unsigned int n_smear_combs = smear_combs_to_read.size();
+  const unsigned int n_files = files_to_read.size();
 
-   for (int ii=0,confindex=confstart;ii<confnumber;++ii,confindex+=confsteps){
-     int store_index=0;
-     for(CharacterVector::iterator smearing = localsmeared.begin(); smearing != localsmeared.end(); ++smearing){
-       std::string temporary=(string)(*smearing);
-       sprintf(filename,"%s/%04d/mes_contr_2pts_%s",dirname.c_str(),confindex,temporary.c_str());
-       for(CharacterVector::iterator spin = spinstructures.begin(); spin != spinstructures.end(); ++spin) {
-         fb.open(filename,std::ios::in);
-         std::istream is(&fb);
-         int line_number=0;
-         int spinindex=gammastructures[(string)*spin];
-         std::string line;
-         for (int mindex=0; mindex<nmasses1.size(); ++mindex){
-           if (nmasses1[mindex] > nmasses2[mindex]){
-             stop("Order of masses is not correct\n");
-           }
-           int index=indextable[(int)(nmasses2[mindex])][(int)(nmasses1[mindex])][(int)(r1[mindex])][(int)(r2[mindex])];
-           int starting_point=(4+(Nt+2)*61)*index;
-           for (;line_number<starting_point;++line_number)
-             std::getline(is, line); 
-           int endpoint=4;
-           for(int j=0;j<endpoint;++j){
-             getline(is,line);
-             line_number++;
-             if (ii==1){
-              cout<<line<<endl;
-             }
-           }
-           if (ii==1){
-             Rprintf("Correlator to be readed\n");
-           }
-           for(int j=0;j<spinindex*(Nt+2);++j){
-             line_number++;
-             getline(is,line);
-           }
-           for(int j=0;j<1;++j){
-             getline(is,line);
-             line_number++;
-             if (ii==1){
-               cout<<line<<endl;
-             }
-           }
-           
-           readFile(is,Nt,matreal,matimag);
-           line_number+=Nt;
-           getline(is,line);
-           line_number++;
-           getline(is,line);
-           for(int j=0;j<Nt;++j,store_index+=2){
-             matR(ii,store_index  )=matreal[j];
-             matR(ii,store_index+1)=matimag[j];
-           }
-         }
-         fb.close();
-       }
-     }
-   }
-   return matR;
+  // prepare some memory for output
+  NumericMatrix cf_data(n_files, 2*Nt*n_correls*n_smear_combs );
+
+  CharacterVector spin_combs = combs_to_read["spin_comb"];
+  IntegerVector r1s = combs_to_read["r1"];
+  IntegerVector r2s = combs_to_read["r2"];
+  IntegerVector m1s = combs_to_read["m1"];
+  IntegerVector m2s = combs_to_read["m2"];
+
+  std::vector<double> realbuf(Nt);
+  std::vector<double> imagbuf(Nt);
+
+  for(unsigned int ifile = 0; ifile < n_files; ++ifile ){
+    for(unsigned int ismear_comb = 0; ismear_comb < n_smear_combs; ++ismear_comb ){
+
+      std::string filename = (std::string)(files_to_read[ifile]) + std::string("_") + 
+                             (std::string)(smear_combs_to_read[ismear_comb]);
+
+      std::ifstream ifs(filename.c_str(), std::ios::in);
+      if( ! ifs.is_open() ){
+        char message[200];
+        snprintf(message, 200, "File %s could not be opened!", filename.c_str());
+        stop(message);
+      }
+      std::map<std::string, std::iostream::pos_type> filemap;
+      // create a map of the file which links a given observable
+      // to a certain position in the file by reading the meta-data
+      // this is a significant overhead incurred on a per-file basis,
+      // but it is robust against changes in the file's structure
+      map_file(ifs, filemap);
+      // bring file back into good state
+      ifs.clear();
+
+      for( unsigned int icorrel = 0; icorrel < n_correls; ++icorrel ){
+        // observable runs slowest, then smearing combination, then time, then real / imag
+        // that should be the fastest way to split it into real and imaginary parts
+        unsigned int out_idx = (icorrel * n_smear_combs + ismear_comb) * Nt * 2;
+
+        // if we ever support other correlation functions from Nissa,
+        // a simple point to generalise would be here in the way the key is
+        // constructed
+        std::string key = make_key_2pt((unsigned int)m1s[icorrel], 
+                                       (unsigned int)m2s[icorrel], 
+                                       (unsigned int)r1s[icorrel], 
+                                       (unsigned int)r2s[icorrel],
+                                       (std::string)spin_combs[icorrel]);
+        if( filemap.count(key) != 1 ){
+          char message[200];
+          snprintf(message, 200, "correlator %s does not exist in file %s!", key.c_str(), filename.c_str());
+          stop(message);
+        }
+        ifs.seekg( filemap[key] );
+        read_correl(ifs, Nt, realbuf, imagbuf);
+
+        for(int t=0; t<Nt; ++t){
+          cf_data(ifile,out_idx  ) = realbuf[t];
+          cf_data(ifile,out_idx+1) = imagbuf[t];
+          out_idx += 2;
+        }
+      } // icorrel
+    } // ismear_comb
+  } // ifile
+ return cf_data;
 }
