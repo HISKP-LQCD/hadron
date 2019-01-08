@@ -410,6 +410,10 @@ bootstrap.nlsfit <- function(fn,
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess)
 
+  if (!first.res$converged) {
+    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+  }
+
   if (parallel)
     my.lapply <- parallel::mclapply
   else {
@@ -427,7 +431,9 @@ bootstrap.nlsfit <- function(fn,
   ## are worthless. We do not check directly after the first fit as the restart
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
-  stopifnot(converged[1])
+  if (!converged[1]) {
+    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+  }
   
   if (any(!converged)) {
       warning('There were fits on the samples that did not converge. Check the `converged.boot` and `info.boot` fields of the return value for more information.')
