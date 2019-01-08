@@ -139,10 +139,10 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' @param fn `fn(par, x, ...)`. The (non-linear) function to be fitted to the
 #' data. Its first argument must be the fit parameters named \code{par}. The
 #' second must be \code{x}, the explaining variable. Additional parameters
-#' might be passed to the function. Currently we pass `boot_r` which is `NA`
-#' for the original data and the ID of the bootstrap sample otherwise. As more
-#' parameters might be added in the future it is recommended that the fit
-#' function accepts `...` as the last parameter to be forward compatible.
+#' might be passed to the function. Currently we pass `boot_r` which is `0`
+#' for the original data and the ID (1, …) of the bootstrap sample otherwise.
+#' As more parameters might be added in the future it is recommended that the
+#' fit function accepts `...` as the last parameter to be forward compatible.
 #' @param gr `gr(par, x, ...)`. \code{gr=d(fn) / d(par)} is a function to
 #' return the gradient of \code{fn}. It must return an array with
 #' \code{length(x)} rows and \code{length(par)} columns.
@@ -423,7 +423,7 @@ bootstrap.nlsfit <- function(fn,
     my.lapply <- lapply
   }
 
-  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par, boot_r = ifelse(boot_r == 1, NA, sample - 1), ...) })
+  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par, boot_r = sample - 1, ...) })
 
   par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
