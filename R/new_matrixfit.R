@@ -286,6 +286,7 @@ new_matrixfit <- function(cf,
                           boot.fit = TRUE,
                           fit.method = "optim",
                           autoproceed = FALSE,
+                          par.guess,
                           every) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -432,7 +433,9 @@ new_matrixfit <- function(cf,
     model_object <- Phi4Model$new(cf$Time, parind, sign.vec, ov.sign.vec)#cf$n_particles)
   }
   
-  par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
+  if (missing(par.guess)) {
+    par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
+  }
 
   args <- list(fn = model_object$prediction,            # function
                gr = model_object$prediction_jacobian,   # gradient
