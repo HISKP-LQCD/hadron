@@ -15,25 +15,12 @@ bootstrap.gevp(cf, t0 = 1, element.order = 1:cf$nrObs, sort.type = "vectors", so
     initial time value of the GEVP, must be in between 0 and
     \code{Time/2-2}. Default is 1.
   }
-  \item{matrix.size}{
-    the size of the square matrix
-  }
   \item{element.order}{
     specifies how to fit the \code{n} linearly ordered single
     correlators into the correlator
     matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
     \code{matrix(cf[element.order], nrow=2)}.
     Double indexing is allowed.
-  }
-  \item{boot.R}{
-    number of bootstrap samples. Used only if cf was not yet
-    bootstrapped using \code{bootstrap.cf}.
-  }
-  \item{boot.l}{
-    block size for autocorrelation analysis
-  }
-  \item{seed}{
-    seed for the random number generation used for boostrapping.
   }
   \item{sort.type}{
     Sort the eigenvalues either in descending order, or by using the

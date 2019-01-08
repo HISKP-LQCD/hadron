@@ -9,7 +9,7 @@
 \method{plot}{outputdata}(x, skip = 0, ...)
 }
 \arguments{
-  \item{data}{
+  \item{x}{
     object of class \dQuote{outputdata} obtained from a read with \code{readoutputdata}
   }
   \item{skip}{

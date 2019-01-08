@@ -30,9 +30,6 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #'   \code{$opt.res$par}.
 #' @param t Numeric vector: Time of interest.
 #' @param T Numeric: Time extent of the lattice.
-#' @param sign.vec Numeric vector: Relative sign between forward and
-#'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
-#' @param deltat Numeric: time shift.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
 #' 
 #' @seealso \code{\link{matrixfit}}
