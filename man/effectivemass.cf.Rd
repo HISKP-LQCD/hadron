@@ -7,9 +7,7 @@
   mainly indented for internal usage by \code{\link{bootstrap.effectivmass}}.
 }
 \usage{
-effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
-                 interval=c(0.000001,2.), weight.factor=1,
-                 deltat=1, tmax=Thalf)
+effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor = NULL, deltat=1, tmax=Thalf)
 }
 \arguments{
   \item{cf}{

@@ -5,8 +5,7 @@
   solve GEVP for a real, symmetric correlator matrix
 }
 \usage{
-gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
-for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
+gevp(cf, Time, t0 = 1, element.order = 1:cf$nrObs, for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 }
 \arguments{
   \item{cf}{

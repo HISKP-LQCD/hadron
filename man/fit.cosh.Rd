@@ -13,7 +13,7 @@
 \usage{
 fit.cosh(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, adjust.n.cosh=FALSE, every, ...)
 
-\method{summary}{coshfit}(x, verbose=FALSE)
+\method{summary}{coshfit}(x, verbose = FALSE, ...)
 
 \method{plot}{coshfit}(x, col.fitline="black", plot.mass=TRUE, plot.corr=FALSE, ...)
 }

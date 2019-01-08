@@ -6,7 +6,7 @@
 }
 \usage{
 averx(data3pt, data2pt, ind.vec=c(1,2), ind.vec2pt=c(1,2), skip=0, t1,
-t2, mps, par=c(0.6, 0.15), S=1.5, method="uwerr", nrep)
+t2, mps, par=c(data3pt, data2pt, pionfit, boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE, t1, t2, seed=123456, type="solve", force.optim=FALSE)
 }
 \arguments{
   \item{data3pt}{

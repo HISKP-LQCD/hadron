@@ -5,8 +5,7 @@
   perform a bootstrap analysis of a GEVP for a real, symmetric correlator matrix
 }
 \usage{
-bootstrap.gevp(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
-element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE)
+bootstrap.gevp(cf, t0 = 1, element.order = 1:cf$nrObs, sort.type = "vectors", sort.t0 = TRUE)
 }
 \arguments{
   \item{cf}{
