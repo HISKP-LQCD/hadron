@@ -38,6 +38,28 @@ test_that('SingleModel', {
   expect_equal(fit_old$Qval, fit_new$Qval)
 })
 
+test_that('ShiftedModelPrediction', {
+  time_extent <- 10
+  parind <- cbind(rep(2, time_extent), rep(2, time_extent))
+  delta_t <- 1
+  par <- c(0.4, 2.3)
+  x <- 1:time_extent
+  sign_vec <- rep(1, time_extent)
+  ov_sign_vec <- rep(1, time_extent)
+  
+  L <- diag(rep(1, time_extent))
+  
+  new_model <- ShiftedModel$new(time_extent, parind, sign_vec, ov_sign_vec, delta_t)
+  
+  old_pred <- - c(matrixChi.shifted(par, x, rep(0, time_extent), L, time_extent, parind, sign_vec, ov_sign_vec, delta_t))
+  new_pred <- new_model$prediction(par, x)
+  expect_equal(new_pred, old_pred)
+  
+  old_jac <- - matrix(dmatrixChi.shifted(par, x, rep(0, time_extent), L, time_extent, parind, sign_vec, ov_sign_vec, delta_t), ncol = length(par))
+  new_jac <- new_model$prediction_jacobian(par, x)
+  expect_equal(old_jac, new_jac)
+})
+
 test_that('ShiftedModel', {
   samplecf_shited <- takeTimeDiff.cf(samplecf, 1)
   samplecf_boot <- bootstrap.cf(samplecf_shited, 100)

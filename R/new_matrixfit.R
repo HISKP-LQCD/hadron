@@ -102,8 +102,9 @@ ShiftedModel <- R6Class(
     },
     
     prediction = function (par, x) {
-      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2))))
+      xx <- x - self$delta_t/2
+      self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
+        (exp(-par[1] * xx) - self$sign_vec * exp(-par[1] * (self$time_extent - xx)))
       
     },
     
@@ -113,8 +114,8 @@ ShiftedModel <- R6Class(
       res <- matrix(0.0, nrow = length(x), ncol = length(par))
       
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (-xx * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
+      zp <- self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
+        (-xx * exp(-par[1] * xx) + (self$time_extent - xx) * self$sign_vec *
            exp(-par[1] * (self$time_extent - xx)))
       stopifnot(length(zp) == nrow(res))
       
@@ -124,15 +125,15 @@ ShiftedModel <- R6Class(
       for (i in 2:length(par)) {
           zp1 <- rep(0, length(zp))##
           j <- which(self$parind[, 1] == i)
-          zp1[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
-            (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
-            exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+          zp1[j] <- self$ov_sign_vec * par[self$parind[j, 2]] *
+            (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+            exp(-par[1] * (self$time_extent - xx[j])))
         
           zp2 <- rep(0, length(zp))##
           j <- which(self$parind[, 2] == i)
-          zp2[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
-            (exp(-par[1] * (x[j] - self$delta_t/2)) + self$sign_vec[j] *
-            exp(-par[1] * (self$time_extent - (x[j] - self$delta_t/2))))
+          zp2[j] <- self$ov_sign_vec * par[self$parind[j, 1]] *
+            (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+            exp(-par[1] * (self$time_extent - xx[j])))
           
           stopifnot(length(zp1) == nrow(res))
           stopifnot(length(zp2) == nrow(res))
