@@ -3,8 +3,9 @@ context('new_matrixfit')
 test_that('MatrixModel', {
   samplecf_boot <- bootstrap.cf(samplecf, 100)
   
-  fit_old <- matrixfit(samplecf_boot, 5, 10, fit.method = 'lm')
-  fit_new <- new_matrixfit(samplecf_boot, 5, 10, fit.method = 'lm')
+  args <- list(samplecf_boot, 5, 10, fit.method = 'lm')
+  fit_old <- do.call(matrixfit, args)
+  fit_new <- do.call(new_matrixfit, args)
   
   expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-4)
   
@@ -20,8 +21,9 @@ test_that('ShiftedModel', {
   samplecf_shited <- takeTimeDiff.cf(samplecf, 1)
   samplecf_boot <- bootstrap.cf(samplecf_shited, 100)
   
-  fit_old <- matrixfit(samplecf_boot, 5, 10, model = 'shifted', fit.method = 'lm', sym.vec = 'sinh')
-  fit_new <- new_matrixfit(samplecf_boot, 5, 10, model = 'shifted', fit.method = 'lm', sym.vec = 'sinh')
+  args <- list(samplecf_boot, 5, 10, model = 'shifted', fit.method = 'lm', sym.vec = 'sinh')
+  fit_old <- do.call(matrixfit, args)
+  fit_new <- do.call(new_matrixfit, args)
   
   expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-4)
   
@@ -38,8 +40,9 @@ test_that('TwoStateModel', {
   gevp <- bootstrap.gevp(samplecf_boot, t0 = 4, element.order = 1:4)
   pc <- gevp2cf(gevp, 1)
   
-  fit_old <- matrixfit(pc, 2, 15, model = 'pc', fit.method = 'lm')
-  fit_new <- new_matrixfit(pc, 2, 15, model = 'pc', fit.method = 'lm')
+  args <- list(pc, 2, 15, model = 'pc', fit.method = 'lm')
+  fit_old <- do.call(matrixfit, args)
+  fit_new <- do.call(new_matrixfit, args)
   
   expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-4)
   
