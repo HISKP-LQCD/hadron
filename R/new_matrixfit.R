@@ -100,14 +100,11 @@ ShiftedModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$delta_t <- delta_t
     },
-    
     prediction = function (par, x) {
       xx <- x - self$delta_t/2
       self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * xx) - self$sign_vec * exp(-par[1] * (self$time_extent - xx)))
-      
     },
-    
     prediction_jacobian = function (par, x, ...) {
       xx <- x - self$delta_t/2
       
@@ -208,14 +205,12 @@ Phi4Model <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$delta_t <- delta_t
     },
-    
     prediction = function (par, x) {
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
       (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2)))) +
       self$ov_sign_vec*par[self$parind[,3]]*par[self$parind[,4]]*exp(-(par[1]*(2/3))*(self$time_extent/2))*
       (exp(-(par[1]*(1/3))*(x-self$delta_t/2)) + self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-(x-self$delta_t/2))))
     },
-    
     prediction_jacobian = function (par, x, ...) {
       xx <- x - self$delta_t/2
       
