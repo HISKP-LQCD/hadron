@@ -411,7 +411,7 @@ bootstrap.nlsfit <- function(fn,
   first.res <- wrapper(Y, par.Guess)
 
   if (!first.res$converged) {
-    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+    stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
 
   if (parallel)
@@ -432,7 +432,7 @@ bootstrap.nlsfit <- function(fn,
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
   if (!converged[1]) {
-    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+    stop(sprintf('The second fit to the original data has failed. The `info` from the algorithm is `%d`', info[1]))
   }
   
   if (any(!converged)) {
