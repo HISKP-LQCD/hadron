@@ -4,8 +4,7 @@
 \alias{summary.bootstrapfit}
 \title{Summarize a bootstrap NLS fit}
 \usage{
-\method{summary}{bootstrapfit}(object, digits = 2,
-  print.correlation = TRUE)
+\method{summary}{bootstrapfit}(object, digits = 2, print.correlation = TRUE)
 }
 \arguments{
 \item{object}{object returned by \code{bootstrap.nlsfit}}
@@ -24,4 +23,3 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{plot.bootstrapfit}},
   \code{\link{print.bootstrapfit}}
 }
-\concept{NLS fit functions}
