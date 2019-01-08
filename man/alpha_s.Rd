@@ -6,7 +6,7 @@
   scheme.
 }
 \usage{
-alphas(mu, nl, lam0=0.250, Nc=3, Nf=2)
+alphas(mu, nl=3, lam0=0.250, Nc=3., Nf=2., use.cimpl=TRUE)
 }
 \arguments{
   \item{mu}{the renormalisation scale \eqn{\mu}{mu} in GeV}

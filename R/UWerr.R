@@ -362,7 +362,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   
 }
 
-summary.uwerr <- function(uwerr) {
+summary.uwerr <- function (object, ...) {
+  uwerr <- object
 
   cat("Error analysis with Gamma method\n")
   cat("based on", uwerr$N, "measurements\n")

@@ -15,7 +15,7 @@ tikz.finalize(tikzfiles, crop=TRUE, margins=0, clean=TRUE)
     the base of the files which will be used by \code{tikzDevice}, e.g. "basename" -> "basename.pdf", etc.
   }
   \item{...}{
-    optional arguments which are passed to \code{tikz}, see \code{\link{tikz}}
+    optional arguments which are passed to \code{tikz}, see \code{\link[tikzDevice:tikz]{tikzDevice::tikz}}
   }
   \item{tikzfiles}{
     a list with members $pdf, $tex, $aux and $log, returned by \code{tikz.init}

@@ -8,17 +8,19 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
   resampling_method = "bootstrap")
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{boot.R}{Integer, number of bootstrap samples used.}
 
 \item{boot.l}{Integer, block length in the time-series bootstrap process.}
 
 \item{seed}{Integer, random number generator seed used in bootstrap.}
 
-\item{sim}{Character, \code{sim} argument of \link{boot::tsboot}.}
+\item{sim}{Character, \code{sim} argument of \link[boot]{tsboot}.}
 
-\item{cf.tsboot}{List, result from the \link{boot::tsboot} function.}
+\item{cf.tsboot}{List, result from the \link[boot]{tsboot} function.}
 
-\item{cf}{\code{cf} object to extend.}
+\item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }
 \description{
 Bootstrapped CF mixin constructor
@@ -40,3 +42,4 @@ Other cf constructors: \code{\link{cf_meta}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
   \code{\link{cf}}
 }
+\concept{cf constructors}
