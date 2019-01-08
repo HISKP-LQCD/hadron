@@ -194,9 +194,11 @@ TwoStateModel <- R6Class(
 )
 
 
-## 3 particle correlation function in phi^4 theory:
-## C_3 (t) = 0.5*A_1^(3)*A_2^(3)*(exp(-E_3*(T-t))+exp(-E_3*t)) (3-particle correlator)
-##            + 0.5*A_3^(3)*A_4^(3)*exp(-(2/3)*E_3*(T/2)) * (exp(-(1/3)*E_3*(T-t)) + exp(-(1/3)*E_3*t)) (thermal pollution)
+#' 3 particle correlation function in phi^4 theory
+#'
+#' @description
+#' 3 particle correlator with thermal pollution term:
+#' \deqn{C_3 (t) = 0.5*A_1^(3)*A_2^(3)*(exp(-E_3*(T-t))+exp(-E_3*t)) + 0.5*A_3^(3)*A_4^(3)*exp(-(2/3)*E_3*(T/2)) * (exp(-(1/3)*E_3*(T-t)) + exp(-(1/3)*E_3*t))}
 
 Phi4Model <- R6Class(
   'Phi4Model',
@@ -208,7 +210,6 @@ Phi4Model <- R6Class(
     },
     
     prediction = function (par, x) {
-      
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
       (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2)))) +
       self$ov_sign_vec*par[self$parind[,3]]*par[self$parind[,4]]*exp(-(par[1]*(2/3))*(self$time_extent/2))*
@@ -257,7 +258,6 @@ Phi4Model <- R6Class(
              zp4 <- -self$ov_sign_vec[j]*par[self$parind[j,3]]*
              exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
              self$sign_vec[j]*exp(-(par[1]*(1/3))*(self$time_extent-(x[j]-self$delta_t/2))))
-        
         
         stopifnot(length(zp1) == nrow(res))
         stopifnot(length(zp2) == nrow(res))
@@ -437,8 +437,8 @@ new_matrixfit <- function(cf,
     par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
   }
 
-  args <- list(fn = model_object$prediction,            # function
-               gr = model_object$prediction_jacobian,   # gradient
+  args <- list(fn = model_object$prediction,
+               gr = model_object$prediction_jacobian,
                par.guess = par.guess,
                y = CF$Cor[ii],
                x = CF$t[ii],
