@@ -4,7 +4,7 @@
 #' of class `cf`. This class is particularly designed to deal with
 #' correlation functions emerging in statistical and quantum field theory
 #' simulations. Arithmetic operations are defined for this class in
-#' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
+#' several ways, as well as concatenation and \link{is.cf}.
 #'
 #' @details
 #'
@@ -26,6 +26,7 @@ cf <- function () {
 
 #' CF metadata mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
 #' @param Time Integer, full time extent.
 #' @param nrStypes Integer, number of smearing types.
@@ -48,12 +49,13 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 
 #' Bootstrapped CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
-#' @param sim Character, `sim` argument of \link{boot::tsboot}.
-#' @param cf.tsboot List, result from the \link{boot::tsboot} function.
+#' @param sim Character, `sim` argument of \link[boot]{tsboot}.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param resampling_method Character, either 'bootstrap' or 'jackknife'
 #'
 #' @details
 #'
@@ -83,6 +85,8 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
   else if (resampling_method == 'jackknife') {
     .cf$error_fn <- jackknife_error
     .cf$cov_fn <- jackknife_cov
+  } else {
+    stop('This resampling method is not implemented')
   }
 
   .cf$resampling_method <- resampling_method
@@ -103,6 +107,25 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' is incompatible with the previously used `sd` everywhere for the bootstrap
 #' samples. As the `sd` for the bootstrap samples also does not include the
 #' original data, this likely is similar in terms of bias.
+#'
+#' @param samples Numeric vector.
+#' @param na.rm Logical. Determines whether `NA` values shall be removed, see
+#' Description for details.
+#'
+#' @description
+#' Computes the jackknife error which is just
+#' \deqn{\sum_{i=0}^N (x_i - \bar x)^2 \,.}
+#' Internally we use
+#' \deqn{\frac{(N-1)^2}{N} \mathop{\mathrm{sd}}(X)}
+#' in order to benefit from the optimized standard deviation function.
+#'
+#' The width of the bootstrap distribution does not change with the number of
+#' elements. The jackknife distribution crucially depends on the number of
+#' measurements that one started with. Therefore we cannot just drop the NA
+#' values and are done with it. Instead we need to rescale with the
+#' \eqn{\sqrt{N / m}} where \eqn{N} is the number of original measurements and
+#' \eqn{m} is the number of non-NA values. With NA values removed we would
+#' otherwise underestimate the uncertainty.
 #'
 #' @export
 jackknife_error <- function (samples, na.rm = FALSE) {
@@ -177,8 +200,11 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 
 #' Principal correlator CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
-#' @param id Integer, number of the principal correlator from the GEVP. Ascending with eigenvalue, so `id = 1` is the lowest state.
+#' @param .cf `cf` object to extend.
+#' @param id Integer, number of the principal correlator from the GEVP.
+#' Ascending with eigenvalue, so `id = 1` is the lowest state.
+#' @param gevp_reference_time Integer, reference time \eqn{t_0} that has been
+#' used in the GEVP.
 #'
 #' @family cf constructors
 #'
@@ -195,6 +221,7 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
 
 #' Shifted CF mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param deltat TODO
 #' @param forwardshift Logical, TODO
 #'
@@ -221,6 +248,7 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
 
 #' Smeared CF mixin constructor
 #'
+#' @param .cf `cf` object to extend.
 #' @param scf Like `cf`, but with the smeared data.
 #' @param iscf Like `icf`, but with the smeared data.
 #' @param nrSamples TODO
@@ -251,7 +279,7 @@ cf_smeared <- function (.cf = cf(), scf, iscf, nrSamples, obs) {
 
 #' Subtracted CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param subtracted.values Numeric matrix, TODO
 #' @param subtracted.ii Integer vector, TODO
 #'
@@ -270,7 +298,7 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 
 #' Weighted CF mixin constructor
 #'
-#' @param cf `cf` object to extend.
+#' @param .cf `cf` object to extend.
 #' @param weight.factor TODO
 #' @param weight.cosh TODO
 #' @param mass1 TODO
@@ -300,6 +328,8 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
 }
 
 #' Checks whether the cf object contains no data
+#'
+#' @param .cf `cf` object.
 #'
 #' @examples
 #' # The empty cf object must be empty:
@@ -342,8 +372,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   ## we set the seed for reproducability and correlation
   set.seed(seed)
   ## now we bootstrap the correlators
-  cf.tsboot <- tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                         R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+  cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
 
   cf <- cf_boot(cf,
                 boot.R = boot.R,
@@ -509,8 +539,18 @@ avg.cbt.cf <- function(cf){
   return(invisible(cf))
 }
 
-## this is intended for instance for adding diconnected diagrams to connected ones
-add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
+#' Arithmetically adds two correlation functions
+#'
+#' @param cf1,cf2 `cf` object.
+#' @param a,b Numeric. Factors that multiply the correlation function before
+#' the addition.
+#'
+#' @return
+#' The value is
+#' \deqn{a C_1 + b C_2 \,.}
+#'
+#' @export
+add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
   stopifnot(inherits(cf1, 'cf_orig'))
@@ -581,7 +621,12 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   return (cf)
 }
 
-is.cf <- function(x){
+#' Checks whether an object is a cf
+#'
+#' @param x Object, possibly of class `cf`.
+#'
+#' @export
+is.cf <- function (x) {
   inherits(x, "cf")
 }
 
@@ -594,12 +639,13 @@ c.cf <- function (...) {
 }
 
 #' Concatenate two correlation function objects
+#'
+#' @param left,right `cf` objects to concatenate.
 concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
 
-  if (inherits(left, 'cf_boot') || inherits(left, 'cf_jackknife')
-      || inherits(right, 'cf_boot') || inherits(right, 'cf_jackknife')) {
+  if (inherits(left, 'cf_boot') || inherits(right, 'cf_boot')) {
     warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
   }
 
@@ -634,7 +680,8 @@ concat.cf <- function (left, right) {
   return (invisible(rval))
 }
 
-plot.cf <- function(cf, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+  cf <- x
   stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
   stopifnot(inherits(cf, 'cf_meta'))
 
@@ -707,8 +754,13 @@ shift.cf <- function(cf, places) {
 
 #' Invalidate samples
 #'
-#' When a correlation function is modified, any resampling should be invalidated. We could instead also choose to properly work with the samples, but most computations are done with the original data anyway.
-invalidate.samples.cf <- function(cf){
+#' When a correlation function is modified, any resampling should be
+#' invalidated. We could instead also choose to properly work with the samples,
+#' but most computations are done with the original data anyway.
+#'
+#' @param cf `cf` object.
+#'
+invalidate.samples.cf <- function (cf) {
   cf$boot.l <- NULL
   cf$boot.R <- NULL
   cf$boot.samples <- NULL
@@ -763,7 +815,8 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 }
 
 
-summary.cf <- function(cf, ...) {
+summary.cf <- function(object, ...) {
+  cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
 
   cat("T = ", cf$Time, "\n")
@@ -797,6 +850,6 @@ summary.cf <- function(cf, ...) {
   }
 }
 
-print.cf <- function(cf, ...) {
-  summary(cf, ...)
+print.cf <- function (x, ...) {
+  summary(x, ...)
 }

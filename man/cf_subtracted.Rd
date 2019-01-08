@@ -7,11 +7,11 @@
 cf_subtracted(.cf = cf(), subtracted.values, subtracted.ii)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{subtracted.values}{Numeric matrix, TODO}
 
 \item{subtracted.ii}{Integer vector, TODO}
-
-\item{cf}{\code{cf} object to extend.}
 }
 \description{
 Subtracted CF mixin constructor
@@ -23,3 +23,4 @@ Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_weighted}}, \code{\link{cf}}
 }
+\concept{cf constructors}
