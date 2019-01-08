@@ -1,9 +1,30 @@
 context('new_matrixfit')
 
-test_that('MatrixModel', {
+test_that('SingleModelJacobian', {
+  time_extent <- 10
+  parind <- cbind(rep(2, time_extent), rep(3, time_extent))
+  par <- c(0.4, 2.3, 3.4)
+  x <- 1:time_extent
+  sign_vec <- rep(1, time_extent)
+  ov_sign_vec <- rep(1, time_extent)
+  
+  L <- diag(rep(1, time_extent))
+  
+  new_model <- SingleModel$new(time_extent, parind, sign_vec, ov_sign_vec)
+  
+  old_jac <- - matrix(dmatrixChi(par, x, 0, L, time_extent, parind, sign_vec, ov_sign_vec), ncol = length(par))
+  new_jac <- new_model$prediction_jacobian(par, x)
+  
+  expect_equal(sum(is.na(old_jac)), 0)
+  expect_equal(sum(is.na(new_jac)), 0)
+  
+  expect_equal(new_jac, old_jac)
+})
+
+test_that('SingleModel', {
   samplecf_boot <- bootstrap.cf(samplecf, 100)
   
-  args <- list(samplecf_boot, 5, 10, fit.method = 'lm')
+  args <- list(samplecf_boot, 5, 10, fit.method = 'lm', model = 'single')
   fit_old <- do.call(matrixfit, args)
   fit_new <- do.call(new_matrixfit, args)
   

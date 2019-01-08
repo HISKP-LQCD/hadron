@@ -9,6 +9,9 @@ MatrixModel <- R6Class(
       self$parind <- parind
       self$sign_vec <- sign_vec
       self$ov_sign_vec <- ov_sign_vec
+
+      stopifnot(!is.na(self$sign_vec))
+      stopifnot(!is.na(self$ov_sign_vec))
     },
     prediction = function (par, x) {
       stop('MatrixModel$prediction is an abstract function.')
@@ -68,16 +71,21 @@ SingleModel <- R6Class(
       for (i in 2:length(par)) {
         zp1 <- rep(0, length(zp))
         j <- which(self$parind[, 1] == i)
-        zp1[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
+        zp1[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
           (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         zp2 <- rep(0, length(zp))
         j <- which(self$parind[, 2] == i)
-        zp2[j] <- -self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
+        zp2[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
           (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
-        res <- c(res, zp1 + zp2)
+        res <- cbind(res, zp1 + zp2)
       }
+
+      stopifnot(nrow(res) == length(x))
+      stopifnot(ncol(res) == length(par))
+
+      dimnames(res) <- NULL
       
       return (res)
     }
