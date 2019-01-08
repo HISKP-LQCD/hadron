@@ -27,9 +27,6 @@ bootstrap.effectivemass(cf, type="solve")
     polution is removed by \code{removeTemporal.cf} and taken into
     account here.
   }
-  \item{weight.factor}{
-    relative weight for type "weighted" only, see details
-  }
 }
 \value{
   An object of class \code{effectivemass} is invisibly returned. It has
