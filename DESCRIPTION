@@ -19,6 +19,8 @@ Suggests: tikzDevice, minpack.lm, parallel
 License: GPL 3 or later
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
+Imports: Rcpp
+LinkingTo: Rcpp
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
