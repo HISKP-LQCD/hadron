@@ -34,7 +34,7 @@ computeacf <- function(tseries, W.max, Lambda=100) {
 }
 
 ## generic function to plot an object of class "myGamma"
-plot.hadronacf <- function (x, col = "black", ...) {
+plot.hadronacf <- function (x, ..., col = "black") {
   Gamma <- x
   ## this is to avoid a warning
   Gamma$dGamma[1] <- 0.001

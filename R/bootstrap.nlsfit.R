@@ -476,14 +476,14 @@ bootstrap.nlsfit <- function(fn,
 #' Summarize a bootstrap NLS fit
 #'
 #' @param object object returned by \code{bootstrap.nlsfit}
+#' @param ... ignored
 #' @param digits number of significant digits to print in summary or print.
 #' @param print.correlation Logical. Whether to show the correlation between of
 #' the fit parameters.
-#' @param ... ignored
 #'
 #' @export
 #' @family NLS fit functions
-summary.bootstrapfit <- function(object, digits = 2, print.correlation = TRUE, ...) {
+summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TRUE) {
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
   errors <- object$se
@@ -528,11 +528,11 @@ summary.bootstrapfit <- function(object, digits = 2, print.correlation = TRUE, .
 #' Print a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
-#' @param digits number of significant digits to print in summary or print.
 #' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
+#' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
-print.bootstrapfit <- function(x, digits = 2, ...) {
+print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
 
