@@ -73,20 +73,6 @@ raw_cf_data <- function (cf, data) {
   return (cf)
 }
 
-#' @title Add Gamma-method error analysis to existing `raw_cf` container
-#' 
-#' @param cf Correlation function container of class 'raw_cf'
-#' @family raw_cf constructors
-#' 
-#' @export
-raw_cf_uwerr <- function(cf){
-  stopifnot(inherits(cf, 'raw_cf_data'))
-  stopifnot(inherits(cf, 'raw_cf_meta'))
-  cf$uwerr <- uwerr.raw_cf(cf)
-  class(cf) <- append(class(cf), 'raw_cf_uwerr')
-  return(cf)
-}
-
 #' @title Gamma method analysis on all time-slices in a 'raw_cf' object
 #'
 #' @param cf Correlation function container of class 'raw_cf'  
@@ -160,14 +146,19 @@ uwerr.raw_cf <- function(cf){
 #}
 
 #' @title Block average correlation function data
-#' @description Block `block_length` measurements of the correlation
+#' @description Block `block_length` sequential measurements of the correlation
 #'              function together. This occurs, for example, when multiple
 #'              stochastic noise vectors are used per measurement or multiple
 #'              source locations. Alternatively, it can also be used to
-#'              account for auto-correlations in the data.
+#'              account for auto-correlations in the data. If the total numbers
+#'              of measurements is not divisible by `block_length`, the last
+#'              measurements are discarded.
 #'
 #' @param cf `raw_cf` object
 #' @param block_length Integer, number of successive measurements to average over.
+#' @value cf `raw_cf` object with the data member reduced in its first dimension
+#'        by a factor of `block_length` and restricted (at the end) to the number
+#'        of measurements divisible by `block_length`.
 block.raw_cf <- function(cf, block_length){
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -251,53 +242,69 @@ addStat.raw_cf <- function(cf1, cf2) {
   return (invisible(cf))
 }
 
-## this is intended for instance for adding diconnected diagrams to connected ones
-#add.cf <- function(cf1, cf2, a=1.0, b=1.0) {
-#  stopifnot(inherits(cf1, 'cf'))
-#  stopifnot(inherits(cf2, 'cf'))
-#  stopifnot(inherits(cf1, 'cf_orig'))
-#  stopifnot(inherits(cf2, 'cf_orig'))
-#  stopifnot(inherits(cf1, 'cf_meta'))
-#  stopifnot(inherits(cf2, 'cf_meta'))
-#  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
-#  stopifnot(cf1$Time == cf2$Time)
-#
-#  cf <- cf1
-#  cf$cf <- a*cf1$cf + b*cf2$cf
-#  cf <- invalidate.samples.cf(cf)
-#  return(cf)
-#}
-#
-#'+.cf' <- function (cf1, cf2) {
-#  add.cf(cf1, cf2, a = 1.0, b = 1.0)
-#}
-#
-#'-.cf' <- function(cf1, cf2) {
-#  add.cf(cf1, cf2, a = 1.0, b = -1.0)
-#}
-#
-#'/.cf' <- function(cf1, cf2) {
-#  stopifnot(inherits(cf1, 'cf_meta'))
-#  stopifnot(inherits(cf2, 'cf_meta'))
-#  stopifnot(inherits(cf1, 'cf_orig'))
-#  stopifnot(inherits(cf2, 'cf_orig'))
-#  stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
-#  stopifnot(cf1$Time == cf2$Time)
-#
-#  cf <- cf1
-#  cf$cf <- cf1$cf / cf2$cf
-#  cf <- invalidate.samples.cf(cf)
-#  return (cf)
-#}
-#
-#mul.cf <- function(cf, a=1.) {
-#  stopifnot(inherits(cf, 'cf_orig'))
-#  stopifnot(is.numeric(a))
-#
-#  cf$cf <- a*cf$cf
-#  cf <- invalidate.samples.cf(cf)
-#  return (cf)
-#}
+#' @title add two `raw_cf` objects
+#' @value \code{a*cf1$data + b*cf2$data}
+add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
+  stopifnot(inherits(cf1, 'raw_cf'))
+  stopifnot(inherits(cf2, 'raw_cf'))
+  stopifnot(inherits(cf1, 'raw_cf_data'))
+  stopifnot(inherits(cf2, 'raw_cf_data'))
+  stopifnot(inherits(cf1, 'raw_cf_meta'))
+  stopifnot(inherits(cf2, 'raw_cf_meta'))
+  stopifnot(all(dim(cf1$data) == dim(cf2$data)))
+  stopifnot(cf1$Time == cf2$Time)
+  stopifnot(cf1$nts == cf2$nts)
+
+  cf <- cf1
+  cf$data <- a*cf1$data + b*cf2$data
+  return(cf)
+}
+
+
+'+.cf' <- function (cf1, cf2) {
+  add.cf(cf1, cf2, a = 1.0, b = 1.0)
+}
+
+'-.cf' <- function(cf1, cf2) {
+  add.cf(cf1, cf2, a = 1.0, b = -1.0)
+}
+
+'/.cf' <- function(cf1, cf2) {
+  stopifnot(inherits(cf1, 'raw_cf_meta'))
+  stopifnot(inherits(cf2, 'raw_cf_meta'))
+  stopifnot(inherits(cf1, 'raw_cf_orig'))
+  stopifnot(inherits(cf2, 'raw_cf_orig'))
+  stopifnot(all(dim(cf1$data) == dim(cf2$data)))
+  stopifnot(cf1$Time == cf2$Time)
+  stopifnot(cf1$nts == cf2$nts)
+
+  cf <- cf1
+  cf$data <- cf1$data / cf2$data
+  return (cf)
+}
+
+'*.cf' <- function(cf1, cf2) {
+  stopifnot(inherits(cf1, 'raw_cf_meta'))
+  stopifnot(inherits(cf2, 'raw_cf_meta'))
+  stopifnot(inherits(cf1, 'raw_cf_orig'))
+  stopifnot(inherits(cf2, 'raw_cf_orig'))
+  stopifnot(all(dim(cf1$data) == dim(cf2$data)))
+  stopifnot(cf1$Time == cf2$Time)
+  stopifnot(cf1$nts == cf2$nts)
+
+  cf <- cf1
+  cf$data <- cf1$data * cf2$data
+  return(cf)
+}
+
+mul.raw_cf <- function(cf, a=1.) {
+  stopifnot(inherits(cf, 'raw_cf_data'))
+  stopifnot(is.numeric(a) | is.complex(a))
+
+  cf$data <- a*cf$data
+  return (cf)
+}
+
 #
 #extractSingleCor.cf <- function(cf, id=c(1)) {
 #  stopifnot(inherits(cf, 'cf_meta'))
@@ -332,81 +339,70 @@ is_empty.raw_cf <- function(.raw_cf){
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))
 }
 
-#
-##' Concatenate correlation function objects
-##'
-##' @param ... Zero or multiple objects of type `raw_cf`.
-#c.raw_cf <- function (...) {
-#  rval <- Reduce(concat.raw_cf, list(...), raw_cf())
-#  return (invisible(rval))
-#}
-#
-##' Concatenate two correlation function objects
-#concat.raw_cf <- function (left, right) {
-#  stopifnot(inherits(left, 'raw_cf'))
-#  stopifnot(inherits(right, 'raw_cf'))
-#
-#  # In case that one of them does not contain data, the other one is the
-#  # result. This satisfies the neutral element axiom of a monoid.
-#  if (is_empty.cf(left)) {
-#    return (right)
-#  }
-#  if (is_empty.cf(right)) {
-#    return (left)
-#  }
-#
-#  stopifnot(inherits(left, 'cf_meta'))
-#  stopifnot(inherits(right, 'cf_meta'))
-#
-#  # At this point both `cf` objects given here have original data, therefore we
-#  # need to concatenate them.
-#
-#  # A few checks for compatability.
-#  stopifnot(left$Time == right$Time)
-#  stopifnot(nrow(left$cf) == nrow(right$cf))
-#  stopifnot(left$symmetrised == right$symmetrised)
-#  stopifnot(left$nrStypes == right$nrStypes)
-#
-#  rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
-#                  Time = left$Time,
-#                  nrStypes = left$nrStypes,
-#                  symmetrised = left$symmetrised)
-#  rval <- cf_orig(.cf = rval,
-#                  cf = cbind(left$cf, right$cf),
-#                  icf = cbind(left$icf, right$icf))
-#  return (invisible(rval))
-#}
-#
 
-overview_plot_raw_cf <- function(cf, 
-                                 plot_reim = 'real', 
-                                 plot_reim_same = FALSE,
-                                 plot_relerr = FALSE,
-                                 plot_tauint = FALSE,
-                                 return_only = FALSE,
-                                 logplot = '',
-                                 title = '') {
+#' Concatenate correlation function objects
+#'
+#' @param ... Zero or multiple objects of type `raw_cf`.
+c.raw_cf <- function (...) {
+  rval <- Reduce(concat.raw_cf, list(...), raw_cf())
+  return (rval)
+}
+
+#' Concatenate two correlation function objects
+concat.raw_cf <- function (left, right) {
+  stopifnot(inherits(left, 'raw_cf'))
+  stopifnot(inherits(right, 'raw_cf'))
+
+  # In case that one of them does not contain data, the other one is the
+  # result. This satisfies the neutral element axiom of a monoid.
+  if (is_empty.raw_cf(left)) {
+    return (right)
+  } else if (is_empty.raw_cf(right)) {
+    return (left)
+  } else if ( is_empty.raw_cf(left) & is_empty.raw_cf(right) ) {
+    stop("concat.raw_cf: both `raw_cf` objects empty, cannot concatenate!")
+  }
+
+  stopifnot(inherits(left, 'raw_cf_meta'))
+  stopifnot(inherits(right, 'raw_cf_meta'))
+
+  # At this point both `raw_cf` objects given here have original data, therefore we
+  # need to concatenate them.
+
+  # A few checks for compatability.
+  stopifnot(left$Time == right$Time)
+  stopifnot(left$nts == right$nts)
+  stopifnot(nrow(left$data) == nrow(right$data))
+  stopifnot(left$nrStypes == right$nrStypes)
+  stopifnot(all(left$dim == right$dim))
+
+  rval <- raw_cf_meta(nrObs = left$nrObs + right$nrObs,
+                     Time = left$Time,
+                     nts = left$nts,
+                     dim = left$im,
+                     nrStypes = left$nrStypes)
+  rval <- raw_cf_orig(.cf = rval,
+                      data = abind(left$data, right$data, along=2))
+  return (rval)
+}
+
+get_plotdata_raw_cf <- function(cf,
+                                reim,
+                                tauint,
+                                relerr)
+{
   stopifnot(any(inherits(cf, c('raw_cf_data'))))
   stopifnot(inherits(cf, 'raw_cf_meta'))
+  
+  data <- uwerr.raw_cf(cf)
 
-  if( !(plot_reim %in% c('real','imag','both') ) ){
-    stop("'plot_reim' must be one of 'real', 'imag' or 'both'")
-  }
-  if( plot_reim_same & !(plot_reim == 'both') ){
-    stop("'plot_reim_same' can only be true if 'plot_reim' is 'both'")
-  } 
-
-  if( !inherits(cf, 'raw_cf_uwerr') ){
-    data <- uwerr.raw_cf(cf)
-  } else {
-    data <- cf$uwerr
+  if( !(reim %in% c('real','imag','both') ) ){
+    stop("'reim' must be one of 'real', 'imag' or 'both'")
   }
 
-  tmax <- cf$nts-1
- 
-  # construct a return value of the plotted data
-  plotdf <- list()
-
+  data <- uwerr.raw_cf(cf)
+  # construct a return value
+  plotdata <- list()
   # loop over the internal dimensions
   for( i in 0:(prod(cf$dim)-1) ){
     istart <- i*cf$nrStypes*cf$nrObs*cf$nts + 1
@@ -415,17 +411,11 @@ overview_plot_raw_cf <- function(cf,
     # subset of the index matrix for the internal dimension which is about to be plotted 
     iselect <- data$idx_matrix[istart:iend,]
     
-    #clr_real <- rep("black", times=cf$nrStypes*cf$nrObs*cf$nts)
-    #clr_real[ which( Re(data$value[iselect]) < 0) ] <- "red"
-
-    #clr_imag <- rep("blue", times=cf$nrStypes*cf$nrObs*cf$nts)
-    #clr_imag[ which( Im(data$value[iselect]) < 0) ] <- "purple"
-
-    lidx <- length(plotdf)+1
-    plotdf[[lidx]] <- list()
-    if( plot_reim %in% c('real','both') ){
+    lidx <- length(plotdata)+1
+    plotdata[[lidx]] <- list()
+    if( reim %in% c('real','both') ){
       # ensure that we append to the end in the right order
-      plotdf[[lidx]] <- append(plotdf[[lidx]],
+      plotdata[[lidx]] <- append(plotdata[[lidx]],
                                list(real = 
                                     list(val = data$value$real[iselect],
                                          dval = data$dvalue$real[iselect],
@@ -435,8 +425,8 @@ overview_plot_raw_cf <- function(cf,
                                     )
                                )
     }
-    if( plot_reim %in% c('imag','both') ){
-      plotdf[[lidx]] <- append(plotdf[[lidx]],
+    if( reim %in% c('imag','both') ){
+      plotdata[[lidx]] <- append(plotdata[[lidx]],
                                list(imag = 
                                     list(val = data$value$imag[iselect],
                                          dval = data$dvalue$imag[iselect],
@@ -446,9 +436,9 @@ overview_plot_raw_cf <- function(cf,
                                     )
                                )
     }
-    if( plot_relerr ){
-      if( plot_reim %in% c('real','both') ){
-        plotdf[[lidx]] <- append(plotdf[[lidx]],
+    if( relerr ){
+      if( reim %in% c('real','both') ){
+        plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_real =
                                       list(val = abs(data$dvalue$real[iselect] / data$value$real[iselect]),
                                            dval = data$ddvalue$real[iselect],
@@ -458,8 +448,8 @@ overview_plot_raw_cf <- function(cf,
                                       )
                                  )
       }
-      if( plot_reim %in% c('imag','both') ){
-        plotdf[[lidx]] <- append(plotdf[[lidx]],
+      if( reim %in% c('imag','both') ){
+        plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_imag =
                                       list(val = abs(data$dvalue$imag[iselect] / data$value$imag[iselect]),
                                            dval = data$ddvalue$imag[iselect],
@@ -470,9 +460,9 @@ overview_plot_raw_cf <- function(cf,
                                  )
       }
     }
-    if( plot_tauint ){
-      if( plot_reim %in% c('real','both') ){
-        plotdf[[lidx]] <- append(plotdf[[lidx]],
+    if( tauint ){
+      if( reim %in% c('real','both') ){
+        plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(tauint_real =
                                       list(val = data$tauint$real[iselect],
                                            dval = data$dtauint$real[iselect],
@@ -482,8 +472,8 @@ overview_plot_raw_cf <- function(cf,
                                       )
                                  )
       }
-      if( plot_reim %in% c('imag', 'both') ){
-        plotdf[[lidx]] <- append(plotdf[[lidx]],
+      if( reim %in% c('imag', 'both') ){
+        plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(tauint_imag =
                                       list(val = data$tauint$imag[iselect],
                                            dval = data$dtauint$imag[iselect],
@@ -494,38 +484,101 @@ overview_plot_raw_cf <- function(cf,
                                  )
       }
     }
-    if( ! return_only ){
-      ts <- rep(0:tmax, times=cf$nrStypes*cf$nrObs)
-      if( plot_reim_same ){
-        ts <- rep(ts,times=2)
-      }
-      step <- 1
-      if( plot_reim_same ) step <- 2
-      for( qidx in seq(1,length(plotdf[[lidx]]),step) ){
-        args <- list()
-        args$x <- ts
-        if( any(names(plotdf[[lidx]][[qidx]]) == "ylim") ){
-          args$ylim <- plotdf[[lidx]][[qidx]]$ylim
-        }
-        args$xlab <- "t/a"
-        args$log <- plotdf[[lidx]][[qidx]]$logplot
-        args$main <- title
-        if( plot_reim_same ){
-          args$y <- c(plotdf[[lidx]][[qidx]]$val, plotdf[[lidx]][[qidx+1]]$val)
-          args$dy <- c(plotdf[[lidx]][[qidx]]$dval, plotdf[[lidx]][[qidx+1]]$dval)
-          args$col <- c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
-                        rep("red", cf$nrStypes*cf$nrObs*cf$nts))
-          args$ylab <- plotdf[[lidx]][[qidx]]$same_ylab
-        } else {
-          args$y <- plotdf[[lidx]][[qidx]]$val
-          args$dy <- plotdf[[lidx]][[qidx]]$dval
-          args$ylab <- plotdf[[lidx]][[qidx]]$ylab
-        }
-        do.call(plotwitherror, args)
-      }
+  }
+  return(plotdata)
+}
+
+plot.raw_cf <- function(x,
+                        reim = 'real', 
+                        reim_same = FALSE,
+                        ...)
+{
+  cf <- x
+  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_meta'))
+  
+  if( !(reim %in% c('real','imag','both') ) ){
+    stop("'reim' must be one of 'real', 'imag' or 'both'")
+  }
+  if( reim_same & !(reim == 'both') ){
+    stop("'reim_same' can only be true if 'reim' is 'both'")
+  }
+
+  plotdata <- get_plotdata_raw_cf(cf, reim=reim, tauint=FALSE, relerr=FALSE) 
+  for( lidx in 1:length(plotdata) ){
+    if( plot_reim %in% c('real', 'both') & plot_reim_same == FALSE){
+      plotwitherror(x = 0:(cf$nts-1),
+                    y = plotdata[[lidx]]$real$val,
+                    dy = plotdata[[lidx]]$real$dval,
+                    ...)
+    }
+    if( plot_reim %in% c('imag', 'both') & plot_reim_same == FALSE){
+      plotwitherror(x = 0:(cf$nts-1),
+                    y = plotdata[[lidx]]$imag$val,
+                    dy = plotdata[[lidx]]$imag$dval,
+                    ...)
+    }
+    if( plot_reim_same ){
+      plotwitherror(x = rep(0:(cf$nts-1), times=2),
+                    y = c(plotdata[[lidx]]$real$val, plotdata[[lidx]]$imag$val),
+                    dy = c(plotdata[[lidx]]$real$dval, plotdata[[lidx]]$imag$dval),
+                    ...)
     }
   }
-  return(invisible(plotdf))
+  return(invisible(plotdata))
+}
+
+
+overview_plot_raw_cf <- function(cf, 
+                                 reim = 'real', 
+                                 reim_same = FALSE,
+                                 relerr = FALSE,
+                                 tauint = FALSE,
+                                 logplot = '',
+                                 title = '')
+{
+  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_meta'))
+
+  if( !(reim %in% c('real','imag','both') ) ){
+    stop("'reim' must be one of 'real', 'imag' or 'both'")
+  }
+  if( reim_same & !(reim == 'both') ){
+    stop("'reim_same' can only be true if 'reim' is 'both'")
+  }
+
+  tmax <- cf$nts-1  
+  plotdata <- get_plotdata_raw_cf(cf, reim=reim, relerr=relerr, tauint=tauint)
+  ts <- rep(0:tmax, times=cf$nrStypes*cf$nrObs)
+  if( reim_same ){
+    ts <- rep(ts,times=2)
+  }
+  step <- 1
+  if( reim_same ) step <- 2
+  for( lidx in 1:length(plotdata) ){
+    for( qidx in seq(1,length(plotdata[[lidx]]),step) ){
+      args <- list()
+      args$x <- ts
+      if( any(names(plotdata[[lidx]][[qidx]]) == "ylim") ){
+        args$ylim <- plotdata[[lidx]][[qidx]]$ylim
+      }
+      args$xlab <- "t/a"
+      args$log <- plotdata[[lidx]][[qidx]]$logplot
+      args$main <- title
+      if( reim_same ){
+        args$y <- c(plotdata[[lidx]][[qidx]]$val, plotdata[[lidx]][[qidx+1]]$val)
+        args$dy <- c(plotdata[[lidx]][[qidx]]$dval, plotdata[[lidx]][[qidx+1]]$dval)
+        args$col <- c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
+                      rep("red", cf$nrStypes*cf$nrObs*cf$nts))
+        args$ylab <- plotdata[[lidx]][[qidx]]$same_ylab
+      } else {
+        args$y <- plotdata[[lidx]][[qidx]]$val
+        args$dy <- plotdata[[lidx]][[qidx]]$dval
+        args$ylab <- plotdata[[lidx]][[qidx]]$ylab
+      }
+      do.call(plotwitherror, args)
+    }
+  }
 }
 
 
@@ -579,7 +632,7 @@ shift.raw_cf <- function(cf, places) {
       cf$data[out_dof] <- cf$data[in_dof]
     }
   }
-  return(invisible(cf))
+  return(cf)
 }
 
 #' @title Construct the tensor index set for the entire raw correlator
@@ -600,7 +653,6 @@ idx_matrix.raw_cf <- function(cf){
 #' @param cf `raw_cf` container
 int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
-  stopifnot(inherits(cf, 'raw_cf_data'))
   args <- list()
   for( d in cf$dim ){
     args[[length(args)+1]] <- 1:d
@@ -608,41 +660,35 @@ int_idx_matrix.raw_cf <- function(cf){
   as.matrix(do.call(expand.grid, args))
 }
 
-#
-#summary.cf <- function(cf, ...) {
-#  stopifnot(inherits(cf, 'cf_meta'))
-#
-#  cat("T = ", cf$Time, "\n")
-#  cat("observations = ", dim(cf$cf)[1], "\n")
-#  cat("Nr Stypes = ", cf$nrStypes, "\n")
-#  cat("Nr Obs    = ", cf$nrObs, "\n")
-#
-#  if (inherits(cf, 'cf_boot')) {
-#    cat("R = ", cf$boot.R, "\n")
-#
-#    if(!cf$symmetrised){
-#      tmax <- cf$Time-1
-#    } else {
-#      tmax <- cf$Time/2
-#    }
-#    cat("l = ", cf$boot.l, "\n")
-#    out <- data.frame(t=c(0:tmax), C=cf$cf0)
-#    cat("sim = ", cf$sim, "\n")
-#
-#    out <- cbind(out, tsboot.se=cf$tsboot.se)
-#  }
-#
-#
-#  if (inherits(cf, 'cf_jackknife')) {
-#    out <- cbind(out, jackknife.se=cf$jackknife.se)
-#    out <- cbind(out, jab.se=cf$jack.boot.se)
-#  }
-#
-#  if(exists("out")) {
-#    print(out)
-#  }
-#}
-#
-#print.cf <- function(cf, ...) {
-#  summary(cf, ...)
-#}
+
+summary.raw_cf <- function(cf, ...) {
+  stopifnot(inherits(cf, 'raw_cf_meta'))
+  stopifnot(inherits(cf, 'raw_cf_data'))
+
+  cat("T = ", cf$Time, "\n")
+  cat("observations = ", dim(cf$data)[1], "\n")
+  cat("Nr Stypes = ", cf$nrStypes, "\n")
+  cat("Nr Obs    = ", cf$nrObs, "\n")
+  cat("dim       = ", cf$dim, "\n")
+
+  uw <- uwerr.raw_cf(cf)
+
+  idcs <- uw$idx_matrix
+  out <- NULL
+  for( i in 1:nrow(idcs) ){
+    out <- rbind(out,
+                 data.frame(t = idcs[i,1]-1, 
+                            value_real = uw$value$real[idcs[i,drop=FALSE]], 
+                            value_imag = uw$value$imag[idcs[i,drop=FALSE]],
+                            dvalue_real = uw$dvalue$real[idcs[i,drop=FALSE]],
+                            dvalue_imag = uw$dvalue$imag[idcs[i,drop=FALSE]])
+                 )
+  }
+  rownames(out) <- NULL
+  print(out)
+  return(invisible(out))
+}
+
+print.raw_cf <- function(cf, ...) {
+  summary(cf, ...)
+}
