@@ -4,7 +4,7 @@
 #' of class `cf`. This class is particularly designed to deal with
 #' correlation functions emerging in statistical and quantum field theory
 #' simulations. Arithmetic operations are defined for this class in
-#' several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
+#' several ways, as well as concatenation and \link{is.cf}.
 #'
 #' @details
 #'
@@ -53,8 +53,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
-#' @param sim Character, `sim` argument of \link{boot::tsboot}.
-#' @param cf.tsboot List, result from the \link{boot::tsboot} function.
+#' @param sim Character, `sim` argument of \link[boot]{tsboot}.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
 #'
 #' @details

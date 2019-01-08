@@ -1,7 +1,9 @@
+#' pionfit print
 print.pionfit <- function (x, ...) {
   summary(x, ...)
 }
 
+#' pionfit summary
 summary.pionfit <- function (object, ...) {
   fit <- object
   kappa <- fit$kappa

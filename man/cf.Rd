@@ -11,7 +11,7 @@ This function \code{cf()} creates containers for correlation functions
 of class \code{cf}. This class is particularly designed to deal with
 correlation functions emerging in statistical and quantum field theory
 simulations. Arithmetic operations are defined for this class in
-several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
+several ways, as well as concatenation and \link{is.cf}.
 }
 \details{
 And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:

@@ -40,7 +40,7 @@ effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(
     \code{\link{bootstrap.effectivemass}}. 
   }
   \item{interval}{
-    initial interval for the \code{\link{root}} function when
+    initial interval for the \code{\link{uniroot}} function when
     numerically solving for the effective mass.
   }
   \item{weight.factor}{

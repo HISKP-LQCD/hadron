@@ -25,14 +25,14 @@ bootstrap.cf(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE)
     time series.  The possible input values are ‘"fixed"’ (block
     resampling with fixed block lengths of ‘boot.l’) and ‘"geom"’ (block
     resampling with block lengths having a geometric distribution with
-    mean ‘boot.l’). Default is ‘"geom"’. See \link{boot::tsboot} for details.
+    mean ‘boot.l’). Default is ‘"geom"’. See \link[boot]{tsboot} for details.
   }
   \item{endcorr}{
     A logical variable indicating whether end corrections are to
     be applied when ‘sim’ is ‘"fixed"’.  When ‘sim’ is
     ‘"geom"’, ‘endcorr’ is automatically set to ‘TRUE’; ‘endcorr’ is
     not used when ‘sim’ is ‘"model"’ or ‘"scramble"’. See
-    \link{boot::tsboot} for details.
+    \link[boot]{tsboot} for details.
   }
 }
 \value{
@@ -48,7 +48,7 @@ samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
 plot(samplecf, log=c("y"))
 }
 \seealso{
-  \code{\link[boot:tsboot]{tsboot}}, \code{jackknife.cf}
+  \code{\link[boot]{tsboot}}, \code{jackknife.cf}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{bootstrap}
