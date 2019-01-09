@@ -7,13 +7,13 @@
 parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...)
 }
 \arguments{
-\item{fn}{the (non-linear) function to be fitted to the data. Its first
-argument must be the fit parameters named \code{par}. The second must be
-\code{x}, the explaining variable. Additional parameters might be passed to
-the function. Currently we pass \code{boot_r} which is \code{NA} for the original data
-and the ID of the bootstrap sample otherwise. As more parameters might be
-added in the future it is recommended that the fit function accepts \code{...} as
-the last parameter to be forward compatible.}
+\item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
+data. Its first argument must be the fit parameters named \code{par}. The
+second must be \code{x}, the explaining variable. Additional parameters
+might be passed to the function. Currently we pass \code{boot_r} which is \code{0}
+for the original data and the ID (1, …) of the bootstrap sample otherwise.
+As more parameters might be added in the future it is recommended that the
+fit function accepts \code{...} as the last parameter to be forward compatible.}
 
 \item{par.guess}{initial guess values for the fit parameters.}
 
@@ -52,7 +52,7 @@ x <- c(1, 2, 3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
 
-fn <- function (par, x) par[1] + par[2] * x
+fn <- function (par, x, ...) par[1] + par[2] * x
 
 fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 summary(fit.result)
