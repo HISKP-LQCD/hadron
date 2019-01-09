@@ -7,7 +7,7 @@
 }
 \usage{
 fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE, 
-                  boot.fit = TRUE, autoproceed = FALSE)
+                  boot.fit = TRUE, autoproceed = FALSE, every)
 }
 \arguments{
   \item{cf}{
@@ -44,6 +44,10 @@ fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE,
     behaviour is to abort the fit. Setting this to \code{TRUE} means that
     the fit is instead continued with a diagonal inverse of the variance-covariance
     matrix.
+  }
+  \item{every}{
+    Fit only a part of the data points. Indices that are not multiples of \code{every}
+    are skipped. If no value is provided, all points are taken into account.
   }
 }
 \value{
@@ -82,7 +86,7 @@ fit.effectivemass(cf, t1, t2, useCov = FALSE, replace.na = TRUE,
 \examples{
 data(samplecf)
 samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
-effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556), t1=15, t2=23)
+effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
 summary(effmass)
 plot(effmass, ylim=c(0.14,0.15))
 }

@@ -48,7 +48,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   }
   ## index array for indexing the linear data
   ii <- c()
-  for(i in 1:Ncor) {
+  for(i in c(1:Ncor)) {
     ii <- c(ii, (i-1)*(Thalf+1)+1)
   }
   ## re-order as to match the input order
@@ -70,64 +70,73 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   L <- chol(cM)
   invL <- solve(L)
   
-  ## now the time dependence for t > t0
+  ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
-  for(t in (t0+1):(Thalf)) {
-    
+  for(t in c((t0 + 1):(Thalf), (t0-1):0)) {
     t.sort <- t0+2
+    ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1 for t > t0
     if((t > t0+1) && !sort.t0) t.sort <- t
+    ## and t.sort <- t + 1 + 1 for t < t0
+    if((t < t0-1) && !sort.t0) t.sort <- t + 2
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
-    ## determine eigenvalues and vectors
-
-    variational.solve <- eigen(t(invL) %*% cM %*% invL,
-                               symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
-    ## sort depending on input by values or vectors
-    sortindex <- integer(matrix.size)
-    if(sort.type == "values" || t == t0+1) {
-      sortindex <- order(variational.solve$values, decreasing=TRUE)
-    }
-    else if(sort.type == "vectors") {
-      ## compute the scalar product of eigenvectors with those at t0+1
-      idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-      sortindex <- idx[,1]
-      if(!all(order(sortindex) == c(1:matrix.size))) {
-        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-        sortindex <- idx[,1]
-      }
-      if(!all(order(sortindex) == c(1:matrix.size))) {
-        sortindex <- order(variational.solve$values, decreasing=TRUE)
-      }
+    if(any(is.na(cM))) {
+      evalues[t+1,] <- NA
+      evectors[t+1,,] <- NA
+      amplitudes[t+1,,] <- NA
     }
     else {
-      Perms <- permutations(matrix.size)
-      NPerms <- dim(Perms)[1]
-      DMp <- integer(NPerms)
-      Mp <- matrix(0, nrow=matrix.size, ncol=matrix.size)
-      for(p in c(1:NPerms)) {
-        for(i in c(1:matrix.size)) {
-          ij <- Perms[p,c(1:matrix.size)[-i]]
-          if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
-          else {
-            Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
-          }
-        }
-        DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
+      ## determine eigenvalues and vectors
+      
+      variational.solve <- eigen(t(invL) %*% cM %*% invL,
+                                 symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
+      ## sort depending on input by values or vectors
+      sortindex <- integer(matrix.size)
+      if(sort.type == "values" || t == t0+1) {
+        sortindex <- order(variational.solve$values, decreasing=TRUE)
       }
-      sortindex <- Perms[which.max(DMp),]
+      else if(sort.type == "vectors") {
+        ## compute the scalar product of eigenvectors with those at t0+1
+        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+        sortindex <- idx[,1]
+        if(!all(order(sortindex) == c(1:matrix.size))) {
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+          sortindex <- idx[,1]
+        }
+        if(!all(order(sortindex) == c(1:matrix.size))) {
+          sortindex <- order(variational.solve$values, decreasing=TRUE)
+        }
+      }
+      else {
+        Perms <- permutations(matrix.size)
+        NPerms <- dim(Perms)[1]
+        DMp <- integer(NPerms)
+        Mp <- matrix(0, nrow=matrix.size, ncol=matrix.size)
+        for(p in c(1:NPerms)) {
+          for(i in c(1:matrix.size)) {
+            ij <- Perms[p,c(1:matrix.size)[-i]]
+            if(i == 1) Mp <- matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+            else {
+              Mp <- Mp %*% matrix(c(variational.solve$vectors[,i], as.vector(evectors[t.sort,,ij])), nrow=matrix.size, ncol=matrix.size)
+            }
+          }
+          DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
+        }
+        sortindex <- Perms[which.max(DMp),]
+      }
+      evalues[t+1,] <- variational.solve$values[sortindex]
+      evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
+      tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
+      ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
+      ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
+      ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
+      ## we set them to NA first
+      d <- diag(t(evectors[t+1,,]) %*% tmp)
+      d[d < 0] <- NA
+      amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
+      rm(tmp)
     }
-    evalues[t+1,] <- variational.solve$values[sortindex]
-    evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
-    tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
-    ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
-    ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
-    ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
-    ## we set them to NA first
-    d <- diag(t(evectors[t+1,,]) %*% tmp)
-    d[d < 0] <- NA
-    amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
-    rm(tmp)
   }
   evalues[t0+1,] <- 1.
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
@@ -140,28 +149,22 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 }
 
 
-bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
-                           element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE) {
-  ## number of measurements
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.gevp requires an object of class cf as input! Aborting!\n")
-  }
-  if(!any(c("values", "vectors", "det") == sort.type)) {
-    stop("possible values for sort.ype are values or vectors. Aborting\n")
-  }
+bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
+                           sort.type = "vectors", sort.t0 = TRUE) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(sort.type %in% c("values", "vectors", "det"))
+
   N <- length(cf$cf[,1])
-  if(!cf$boot.samples) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-  }
-  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, matrix.size=matrix.size, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
+  seed <- cf$seed
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
+  matrix.size <- as.integer(round(sqrt(length(element.order))))
+  res <- gevp(cf$cf0, Time=cf$Time, t0=t0, element.order=element.order, for.tsboot=FALSE, sort.type=sort.type, sort.t0=sort.t0)
 
   gevp.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp, Time=cf$Time, t0=t0,
-                         matrix.size=matrix.size, element.order=element.order,
+                         element.order=element.order,
                          for.tsboot=TRUE, sort.type=sort.type, sort.t0=sort.t0))
 
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
@@ -174,37 +177,50 @@ bootstrap.gevp <- function(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
 }
 
 gevp2cf <- function(gevp, id=1) {
-  if(!inherits(gevp, "gevp")) {
-    stop("gevp2cf requires an element of class gevp as input. Aborting...\n")
-  }
-  if(id > gevp$matrix.size || id < 1) {
-    stop("gevp2cf: id must be <= matrix.size and > 0. Aborting...\n")
-  }
-  cf <- list()
-  cf$N <- length(gevp$cf$cf[,1])
-  cf$cf0 <- gevp$res.gevp$evalues[,id]
-  cf$boot.samples <- TRUE
-  cf$boot.R <- gevp$boot.R
-  cf$boot.l <- gevp$boot.l
-  cf$seed <- gevp$seed
-  cf$nrStypes <- 1
-  cf$nrObs <- 1
-  cf$Time <- gevp$cf$Time
+  stopifnot(inherits(gevp, "gevp"))
+  stopifnot(!(id > gevp$matrix.size || id < 1))
+
+  # Base `cf` properties.
+  cf <- cf_meta(nrObs = 1,
+                Time = gevp$cf$Time,
+                nrStypes = 1,
+                symmetrised = gevp$cf$symmetrised)
+
+  # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
-  cf$cf.tsboot <- list()
-  cf$cf.tsboot$t <- gevp$gevp.tsboot[,tt]
-  cf$cf.tsboot$t0 <- gevp$res.gevp$evalues[,id]
-  ## the bootstrap error
-  cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN=2L, FUN=sd)
-  cf$id <- id
-  if(any(names(gevp$cf) == "weighted")) {
-    cf$weighted <- gevp$cf$weighted
-    cf$weight.cosh <- gevp$cf$weight.cosh
-    cf$mass1 <- gevp$cf$mass1
-    cf$mass2 <- gevp$cf$mass2
+  cf.tsboot <- list(t = gevp$gevp.tsboot[,tt],
+                    t0 = gevp$res.gevp$evalues[,id])
+
+  cf <- cf_boot(cf,
+                boot.R = gevp$boot.R,
+                boot.l = gevp$boot.l,
+                seed = gevp$seed,
+                sim = gevp$cf$sim,
+                cf.tsboot = cf.tsboot,
+                resampling_method = gevp$cf$resampling_method)
+
+  cf <- cf_principal_correlator(cf,
+                                id = id,
+                                gevp_reference_time = gevp$t0)
+
+  if (inherits(gevp$cf, 'cf_shifted')) {
+    cf <- cf_shifted(cf,
+                     deltat = gevp$cf$deltat,
+                     forwardshift = gevp$cf$forwardshift)
   }
-  attr(cf, "class") <- c("cf", class(cf))
-  return(invisible(cf))
+
+  if (inherits(gevp$cf, 'cf_weighted')) {
+    cf <- cf_weighted(cf,
+                      weight.factor = gevp$cf$weight.factor,
+                      weight.cosh = gevp$cf$weight.cosh,
+                      mass1 = gevp$cf$mass1,
+                      mass2 = gevp$cf$mass2)
+  }
+
+  # Add some other stuff
+  cf$N <- length(gevp$cf$cf[,1])
+
+  return (invisible(cf))
 }
 
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
@@ -254,7 +270,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   for(i in c(1:gevp$boot.R)) {
     amplitude.tsboot[i,] <- abs(gevp$gevp.tsboot[i,tt])/sqrt(.5*(exp(-m[i]*t)+ sign*exp(-m[i]*(T-t))))
   }
-  damplitude <- apply(amplitude.tsboot, 2, sd)
+  damplitude <- apply(amplitude.tsboot, 2, gevp$cf$error_fn)
   
   ## now we perform a constant fit
   ii <- c((t1+1):(t2+1))
@@ -306,23 +322,24 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
               boot.R=gevp$boot.R, boot.l=gevp$boot.l, seed=gevp$seed,
               id=id, op.id=op.id,
               Time=T, m0=m0, m0.tsboot=m, useCov=useCov,
-              Qval=1-pchisq(opt.res$value, t2-t1)
-              )
+              Qval=1-pchisq(opt.res$value, t2-t1),
+              error_fn = gevp$cf$error_fn)
   attr(res, "class") <- c("gevp.amplitude", class(res))
   return(invisible(res))
 }
 
-summary.gevp.amplitude <- function(amp) {
+summary.gevp.amplitude <- function (object, ...) {
+  amp <- object
   cat("\n ** Result of a GEVP analysis for the amplitude **\n\n")
   cat("time range from", amp$t1, " to ", amp$t2, "\n")
   cat("mass:\n")
   cat("m \t=\t", amp$m0, "\n")
-  cat("dm\t=\t", sd(amp$m0.tsboot), "\n")
+  cat("dm\t=\t", amp$error_fn(amp$m0.tsboot), "\n")
   cat("\nAmplitude:\n")
   cat("operator id:", amp$op.id, "\n")
   cat("state id   :", amp$id, "\n")
   cat(" P[", amp$id, ",", amp$op.id, "] = ", amp$meanAmplitude, "\n")
-  cat("dP[", amp$id, ",", amp$op.id, "] = ", sd(amp$meanAmplitude.tsboot[,1]), "\n")
+  cat("dP[", amp$id, ",", amp$op.id, "] = ", amp$error_fn(amp$meanAmplitude.tsboot[,1]), "\n")
   cat("\n")
   cat("boot.R\t=\t", amp$gevp$boot.R, "\n")
   cat("boot.l\t=\t", amp$gevp$boot.l, "\n")
@@ -336,20 +353,21 @@ summary.gevp.amplitude <- function(amp) {
     cat("mu2 \t=\t", amp$mu2, "\n")
     if(amp$normalisation == "cmi") cat("kappa\t=\t", amp$kappa,"\n")
     cat("fps \t=\t", amp$fps, "\n")
-    cat("dfps\t=\t", sd(amp$fps.tsboot), "\n")
+    cat("dfps\t=\t", amp$error_fn(amp$fps.tsboot), "\n")
   }
 }
 
-plot.gevp.amplitude <- function(amp, ...) {
+plot.gevp.amplitude <- function (x, ...) {
+  amp <- x
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)
   if(amp$fit) {
     arrows(x0=amp$t1, y0=amp$meanAmplitude,
            x1=amp$t2, y1=amp$meanAmplitude, col=c("red"), length=0)
-    arrows(x0=amp$t1, y0=amp$meanAmplitude+sd(amp$meanAmplitude.tsboot[,1]),
-           x1=amp$t2, y1=amp$meanAmplitude+sd(amp$meanAmplitude.tsboot[,1]),
+    arrows(x0=amp$t1, y0=amp$meanAmplitude+amp$error_fn(amp$meanAmplitude.tsboot[,1]),
+           x1=amp$t2, y1=amp$meanAmplitude+amp$error_fn(amp$meanAmplitude.tsboot[,1]),
            col=c("red"), length=0, lwd=c(1))
-    arrows(x0=amp$t1, y0=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
-           x1=amp$t2, y1=amp$meanAmplitude-sd(amp$meanAmplitude.tsboot[,1]),
+    arrows(x0=amp$t1, y0=amp$meanAmplitude-amp$error_fn(amp$meanAmplitude.tsboot[,1]),
+           x1=amp$t2, y1=amp$meanAmplitude-amp$error_fn(amp$meanAmplitude.tsboot[,1]),
            col=c("red"), length=0, lwd=c(1))
   }
 }

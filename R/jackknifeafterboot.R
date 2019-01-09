@@ -29,16 +29,10 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
   return(jack.boot.se)
 }
 
-jab.cf <- function(cf, m=1) {
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.cf requires an object of class cf as input! Aborting!\n")
-  }
-  if(!cf$boot.sample) {
-    stop("cf must be bootstrapped already using bootstrap.cf! Aborting!\n")
-  }
-  if(cf$cf.tsboot$sim != "fixed") {
-    stop("JAB only implemented for 'sim=fixed' at the moment")
-  }
+jab.cf <- function(cf, m = 1) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(cf$cf.tsboot$sim == "fixed")
 
   ## save random number generator state
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
@@ -48,8 +42,8 @@ jab.cf <- function(cf, m=1) {
   set.seed(cf$seed)
 
   ## the resampling block indices
-  cf$blockind <- boot:::ts.array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
-                              R=cf$boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
+  cf$blockind <- boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
+                               R=cf$boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
 
   cf$jack.boot.se <- jab(t=cf$cf.tsboot$t, t0=cf$tsboot.se, starts=cf$blockind$starts, m=m, fn=sd)
   
@@ -74,8 +68,8 @@ jab.cf.derived <- function(cf, m=1) {
 
   if(is.null(cf$cf$blockind)) {
 
-    cf$cf$blockind <- boot:::ts.array(n=cf$cf$cf.tsboot$n, n.sim=cf$cf$cf.tsboot$n.sim,
-                              R=cf$cf$boot.R, l=cf$cf$boot.l, sim=cf$cf$sim, endcorr=cf$cf$cf.tsboot$endcorr)
+    cf$cf$blockind <- boot_ts_array(n=cf$cf$cf.tsboot$n, n.sim=cf$cf$cf.tsboot$n.sim,
+                                    R=cf$cf$boot.R, l=cf$cf$boot.l, sim=cf$cf$sim, endcorr=cf$cf$cf.tsboot$endcorr)
   }
   jack.boot.se <- jab(t=cf$t[,c(1:length(cf$se))], t0=cf$se, starts=cf$cf$blockind$starts, m=m, fn=sd)
   ## restore random number generator state

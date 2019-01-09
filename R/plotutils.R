@@ -9,11 +9,11 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   if(logscale) {
     tmp <- tmp[ tmp > 0 ]
     tmpp <- tmpp[ tmpp > 0 ]
-  }
-  if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
-    warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
-    tmp <- 10^(-6)
-    tmpp <- 10^2
+    if( ( all(is.na(tmp)) && all(is.na(tmpp)) ) | ( length(tmp) == 0 & length(tmpp) == 0 ) ){
+      warning("compute.plotlims: log scale requested but there are no positive data, setting default range\n")
+      tmp <- 10^(-6)
+      tmpp <- 10^2
+    }
   }
   range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
 }
@@ -187,13 +187,11 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
-          # arrows has a special behaviour here: when start==end, no arrow will be drawn,
-          # this can be exploited to plot points with different numbers of error bars in one go
-          # by supplying 0 errors for those points with fewer error bars
-          # In order to accomodate this, we don't increase
-          # the arrowhead line length in this case to prevent crazy looking error bars.
-          arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
-          arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
+
+          if (!is.na(start) && !is.na(end) && start != end) {
+            arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
+            arwhd.len <- arwhd.len + 0.01
+          }
         } 
         # for the linear.quadrature method, show the total error as a line of triple thickness
         # without drawing any "arrowstems"
@@ -329,7 +327,8 @@ plot.cfit <- function(x, ...) {
   }
 }
 
-plot.effmass <- function(m, ll, lf, ff, ...) {
+plot.effmass <- function (x, ll, lf, ff, ...) {
+  m <- x
 
   if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
     X11()
@@ -358,7 +357,12 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx, ...) {
+#' Plots averx data
+#'
+#' @param x `averx` object
+#' @param ... ignored
+plot.averx <- function(x, ...) {
+  averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
   ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
@@ -388,7 +392,8 @@ plot.averx <- function(averx, ...) {
          )
 }
 
-plot.pionff <- function(ff, ...) {
+plot.pionff <- function (x, ...) {
+  ff <- x
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
@@ -404,7 +409,8 @@ plot.pionff <- function(ff, ...) {
 }
 
 
-plot.outputdata <- function(data, skip=0, ...) {
+plot.outputdata <- function (x, skip = 0, ...) {
+  data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])
   dH.res <- uwerrprimary( exp(-data$V3[skip:length(data$V3)]))
   plot(data$V1, data$V2, type="l",

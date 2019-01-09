@@ -1,19 +1,41 @@
 # these should also have references
-gf.scales <- list()
-gf.scales[["sqrt_t0_Eplaq"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
-                                     label="\\sqrt{ t_0^{\\mathrm{plaq}} }", obs="tsqEplaq")
-gf.scales[["sqrt_t0_Esym"]] <- list(val=rep(0,3), ref.val=0.1416, ref.dval=0.0008, approx.idx=0,
-                                    label="\\sqrt{ t_0^{\\mathrm{sym}} }", obs="tsqEsym")
-gf.scales[["w0_Wsym"]] <- list(val=rep(0,3), ref.val=0.1755, ref.dval=0.0019, approx.idx=0,
-                               label="\\w_0^{\\mathrm{sym}}", obs="Wsym")
+ref_gf_scales <- list()
+ref_gf_scales[["sqrt_t0_Eplaq"]] <- list(val=0.1416, dval=0.0008,
+                                         label="t_0^{\\mathrm{plaq}}/a^2", 
+                                         obs="tsqEplaq",
+                                         obslabel="$\\langle t^2 E_{\\mathrm{plaq}}(t) \\rangle$",
+                                         physobslabel="\\langle t_0^2 E_{\\mathrm{plaq}}(t_0) \\rangle")
 
-analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.data=TRUE,plot=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
+ref_gf_scales[["sqrt_t0_Esym"]] <- list(val=0.1416, dval=0.0008,
+                                        label="t_0^{\\mathrm{sym}}/a^2",
+                                        obs="tsqEsym",
+                                        obslabel="$\\langle t^2 E_{\\mathrm{sym}}(t) \\rangle$",
+                                        physobslabel="\\langle t_0^2 E_{\\mathrm{sym}}(t_0) \\rangle")
+
+ref_gf_scales[["w0_Wsym"]] <- list(val=0.1755, dval=0.0019,
+                                   label="(w_0^{\\mathrm{sym}}/a)^2",
+                                   obs="Wsym",
+                                   obslabel="$\\langle W_{\\mathrm{sym}}(t) \\rangle$",
+                                   physobslabel="\\langle W_{\\mathrm{sym}}(w_0^2) \\rangle")
+
+analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.data=TRUE,pl=FALSE,skip=0,start=0,scale=1,dbg=FALSE) {
+
+  # much like for the analysis of online measurements, we store summary information
+  # in the list "gradflow_resultsum" with elements named by "outputbasename"
+  # such that when the analysis is rerun, the entries are replaced
+  resultsfile <- "gradflow.summary.RData"
+  gradflow_resultsum <- list()
+  if(file.exists(resultsfile)){
+    cat("Loading gradient flow results database from ", resultsfile, "\n")
+    load(resultsfile)
+  }
+
   if(read.data) {
-    raw.gradflow <- readgradflow(path=path,skip=skip, basename=basename)
+    raw.gradflow <- readgradflow(path=path, skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
   }else{
-    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",basename))
-    load(sprintf("%s.raw.gradflow.Rdata",basename))
+    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
+    load(sprintf("%s.raw.gradflow.Rdata",outputbasename))
   }
   if(dbg==TRUE) print(raw.gradflow)
 
@@ -39,83 +61,141 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
     }
     gradflow[i_row,] <- summaryvec
   }
- 
-  # TODO: estimate the lattice spacing also from the other scales
-  for( i in 1:length(gf.scales) ){
-    val <- gradflow[,sprintf("%s.value", gf.scales[[i]]$obs)]
-    dval <- gradflow[,sprintf("%s.dvalue", gf.scales[[i]]$obs)] 
-    tref <- c( approx( x=val+dval,y=gradflow$t,xout=0.3)$y, 
-               approx( x=val, y=gradflow$t, xout=0.3 )$y, 
-               approx( x=val-dval, y=gradflow$t, xout=0.3)$y )
-    sqrt_tref <- sqrt(tref)
-    print(sqrt_tref)
-  }
-
   save(gradflow,file=sprintf("%s.result.gradflow.Rdata",outputbasename),compress=FALSE)
-   
-  # find w_0 and its lower and upper values, note how x and y are reversed for this purpose
-  w0sq <- c( approx(x=gradflow$Wsym.value+gradflow$Wsym.dvalue,y=gradflow$t,xout=0.3)$y, 
-             approx( x=gradflow$Wsym.value, y=gradflow$t, xout=0.3 )$y, 
-             approx( x=gradflow$Wsym.value-gradflow$Wsym.dvalue, y=gradflow$t, xout=0.3)$y )
  
-  # find t value closest to w0sq
-  w0sq_approx <- w0sq[2]
-  for( i in 1:length(t_vec) ){
-    if( t_vec[i] >= w0sq_approx ) { w0sq_approx <- t_vec[i]; break }
+  gf_scales <- list()
+  gf_latspacs <- list()
+  gf_approx_scales <- list()
+  gradflow_resultsum[[outputbasename]] <- NULL
+  for( i in 1:length(ref_gf_scales) ){
+    # extract colum names of gradflow relevant to the observable currently in the loop
+    nms <- c("t",
+             outer(ref_gf_scales[[i]]$obs, subnames, FUN=function(x,y){ paste(x,y,sep=".") })
+             )
+
+    val <- gradflow[,sprintf("%s.value", ref_gf_scales[[i]]$obs)]
+    dval <- gradflow[,sprintf("%s.dvalue", ref_gf_scales[[i]]$obs)] 
+    gf_scales[[i]] <- c(approx( x=val+dval,y=gradflow$t,xout=0.3)$y, 
+                        approx( x=val, y=gradflow$t, xout=0.3 )$y, 
+                        approx( x=val-dval, y=gradflow$t, xout=0.3)$y )
+
+
+    ## determine which discrete value of t is closest to the scale in question
+    for( tidx in 1:length(t_vec) ){
+      if( t_vec[tidx] >= gf_scales[[i]][2] ){
+        gf_approx_scales[[i]] <- gradflow[tidx,nms]
+        colnames(gf_approx_scales[[i]]) <-  c("t", subnames)
+        break
+      }
+    }
+
+    ## summary information about the gradient flow scales:
+    ## observable name, value, stat. errors in + and - directions
+    ## we also add the autocorrelation time and error of the observable
+    ## at the value of t closest to our scale
+    gradflow_resultsum[[outputbasename]] <- 
+      rbind(gradflow_resultsum[[outputbasename]],
+            data.frame(obs=ref_gf_scales[[i]]$obs,
+                       val=gf_scales[[i]][2],
+                       pdval=gf_scales[[i]][2]-gf_scales[[i]][1],
+                       mdval=gf_scales[[i]][3]-gf_scales[[i]][2],
+                       tauint=gf_approx_scales[[i]]$tauint,
+                       dtauint=gf_approx_scales[[i]]$dtauint
+                       )
+            )
+
+    # sqrt of our bounds to compute the lattice spacing
+    sqrt_gf_scale <- sqrt(gf_scales[[i]])
+
+    gf_latspacs[[i]] <- list()
+    for( k in 1:length(sqrt_gf_scale) ){
+      gf_latspacs[[i]][[k]] <- compute_ratio(dividend=ref_gf_scales[[i]],
+                                             divisor=list(val=sqrt_gf_scale[k],
+                                                          dval=0))
+    }
   }
 
-  cat(sprintf("w0^2/a^2: %f (+%f -%f)\n",w0sq[2],w0sq[3]-w0sq[2],w0sq[2]-w0sq[1]))
+  save(gradflow_resultsum,
+       file=resultsfile)
    
-  w0 <- sqrt(w0sq)
-  cat(sprintf("w0/a: %f (+%f -%f)\n",w0[2],w0[3]-w0[2],w0[2]-w0[1]))
-
-  # TODO: add database of inputs to hadron, such that one can choose from multiple values of w0
-  #       to compute the lattice spacing from
-  w0fm <- list(val=0.1755,dval=0.0019,name="w_0(fm)")
-  a <- matrix(nrow=3,ncol=2)
-  for(i in 1:length(w0)){
-    a_fm <- compute_ratio(dividend=w0fm,divisor=list(val=w0[i],dval=0,name="w_0"),name="a(fm)")
-    a[i,] <- c(a_fm$val,a_fm$dval)
-  }
-  cat(sprintf("Using w0 = %f (%f)\n",w0fm$val,w0fm$dval))
-  cat("a(fm):", a[2,1], " (", a[3,1]-a[2,1], ",", a[1,1]-a[2,1]," ) ( ", a[2,2], ")\n")
-  cat("a(fm) ~ ", a[2,1], "(", sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2 ), ")\n");
-
-  
-  if(plot) {
+  if(pl) {
     tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
-    # set up plot
-    plot(x=gradflow$t, 
-         y=gradflow$Wsym.value,
-         type='n',
-         xlim=c(0,1.25*w0sq[2]),
-         ylim=c(0.0,0.4),
-         xlab="$t/a^2$",
-         ylab="$W(t)$",
-         las=1)
-    # draw errorband
-    poly.col <- rgb(red=1.0,green=0.0,blue=0.0,alpha=0.6)
-    poly.x <- c(gradflow$t,rev(gradflow$t))
-    poly.y <- c(gradflow$Wsym.value+gradflow$Wsym.dvalue,rev(gradflow$Wsym.value-gradflow$Wsym.dvalue))
-    polygon(x=poly.x,y=poly.y,col=poly.col)
-    abline(h=0.3)
-    abline(v=w0sq)
-    lines(x=gradflow$t, y=gradflow$Wsym.value)
-    legend(x="topleft",
-           legend=sprintf("$a=%s$\\,fm", 
-                          tex.catwitherror(x=a[2,1],
-                                           dx=sqrt( 0.5*(abs(a[3,1]-a[2,1])+abs(a[1,1]-a[2,1]))^2 + a[2,2]^2),
-                                           digits=2,
-                                           with.dollar=FALSE)
-                          ),
-           bty='n')
-    
-    # plot MD history of Wsym at w0
-    tseries <- data.frame(y=raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"],
-                          t=start + c( skip :( skip + length(raw.gradflow[which(raw.gradflow$t==w0sq_approx),"Wsym"]) - 1 ) )*scale )
-    plot_timeseries(dat=tseries,
-                    ylab=sprintf("$W\\left( t/a^2 = %.2f \\right)$", w0sq_approx),
-                    titletext="")
+    for( i in 1:length(ref_gf_scales) ){
+      scale_obs <- ref_gf_scales[[i]]$obs
+      scale_obslabel <- ref_gf_scales[[i]]$obslabel
+      scale_label <- ref_gf_scales[[i]]$label
+
+      val <- gradflow[,sprintf("%s.value", scale_obs)]
+      dval <- gradflow[,sprintf("%s.dvalue", scale_obs)]
+
+      gf_scale <- gf_scales[[i]]
+      gf_latspac <- gf_latspacs[[i]]
+
+      # set up plot
+      # xlim is set to 1.25 times the value of t corresponding to the upper
+      # limit of the reference scale in lattice units
+      plot(x=gradflow$t, 
+           y=val,
+           type='n',
+           xlim=c(0,1.25*gf_scale[1]),
+           ylim=c(0.0,0.4),
+           xlab="$t/a^2$",
+           ylab=scale_obslabel,
+           las=1)
+      # draw errorband
+      poly.col <- rgb(red=1.0,green=0.0,blue=0.0,alpha=0.6)
+      poly.x <- c(gradflow$t,rev(gradflow$t))
+      poly.y <- c(val+dval,rev(val-dval))
+      polygon(x=poly.x,y=poly.y,col=poly.col)
+      abline(h=0.3)
+      abline(v=gf_scale)
+      lines(x=gradflow$t, y=val)
+      legend(x="topleft",
+             legend=c(sprintf("$%s = %s$",
+                              scale_label,
+                              tex.catwitherror(x=gf_scale[2],
+                                               # for the error, we use the average of the plus and minus errors
+                                               dx=0.5*(abs(gf_scale[3]-gf_scale[2]) + abs(gf_scale[2]-gf_scale[1])),
+                                               digits=2,
+                                               with.dollar=FALSE)
+                              ),
+                    sprintf("$a=%s$\\,fm", 
+                            tex.catwitherror(x=gf_latspac[[2]]$val,
+                                             dx=sqrt( (0.5* ( 
+                                                             abs( gf_latspac[[3]]$val-gf_latspac[[2]]$val) +
+                                                             abs( gf_latspac[[1]]$val-gf_latspac[[2]]$val) 
+                                                             ) 
+                                                       )^2 + gf_latspac[[2]]$dval^2 ),
+                                             digits=2,
+                                             with.dollar=FALSE)
+                            )
+                    ),
+             bty='n')
+      
+      ### plot MD history of the scale observable at the value of t closest to the scale
+      approx_idx <- which(raw.gradflow$t==gf_approx_scales[[i]]$t)
+      tseries <- data.frame(y=raw.gradflow[approx_idx,scale_obs],
+                            t=start + c( skip :(skip + 
+                                                length(raw.gradflow[approx_idx,scale_obs]) - 1 ) )*scale )
+      plot_timeseries(dat=tseries,
+                      ylab=sprintf("%s$|_{t/a^2 = %.2f}$", 
+                                   scale_obslabel,
+                                   gf_approx_scales[[i]]$t),
+                      titletext="")
+
+      # indicate integrated autocorrelation time in scaled units
+      legend(x="topleft",
+             bty='n',
+             pch=NA,
+             legend=sprintf("$\\tau_{\\mathrm{int}}($ %s $) = %s$ traj.",
+                            scale_obslabel,
+                            tex.catwitherror(x=gf_approx_scales[[i]]$tauint,
+                                             dx=gf_approx_scales[[i]]$dtauint,
+                                             digits=2,
+                                             with.dollar=FALSE)
+                            )
+             )
+    }
    
     if( any(cnames == "Qsym") ){
       ################ TOPOLOGICAL CHARGE ####################
@@ -137,16 +217,29 @@ analysis_gradient_flow <- function(path,outputbasename,basename="gradflow",read.
       lines(x=gradflow$t, y=gradflow$Qsym.value)
       
       # plot MD history of Q at maximal flow time
-      tmax_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
-      tseries <- data.frame(y=raw.gradflow[tmax_idx,"Qsym"],
-                            t=start + c( skip :( skip + length(raw.gradflow[tmax_idx,"Qsym"]) - 1 ) )*scale)
+      tmax_md_idx <- which(raw.gradflow$t==max(raw.gradflow$t))
+      tmax_idx <- which(gradflow$t==max(gradflow$t))
+      tseries <- data.frame(y=raw.gradflow[tmax_md_idx,"Qsym"],
+                            t=start + c( skip :( skip + length(raw.gradflow[tmax_md_idx,"Qsym"]) - 1 ) )*scale)
       plot_timeseries(dat=tseries,
                       ylab=sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
                       titletext="")
+
+      # indicate integrated autocorrelation time in scaled units
+      legend(x="topleft",
+             bty='n',
+             pch=NA,
+             legend=sprintf("$\\tau_{\\mathrm{int}}($ %s $) = %s$ traj.",
+                            sprintf("$Q\\left( t/a^2 = %.2f \\right)$",max(raw.gradflow$t)),
+                            tex.catwitherror(x=gradflow[tmax_idx, "Qsym.tauint"],
+                                             dx=gradflow[tmax_idx, "Qsym.dtauint"],
+                                             digits=1,
+                                             with.dollar=FALSE)
+                            )
+             )
     }
     
     tikz.finalize(tikzfiles)
   }
-  
 }
 

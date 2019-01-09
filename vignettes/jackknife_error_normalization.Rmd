@@ -1,0 +1,100 @@
+---
+title: "Jackknife Error Normalization"
+output: html_notebook
+vignette: >
+  %\VignetteIndexEntry{Jackknife Error Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Standard deviation
+
+The standard deviation over the bootstrap samples $X$ is defined as
+$$ \mathop{\mathrm{sd}}(X) = \sqrt{\frac{1}{N - 1} \sum_{i = 1}^N (x_i - \bar x_.)^2} \,. $$
+
+In the notation $\bar x_.$ the bar means that averaging has been performed over the indices that are replaced by periods.
+
+The jackknife error over the jackknife samples $Y$ is defined as
+$$ \mathop{\mathrm{jse}}(Y) = \sqrt{\frac{N - 1}{N} \sum_{i = 1}^N (y_i - \bar y_.)^2} \,. $$
+
+From the equations we expect a factor $\sqrt{(N-1)^2 / N}$ between the two. We can therefore expect to express the jackknife error simply as
+$$ \mathop{\mathrm{jse}}(Y) = \sqrt{\frac{(N-1)^2}{N}} \mathop{\mathrm{sd}}(Y) \,. $$
+
+We want to test this numerically using the implementation of the second equation.
+
+```{r}
+jackknife_error <- function (samples, na.rm = FALSE) {
+  ## Number of jackknife samples.
+  N <- length(samples)
+
+  if (na.rm) {
+    selection <- !is.na(samples)
+    samples <- samples[selection]
+
+    ## Number of non-NA samples.
+    m <- sum(selection)
+    factor <- N / m
+  } else {
+    factor <- 1.0
+  }
+
+  sqrt(factor * (N - 1) / N * sum((samples - mean(samples))^2))
+}
+```
+
+Using a little data set we conclude that we got the factor right.
+
+```{r}
+N = 10
+data = rnorm(N)
+
+be = sd(data)
+je = jackknife_error(data)
+expected_factor = sqrt((N-1)^2 / N)
+actual_factor = je / be
+
+actual_factor / expected_factor
+```
+
+# Covariance
+
+The covariance is similarly defined, and we have the same normalization factor that we need to take care of. Since the diagonal elements of the covariance matrix are the variances, we need to apply the same normalization factor. The big complication is that the R `cov` function can either be called with one matrix or two vectors. We need to support both for the jackknife such that it has the same API.
+
+```{r}
+jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
+    factor <- 1.0
+    
+    if (is.null(y)) {
+        N <- nrow(x)
+        if (na.rm) {
+            na_values <- apply(x, 2, function (row) any(is.na(row)))
+            m <- sum(na_values)
+            x <- x[!na_values, ]
+            factor <- N / m
+        }
+    } else {
+        N <- length(x)
+        if (na.rm) {
+        na_values <- is.na(x) | is.na(y)
+            m <- sum(na_values)
+            x <- x[!na_values]
+            y <- y[!na_values]
+            factor <- N / m
+        }
+    }
+    
+    (N-1)^2 / N * factor * cov(x, y, ...)
+}
+```
+
+```{r}
+x <- rnorm(10)
+y <- rnorm(10)
+
+cov(x, y)
+jackknife_cov(x, y)
+
+cov(cbind(x, y))
+jackknife_cov(cbind(x, y))
+```
+

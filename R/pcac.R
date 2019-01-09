@@ -105,10 +105,10 @@ pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0
 
   for(t in from:to) {
     if(fit) {
-      mass <- uwerrderived(pcacfit, data=Z[,skip:(length(Z[1,]))], S=S, pl=debug, t, to, T2, pa)
+      mass <- uwerrderived(pcacfit, data=t(Z[,skip:(length(Z[1,]))]), S=S, pl=debug, t, to, T2, pa)
     }
     else {
-      mass <- uwerrderived(pcacsym, data=Z[,skip:(length(Z[1,]))], S=S, pl=debug, t, T2, pa)
+      mass <- uwerrderived(pcacsym, data=t(Z[,skip:(length(Z[1,]))]), S=S, pl=debug, t, T2, pa)
     }
     result$t[i] <- t
     result$mass[i] <- mass$value[1]

@@ -189,29 +189,29 @@ kaon <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
   fit.boot <- NULL
   fit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrm <- uwerr(f=fitmasses.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses)
 
-    fit.uwerrf <- uwerr(f=fitf.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrf <- uwerr(f=fitf.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                         kappa=kappa, mu=mu)
     if(matrix.size > 2) {
-      fit.uwerrpcac <- uwerr(f=fitmpcac.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
+      fit.uwerrpcac <- uwerr(f=fitmpcac.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                              Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
                              kappa=kappa, mu=mu)
     }
     if(matrix.size > 4) {
-      fit.uwerrzv <- uwerr(f=fitzv.pion, data=W[ii,], S=S, pl=pl, nrep=nrep, Time=Time, t1=t1, t2=t2,
+      fit.uwerrzv <- uwerr(f=fitzv.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep, Time=Time, t1=t1, t2=t2,
                            Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, kappa=kappa,
                            mu=mu)
     }
     
     if(no.masses == 2) {
-      fit.uwerrm2 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
+      fit.uwerrm2 <- uwerr(f=fitmasses.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=2)
     }
     if(no.masses > 2) {
-      fit.uwerrm3 <- uwerr(f=fitmasses.pion, data=W[ii,], S=S, pl=pl, nrep=nrep,
+      fit.uwerrm3 <- uwerr(f=fitmasses.pion, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses, no=3)
     }
   }

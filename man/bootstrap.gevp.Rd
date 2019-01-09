@@ -5,8 +5,7 @@
   perform a bootstrap analysis of a GEVP for a real, symmetric correlator matrix
 }
 \usage{
-bootstrap.gevp(cf, t0=1, boot.R=400, boot.l=2, matrix.size=2,
-element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE)
+bootstrap.gevp(cf, t0 = 1, element.order = 1:cf$nrObs, sort.type = "vectors", sort.t0 = TRUE)
 }
 \arguments{
   \item{cf}{
@@ -16,9 +15,6 @@ element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE)
     initial time value of the GEVP, must be in between 0 and
     \code{Time/2-2}. Default is 1.
   }
-  \item{matrix.size}{
-    the size of the square matrix
-  }
   \item{element.order}{
     specifies how to fit the \code{n} linearly ordered single
     correlators into the correlator
@@ -26,24 +22,19 @@ element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE)
     \code{matrix(cf[element.order], nrow=2)}.
     Double indexing is allowed.
   }
-  \item{boot.R}{
-    number of bootstrap samples. Used only if cf was not yet
-    bootstrapped using \code{bootstrap.cf}.
-  }
-  \item{boot.l}{
-    block size for autocorrelation analysis
-  }
-  \item{seed}{
-    seed for the random number generation used for boostrapping.
-  }
   \item{sort.type}{
     Sort the eigenvalues either in descending order, or by using the
     scalar product of the eigenvectors with the eigenvectors at
-    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values" or "vectors". 
+    \eqn{t=t_0+1}{t=t0+1}. Possible values are "values", "vectors" and
+    "det". The last one represents a time consuming, but in principle
+    better version of sorting by vectors. 
   }
   \item{sort.t0}{
     for \code{sort.type} "vectors" use \eqn{t_0}{t0} as reference or \eqn{t-1}{t-1}.
   }
+}
+\details{
+  Say something on "det" sorting method.
 }
 \value{
   Returns an object of class \code{gevp} with member objects:
@@ -70,14 +61,34 @@ element.order=c(1,2,3,4), seed=1234, sort.type="vectors", sort.t0=TRUE)
   \code{gevp}, \code{extract.obs}, \code{bootstrap.cf}
 }
 \examples{
-\dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
-\dontrun{## extract the first principal correlator}
-\dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
-\dontrun{## which can now be treated like a bootstrapped correlation function}
-\dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
-\dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12, t2=23, useCov=FALSE)}
-\dontrun{summary(pion.pc1.effectivemass)}
-\dontrun{plot(pion.pc1.effectivemass, xlab=c("t/a"), ylab=c("aM"))}
+data(correlatormatrix)
+## bootstrap the correlator matrix
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+## solve the GEVP
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+## extract the ground state and plot
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+plot(pc1, log="y")
+## determine the corresponding effective masses
+pc1.effectivemass <- bootstrap.effectivemass(cf=pc1)
+pc1.effectivemass <- fit.effectivemass(cf=pc1.effectivemass, t1=5, t2=20)
+## summary and plot
+summary(pc1.effectivemass)
+plot(pc1.effectivemass)
+
+## we can also use matrixfit with a special model for a principal
+## correlators
+pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE)
+summary(pc1.matrixfit)
+plot(pc1.matrixfit)
+
+## the same can be achieved using bootstrap.nlsfit
+model <- function(par, x, t0) return(exp(-par[1]*(x-t0))*(par[3]+(1-par[3])*exp(-par[2]*(x-t0))))
+ii <- c(2:4, 6:25)
+fitres <- parametric.nlsfit(fn=model, par.guess=c(0.5, 1, .9), y=pc1$cf0[ii], dy=pc1$tsboot.se[ii], x=ii-1, boot.R=pc1$boot.R, t0=t0)
+summary(fitres)
+plot(fitres, log="y")
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}

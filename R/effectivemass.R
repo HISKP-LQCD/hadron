@@ -1,5 +1,5 @@
 effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
-                             weight.factor=1., deltat=1, tmax=Thalf) {
+                             weight.factor = NULL, deltat=1, tmax=Thalf) {
   if(missing(cf)) {
     stop("cf must be provided to effectivemass.cf! Aborting...\n")
   }
@@ -40,7 +40,10 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       if(type == "shifted" || type == "weighted") Ratio <- Cor[t+1]/Cor[t]
       else Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
       w <- 1
-      if(type == "weighted") w <- weight.factor
+      if(type == "weighted") {
+        stopifnot(!is.null(weight.factor))
+        w <- weight.factor
+      }
       ## the t-dependence needs to be modified accordingly
       fn <- function(m, t, T, Ratio, w) {
         return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
@@ -71,34 +74,10 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
-bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor = 1.) {
+bootstrap.effectivemass <- function(cf, type="solve") {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(!any(class(cf) == "cf")) {
-    stop("bootstrap.effectivemass requires an object of class cf as input! Aborting!\n")
-  }
-
-  if(missing(boot.R)){
-    if(cf$boot.samples){
-      boot.R <- cf$boot.R
-    } else {
-      boot.R <- 400
-    }
-  }
-
-  if(missing(boot.l)){
-    if(cf$boot.samples){
-      boot.l <- cf$boot.l
-    } else {
-      boot.l <- 20
-    }
-  }
-
-  if(!cf$boot.samples || boot.R != cf$boot.R || boot.l != cf$boot.l) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l, seed=seed)
-  }
-  else {
-    seed <- cf$seed
-  }
   ## number of measurements
   N <- length(cf$cf[,1])
   if(is.null(cf$cf)) {
@@ -113,50 +92,58 @@ bootstrap.effectivemass <- function(cf, boot.R, boot.l, seed=12345, type="solve"
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
-  if( "symmetrised" %in% names(cf) ) {
-    if(!cf$symmetrised){
-      tmax <- cf$Time-1
-    }
+  if(!cf$symmetrised){
+    tmax <- cf$Time-1
   }
   nrObs <- floor(Nt/(tmax+1))
   ## we run on the original data first
-  effMass <- effectivemass.cf(cf$cf0, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat)
+  effMass <- effectivemass.cf(cf$cf0, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, deltat=deltat, weight.factor = cf$weight.factor)
   ## now we do the same on all samples
-  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, weight.factor=weight.factor, deltat=deltat))
+  effMass.tsboot <- t(apply(cf$cf.tsboot$t, 1, effectivemass.cf, Thalf=cf$Time/2, tmax=tmax, type=type, nrObs=nrObs, deltat=deltat, weight.factor = cf$weight.factor))
 
-  deffMass=apply(effMass.tsboot, 2, sd, na.rm=TRUE)
+  deffMass=apply(effMass.tsboot, 2, cf$error_fn, na.rm=TRUE)
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R=boot.R, boot.l=boot.l, seed = seed, weight.factor=weight.factor,
+              boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed,
               massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
   ret$cf <- cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
-  ret$se <- apply(ret$t, MARGIN=2L, FUN=sd, na.rm=TRUE)
+  ret$se <- apply(ret$t, MARGIN=2L, FUN=cf$error_fn, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
 
+fit.constant <- function(M, y) {
+	res <- list()
+	if(is.matrix(M)){ # this is the covariance case
+		m.eff <- sum(M %*% y)/sum(M)
+		res$value <- (y-m.eff) %*% M %*% (y-m.eff)
+	}else{ # this is the uncorrelated case
+		m.eff <- sum(M*y)/sum(M)
+		res$value <- sum(M*(y-m.eff)^2)
+	}
+	res$par <- c(m.eff)
+	return(res)
+}
+
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
-  if(missing(cf) || !any(class(cf) == "effectivemass" )) {
-    stop("cf is missing or must be of class \"effectivemass\"! Aborting...!\n")
-  }
-  if(missing(t1) || missing(t2)) {
-    stop("t1 and t2 must be specified! Aborting...!\n")
-  }
+  ## If it wasn't clear from the name, the `cf` argument is of type
+  ## `effectivemass`.
+  stopifnot(inherits(cf, 'effectivemass'))
+
   tmax <- cf$Time/2
-  if(!is.null(cf$cf$symmetrised)) {
-    if(!cf$cf$symmetrised) {
-      tmax <- cf$Time-1
-    }
+  if(!cf$cf$symmetrised) {
+    tmax <- cf$Time-1
   }
-  if((t2 <= t1) || (t1 < 0) || (t2 > (tmax))) {
-    stop("t1 < t2 and both in 0...tmax is required, tmax depending on symmetrised or not. Aborting...\n")
-  }
-  else
+
+  stopifnot(t1 < t2)
+  stopifnot(0 <= t1)
+  stopifnot(t2 <= tmax)
+
   cf$effmassfit <- list()
   cf$t1 <- t1
   cf$effmassfit$t1 <- t1
@@ -189,14 +176,11 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   }
 
   # cf here is a bootstrapped effective mass and $t is the matrix of bootstrap samples
-  CovMatrix <- cov(cf$t[,ii])
+  CovMatrix <- cf$cf$cov_fn(cf$t[,ii])
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(1/cf$se[ii]^2)
 
-  ## the chisqr function
-  fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
-  
   cf$CovMatrix <- CovMatrix
   cf$effmassfit$CovMatrix <- CovMatrix
   tb.save <- cf$t
@@ -252,15 +236,11 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     if( length( ii.remove ) > 0 ) {
       ## if the matrix is diagonal, we simply restrict it
       M <- M[ -ii.remove, -ii.remove]
+	  M <- diag(M)
     }
   }
 
-  par <- c(cf$effMass[t1])
-  opt.res <- optim(par, fn = fn,
-                   method="BFGS", M=M, y = cf$effMass[ii])
-  opt.res <- optim(opt.res$par, fn = fn,
-                   control=list(parscale=1/opt.res$par),
-                   method="BFGS", M=M, y = cf$effMass[ii])
+  opt.res <- fit.constant(M=M, y = cf$effMass[ii])
   par <- opt.res$par
 
   cf$chisqr <- opt.res$value
@@ -271,9 +251,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     ## now we bootstrap the fit
     massfit.tsboot <- array(0, dim=c(cf$boot.R, 2))
     for(i in c(1:cf$boot.R)) {
-      opt <- optim(par, fn = fn,
-                   control=list(parscale=1/par),
-                   method="BFGS", M=M, y = cf$t[i,ii])
+      opt <- fit.constant(M=M, y = cf$t[i,ii])
       massfit.tsboot[i, 1] <- opt$par[1]
       massfit.tsboot[i, 2] <- opt$value
     }
@@ -284,10 +262,13 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   } # if(boot.fit)
   cf$effmassfit$t <- cf$massfit.tsboot
   cf$effmassfit$t0 <- c(opt.res$par, opt.res$value)
-  cf$effmassfit$se <-  sd(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
+  cf$effmassfit$se <-  cf$cf$error_fn(massfit.tsboot[c(1:(dim(massfit.tsboot)[1]-1)),1])
   cf$effmassfit$cf <- cf$cf
   cf$t <- tb.save
 
+  if(!is.matrix(M)){
+	  M <- diag(M)
+  }
   cf$invCovMatrix <- M
   cf$opt.res <- opt.res
   cf$useCov <- useCov
@@ -296,7 +277,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   return(invisible(cf))
 }
 
-summary.effectivemass <- function(effMass) {
+summary.effectivemass <- function (object, ...) {
+  effMass <- object
   cat("\n ** effective mass values **\n\n")
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
@@ -307,7 +289,8 @@ summary.effectivemass <- function(effMass) {
   print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
 }
 
-summary.effectivemassfit <- function(effMass, verbose=FALSE) {
+summary.effectivemassfit <- function(object, verbose = FALSE, ...) {
+  effMass <- object
   cat("\n ** Result of effective mass analysis **\n\n")
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("type\t=\t", effMass$type, "\n")
@@ -334,11 +317,13 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
 
 }
 
-print.effectivemassfit <- function(effMass, verbose=FALSE) {
-  summary(effMass, verbose=verbose)
+print.effectivemassfit <- function (x, verbose = FALSE, ...) {
+  effMass <- x
+  summary(effMass, verbose = verbose, ...)
 }
 
-plot.effectivemass <- function(effMass, ref.value, col, col.fitline,...) {
+plot.effectivemass <- function (x, ref.value, col, col.fitline, ...) {
+  effMass <- x
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))
   }

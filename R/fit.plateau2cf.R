@@ -1,14 +1,9 @@
-fit.plateau2cf <- function(cf, t1, t2,
-                           boot.samples=FALSE, boot.R=400, boot.l=2,
-                           useCov=FALSE) {
+fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
 
-  if(!cf$boot.samples) {
-    cf <- bootstrap.cf(cf, boot.R=boot.R, boot.l=boot.l)
-  }
-  else {
-    boot.R <- cf$boot.R
-    boot.l <- cf$boot.l
-  }
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
   ## fit interval
   ii <- c((t1+1):(t2+1))
   ## error weights
@@ -20,8 +15,7 @@ fit.plateau2cf <- function(cf, t1, t2,
 
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
-    ##M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.samples=TRUE)
-    M <- invertCovMatrix(cf$cf[,ii], boot.samples=boot.samples, boot.l=boot.l)
+    M <- invertCovMatrix(cf$cf.tsboot$t[,ii], boot.samples = TRUE)
   }
   fn <- function(par, y, M) { sum((y-par[1]) %*% M %*% (y-par[1]))}
 
