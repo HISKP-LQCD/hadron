@@ -22,6 +22,6 @@ Rscript -e 'devtools::document();'
 git diff > "$diff_new"
 
 if ! diff -u "$diff_old" "$diff_new" &> /dev/null; then
-  echo "${red}Generating the documentation has changed the tree, try to commit again.${reset}" >&2
+  echo "${red}Generating the documentation has changed the tree, add them to the index and try to commit again.${reset}" >&2
   exit 2
 fi
