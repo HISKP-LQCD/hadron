@@ -1,9 +1,13 @@
 #' pionfit print
+#'
+#' @param x class pionfit. object to print
 print.pionfit <- function (x, ...) {
   summary(x, ...)
 }
 
 #' pionfit summary
+#'
+#' @param object class pionfit. object to summarise
 summary.pionfit <- function (object, ...) {
   fit <- object
   kappa <- fit$kappa
