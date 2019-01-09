@@ -6,16 +6,16 @@
 using namespace Rcpp;
 
 // read_nissa_textcf_kernel
-NumericMatrix read_nissa_textcf_kernel(CharacterVector files_to_read, CharacterVector smear_combs_to_read, const unsigned int Nt, DataFrame combs_to_read);
-RcppExport SEXP _hadron_read_nissa_textcf_kernel(SEXP files_to_readSEXP, SEXP smear_combs_to_readSEXP, SEXP NtSEXP, SEXP combs_to_readSEXP) {
+NumericMatrix read_nissa_textcf_kernel(CharacterVector file_basenames_to_read, CharacterVector smear_combs_to_read, const unsigned int nts, DataFrame combs_to_read);
+RcppExport SEXP _hadron_read_nissa_textcf_kernel(SEXP file_basenames_to_readSEXP, SEXP smear_combs_to_readSEXP, SEXP ntsSEXP, SEXP combs_to_readSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type files_to_read(files_to_readSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type file_basenames_to_read(file_basenames_to_readSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type smear_combs_to_read(smear_combs_to_readSEXP);
-    Rcpp::traits::input_parameter< const unsigned int >::type Nt(NtSEXP);
+    Rcpp::traits::input_parameter< const unsigned int >::type nts(ntsSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type combs_to_read(combs_to_readSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_nissa_textcf_kernel(files_to_read, smear_combs_to_read, Nt, combs_to_read));
+    rcpp_result_gen = Rcpp::wrap(read_nissa_textcf_kernel(file_basenames_to_read, smear_combs_to_read, nts, combs_to_read));
     return rcpp_result_gen;
 END_RCPP
 }

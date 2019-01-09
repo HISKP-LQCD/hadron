@@ -344,17 +344,41 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return (invisible(ret))
 }
 
-#' reader for Nissa text format correlation functions
-readnissatextcf <- function(files_to_read,
+#' @title reader for Nissa text format correlation functions
+#' @param file_baseames_to_read Character vector of file names without the
+#'                              smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
+#'                              which will be added in the reading routine accordign to what was 
+#'                              passed via `smear_combs_to_read`. An example would be
+#'                              '0001/mes_contr_2pts', not the lack of the smearing suffix.
+#' @param smear_combs_to_read Character vector containing the smearing cominations that are to be read.
+#'                            These will be attached to the `file_basenames_to_read` in the reading routine.
+#' @param Time Integer, time extent of the lattice.
+#' @param combs_to_read Data frame containing the indices of the masses and r-paramter combinations to
+#'                      be read as well as the name of the spin combination.
+#'                      For a two-point function using the second and third mass (0-indexed), 
+#'                      the (+^dag,+) r-combination and the pseudoscalar-pseudoscalar spin combination
+#'                      would look as follows:
+#'                      \tabular{rrrrr}{
+#'                        m1_idx \tab m2_idx \tab r1_idx \tab r2_idx \tab spin_comb \cr
+#'                        1      \tab 2      \tab 0      \tab 0      \tab "P5P5"
+#'                      }
+#' @param sym.vec Integer or numeric vector. Specifies whether the correlator at
+#'                the given position is symmetric (+1.0) or anti-symmetric (-1.0)
+#'                under time reflection. This is passed to \code{symmetrise.cf}
+#' @param symmetrise Boolean, specifies whether averaging over backward and forward
+#'                   correlators should be done after the correlator has been read in.
+#' @param Nt Integer, number of time slices to be read from the correlator files.
+readnissatextcf <- function(file_basenames_to_read,
                             smear_combs_to_read,
-                            Nt, 
+                            Time,
                             combs_to_read,
+                            nts = Time, 
                             sym.vec = c(1),
                             symmetrise = FALSE)
 {
-  tmp <- read_nissa_textcf_kernel(files_to_read,
+  tmp <- read_nissa_textcf_kernel(file_basenames_to_read,
                                   smear_combs_to_read,
-                                  Nt,
+                                  nts,
                                   combs_to_read)
 
   total_nts <- Nt*length(smear_combs_to_read)*nrow(combs_to_read)
@@ -362,11 +386,18 @@ readnissatextcf <- function(files_to_read,
   realcols <- seq(1,2*total_nts,2)
   imagcols <- seq(2,2*total_nts,2)
 
-  cf <- cf_meta(nrObs = nrow(combs_to_read), Time=Nt, nrStypes = length(smear_combs_to_read), symmetrised = FALSE)
+  cf <- cf_meta(nrObs = nrow(combs_to_read), Time=Time, nrStypes = length(smear_combs_to_read), symmetrised = FALSE)
   cf <- cf_orig(cf, cf = tmp[,realcols], icf = tmp[,imagcols])
 
-  if(symmetrise) cf <- symmetrise.cf(cf, sym.vec)
-
+  if(symmetrise){
+    # in some cases it makes sense to store only a subset of the time slices of a
+    # correlation function. In this case, symmetrisation is not possible unless
+    # the missing time slices are reconstructed or added manually somehow.
+    if( Nt != Time ){
+      stop("The time extent and the number of time slices in the correlator do not agree, cannot symmetrise!")
+    }
+    cf <- symmetrise.cf(cf, sym.vec)
+  }
   return (invisible(cf))
 }
 
