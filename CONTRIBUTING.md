@@ -10,3 +10,8 @@ CI.
 
 Comments should be prefixed with `## ` whereas commented out code is prefixed
 with `# `.
+
+## Commit Hooks
+
+Please run the `./setup-devel` script before making a commit such that the
+appropriate commit hooks are in place.
