@@ -4,10 +4,12 @@
 \alias{print.bootstrapfit}
 \title{Print a bootstrap NLS fit}
 \usage{
-\method{print}{bootstrapfit}(x, digits = 2)
+\method{print}{bootstrapfit}(x, ..., digits = 2)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
+
+\item{...}{Additional parameters passed to the \code{summary.bootstrapfit} function.}
 
 \item{digits}{number of significant digits to print in summary or print.}
 }

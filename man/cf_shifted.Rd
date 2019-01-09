@@ -7,6 +7,8 @@
 cf_shifted(.cf = cf(), deltat, forwardshift)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{deltat}{TODO}
 
 \item{forwardshift}{Logical, TODO}

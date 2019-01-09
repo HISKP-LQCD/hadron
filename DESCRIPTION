@@ -13,13 +13,23 @@ Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
 Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
-Description: package to extract hadronic quantities from Lattice QCD simulations
-Depends: boot, abind
-Suggests: tikzDevice, minpack.lm, parallel
-License: GPL 3 or later
-URL: https://github.com/hiskp-lqcd/hadron
-BugReports: https://github.com/hiskp-lqcd/hadron/issues
+Description: Toolkit to extract hadronic quantities from Lattice QCD simulations. It contains functionality for IO, plotting, bootstrap and jackknife resampling, fitting, GEVP solving, error and autocorrelation estimation as well as other areas.
+Imports: boot
+Suggests: 
+    tikzDevice,
+    minpack.lm,
+    parallel,
+    Rhdf5lib (>= 1.3.2),
+    rhdf5,
+    knitr,
+    testthat,
+    abind
+License: GPL-3
+URL: https://github.com/urbach/hadron
+BugReports: https://github.com/urbach/hadron/issues
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
 Encoding: UTF-8
+Remotes: bioc::release/Rhdf5lib, bioc::release/rhdf5
+VignetteBuilder: knitr

@@ -7,6 +7,8 @@
 cf_weighted(.cf = cf(), weight.factor, weight.cosh, mass1, mass2)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{weight.factor}{TODO}
 
 \item{weight.cosh}{TODO}
@@ -14,8 +16,6 @@ cf_weighted(.cf = cf(), weight.factor, weight.cosh, mass1, mass2)
 \item{mass1}{TODO}
 
 \item{mass2}{TODO}
-
-\item{cf}{\code{cf} object to extend.}
 }
 \description{
 Weighted CF mixin constructor

@@ -181,7 +181,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
                 icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3))
   cf <- cf_smeared(cf,
                    scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
-                   sicf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
+                   iscf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
@@ -374,7 +374,7 @@ readbinarycf <- function(files,
   }
   if(hdf5format) {
     if(missing(hdf5name)) stop("hdf5name must be given, aborting...\n")
-    h5avail <- require(rhdf5)
+    h5avail <- requireNamespace('rhdf5')
     if(!h5avail) stop("rhdf5 package not installed, aborting...\n")
     obs <- 1
     Nop <- 1
@@ -392,11 +392,11 @@ readbinarycf <- function(files,
         tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
       }
       else {
-        LS <- h5ls(ifs)
+        LS <- rhdf5::h5ls(ifs)
         if(as.integer(LS[LS$name == hdf5name,]$dim) != T) {
           stop(paste(hdf5name, "in file", ifs, "has not the correct length, aborting...\n"))
         }
-        tmp <- h5read(file=ifs, name=hdf5name)
+        tmp <- rhdf5::h5read(file=ifs, name=hdf5name)
         tmp <- tmp[,hdf5index[1]] + 1i*tmp[,hdf5index[2]]
       }
       ## we average the replica
@@ -415,7 +415,7 @@ readbinarycf <- function(files,
         close(to.read)
       }
       else {
-        if(exists("H5close")) H5close()
+        if(exists("rhdf5::H5close")) rhdf5::H5close()
       }
     }
     else if(!file.exists(ifs)) {
@@ -564,7 +564,7 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                 icf = array(ldata[, ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
   cf <- cf_smeared(cf,
                    scf = array(ldata[, ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                   sicf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   iscf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 

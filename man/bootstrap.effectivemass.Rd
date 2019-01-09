@@ -6,7 +6,7 @@
   object of class \code{cf} (a correlation function)
 }
 \usage{
-bootstrap.effectivemass(cf, type="solve", weight.factor=1)
+bootstrap.effectivemass(cf, type="solve")
 }
 \arguments{
   \item{cf}{
@@ -26,9 +26,6 @@ bootstrap.effectivemass(cf, type="solve", weight.factor=1)
     having different energies. In the latter case only the leading
     polution is removed by \code{removeTemporal.cf} and taken into
     account here.
-  }
-  \item{weight.factor}{
-    relative weight for type "weighted" only, see details
   }
 }
 \value{

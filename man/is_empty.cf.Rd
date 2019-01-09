@@ -6,6 +6,9 @@
 \usage{
 is_empty.cf(.cf)
 }
+\arguments{
+\item{.cf}{\code{cf} object.}
+}
 \description{
 Checks whether the cf object contains no data
 }

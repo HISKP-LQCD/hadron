@@ -2,14 +2,14 @@
 % Please edit documentation in R/matrixfit.R
 \name{plot.matrixfit}
 \alias{plot.matrixfit}
-\title{plot a matrixfit}
+\title{Plot a matrixfit}
 \usage{
-\method{plot}{matrixfit}(mfit, plot.errorband = FALSE, ylim,
-  xlab = "t/a", ylab = "y", do.qqplot = TRUE, plot.raw = TRUE,
-  rep = FALSE, col, every, ...)
+\method{plot}{matrixfit}(x, plot.errorband = FALSE, ylim, xlab = "t/a",
+  ylab = "y", do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col,
+  every, ...)
 }
 \arguments{
-\item{mfit}{an object of class matrixfit}
+\item{x}{an object of class matrixfit}
 
 \item{plot.errorband}{Boolean: whether or not to plot an errorband}
 
@@ -28,7 +28,7 @@
 \item{col}{String vector: vector of colours for the different correlation functions}
 }
 \description{
-plot a matrixfit
+Plot a matrixfit
 }
 \seealso{
 \code{\link{matrixfit}}

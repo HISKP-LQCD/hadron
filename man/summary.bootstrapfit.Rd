@@ -4,13 +4,18 @@
 \alias{summary.bootstrapfit}
 \title{Summarize a bootstrap NLS fit}
 \usage{
-\method{summary}{bootstrapfit}(object, digits = 2,
+\method{summary}{bootstrapfit}(object, ..., digits = 2,
   print.correlation = TRUE)
 }
 \arguments{
 \item{object}{object returned by \code{bootstrap.nlsfit}}
 
+\item{...}{ignored}
+
 \item{digits}{number of significant digits to print in summary or print.}
+
+\item{print.correlation}{Logical. Whether to show the correlation between of
+the fit parameters.}
 }
 \description{
 Summarize a bootstrap NLS fit

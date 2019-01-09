@@ -51,11 +51,6 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2,
     perform a fit to the data.
   }
 }
-\value{
-  
-}
-\details{
-}
 \seealso{
   \code{\link{matrixfit}}, \code{\link{fit.effectivemass}},
   \code{\link{gevp}}, \code{\link{gevp2cf}}, \code{\link{computefps}}
