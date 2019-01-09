@@ -4,6 +4,9 @@
 set -e
 set -u
 
+red="$(tput setaf 1)"
+reset="$(tput sgr0)"
+
 diff_old=$(mktemp)
 diff_new=$(mktemp)
 
@@ -19,6 +22,6 @@ Rscript -e 'devtools::document();'
 git diff > "$diff_new"
 
 if ! diff -u "$diff_old" "$diff_new" &> /dev/null; then
-  echo "Generating the documentation has changed the tree, try to commit again." >&2
+  echo "${red}Generating the documentation has changed the tree, try to commit again.${reset}" >&2
   exit 2
 fi
