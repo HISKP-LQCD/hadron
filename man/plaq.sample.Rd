@@ -15,15 +15,6 @@ discretised Euclidean space time.
   The format is:
  num [1:6352] 0.583 0.582 0.582 0.582 0.582 ...
 }
-\details{
-%%  ~~ If necessary, more details than the __description__ above ~~
-}
-\source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
-%%  ~~ possibly secondary sources and usages ~~
-}
 \examples{
 data(plaq.sample)
 plot(x=c(1:length(plaq.sample)), y=plaq.sample, type="l", xlab="t", ylab="<P>")

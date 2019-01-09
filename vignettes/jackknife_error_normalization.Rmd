@@ -1,6 +1,10 @@
 ---
 title: "Jackknife Error Normalization"
 output: html_notebook
+vignette: >
+  %\VignetteIndexEntry{Jackknife Error Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 # Standard deviation

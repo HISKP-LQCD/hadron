@@ -13,7 +13,7 @@ MatrixModel <- R6Class(
       stopifnot(!is.na(self$sign_vec))
       stopifnot(!is.na(self$ov_sign_vec))
     },
-    prediction = function (par, x) {
+    prediction = function (par, x, ...) {
       stop('MatrixModel$prediction is an abstract function.')
     },
     prediction_jacobian = function (par, x, ...) {
@@ -56,7 +56,7 @@ SingleModel <- R6Class(
   'SingleModel',
   inherit = MatrixModel,
   public = list(
-    prediction = function (par, x) {
+    prediction = function (par, x, ...) {
       self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * x) + self$sign_vec * exp(-par[1] * (self$time_extent - x)))
     },
@@ -100,7 +100,7 @@ ShiftedModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$delta_t <- delta_t
     },
-    prediction = function (par, x) {
+    prediction = function (par, x, ...) {
       xx <- x - self$delta_t/2
       self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
         (exp(-par[1] * xx) - self$sign_vec * exp(-par[1] * (self$time_extent - xx)))
@@ -152,17 +152,22 @@ TwoStateModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$reference_time <- reference_time
     },
-    prediction = function (par, x) {
+    prediction = function (par, x, ...) {
+      par[1] <- abs(par[1])
+      par[2] <- abs(par[2])
       xx <- x - self$reference_time
-      exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-(abs(par[2])) * xx))
+
+      exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-(par[2]) * xx))
     },
     prediction_jacobian = function (par, x, ...) {
+      par[1] <- abs(par[1])
+      par[2] <- abs(par[2])
       xx <- x - self$reference_time
       
       res <- array(0.0, dim = c(length(x), length(par)))
-      res[, 1] <- -xx * exp(-abs(par[1]) * xx) * (par[3] + (1 - par[3]) * exp(-abs(par[2]) * xx))
-      res[, 2] <- -exp(-abs(par[1]) * xx) * (1 - par[3]) * xx * exp(-abs(par[2]) * xx)
-      res[, 3] <- exp(-abs(par[1]) * xx) * (1 - exp(-abs(par[2]) * xx))
+      res[, 1] <- -xx * exp(-par[1] * xx) * (par[3] + (1 - par[3]) * exp(-par[2] * xx))
+      res[, 2] <- -exp(-par[1] * xx) * (1 - par[3]) * xx * exp(-par[2] * xx)
+      res[, 3] <- exp(-par[1] * xx) * (1 - exp(-par[2] * xx))
       return(res)
     },
     initial_guess = function (corr, parlist, t1, t2) {

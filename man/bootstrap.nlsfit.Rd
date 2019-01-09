@@ -4,17 +4,18 @@
 \alias{bootstrap.nlsfit}
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
-bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr, dfn,
-  use.minpack.lm = TRUE, parallel = FALSE, error = sd)
+bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
+  dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
+  cov_fn = cov)
 }
 \arguments{
-\item{fn}{the (non-linear) function to be fitted to the data. Its first
-argument must be the fit parameters named \code{par}. The second must be
-\code{x}, the explaining variable. Additional parameters might be passed to
-the function. Currently we pass \code{boot_r} which is \code{NA} for the original data
-and the ID of the bootstrap sample otherwise. As more parameters might be
-added in the future it is recommended that the fit function accepts \code{...} as
-the last parameter to be forward compatible.}
+\item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
+data. Its first argument must be the fit parameters named \code{par}. The
+second must be \code{x}, the explaining variable. Additional parameters
+might be passed to the function. Currently we pass \code{boot_r} which is \code{0}
+for the original data and the ID (1, …) of the bootstrap sample otherwise.
+As more parameters might be added in the future it is recommended that the
+fit function accepts \code{...} as the last parameter to be forward compatible.}
 
 \item{par.guess}{initial guess values for the fit parameters.}
 
@@ -29,16 +30,26 @@ Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 \code{length(y) + length(x)}.}
 
+\item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{dy, dx}{Numeric vector. Errors of the dependent and independent
+variable, respectively. These do not need to be specified as they can be
+computed from the bootstrap samples. In the case of parametric bootstrap it
+might would lead to a loss of information if they were computed from the
+pseudo-bootstrap samples. They must not be specified if a covariance matrix
+is given.}
+
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 length(y)+length(x))} depending on the errormodel.}
 
-\item{gr}{\code{gr=d(fn) / d(par)} is a function to return the gradient of
-\code{fn}. It must return an array with \code{length(x)} rows and
-\code{length(par)} columns.}
+\item{gr}{\code{gr(par, x, ...)}. \code{gr=d(fn) / d(par)} is a function to
+return the gradient of \code{fn}. It must return an array with
+\code{length(x)} rows and \code{length(par)} columns.}
 
-\item{dfn}{\code{dfn=d(fn) / dx} is the canonical derivative of \code{fn} by
-\code{x} and only relevant if x-errors are provided.}
+\item{dfn}{\code{dfn(par, x, ...)}. \code{dfn=d(fn) / dx} is the canonical
+derivative of \code{fn} by \code{x} and only relevant if x-errors are
+provided.}
 
 \item{use.minpack.lm}{use the \code{minpack.lm} library if available. This
 is usually faster than the default \code{optim} but somtimes also less
@@ -46,6 +57,10 @@ stable.}
 
 \item{parallel}{parallelise over bootstrap samples. The package
 \code{parallel} is required.}
+
+\item{error}{Function that takes a sample vector and returns the error
+estimate. This is a parameter in order to support different resampling
+methods like jackknife.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input
@@ -84,7 +99,7 @@ x <- c(1, 2, 3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
 
-fn <- function (par, x) par[1] + par[2] * x
+fn <- function (par, x, ...) par[1] + par[2] * x
 
 ## Before we can use the fit with this data, we need to create bootstrap
 ## samples. We do not want to use the correlation matrix here. Note that you
@@ -106,3 +121,4 @@ Other NLS fit functions: \code{\link{parametric.bootstrap.cov}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
+\concept{NLS fit functions}

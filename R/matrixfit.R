@@ -1,5 +1,5 @@
 bootstrap.meanerror <- function(data, R=400, l=20) {
-  bootit <- boot(block.ts(data, l=l), meanindexed, R=R)
+  bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
 }
 
@@ -30,9 +30,6 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #'   \code{$opt.res$par}.
 #' @param t Numeric vector: Time of interest.
 #' @param T Numeric: Time extent of the lattice.
-#' @param sign.vec Numeric vector: Relative sign between forward and
-#'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
-#' @param deltat Numeric: time shift.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
 #' 
 #' @seealso \code{\link{matrixfit}}
@@ -100,7 +97,7 @@ pcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, refe
 
 ## deltat is a dummy variable here
 pcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-referenece_time))))
+  z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time))))
   return( sum(z %*% M %*% z) )
 }
 
@@ -373,7 +370,7 @@ matrixfit <- function(cf, t1, t2,
   }
   lm.avail <- FALSE
   if(fit.method == "lm") 
-    lm.avail <- require(minpack.lm)
+    lm.avail <- requireNamespace('minpack.lm')
   LM <- chol(M)
   
   par <- numeric(max(parind))
@@ -413,14 +410,7 @@ matrixfit <- function(cf, t1, t2,
   }
   if(model == "weighted") {
     if(any(names(cf) == "weighted")) {
-      if(cf$weighted) {
-        fitfn <- matrixChisqr.weighted
-        dfitfn <- dmatrixChisqr.weighted
-      }
-      else {
-        model <- "single"
-        warning("model chosen to be weighted, but weighting information not available in cf. Falling back to model=single\n")
-      }
+      stop('Weighted model is not implemented.')
     }
   }
   if(pcmodel) {
@@ -435,10 +425,6 @@ matrixfit <- function(cf, t1, t2,
       fitfn <- matrixChi.shifted
       dfitfn <- dmatrixChi.shifted
     }
-    if(model == "weighted") {
-      fitfn <- matrixChi.weighted
-      dfitfn <- dmatrixChi.weighted
-    }
     if(pcmodel) {
       fitfn <- pcChi
       dfitfn <- dpcChi
@@ -452,9 +438,9 @@ matrixfit <- function(cf, t1, t2,
   opt.res <- NA
   rchisqr <- 0.
   if(lm.avail) {
-    opt.res <- nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
+    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
                       parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], reference_time=reference_time,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
+                      control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
@@ -498,9 +484,9 @@ matrixfit <- function(cf, t1, t2,
   return(invisible(res))
 }
 
-#' plot a matrixfit
+#' Plot a matrixfit
 #' 
-#' @param mfit an object of class matrixfit
+#' @param x an object of class matrixfit
 #' @param plot.errorband Boolean: whether or not to plot an errorband
 #' @param ylim Numeric vector: y-limit of the plot
 #' @param xlab String: label of x-axis
@@ -511,9 +497,9 @@ matrixfit <- function(cf, t1, t2,
 #' @param col String vector: vector of colours for the different correlation functions
 #' 
 #' @seealso \code{\link{matrixfit}}
-
-plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y",
-                           do.qqplot=TRUE, plot.raw=TRUE, rep=FALSE, col, every, ...) {
+plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
+                            do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
+  mfit <- x
   par <- mfit$opt.res$par
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
@@ -637,7 +623,8 @@ plot.matrixfit <- function(mfit, plot.errorband=FALSE, ylim, xlab="t/a", ylab="y
 }
 
 
-summary.matrixfit <- function(mfit) {
+summary.matrixfit <- function (object, ...) {
+  mfit <- object
   if(mfit$model == "pc") {
     cat("\n ** Result of two state exponential fit to principal correlator **\n\n")
   }
@@ -701,9 +688,9 @@ summary.matrixfit <- function(mfit) {
 
 fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1, reference_time=0) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
+    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
                       deltat=deltat, ov.sign.vec=ov.sign.vec, reference_time=reference_time,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
+                      control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }

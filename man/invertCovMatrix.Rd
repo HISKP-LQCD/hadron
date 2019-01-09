@@ -7,7 +7,7 @@
   arise from too much noise in the data.
 }
 \usage{
-invertCovMatrix(cf, boot.l=1, boot.samples=FALSE)
+invertCovMatrix(cf, boot.l=1, boot.samples=FALSE, cov_fn = cov)
 }
 \arguments{
   \item{cf}{

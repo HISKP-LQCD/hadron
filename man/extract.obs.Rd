@@ -84,8 +84,6 @@ extract.obs(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   C(t) and C(-t) are averaged as indicated by \code{sym.vec}.
 
 }
-\references{
-}
 \seealso{
   \code{\link{readcmicor}}, \code{\link{readcmidatafiles}},
 }
