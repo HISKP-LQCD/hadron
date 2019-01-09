@@ -20,11 +20,13 @@ using namespace Rcpp;
  */
 inline void read_correl(std::ifstream &ifs, const unsigned int Nt, std::vector<double> &real, std::vector<double> &imag)
 {
-  if( !ifs.good() ){
-    stop("read_correl: input file stream not in a good state!");
-  }
+  char message[200];
   for(unsigned int i=0; i<Nt; ++i)
   {
+    if( !ifs.good() ){
+      snprintf(message, 200, "read_correl: input file steram is not in a good state at time slice %u", i);
+      stop(message);
+    }
     ifs >> real[i];
     ifs >> imag[i];
   }
