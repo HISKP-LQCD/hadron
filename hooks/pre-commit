@@ -1,6 +1,10 @@
 #!/bin/bash
 # Copyright © 2019 Martin Ueding <dev@martin-ueding.de>
 
+# Builds the documentation with Roxygen and aborts the commit if the output of
+# `git diff` changes. This gives the user the opportunity to add the generated
+# changes and try to commit again.
+
 set -e
 set -u
 
