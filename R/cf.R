@@ -541,7 +541,7 @@ avg.cbt.cf <- function(cf){
 
 #' Arithmetically adds two correlation functions
 #'
-#' @param cf1,cf2 `cf` object.
+#' @param cf1,cf2 `cf_orig` object.
 #' @param a,b Numeric. Factors that multiply the correlation function before
 #' the addition.
 #'
@@ -566,14 +566,29 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   return(cf)
 }
 
+#' Arithmetically add correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '+.cf' <- function (cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
+#' Arithmetically subtract correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '-.cf' <- function(cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
+#' Arithmetically divide correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '/.cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
@@ -588,6 +603,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   return (cf)
 }
 
+#' Arithmetically scale a correlator
+#'
+#' @param cf1 `cf_orig` objects.
+#' @param a Numeric, scaling factor.
+#'
+#' @export
 mul.cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(is.numeric(a))
