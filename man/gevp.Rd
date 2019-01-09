@@ -5,8 +5,7 @@
   solve GEVP for a real, symmetric correlator matrix
 }
 \usage{
-gevp(cf, Time, t0=1, matrix.size=2, element.order=c(1,2,3,4),
-for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
+gevp(cf, Time, t0 = 1, element.order = 1:cf$nrObs, for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 }
 \arguments{
   \item{cf}{
@@ -25,9 +24,6 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
   \item{t0}{
     initial time value of the GEVP, must be in between 0 and
     \code{Time/2-2}. Default is 1.
-  }
-  \item{matrix.size}{
-    the size of the square matrix
   }
   \item{element.order}{
     specifies how to fit the \code{n} linearly ordered single
@@ -99,9 +95,6 @@ for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE)
 }
 \seealso{
   \code{boostrap.gevp}, \code{extract.obs}
-}
-\examples{
-
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
 \keyword{GEVP}

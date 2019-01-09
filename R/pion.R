@@ -183,13 +183,13 @@ pion <- function(cmicor, mu=0.1, kappa=0.156, t1, t2, S=1.5, pl=FALSE, skip=0,
     }
   }
   if(method == "boot" || method == "all") {
-    fit.boot <- boot(data=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, stype="i",
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
-                     kappa=kappa, mu=mu, fit.routine=fit.routine)
+    fit.boot <- boot::boot(data=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, stype="i",
+                           Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
+                           kappa=kappa, mu=mu, fit.routine=fit.routine)
 
-    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
-                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
-                         kappa=kappa, mu=mu, fit.routine=fit.routine)
+    fit.tsboot <- boot::tsboot(tseries=t(W[ii,]), statistic=fit.pion.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+                               Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, N=matrix.size, no.masses=no.masses,
+                               kappa=kappa, mu=mu, fit.routine=fit.routine)
   }
 
   

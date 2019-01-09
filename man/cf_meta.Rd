@@ -8,6 +8,8 @@ cf_meta(.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1,
   symmetrised = FALSE)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{nrObs}{Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.}
 
 \item{Time}{Integer, full time extent.}
@@ -27,3 +29,4 @@ Other cf constructors: \code{\link{cf_boot}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
   \code{\link{cf}}
 }
+\concept{cf constructors}

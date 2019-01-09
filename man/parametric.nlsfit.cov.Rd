@@ -6,6 +6,11 @@
 \usage{
 parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...)
 }
+\arguments{
+\item{boot.R}{numeric. Number of bootstrap samples to generate.}
+
+\item{x}{numeric vector. Actual values for the data.}
+}
 \description{
 NLS fit with parametric bootstrap and covariance
 }
@@ -18,3 +23,4 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
+\concept{NLS fit functions}

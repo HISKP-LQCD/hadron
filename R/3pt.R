@@ -55,8 +55,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   Cf2pt <- bootstrap.cf(Cf2pt, boot.R=boot.R, boot.l=boot.l)
   Cf3pt <- bootstrap.cf(Cf3pt, boot.R=boot.R, boot.l=boot.l)
 
-  plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
-  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, boot.samples=FALSE, boot.l=boot.l, boot.R=boot.R, useCov=useCov)
+  plateaufitZV <- fit.plateau2cf(Cf3ptp0, t1=t1, t2=t2, useCov=useCov)
+  plateaufitFF <- fit.plateau2cf(Cf3pt, t1=t1, t2=t2, useCov=useCov)
 
   res <- list(Cf2ptratio=Cf2pt, Cf3ptratio=Cf3pt, Cf2ptp0=Cf2ptp0,
               Cf2ptp=Cf2ptp, Cf3ptp0=Cf3ptp0, Cf3ptp=Cf3ptp,
@@ -68,7 +68,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   return(invisible(res))
 }
 
-summary.pionff <- function(ff, ...) {
+summary.pionff <- function (object, ...) {
+  ff <- object
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
 
@@ -112,7 +113,7 @@ averx <- function(data3pt, data2pt, pionfit,
 
   ## now a cosh fit to the 2pt correlator
   if(missing(pionfit)) {
-    pionfit <- matrixfit(Cf2pt, t1=piont1, t2=piont2, symmetrise=TRUE, useCov=useCov,
+    pionfit <- matrixfit(Cf2pt, t1=piont1, t2=piont2, useCov=useCov,
                          parlist=array(c(1,1), dim=c(2,1)))
   }
 
@@ -130,7 +131,7 @@ averx <- function(data3pt, data2pt, pionfit,
   ## here we generate the inverse covariance matrix, if required
   ## otherwise take inverse errors squared
   M <- diag(w^2)
-  lm.avail <- require("minpack.lm")
+  lm.avail <- requireNamespace('minpack.lm')
   
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
@@ -143,7 +144,7 @@ averx <- function(data3pt, data2pt, pionfit,
   
   par <- Cf3pt$cf0[Cf2pt$Time/4]
   if(lm.avail && !force.optim) {
-    opt.res <- nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf0[ii])
+    opt.res <- minpack.lm::nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf0[ii])
     chisq <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
@@ -159,7 +160,7 @@ averx <- function(data3pt, data2pt, pionfit,
   plateau.tsboot <- array(NA, dim=c(boot.R,2))
   for(i in 1:boot.R) {
     if(lm.avail && !force.optim) {
-      opt <- nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf.tsboot$t[i,ii])
+      opt <- minpack.lm::nls.lm(par, fn=fn.lm, LM=LM, y=Cf3pt$cf.tsboot$t[i,ii])
       plateau.tsboot[i,2] <- opt$rsstrace[length(opt$rsstrace)]
     }
     else {
@@ -194,7 +195,8 @@ averx <- function(data3pt, data2pt, pionfit,
   return(invisible(res))
 }
 
-summary.averx <- function(averx, ...) {
+summary.averx <- function(object, ...) {
+  averx <- object
   cat("\n")
   summary(averx$matrixfit)
   cat("\nAnalysis for <x>\n\n")
@@ -221,7 +223,7 @@ summary.averx <- function(averx, ...) {
   cat("error    =", averx$daverx.wm, "\n")  
 }
 
-print.averx <- function(averx, ...) {
-  summary.averx(averx)
+print.averx <- function(x, ...) {
+  summary.averx(x, ...)
 }
 

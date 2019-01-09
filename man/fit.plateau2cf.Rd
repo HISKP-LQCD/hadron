@@ -8,7 +8,7 @@
   \code{cf} using a (correlated) chisquare fit.
 }
 \usage{
-fit.plateau2cf(cf, t1, t2, boot.samples = FALSE, boot.R = 400, boot.l = 2, useCov = FALSE)
+fit.plateau2cf(cf, t1, t2, useCov=FALSE)
 }
 \arguments{
   \item{cf}{

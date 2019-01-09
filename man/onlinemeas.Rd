@@ -18,7 +18,7 @@ onlinemeas(data, t1, t2, stat_range, S=1.5, pl=FALSE, skip=0,
   \item{data}{
     data to be fitted to as e.g. the output of
     \code{\link{readcmicor}}. Currently only
-    \code{\link{cmicor}} format is supported.
+    \code{cmicor} format is supported.
   }
   \item{t1}{
     lower bound for the fitrange in time (t1,t2). Counting starts with 0.
