@@ -349,6 +349,7 @@ readnissatextcf <- function(files_to_read,
                             smear_combs_to_read,
                             Nt, 
                             combs_to_read,
+                            sym.vec = c(1),
                             symmetrise = FALSE)
 {
   tmp <- read_nissa_textcf_kernel(files_to_read,
@@ -361,47 +362,10 @@ readnissatextcf <- function(files_to_read,
   realcols <- seq(1,2*total_nts,2)
   imagcols <- seq(2,2*total_nts,2)
 
-  #sign <- +1
-  #if(!sym) sign <- -1
-
-  #if( (sparsity > 1 | avg > 1) & (nrow(tmp) %% (sparsity*avg) != 0) ){
-  #  if(autotruncate){
-  #    cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,nrow(tmp)))
-  #    cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
-  #    cat("readtextcf: Reducing the number of total measurements to fit!\n")
-  #    nmeas <- as.integer( (sparsity*avg)*floor( nrow(tmp)/(sparsity*avg) ))
-  #    if( nmeas/(sparsity*avg) >= Nmin ){
-  #      tmp <- tmp[1:nmeas,]
-  #    } else {
-  #      cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
-  #      sparsity <- 1
-  #      avg <- 1
-  #    }
-  #  } else {
-  #    stop("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
-  #  }
-  #}
-
-  ### sparsify data
-  #if(sparsity > 1){
-  #  sp.idx <- seq(from=1,to=nrow(tmp),by=sparsity)
-  #  tmp <- tmp[sp.idx,]
-  #}
-  ## average over 'avg' measurements sequentially
-  #if(avg > 1){
-  #  tmp2 <- tmp
-  #  tmp <- array(0, dim=c(nrow(tmp2)/avg),ncol(tmp))
-  #  for( i in c(1:nrow(tmp)) ){
-  #    tmp[i,] <- (1.0/avg)*apply(X=tmp2[((i-1)*avg+1):(i*avg),],
-  #                               MARGIN=2,
-  #                               FUN=sum)
-  #  }
-  #}
-
   cf <- cf_meta(nrObs = nrow(combs_to_read), Time=Nt, nrStypes = length(smear_combs_to_read), symmetrised = FALSE)
   cf <- cf_orig(cf, cf = tmp[,realcols], icf = tmp[,imagcols])
 
-  if(symmetrise) cf <- symmetrise.cf(cf, sign.vec)
+  if(symmetrise) cf <- symmetrise.cf(cf, sym.vec)
 
   return (invisible(cf))
 }
