@@ -230,7 +230,7 @@ addStat.raw_cf <- function(cf1, cf2) {
 
   cf <- cf1
 
-  cf$data <- abind(cf1$data, cf2$data, along=1)
+  cf$data <- abind::abind(cf1$data, cf2$data, along=1)
 
   return (invisible(cf))
 }
@@ -402,7 +402,7 @@ concat.raw_cf <- function (left, right) {
 #'         \code{tauint_real}, \code{tauint_imag} if \code{reim} is `both` and
 #'         \code{tauint} and \code{relerr} are \code{TRUE}. The \code{val} and
 #'         \code{dval} members of these list elements are arrays of dimension
-#'         \cdoe{ c( cf$nts, cf$dim ) } and thus lack the first index compared
+#'         \code{ c( cf$nts, cf$dim ) } and thus lack the first index compared
 #'         to \code{cf$data}.
 get_plotdata_raw_cf <- function(cf,
                                 reim,

@@ -28,7 +28,7 @@ relative errors. The list elements come in the order
 \code{tauint_real}, \code{tauint_imag} if \code{reim} is \code{both} and
 \code{tauint} and \code{relerr} are \code{TRUE}. The \code{val} and
 \code{dval} members of these list elements are arrays of dimension
-\cdoe{ c( cf$nts, cf$dim ) } and thus lack the first index compared
+\code{ c( cf$nts, cf$dim ) } and thus lack the first index compared
 to \code{cf$data}.
 }
 \description{
