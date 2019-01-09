@@ -1,0 +1,24 @@
+#!/bin/bash
+# Copyright © 2019 Martin Ueding <dev@martin-ueding.de>
+
+set -e
+set -u
+
+diff_old=$(mktemp)
+diff_new=$(mktemp)
+
+cleanup() {
+  rm -f "$diff_old"
+  rm -f "$diff_new"
+}
+
+trap cleanup EXIT
+
+git diff > "$diff_old"
+Rscript -e 'devtools::document();'
+git diff > "$diff_new"
+
+if diff -u "$diff_old" "$diff_new" &> /dev/null; then
+  echo "Generating the documentation has changed the tree, try to commit again." >&2
+  exit 2
+fi
