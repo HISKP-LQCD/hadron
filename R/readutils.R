@@ -436,8 +436,24 @@ readbinarycf <- function(files,
 }
 
 
-# read binary correlation functions sample by sample, return as a list of length "nosamples"
-# where increasing indices refer to averaging over increasing numbers of samples
+#' Read binary correlation function by sample
+#'
+#' Read binary correlation functions sample by sample, return as a list of
+#' length `nosamples` where increasing indices refer to averaging over
+#' increasing numbers of samples.
+#'
+#' @param files character vector. Paths to the file to read. As `path` is
+#' prepended to each element, one can also just pass the filenames here.
+#' @param T numeric. Time extent.
+#' @param endian character, either `little` or `big`.
+#' @param path character. Path that is prefixed to each of the paths given in
+#' `files`.
+#' @param excludelist character vector. Elements in `files` that are specified
+#' in `excludelist` are skipped. The caller could also just pass
+#' `setdiff(files, excludelist)`.
+#' @param sym logical. Whether the read data shall be symmetrized in the end.
+#' @param ftype numeric type. As the data is read in binary this type has to
+#' match exactly the one in the file.
 readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
                               op="aver", excludelist=c(""), sym=TRUE, path="", ftype=double() ){
 

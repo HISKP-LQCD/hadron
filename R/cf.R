@@ -701,20 +701,24 @@ concat.cf <- function (left, right) {
   return (invisible(rval))
 }
 
+#' Plot a correlation function
+#'
+#' @param x `cf_boot` object
+#' @param neg.vec Numeric vector of length `cf$cf0`. This allows switching the
+#' sign for certain time slices or observables such that displaying in
+#' log-scale is sensible.
+#' @param rep See \code{\link{plotwitherror}}.
+#'
+#' @inheritParams plotwitherror
+#'
+#' @export
 plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
   cf <- x
-  stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
+  stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_meta'))
 
-  if (inherits(cf, 'cf_boot')) {
-    val <- cf$cf0
-    err <- cf$tsboot.se
-  } else if (inherits(cf, 'cf_jackknife')) {
-    val <- cf$cf0
-    err <- cf$jackknife.se
-  } else {
-    stop('A correlation function must be bootstrapped before it can be plotted.')
-  }
+  val <- cf$cf0
+  err <- cf$tsboot.se
 
   if(!cf$symmetrised){
     tmax <- cf$Time - 1
