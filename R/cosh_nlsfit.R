@@ -92,7 +92,7 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   tt = ii-1-Thalf
 
   ## function to fit
-  sum.cosh.fit <- function(par, x) {
+  sum.cosh.fit <- function(par, x, ...) {
     sum.cosh(par[1:n.cosh], abs(par[(n.cosh+1):(2*n.cosh)]), x)
   }
   ## corresponding Jacobian
