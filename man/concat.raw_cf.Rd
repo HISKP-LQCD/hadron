@@ -2,10 +2,18 @@
 % Please edit documentation in R/raw_cf.R
 \name{concat.raw_cf}
 \alias{concat.raw_cf}
-\title{Concatenate two correlation function objects}
+\title{Concatenate two \code{raw_cf} correlation function objects}
 \usage{
 concat.raw_cf(left, right)
 }
+\arguments{
+\item{left}{\code{raw_cf} object to be concatenated with \code{right}}
+
+\item{right}{\code{raw_cf} object to be concatenated with \code{left}}
+}
 \description{
-Concatenate two correlation function objects
+The data of the \code{left} and \code{right} objects
+is concatenated along the second array dimension
+such that the output contains the tensor slices of \code{right}
+after the slices of \code{left}
 }

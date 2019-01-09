@@ -2,7 +2,7 @@
 % Please edit documentation in R/raw_cf.R
 \name{c.raw_cf}
 \alias{c.raw_cf}
-\title{Concatenate correlation function objects}
+\title{Concatenate \code{raw_cf} correlation function objects}
 \usage{
 \method{c}{raw_cf}(...)
 }
@@ -10,5 +10,5 @@
 \item{...}{Zero or multiple objects of type \code{raw_cf}.}
 }
 \description{
-Concatenate correlation function objects
+Concatenate \code{raw_cf} correlation function objects
 }

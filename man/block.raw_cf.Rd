@@ -11,6 +11,11 @@ block.raw_cf(cf, block_length)
 
 \item{block_length}{Integer, number of successive measurements to average over.}
 }
+\value{
+cf \code{raw_cf} object with the data member reduced in its first dimension
+by a factor of \code{block_length} and restricted (at the end) to the number
+of measurements divisible by \code{block_length}.
+}
 \description{
 Block \code{block_length} sequential measurements of the correlation
 function together. This occurs, for example, when multiple

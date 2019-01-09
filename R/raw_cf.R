@@ -138,13 +138,6 @@ uwerr.raw_cf <- function(cf){
               idx_matrix = idx_matrix_uwerr)) 
 }
 
-#addConfIndex2cf <- function(cf, conf.index) {
-#  if(is.null(cf$conf.index)) {
-#    cf$conf.index <- conf.index
-#  }
-#  return(cf)
-#}
-
 #' @title Block average correlation function data
 #' @description Block `block_length` sequential measurements of the correlation
 #'              function together. This occurs, for example, when multiple
@@ -156,7 +149,7 @@ uwerr.raw_cf <- function(cf){
 #'
 #' @param cf `raw_cf` object
 #' @param block_length Integer, number of successive measurements to average over.
-#' @value cf `raw_cf` object with the data member reduced in its first dimension
+#' @return cf `raw_cf` object with the data member reduced in its first dimension
 #'        by a factor of `block_length` and restricted (at the end) to the number
 #'        of measurements divisible by `block_length`.
 block.raw_cf <- function(cf, block_length){
@@ -243,7 +236,7 @@ addStat.raw_cf <- function(cf1, cf2) {
 }
 
 #' @title add two `raw_cf` objects
-#' @value \code{a*cf1$data + b*cf2$data}
+#' @return \code{a*cf1$data + b*cf2$data}
 add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -261,19 +254,25 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 
-'+.cf' <- function (cf1, cf2) {
-  add.cf(cf1, cf2, a = 1.0, b = 1.0)
+#' @title add two `raw_cf` objects
+#' @return `raw_cf` object with \code{cf$data == cf1$data + cf2$data}
+'+.raw_cf' <- function (cf1, cf2) {
+  add.raw_cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
-'-.cf' <- function(cf1, cf2) {
-  add.cf(cf1, cf2, a = 1.0, b = -1.0)
+#' @title add two `raw_cf` objects
+#' @return `raw_cf` object with \code{cf$data == cf1$data - cf2$data}
+'-.raw_cf' <- function(cf1, cf2) {
+  add.raw_cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-'/.cf' <- function(cf1, cf2) {
+#' @title divide two `raw_cf` objects
+#' @return `raw_cf` object with \code{cf$data == cf1$data / cf2$data}
+'/.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
-  stopifnot(inherits(cf1, 'raw_cf_orig'))
-  stopifnot(inherits(cf2, 'raw_cf_orig'))
+  stopifnot(inherits(cf1, 'raw_cf_data'))
+  stopifnot(inherits(cf2, 'raw_cf_data'))
   stopifnot(all(dim(cf1$data) == dim(cf2$data)))
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(cf1$nts == cf2$nts)
@@ -283,11 +282,13 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return (cf)
 }
 
-'*.cf' <- function(cf1, cf2) {
+#' @title multiply two `raw_cf` objects
+#' @return `raw_cf` object with \code{cf$data == cf1$data * cf2$data}
+'*.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
-  stopifnot(inherits(cf1, 'raw_cf_orig'))
-  stopifnot(inherits(cf2, 'raw_cf_orig'))
+  stopifnot(inherits(cf1, 'raw_cf_data'))
+  stopifnot(inherits(cf2, 'raw_cf_data'))
   stopifnot(all(dim(cf1$data) == dim(cf2$data)))
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(cf1$nts == cf2$nts)
@@ -297,6 +298,10 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
+#' @title scale `raw_cf` data
+#' @param a Numeric or complex scaling factor, although it could also be
+#'          an array of dimensions compatible with \code{cf$data}
+#' @return `raw_cf` object with \code{res$data == a*cf$data}
 mul.raw_cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(is.numeric(a) | is.complex(a))
@@ -305,42 +310,21 @@ mul.raw_cf <- function(cf, a=1.) {
   return (cf)
 }
 
-#
-#extractSingleCor.cf <- function(cf, id=c(1)) {
-#  stopifnot(inherits(cf, 'cf_meta'))
-#  stopifnot(inherits(cf, 'cf_orig'))
-#
-#  ii <- c()
-#  for(i in c(1:length(id))) {
-#    ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
-#  }
-#
-#  # TODO: This should be done using constructors.
-#  cf$cf <- cf$cf[,ii]
-#
-#  if (inherits(cf, 'cf_boot')) {
-#    cf$cf0 <- cf$cf0[ii]
-#    cf$tsboot.se <- cf$tsboot.se[ii]
-#    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
-#    cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
-#    cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
-#  }
-#  cf$nrObs <- 1
-#  cf$nsStypes <- 1
-#  return (cf)
-#}
-#
-#is.raw_cf <- function(x){
-#  inherits(x, "raw_cf")
-#}
-#
+#' @title check if an object is of class `raw_cf`
+#' @param x object to be checked 
+is.raw_cf <- function(x){
+  inherits(x, "raw_cf")
+}
 
-is_empty.raw_cf <- function(.raw_cf){
+#' @title check if an obect is of class `raw_cf` and empty otherwise
+#' @param .raw_cf object to be checked
+is_empty.raw_cf <- function(x){
+  .raw_cf <- x
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))
 }
 
 
-#' Concatenate correlation function objects
+#' @title Concatenate `raw_cf` correlation function objects
 #'
 #' @param ... Zero or multiple objects of type `raw_cf`.
 c.raw_cf <- function (...) {
@@ -348,7 +332,13 @@ c.raw_cf <- function (...) {
   return (rval)
 }
 
-#' Concatenate two correlation function objects
+#' @title Concatenate two `raw_cf` correlation function objects
+#' @description The data of the \code{left} and \code{right} objects
+#'              is concatenated along the second array dimension
+#'              such that the output contains the tensor slices of \code{right}
+#'              after the slices of \code{left}
+#' @param left `raw_cf` object to be concatenated with \code{right}
+#' @param right `raw_cf` object to be concatenated with \code{left}
 concat.raw_cf <- function (left, right) {
   stopifnot(inherits(left, 'raw_cf'))
   stopifnot(inherits(right, 'raw_cf'))
@@ -377,15 +367,43 @@ concat.raw_cf <- function (left, right) {
   stopifnot(all(left$dim == right$dim))
 
   rval <- raw_cf_meta(nrObs = left$nrObs + right$nrObs,
-                     Time = left$Time,
-                     nts = left$nts,
-                     dim = left$im,
-                     nrStypes = left$nrStypes)
-  rval <- raw_cf_orig(.cf = rval,
-                      data = abind(left$data, right$data, along=2))
+                      Time = left$Time,
+                      nts = left$nts,
+                      dim = left$im,
+                      nrStypes = left$nrStypes)
+  rval <- raw_cf_data(cf = rval,
+                      data = abind::abind(left$data, right$data, along=2))
   return (rval)
 }
 
+#' @title extract data in format convenient to plot
+#' @description When dealing with with tensorial `raw_cf` objects
+#'              pre-processing and reshaping is always required to
+#'              prepare the data for plotting (or similar). This function
+#'              conveniently prepares a named list of prepared data.
+#'              The list elements are themselves lists which contain
+#'              `val` and `dval` members with the central value and error
+#'              of the element in question. These are in turn
+#'              arrays of dimension \code{ c( cf$nts, cf$dim ) } and thus
+#'              lack the first index compared to \code{cf$data}.
+#' @param cf `raw_cf` object with meta-data and data.
+#' @param reim String, one of 'real', 'imag' or 'both'. Specifies
+#'             whether the real and/or imaginary parts should be extracted.
+#' @param tauint Boolean, specifies if the tensor of auto-correlation times
+#'               and corresponding errors should be extracted. 
+#' @param relerr Boolean, specifies if the return value should also include
+#'               estimates of the relative error and its error.
+#' @return List of up to six named elements (depending on what was passed for
+#'         \code{reim}, \code{tauint}, \code{relerr}) containing the central
+#'         values and errors of the real and/or imaginary part of `cf$data`
+#'         as well as the corresponding arrays of auto-correlation times and
+#'         relative errors. The list elements come in the order
+#'         \code{real}, \code{imag}, \code{relerr_real}, \code{relerr_imag},
+#'         \code{tauint_real}, \code{tauint_imag} if \code{reim} is `both` and
+#'         \code{tauint} and \code{relerr} are \code{TRUE}. The \code{val} and
+#'         \code{dval} members of these list elements are arrays of dimension
+#'         \cdoe{ c( cf$nts, cf$dim ) } and thus lack the first index compared
+#'         to \code{cf$data}.
 get_plotdata_raw_cf <- function(cf,
                                 reim,
                                 tauint,
@@ -404,11 +422,11 @@ get_plotdata_raw_cf <- function(cf,
   # construct a return value
   plotdata <- list()
   # loop over the internal dimensions
-  for( i in 0:(prod(cf$dim)-1) ){
-    istart <- i*cf$nrStypes*cf$nrObs*cf$nts + 1
+  for( idim in 0:(prod(cf$dim)-1) ){
+    istart <- idim*cf$nrStypes*cf$nrObs*cf$nts + 1
     iend <- istart + cf$nrStypes*cf$nrObs*cf$nts - 1
   
-    # subset of the index matrix for the internal dimension which is about to be plotted 
+    # subset of the index matrix for the internal dimension given by the  
     iselect <- data$idx_matrix[istart:iend,]
     
     lidx <- length(plotdata)+1
@@ -418,10 +436,7 @@ get_plotdata_raw_cf <- function(cf,
       plotdata[[lidx]] <- append(plotdata[[lidx]],
                                list(real = 
                                     list(val = data$value$real[iselect],
-                                         dval = data$dvalue$real[iselect],
-                                         ylab = "Re(C(t))",
-                                         same_ylab = "Re/Im(C(t))",
-                                         logplot = logplot )
+                                         dval = data$dvalue$real[iselect])
                                     )
                                )
     }
@@ -429,10 +444,7 @@ get_plotdata_raw_cf <- function(cf,
       plotdata[[lidx]] <- append(plotdata[[lidx]],
                                list(imag = 
                                     list(val = data$value$imag[iselect],
-                                         dval = data$dvalue$imag[iselect],
-                                         ylab = "Im(C(t))",
-                                         same_ylab = "Re/Im(C(t))",
-                                         logplot = logplot )
+                                         dval = data$dvalue$imag[iselect])
                                     )
                                )
     }
@@ -441,10 +453,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_real =
                                       list(val = abs(data$dvalue$real[iselect] / data$value$real[iselect]),
-                                           dval = data$ddvalue$real[iselect],
-                                           ylab = "Re(dC(t))/Re(C(t))",
-                                           same_ylab = "Re/Im(dC(t))/Re/Im(C(t))",
-                                           logplot = '')
+                                           dval = data$ddvalue$real[iselect])
                                       )
                                  )
       }
@@ -452,10 +461,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_imag =
                                       list(val = abs(data$dvalue$imag[iselect] / data$value$imag[iselect]),
-                                           dval = data$ddvalue$imag[iselect],
-                                           ylab = "Im(dC(t))/Im(C(t))",
-                                           same_ylab = "Re/Im(dC(t))/Re/Im(C(t))",
-                                           logplot = '')
+                                           dval = data$ddvalue$imag[iselect])
                                       )
                                  )
       }
@@ -465,10 +471,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(tauint_real =
                                       list(val = data$tauint$real[iselect],
-                                           dval = data$dtauint$real[iselect],
-                                           ylab = "tauint[ Re(C(t)) ]",
-                                           same_ylab = "tauint[ Re/Im(C(t)) ]",
-                                           logplot = '')
+                                           dval = data$dtauint$real[iselect])
                                       )
                                  )
       }
@@ -476,10 +479,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(tauint_imag =
                                       list(val = data$tauint$imag[iselect],
-                                           dval = data$dtauint$imag[iselect],
-                                           ylab = "tauint[ Im(C(t)) ]",
-                                           same_ylab = "tauint[ Re/Im(C(t)) ]",
-                                           logplot = '')
+                                           dval = data$dtauint$imag[iselect])
                                       )
                                  )
       }
@@ -488,10 +488,19 @@ get_plotdata_raw_cf <- function(cf,
   return(plotdata)
 }
 
+#' @title plot all correlators in `raw_cf` object
+#' @param x Object of class `raw_cf` with data and meta-data.
+#' @param reim Character vector, may contain 'real', 'imag' or 'both'. Determines
+#'             whether the real and/or imaginary parts of the correlation funtions
+#'             should be plotted.
+#' @param reim_same Boolean, determines whether the real and imaginary parts, if both
+#'                  are to be plotted, will be plotted in the same plot.
+#' @param ... Further parameters passed to \link{plotwitherror}.
+#' @return Invisibly returns the plotdata, see \link{plotdata.raw_cf}.
 plot.raw_cf <- function(x,
+                        ...,
                         reim = 'real', 
-                        reim_same = FALSE,
-                        ...)
+                        reim_same = FALSE)
 {
   cf <- x
   stopifnot(any(inherits(cf, c('raw_cf_data'))))
@@ -527,7 +536,6 @@ plot.raw_cf <- function(x,
   }
   return(invisible(plotdata))
 }
-
 
 overview_plot_raw_cf <- function(cf, 
                                  reim = 'real', 
@@ -661,6 +669,9 @@ int_idx_matrix.raw_cf <- function(cf){
 }
 
 
+#' @title Print summary of data contained in `raw_cf` container
+#' @param cf `raw_cf` container with data and meta-data
+#' @param ... ignored
 summary.raw_cf <- function(cf, ...) {
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -689,6 +700,9 @@ summary.raw_cf <- function(cf, ...) {
   return(invisible(out))
 }
 
+#' @title Print summary of data contained in `raw_cf` container
+#' @param cf `raw_cf` container with data and meta-data
+#' @param ... ignored
 print.raw_cf <- function(cf, ...) {
   summary(cf, ...)
 }
