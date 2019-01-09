@@ -5,7 +5,7 @@
   jackknife a set of correlation functions
 }
 \usage{
-jackknife.cf(cf, boot.l=2)
+jackknife.cf(cf, boot.l = 1)
 }
 \arguments{
   \item{cf}{

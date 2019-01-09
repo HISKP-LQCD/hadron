@@ -4,23 +4,14 @@
 \alias{plot.bootstrapfit}
 \title{Plot a bootstrap NLS fit}
 \usage{
-\method{plot}{bootstrapfit}(x, ..., xlim, ylim, rep = FALSE,
-  col.line = "black", col.band = "gray", opacity.band = 0.65,
-  lty = c(1), lwd = c(1), xlab = "x", ylab = "y", supports = 1000,
-  plot.range, error = sd)
+\method{plot}{bootstrapfit}(x, ..., col.line = "black",
+  col.band = "gray", opacity.band = 0.65, lty = c(1), lwd = c(1),
+  supports = 1000, plot.range, error = sd)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
 
-\item{...}{Additional parameters passed to the generic \code{plot} function.}
-
-\item{xlim}{x limits of the plot.}
-
-\item{ylim}{y limits of the plot.}
-
-\item{rep}{If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
-adding points with error bars to the current plot. Switches the underlying
-plotting routine from \code{plot} to \code{points}.}
+\item{...}{Additional parameters passed to the \code{plotwitherror} function.}
 
 \item{col.line}{line colour.}
 
@@ -50,3 +41,4 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
+\concept{NLS fit functions}

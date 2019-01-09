@@ -161,7 +161,8 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   return(invisible(effMass))
 }
 
-plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr=FALSE, ...) {
+plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr = FALSE, ...) {
+  effMass <- x
   stopifnot(inherits(effMass, 'coshfit'))
   if(!inherits(effMass, 'effectivemass')){
     plot.mass = FALSE
@@ -217,7 +218,8 @@ plot.coshfit <- function(effMass, col.fitline="black", plot.mass=TRUE, plot.corr
   }
 }
 
-summary.coshfit <- function(effMass, verbose=FALSE) {
+summary.coshfit <- function (object, verbose = FALSE, ...) {
+  effMass <- object
   cat("\n ** Result of", effMass$coshfit$n.cosh, "-fold cosh-fit **\n\n")
   cat("no. measurements\t=\t", length(effMass$cf$cf[,1]), "\n")
   cat("boot.R\t=\t", effMass$cf$boot.R, "\n")

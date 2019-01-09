@@ -105,11 +105,11 @@ onlinemeas <- function(data, t1, t2,
                         fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    sfit.boot <- boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
+    sfit.boot <- boot::boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                      fit.routine=fit.routine)
 
-    sfit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+    sfit.tsboot <- boot::tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
                          Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                          fit.routine=fit.routine)
   }
@@ -151,13 +151,13 @@ onlinemeas <- function(data, t1, t2,
                       fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    fit.boot <- boot(data=t(W[ii,]), statistic=fit.online.boot, R=boot.R, stype="i",
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
-                     fit.routine=fit.routine)
+    fit.boot <- boot::boot(data=t(W[ii,]), statistic=fit.online.boot, R=boot.R, stype="i",
+                           Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
+                           fit.routine=fit.routine)
 
-    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.online.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
-                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2, 
-                         fit.routine=fit.routine)
+    fit.tsboot <- boot::tsboot(tseries=t(W[ii,]), statistic=fit.online.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+                               Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2, 
+                               fit.routine=fit.routine)
   }
 
   Chi <- rep(0., times=2*T1)

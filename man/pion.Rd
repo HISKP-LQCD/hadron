@@ -226,7 +226,7 @@
   order BB SS   - total 20    \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5}\cr
   \eqn{S=I}
   
-  In this routine only PP PA AP AA 44 P4 4P A4 4A are used. See also \link{cmicor}!
+  In this routine only PP PA AP AA 44 P4 4P A4 4A are used. See also \code{cmicor}!
 
   (cases with space index "i" are summed over i=1,2,3)
   (best choice is weaker coupling at sink - ie PA rather than AP\cr
