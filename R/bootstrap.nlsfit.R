@@ -29,10 +29,10 @@ parametric.bootstrap <- function (boot.R, x, dx) {
 
 #' Parametric bootstrap with covariance
 #'
-#' @param boot.R numeric. Number of bootstrap samples to generate.
-#' @param x numeric vector. Actual values for the data.
 #' @param cov numeric matrix, square, length of `x` or missing. Covariance
 #'   between the various variables in the vector `x`.
+#'
+#' @inheritParams parametric.bootstrap
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
@@ -110,8 +110,8 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 
 #' NLS fit with parametric bootstrap and covariance
 #'
-#' @inheritParams bootstrap.nlsfit.cov
-#' @inheritParams parametric.bootstrap
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap.cov
 #'
 #' @export
 #' @family NLS fit functions
