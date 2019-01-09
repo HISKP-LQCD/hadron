@@ -367,7 +367,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #'                under time reflection. This is passed to \code{symmetrise.cf}
 #' @param symmetrise Boolean, specifies whether averaging over backward and forward
 #'                   correlators should be done after the correlator has been read in.
-#' @param Nt Integer, number of time slices to be read from the correlator files.
+#' @param nts Integer, number of time slices to be read from the correlator files.
 readnissatextcf <- function(file_basenames_to_read,
                             smear_combs_to_read,
                             Time,
@@ -381,7 +381,7 @@ readnissatextcf <- function(file_basenames_to_read,
                                   nts,
                                   combs_to_read)
 
-  total_nts <- Nt*length(smear_combs_to_read)*nrow(combs_to_read)
+  total_nts <- nts*length(smear_combs_to_read)*nrow(combs_to_read)
 
   realcols <- seq(1,2*total_nts,2)
   imagcols <- seq(2,2*total_nts,2)
@@ -393,7 +393,7 @@ readnissatextcf <- function(file_basenames_to_read,
     # in some cases it makes sense to store only a subset of the time slices of a
     # correlation function. In this case, symmetrisation is not possible unless
     # the missing time slices are reconstructed or added manually somehow.
-    if( Nt != Time ){
+    if( nts != Time ){
       stop("The time extent and the number of time slices in the correlator do not agree, cannot symmetrise!")
     }
     cf <- symmetrise.cf(cf, sym.vec)

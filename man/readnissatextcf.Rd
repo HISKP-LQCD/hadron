@@ -23,6 +23,8 @@ m1_idx \tab m2_idx \tab r1_idx \tab r2_idx \tab spin_comb \cr
 1      \tab 2      \tab 0      \tab 0      \tab "P5P5"
 }}
 
+\item{nts}{Integer, number of time slices to be read from the correlator files.}
+
 \item{sym.vec}{Integer or numeric vector. Specifies whether the correlator at
 the given position is symmetric (+1.0) or anti-symmetric (-1.0)
 under time reflection. This is passed to \code{symmetrise.cf}}
@@ -35,8 +37,6 @@ smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
 which will be added in the reading routine accordign to what was
 passed via \code{smear_combs_to_read}. An example would be
 '0001/mes_contr_2pts', not the lack of the smearing suffix.}
-
-\item{Nt}{Integer, number of time slices to be read from the correlator files.}
 }
 \description{
 reader for Nissa text format correlation functions
