@@ -6,6 +6,11 @@
 \usage{
 invalidate.samples.cf(cf)
 }
+\arguments{
+\item{cf}{\code{cf} object.}
+}
 \description{
-When a correlation function is modified, any resampling should be invalidated. We could instead also choose to properly work with the samples, but most computations are done with the original data anyway.
+When a correlation function is modified, any resampling should be
+invalidated. We could instead also choose to properly work with the samples,
+but most computations are done with the original data anyway.
 }

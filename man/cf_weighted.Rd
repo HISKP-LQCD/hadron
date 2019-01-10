@@ -4,10 +4,10 @@
 \alias{cf_weighted}
 \title{Weighted CF mixin constructor}
 \usage{
-cf_weighted(cf, weight.factor, weight.cosh, mass1, mass2)
+cf_weighted(.cf = cf(), weight.factor, weight.cosh, mass1, mass2)
 }
 \arguments{
-\item{cf}{\code{cf} object to extend.}
+\item{.cf}{\code{cf} object to extend.}
 
 \item{weight.factor}{TODO}
 
@@ -28,8 +28,9 @@ The following fields will also be made available:
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
+  \code{\link{cf_meta}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf}}
 }
+\concept{cf constructors}

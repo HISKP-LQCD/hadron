@@ -26,11 +26,12 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
   lx <- length(x)
   tmp <- ""
+  N <- 0
+  threshold <- 10^(digits-1)
+
   if(missing(dx) && lx < 2) {
     if( is.na(x) ) x <- 0.0
     ## just a number without error
-    N <- 0
-    threshold <- 10^(digits-1)
     while(round(10^N*abs(x)) < threshold) {
       N <- N+1
     }
@@ -57,27 +58,35 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
       }
     }
 
-    N <- 0
-    threshold <- 10^(digits-1)
-    while(round(10^N*err) < threshold & err > 0 ) {
-      N <- N+1
-    }
-    # if the error is large it may exceed the number of digits that one actually desires
-    # also, the error may be larger or similar in size to the value itself
-    # in these cases, we display it in the same format as the value, rounded to the
-    # desired number of digits
-    displayerr <- paste(round(10^N*err))
-    if( nchar(displayerr) > digits |
-        ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
-        ( abs(err) >= abs(10*x) ) ){
-      displayerr <- paste(format(round(err, digits=N)))
-    }
+    if(err > 0) {
+      while(round(10^N*err) < threshold) {
+	N <- N+1
+      }
+      # if the error is large it may exceed the number of digits that one actually desires
+      # also, the error may be larger or similar in size to the value itself
+      # in these cases, we display it in the same format as the value, rounded to the
+      # desired number of digits
+      displayerr <- paste(round(10^N*err))
+      if( nchar(displayerr) > digits |
+	  ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
+	  ( abs(err) >= abs(10*x) ) ){
+	displayerr <- paste(format(round(err, digits=N)))
+      }
 
-    if(human.readable){
-      tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
-                                errstr = displayerr)
-    } else {
-      tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
+      if(human.readable){
+	tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
+				  errstr = displayerr)
+      } else {
+	tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
+      }
+    }else {
+      while(round(10^N*abs(x)) < threshold) {
+	N <- N+1
+      }
+      displayerr <- paste(format(0))
+      tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
+      if(human.readable) tmp <- convert.scientific(str=tmp, errstr = displayerr)
+      else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
     }
   }
   ret <- tmp
@@ -85,4 +94,11 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
     ret <- paste("$", tmp, "$", sep="")
   }
   return(ret)
+}
+
+escape_underscore <- function(x){
+  gsub(pattern="_",
+       replacement="\\_",
+       x=x,
+       fixed=TRUE)
 }

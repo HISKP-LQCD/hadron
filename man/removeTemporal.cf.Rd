@@ -4,8 +4,8 @@
 \alias{removeTemporal.cf}
 \title{Remove temporal states}
 \usage{
-removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0), p2 = c(0, 0,
-  0), L, lat.disp = TRUE, weight.cosh = FALSE)
+removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0),
+  p2 = c(0, 0, 0), L, lat.disp = TRUE, weight.cosh = FALSE)
 }
 \arguments{
 \item{cf}{Object of type \code{cf}, two-to-two particle correlation function which shall be weighted and shifted. It must be a correlation function in the frame \eqn{p_1 + p_2}.}
@@ -22,7 +22,7 @@ In case \code{single.cf1} is missing, no weighting is performed. Instead it is a
 
 \item{lat.disp}{Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.}
 
-\item{weight.cosh}{Logical, whether to use some cosh formula which might work better or something.}
+\item{weight.cosh}{Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If \code{weight.cosh} is set, they are removed simulalteously.}
 }
 \description{
 Performs weighting and shifting in the rest and moving frames.

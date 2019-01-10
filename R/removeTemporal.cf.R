@@ -11,7 +11,7 @@
 #' @param p1,p2 Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.
 #' @param L Integer, spatial extent of the lattice.
 #' @param lat.disp Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.
-#' @param weight.cosh Logical, whether to use some cosh formula which might work better or something.
+#' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If `weight.cosh` is set, they are removed simulalteously.
 #'
 #' @export
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
@@ -91,46 +91,54 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
       mass2$t <- sqrt( mass2$t^2 + pshift )
     }
   }
-  c <- 0.
-  if(weight.cosh) c <- 1.
+  if(weight.cosh) {
+    cosh.factor  <- 1.
+  }
+  else {
+    cosh.factor <- 0.
+  }
   ## multiply with the exponential correction factor
-  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + c*exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
+  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + c*exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
+      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + c*exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) +c*exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
   }
 
   # We perform a clean copy of the data now to make sure that all invariants
-  # hold and that no new fields have been added.
+  # hold and that no new fields have been added that we are not aware of.
   ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
                  symmetrised = cf$symmetrised)
   ret <- cf_orig(ret,
                  cf = cf$cf)
-  ret <- cf_boot(cf,
+  ret <- cf_boot(ret,
                  boot.R = cf$boot.R,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
-                 cf.tsboot = cf$cf.tsboot)
-  ret <- cf_weighted(cf,
-                     weight.factor = 1.0,
+                 cf.tsboot = cf$cf.tsboot,
+                 resampling_method = cf$resampling_method)
+  ret <- cf_shifted(ret,
+                    deltat = cf$deltat,
+                    forwardshift = cf$forwardshift)
+  ret <- cf_weighted(ret,
+                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
                      weight.cosh = weight.cosh,
                      mass1 = mass1,
                      mass2 = mass2)
@@ -201,11 +209,12 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                    boot.l = cf$boot.l,
                    seed = cf$seed,
                    sim = cf$sim,
-                   cf.tsboot = cf$cf.tsboot)
+                   cf.tsboot = cf$cf.tsboot,
+                   resampling_method = cf$resampling_method)
   }
   ret <- cf_shifted(ret,
                     deltat = deltat,
                     forwardshift = forwardshift)
 
-  return(invisible(cf))
+  return(invisible(ret))
 }

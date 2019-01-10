@@ -56,7 +56,7 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 }
 
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
-                         colClasses, obs=NULL, obs.index) {
+                         colClasses, obs=NULL, obs.index, avg=1, stride=1) {
   if(missing(files)) {
     stop("readcmifiles: filelist missing, aborting...\n")
   }
@@ -70,11 +70,13 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   }
   fLength <- length(tmpdata$V1)
   nFiles <- length(files)
+  # when stride is > 1, we only read a subset of files
+  nFilesToLoad <- as.integer(nFiles/stride)
   nCols <- length(tmpdata)
   ## we generate the full size data.frame first
   tmpdata[,] <- NA
   ldata <- tmpdata
-  ldata[((nFiles-1)*fLength+1):(nFiles*fLength),] <- tmpdata
+  ldata[((nFilesToLoad-1)*fLength+1):(nFilesToLoad*fLength),] <- tmpdata
   # create a progress bar
   
   pb <- NULL
@@ -86,7 +88,8 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
     if(!verbose) {
       setTxtProgressBar(pb, i)
     }
-    if( !(files[i] %in% excludelist) && file.exists(files[i])) {
+    if( !(files[i] %in% excludelist) && file.exists(files[i]) && (i-1) %% stride == 0) {
+      
       if(verbose) {
         cat("Reading from file", files[i], "\n")
       }
@@ -106,27 +109,50 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
         stop(paste("readcmifiles: file", files[i], "does not have the same number of columns as the other files. Aborting...\n"))
       }
       
-      ldata[((i-1)*fLength+1):(i*fLength),] <- tmpdata
+      dat_idx_start <- ((i-1)/stride*fLength) + 1
+      dat_idx_stop <- dat_idx_start+fLength-1
+      ldata[dat_idx_start:dat_idx_stop,] <- tmpdata
       rm(tmpdata)
     }
     else if(!file.exists(files[i])) {
-      warning(paste("readcmifiles: dropped file", files[i], "because its missing\n"))
+      warning(paste("readcmifiles: dropped file", files[i], "because it's missing\n"))
     }
   }
   if(!verbose) {
     close(pb)
   }
+
+  # if we want to average over successive samples, we do this here
+  if(avg > 1){
+    for(i in seq(1,nFilesToLoad,by=avg)){
+      out_idx_start <- (i-1)*fLength + 1
+      out_idx_stop <- i*fLength
+      for(j in seq(i+1,i+avg-1)){
+        print(j)
+        avg_idx_start <- (j-1)*fLength + 1
+        avg_idx_stop <- j*fLength
+        # add the next sample to the sample that we use as an output base
+        ldata[out_idx_start:out_idx_stop,] <- ldata[out_idx_start:out_idx_stop,] +
+                                              ldata[avg_idx_start:avg_idx_stop,]
+        # invalidate the sample that we just added
+        ldata[avg_idx_start:avg_idx_stop,] <- NA 
+      }
+      # take the average over the samples
+      ldata[out_idx_start:out_idx_stop,] <- ldata[out_idx_start:out_idx_stop,]/avg
+    }
+  }
   ## remove NAs from missing files
   ldata <- na.omit(ldata)
+
   return(invisible(ldata))
 }
 
 readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","numeric","numeric"),
-                             obs=NULL, obs.index=1) {
+                             obs=NULL, obs.index=1, avg=1, stride=1) {
 
   data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose,
-                       colClasses=colClasses, obs=obs, obs.index=obs.index)
+                       colClasses=colClasses, obs=obs, obs.index=obs.index, avg=avg, stride=stride)
   attr(data, "class") <- c("cmicor", class(data))  
   return(invisible(data))
 }
@@ -136,7 +162,7 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                                "numeric","numeric","numeric","numeric"),
                              obs=NULL, obs.index=2) {
   data <- readcmifiles(files, excludelist=excludelist, skip=skip, verbose=verbose,
-                       colClasses=colClasses, obs=obs, obs.index=obs.index)
+                       colClasses=colClasses, obs=obs, obs.index=obs.index, avg=1, stride=1)
   attr(data, "class") <- c("cmiloop", class(data))
   return(invisible(data))
 }
@@ -155,7 +181,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
                 icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3))
   cf <- cf_smeared(cf,
                    scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
-                   sicf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
+                   iscf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
@@ -242,18 +268,18 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
 }
 
 readhlcor <- function(filename) {
-  return(invisible(read.table(filename, header=F,
+  return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
 }
 
 readoutputdata <- function(filename) {
-  data <- read.table(filename, header=F)
+  data <- read.table(filename, header=FALSE)
   attr(data, "class") <- c("outputdata", "data.frame")  
   return(invisible(data))
 }
 
 readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
-                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE) {
+                       stride=1, avg=1, Nmin=4, autotruncate=TRUE) {
   stopifnot(!missing(file))
   stopifnot(T >= 1)
 
@@ -268,24 +294,20 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
   }
   
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(T/2+1))
-  sign <- +1
-  if(!sym) sign <- -1
 
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
-  if( (sparsity > 1 | avg > 1) & (ncol(tmp) %% (sparsity*avg) != 0) ){
+  if( (stride > 1 | avg > 1) & (ncol(tmp) %% (stride*avg) != 0) ){
     if(autotruncate){
-      cat(sprintf("sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,ncol(tmp)))
+      cat(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
       cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
       cat("readtextcf: Reducing the number of total measurements to fit!\n")
-      nmeas <- as.integer( (sparsity*avg)*floor( ncol(tmp)/(sparsity*avg) ))
-      if( nmeas/(sparsity*avg) >= Nmin ){
+      nmeas <- as.integer( (stride*avg)*floor( ncol(tmp)/(stride*avg) ))
+      if( nmeas/(stride*avg) >= Nmin ){
         tmp <- tmp[,1:nmeas]
       } else {
         cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
-        sparsity <- 1
+        stride <- 1
         avg <- 1
       }
     } else {
@@ -294,8 +316,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   }
 
   ## sparsify data
-  if(sparsity > 1){
-    sp.idx <- seq(from=1,to=ncol(tmp),by=sparsity)
+  if(stride > 1){
+    sp.idx <- seq(from=1,to=ncol(tmp),by=stride)
     tmp <- tmp[,sp.idx]
   } 
   # average over 'avg' measurements sequentially
@@ -309,17 +331,17 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     }
   }
   
-  ## average +-t
-  if(symmetrise) {
-    tmp[i1,] <- 0.5*(tmp[i1,] + sign * tmp[i2,])
-  }else{
-    ii <- c(1:T)
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1)
+  ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
+
+  if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
+
+    ret <- symmetrise.cf(ret, sign)
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(tmp[ii, ])), icf = t(Im(tmp[ii, ])))
-
-  return (invisible(cf))
+  return (invisible(ret))
 }
 
 readbinarycf <- function(files, 
@@ -352,18 +374,13 @@ readbinarycf <- function(files,
   }
   if(hdf5format) {
     if(missing(hdf5name)) stop("hdf5name must be given, aborting...\n")
-    h5avail <- require(rhdf5)
+    h5avail <- requireNamespace('rhdf5')
     if(!h5avail) stop("rhdf5 package not installed, aborting...\n")
     obs <- 1
     Nop <- 1
     if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
   ii <- c(1:(Nop*T))+obs*T
-  sign <- +1
-  if(!sym) sign <- -1
 
   Cf <- complex()
   for(f in files) {
@@ -375,11 +392,11 @@ readbinarycf <- function(files,
         tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
       }
       else {
-        LS <- h5ls(ifs)
+        LS <- rhdf5::h5ls(ifs)
         if(as.integer(LS[LS$name == hdf5name,]$dim) != T) {
           stop(paste(hdf5name, "in file", ifs, "has not the correct length, aborting...\n"))
         }
-        tmp <- h5read(file=ifs, name=hdf5name)
+        tmp <- rhdf5::h5read(file=ifs, name=hdf5name)
         tmp <- tmp[,hdf5index[1]] + 1i*tmp[,hdf5index[2]]
       }
       ## we average the replica
@@ -391,20 +408,14 @@ readbinarycf <- function(files,
           tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
         }
       }
-      
-      ## average +-t
-      if(symmetrise) {
-        tmp[i1] <- 0.5*(tmp[i1] + sign * tmp[i2])
-        Cf <- cbind(Cf, tmp[c(1:(T/2+1))])
-      }else{
-        Cf <- cbind(Cf, tmp[c(1:T)])
-      }
 
+      Cf <- cbind(Cf, tmp[1:T])
+      
       if(!hdf5format) {
         close(to.read)
       }
       else {
-        if(exists("H5close")) H5close()
+        if(exists("rhdf5::H5close")) rhdf5::H5close()
       }
     }
     else if(!file.exists(ifs)) {
@@ -412,10 +423,16 @@ readbinarycf <- function(files,
     }
   }
 
-  cf <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-  cf <- cf_orig(cf, cf = t(Re(Cf)), icf = t(Cf))
+  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = FALSE)
+  ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Im(Cf)))
 
-  return (invisible(cf))
+  if (symmetrise) {
+    sign <- +1
+    if (!sym) sign <- -1
+    ret <- symmetrise.cf(ret, sign)
+  }
+
+  return (invisible(ret))
 }
 
 
@@ -427,6 +444,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   if(missing(files)) {
     stop("files must be given! Aborting...\n")
   }
+  stopifnot(length(files) > 0)
+
   if(T < 1) {
     stop("T must be larger than 0 and integer, aborting...\n")
   }
@@ -438,11 +457,6 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   for( i in 1:nosamples ){
     Cf[[i]] <- ftype
   }
-  ## indices for averaging +-t
-  i1 <- c(2:(T/2))
-  i2 <- c(T:(T/2+2))
-  sign <- +1
-  if(!sym) sign <- -1
 
   for(f in files){
     ifs <- paste(path, f, sep="")
@@ -458,9 +472,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
         } else {
           tmp2 <- apply(X=tmp[,1:i],MARGIN=1,FUN=mean)
         }
-        # average over +- t
-        tmp2[i1] <- 0.5 * ( tmp2[i1] + sign * tmp2[i2] )
-        Cf[[i]] <- cbind(Cf[[i]],tmp2[1:(T/2+1)])
+        Cf[[i]] <- cbind(Cf[[i]], tmp2)
       }
     } else if(!file.exists(ifs)) {
       cat("file ", ifs, "does not exist...\n")
@@ -469,8 +481,12 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 
   ret <- list()
   for (i in 1:nosamples) {
-    ret[[i]] <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = symmetrise)
-    ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Cf[[i]]))
+    ret[[i]] <- cf_meta(nrObs = 1, Time = T, nrStypes = 1, symmetrised = FALSE)
+    ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Im(Cf[[i]])))
+
+    sign <- +1
+    if (!sym) sign <- -1
+    ret[[i]] <- symmetrise.cf(ret[[i]], sign)
   }
 
   return (invisible(ret))
@@ -544,11 +560,11 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 
   cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
   cf <- cf_orig(cf,
-                cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
+                cf = array(ldata[, ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                icf = array(ldata[, ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
   cf <- cf_smeared(cf,
-                   scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                   sicf= array(ldata[,ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   scf = array(ldata[, ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   iscf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 

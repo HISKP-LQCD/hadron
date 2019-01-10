@@ -6,24 +6,13 @@
   object of class \code{cf} (a correlation function)
 }
 \usage{
-bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.factor=1)
+bootstrap.effectivemass(cf, type="solve")
 }
 \arguments{
   \item{cf}{
     a correlation function as an object of type \code{cf}, preferably
     after a call to \code{\link{bootstrap.cf}}. If the latter has not
     been called yet, it will be called in this function.
-  }
-  \item{boot.R}{
-    only used if no preceeding call to \code{\link{bootstrap.cf}} has
-    happened and it counts the number of bootstrap samples.
-  }
-  \item{boot.l}{
-    only used if no preceeding call to \code{\link{bootstrap.cf}} has
-    happened and it counts the bootstrap block length.
-  }
-  \item{seed}{
-    the seed used in the bootstrap sample generation (for reproducability).
   }
   \item{type}{
     The function to be used to compute the effective mass
@@ -37,9 +26,6 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
     having different energies. In the latter case only the leading
     polution is removed by \code{removeTemporal.cf} and taken into
     account here.
-  }
-  \item{weight.factor}{
-    relative weight for type "weighted" only, see details
   }
 }
 \value{
@@ -107,7 +93,7 @@ bootstrap.effectivemass(cf, boot.R, boot.l, seed=12345, type="solve", weight.fac
 \examples{
 data(samplecf)
 samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
-effmass <- bootstrap.effectivemass(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+effmass <- bootstrap.effectivemass(cf=samplecf)
 summary(effmass)
 plot(effmass, ylim=c(0.14,0.15))
 }

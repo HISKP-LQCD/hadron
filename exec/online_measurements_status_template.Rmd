@@ -1,0 +1,117 @@
+---
+title: "cB211.25.48 simulation status"
+author: Bartosz Kostrzewa
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+  - \usepackage{braket}
+  - \usepackage{pdfpages}
+output:
+  pdf_document:
+    citation_package: biblatex 
+    latex_engine: lualatex
+    highlight: tango
+    keep_tex: no
+    toc: true
+    toc_depth: 2
+bibliography: skeleton.bib
+link-citations: yes
+mainfont: XCharter
+tables: true
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library("hadron")
+library("knitr")
+library("dplyr")
+library("pander")
+library("kableExtra")
+knitr::opts_chunk$set(fig.path="figures/",
+                      echo=FALSE,
+                      warning=FALSE,
+                      message=FALSE,
+                      dev="tikz",
+                      external=TRUE,
+                      fig.width=4.0,
+                      fig.height=3.6)
+styling_latex_hold_position <- function(x) {
+  sub("\\\\begin\\{table\\}", "\\\\begin\\{table\\}[!h]", x)
+}
+```
+
+# Summary Tables
+
+## cB211a.25.48
+
+```{r}
+load("omeas.summary.RData")
+load("gradflow.summary.RData")
+styling_latex_hold_position(
+  kable(list(t(resultsum[["cB211a.25.48"]]$params),
+             t(resultsum[["cB211a.25.48"]]$obs)),
+        format = "latex",
+        booktabs = TRUE,
+        caption = "cB211a.25.48 obervables summary")
+)
+```
+
+## cB211b.25.48
+
+```{r}
+styling_latex_hold_position(
+  kable(list(t(resultsum[["cB211b.25.48"]]$params),
+             t(resultsum[["cB211b.25.48"]]$obs)),
+        booktabs = TRUE,
+        format = "latex",
+        caption = "cB211b.25.48 observables summary")
+)
+```
+
+\par
+\clearpage
+
+# Gradient Flow Summary Tables
+
+```{r}
+styling_latex_hold_position(
+  kable(gradflow_resultsum[["cB211a.25.48"]],
+        format = "latex",
+        booktabs = TRUE,
+        caption = "cB211a.25.48 gradient flow observables summary")
+)
+styling_latex_hold_position(
+  kable(gradflow_resultsum[["cB211b.25.48"]],
+        format = "latex",
+        booktabs = TRUE,
+        caption = "cB211b.25.48 gradient flow observables summary")
+)
+```
+
+# Plots
+
+```{r results="asis"}
+library(pdftools)
+pdfs <- c("analysis_cB211a.25.48.pdf",
+          "cB211a.25.48.gradflow.pdf",
+          "analysis_cB211b.25.48.pdf",
+          "cB211b.25.48.gradflow.pdf")
+for( f in pdfs ){
+  cat(sprintf("\\subsection{%s}\n",escape_underscore(f)))
+  npages <- pdf_info(f)$pages
+  for( p in 1:npages ){
+    cat(
+        sprintf("\\includegraphics[width=0.45\\textwidth, page=%d]{{{%s}}}\n",
+                p,
+                tools::file_path_sans_ext(f)
+                )
+        )
+    # using a paragraph instead of a linebreak helps to avoid placing plots
+    # such that they flow out of the page
+    if( p%%2 == 0 ){
+      cat("\\par")
+    }
+  }
+  #cat("\\end{figure}\n")
+}
+```
+
+

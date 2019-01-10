@@ -4,9 +4,11 @@
 \alias{cf_shifted}
 \title{Shifted CF mixin constructor}
 \usage{
-cf_shifted(cf, deltat, forwardshift)
+cf_shifted(.cf = cf(), deltat, forwardshift)
 }
 \arguments{
+\item{.cf}{\code{cf} object to extend.}
+
 \item{deltat}{TODO}
 
 \item{forwardshift}{Logical, TODO}
@@ -22,8 +24,9 @@ The following fields will also be made available:
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
+  \code{\link{cf_meta}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_smeared}}, \code{\link{cf_subtracted}},
   \code{\link{cf_weighted}}, \code{\link{cf}}
 }
+\concept{cf constructors}

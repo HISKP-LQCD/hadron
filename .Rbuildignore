@@ -1,4 +1,12 @@
-## Ignore travis config file
-^\.travis\.yml$
+\.swp$
 ^.*\.Rproj$
+^\.\.Rcheck$
+^\.git$
+^\.git/
+^\.gitignore$
+^\.RData$
+^\.Rhistory$
 ^\.Rproj\.user$
+^\.travis\.yml$
+^\.vimrc$
+^\.travis\.yml$

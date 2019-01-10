@@ -94,11 +94,11 @@ smearedpion <- function(cmicor, mu1=0.0035, mu2=0.0035, kappa=0.161240, t1, t2, 
 
   ## with UWERR method
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmasses.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
+    fit.uwerrm <- uwerr(f=fitmasses.smeared, data=t(W[ii,]), S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine=fit.routine)
 
-    fit.uwerrf <- uwerr(f=fitf.smeared, data=W[ii,], S=S, pl=debug, nrep=nrep,
+    fit.uwerrf <- uwerr(f=fitf.smeared, data=t(W[ii,]), S=S, pl=debug, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=pionfit$par,
                         fit.routine=fit.routine)
   }
@@ -231,27 +231,27 @@ summary.smearedfit <- function(fit) {
   if(!is.null(fit$uwerrresultmps)) {
     cat("\n--- Autocorrelation analysis for m_ps ---\n")
     cat("\nS        = ", fit$uwerrresultmps$S, "\n")
-    cat("mps      = ", fit$uwerrresultmps$value, "\n")
-    cat("dmps     = ", fit$uwerrresultmps$dvalue, "\n")
-    cat("ddmps    = ", fit$uwerrresultmps$ddvalue, "\n")
-    cat("tauint   = ", fit$uwerrresultmps$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultmps$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultmps$Wopt, "\n")
+    cat("mps      = ", fit$uwerrresultmps$res$value[1], "\n")
+    cat("dmps     = ", fit$uwerrresultmps$res$dvalue[1], "\n")
+    cat("ddmps    = ", fit$uwerrresultmps$res$ddvalue[1], "\n")
+    cat("tauint   = ", fit$uwerrresultmps$res$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultmps$res$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultmps$Wopt[[1]], "\n")
     if(fit$uwerrresultmps$R>1) {
-      cat("Qval     =", fit$uwerrresultmps$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultmps$res$Qval[1], "\n")
     }
   }
   if(!is.null(fit$uwerrresultfps)) {
     cat("\n--- Autocorrelation analysis for f_ps ---\n")    
     cat("\nS        = ", fit$uwerrresultfps$S, "\n")
-    cat("fps      = ", fit$uwerrresultfps$value*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
-    cat("dfps     = ", fit$uwerrresultfps$dvalue*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
-    cat("ddfps    = ", fit$uwerrresultfps$ddvalue*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
-    cat("tauint   = ", fit$uwerrresultfps$tauint, "\n")
-    cat("dtauint  = ", fit$uwerrresultfps$dtauint, "\n")
-    cat("Wopt     = ", fit$uwerrresultfps$Wopt, "\n")
+    cat("fps      = ", fit$uwerrresultfps$res$value[1]*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
+    cat("dfps     = ", fit$uwerrresultfps$res$dvalue[1]*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
+    cat("ddfps    = ", fit$uwerrresultfps$res$ddvalue[1]*2*kappa*2*(mu1+mu2)/2./sqrt(2), "\n")
+    cat("tauint   = ", fit$uwerrresultfps$res$tauint[1], "\n")
+    cat("dtauint  = ", fit$uwerrresultfps$res$dtauint[1], "\n")
+    cat("Wopt     = ", fit$uwerrresultfps$Wopt[[1]], "\n")
     if(fit$uwerrresultfps$R>1) {
-      cat("Qval     =", fit$uwerrresultfps$Qval, "\n")
+      cat("Qval     =", fit$uwerrresultfps$res$Qval[1], "\n")
     }
   }
 

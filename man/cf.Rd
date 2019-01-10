@@ -4,23 +4,14 @@
 \alias{cf}
 \title{Correlation function container}
 \usage{
-cf(nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE)
-}
-\arguments{
-\item{nrObs}{Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.}
-
-\item{Time}{Integer, full time extent.}
-
-\item{nrStypes}{Integer, number of smearing types.}
-
-\item{symmetrised}{Logical, indicating whether the correlation function has been symmetrized.}
+cf()
 }
 \description{
 This function \code{cf()} creates containers for correlation functions
 of class \code{cf}. This class is particularly designed to deal with
 correlation functions emerging in statistical and quantum field theory
 simulations. Arithmetic operations are defined for this class in
-several ways, as well as concatenation and \link{is.cf} and \link{as.cf}.
+several ways, as well as concatenation and \link{is.cf}.
 }
 \details{
 And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
@@ -33,8 +24,9 @@ And last but not least, these are the fields that are used somewhere in the libr
 }
 \seealso{
 Other cf constructors: \code{\link{cf_boot}},
-  \code{\link{cf_jackknife}}, \code{\link{cf_orig}},
+  \code{\link{cf_meta}}, \code{\link{cf_orig}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}}
 }
+\concept{cf constructors}

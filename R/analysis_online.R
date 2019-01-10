@@ -18,10 +18,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
-                            stat_skip=0,
+                            stat_skip=0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
                             omeas.start=0, omeas.stepsize=1, 
                             evals.start=0, evals.stepsize=1,
-                            boot.R=1500, boot.l=2)
+                            boot.R=1500, boot.l=2,
+                            outname_suffix="", verbose=FALSE)
 {
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
@@ -79,6 +80,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   }
   
   filelabel <- rundir
+  if(nchar(outname_suffix)>0){
+    filelabel <- sprintf("%s_%s", filelabel, outname_suffix)
+  }
       
   titletext <- NULL
   if(title) {
@@ -98,10 +102,17 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6)
     # when the online measurements start later than traj 0 and we want to skip 'skip'
     # trajectories, the following should correspond to the correact indexing
-    omeas.idx   <- c((1+as.integer(ceiling((skip-omeas.start)/omeas.stepsize))):length(omeas.files))
+    omeas.idx   <- c((1+as.integer(
+                        (omeas.samples*ceiling((skip-omeas.start)/omeas.stepsize)))):length(omeas.files))
     omeas.files <- omeas.files[omeas.idx]
     omeas.cnums <- omeas.cnums[omeas.idx]
-    pioncor <- readcmidatafiles( files=omeas.files, skip=0 )
+    pioncor <- readcmidatafiles( files=omeas.files, skip=0, 
+                                 avg=omeas.avg, stride=omeas.stride, verbose=verbose )
+
+    # when dealing with multi-sample online measurements, we need to thin out
+    # the configuration numbers extracted above by stepping through them
+    # with a stride of omeas.samples
+    omeas.cnums <- omeas.cnums[seq(1, length(omeas.cnums), omeas.samples)]
     # add unique trajectory identifiers to the correlators
     pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(T/2+1) ) )
 
@@ -110,17 +121,25 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     if(!any(class(pioncor)=='try-error')){
       # the correlation functions have been read externally, taking into account the measurement frequency
       # and possibly missing files. Therefore, skip=0! 
-      onlineout <- onlinemeas(pioncor,t1=t1,t2=t2,kappa=kappa,mu=mul,skip=0,method=method,pl=pl,fit.routine=fit.routine,oldnorm=oldnorm,S=S,
-                              boot.R=boot.R,boot.l=boot.l)
+      onlineout <- onlinemeas(pioncor,
+                              t1=t1,t2=t2,
+                              kappa=kappa,
+                              mu=mul,
+                              skip=0,
+                              method=method,
+                              pl=pl,
+                              fit.routine=fit.routine,
+                              oldnorm=oldnorm,
+                              S=S,
+                              boot.R=boot.R,
+                              boot.l=boot.l)
 
       if(debug){
-        print(onlineout)
+        return(onlineout)
       }
 
       if(trajlabel){
-        filelabel <- sprintf("%s_traj%06d-%06d",rundir,min(omeas.cnums),max(omeas.cnums))
-      } else {
-        filelabel <- rundir
+        filelabel <- sprintf("%s_traj%06d-%06d",filelabel,min(omeas.cnums),max(omeas.cnums))
       }
       cat("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
       save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
@@ -198,24 +217,25 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       }
       rect(xleft=t1,
            xright=t2,
-           ytop=onlineout$uwerrresultmps$value+onlineout$uwerrresultmps$dvalue,
-           ybottom=onlineout$uwerrresultmps$value-onlineout$uwerrresultmps$dvalue,
-           border=FALSE,col=errorband_color)
-      abline(h=onlineout$uwerrresultmps$value,col="black")
+           ytop=onlineout$uwerrresultmps$value[1]+onlineout$uwerrresultmps$dvalue[1],
+           ybottom=onlineout$uwerrresultmps$value[1]-onlineout$uwerrresultmps$dvalue[1],
+           border=FALSE,
+           col=errorband_color)
+      abline(h=onlineout$uwerrresultmps$value[1],col="black")
       tikz.finalize(tikzfiles)
 
       result$obs$mpi <- t(data.frame(val=abs(onlineout$fitresultpp$par[2]),
-                                    dval=onlineout$uwerrresultmps$dvalue,
-                                    tauint=onlineout$uwerrresultmps$tauint*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultmps$dtauint*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultmps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
+                                    dval=onlineout$uwerrresultmps$dvalue[1],
+                                    tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize,
+                                    dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize,
+                                    Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/
                                          (sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
-                                    dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue,
-                                    tauint=onlineout$uwerrresultfps$tauint*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultfps$dtauint*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultfps$Wopt*omeas.stepsize, stringsAsFactors=FALSE) )
+                                    dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue[1],
+                                    tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize,
+                                    dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize,
+                                    Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       if(method=="boot" | method=="all"){
         mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/
@@ -253,9 +273,22 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   tidx <- NULL
   if( plaquette || dH || trajtime || acc ) {
     # read output.data
-    # determine maximum number of columns in output.data (when the mass preconditioning is changed,
+    
+    # skip 'skip' lines. Hopefully the trajectory counter doesn't start at something much larger than 0
+    # because otherwise we'll probably miss trajectories in the filtering below
+    outdat <- read.table(outfile, skip=skip, fill=TRUE)
+    no_rows <- nrow(outdat)
+
+    # count the number of columns in the penultimate line of output.data
+    # in the first line of output.data which we want to consider 
+    # (when the mass preconditioning is changed,
     # the number of columns may change so we need to be able to deal with that)
-    no_columns <- max(count.fields(outfile))
+    no_columns <- max(count.fields(outfile,
+                                   skip=skip+no_rows-1))
+    
+    # restrict any outliers in outdat. Inconsistent lines will almost certainly
+    # be filtered out below 
+    outdat <- outdat[,1:no_columns]
 
     # if we have a rectange in the gauge action, the number of columns is different
     # in output.data
@@ -275,8 +308,10 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       col.names <- c("traj","P","dH","expdH",paste("V",5:(no_columns-accshift),sep=""),tailvec)
     }
 
-    outdat <- read.table(outfile, fill=TRUE, col.names=col.names)
+    colnames(outdat) <- col.names
 
+    # restrict to the lines which are definitely the trajectories we want to 
+    # analyse
     tidx <- which(outdat$traj > skip)
     if(debug) print(outdat)
   }

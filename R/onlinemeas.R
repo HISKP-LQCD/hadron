@@ -100,16 +100,16 @@ onlinemeas <- function(data, t1, t2,
   sfit.boot <- NULL
   sfit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
-    sfit.uwerrm <- uwerr(f=fitmass, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    sfit.uwerrm <- uwerr(f=fitmass, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                         fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    sfit.boot <- boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
+    sfit.boot <- boot::boot(data=t(W[ii,]), statistic=getfit.boot, R=boot.R, stype="i",
                      Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                      fit.routine=fit.routine)
 
-    sfit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+    sfit.tsboot <- boot::tsboot(tseries=t(W[ii,]), statistic=getfit.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
                          Time=Time, t1=t1, t2=t2, Err=E[ii], par=par, sign=sign,
                          fit.routine=fit.routine)
   }
@@ -140,24 +140,24 @@ onlinemeas <- function(data, t1, t2,
   fit.boot <- NULL
   fit.tsboot <- NULL
   if(method == "uwerr" || method == "all") {
-    fit.uwerrm <- uwerr(f=fitmass.online, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrm <- uwerr(f=fitmass.online, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                       Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
                       fit.routine=fit.routine)
-    fit.uwerrpcac <- uwerr(f=fitmpcac.online, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrpcac <- uwerr(f=fitmpcac.online, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                            Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
                            fit.routine=fit.routine)
-    fit.uwerrfpi <- uwerr(f=fitf.online, data=W[ii,], S=S, pl=pl, nrep=nrep,
+    fit.uwerrfpi <- uwerr(f=fitf.online, data=t(W[ii,]), S=S, pl=pl, nrep=nrep,
                       Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
                       fit.routine=fit.routine)
   }
   if(method == "boot" || method == "all") {
-    fit.boot <- boot(data=t(W[ii,]), statistic=fit.online.boot, R=boot.R, stype="i",
-                     Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
-                     fit.routine=fit.routine)
+    fit.boot <- boot::boot(data=t(W[ii,]), statistic=fit.online.boot, R=boot.R, stype="i",
+                           Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2,
+                           fit.routine=fit.routine)
 
-    fit.tsboot <- tsboot(tseries=t(W[ii,]), statistic=fit.online.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
-                         Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2, 
-                         fit.routine=fit.routine)
+    fit.tsboot <- boot::tsboot(tseries=t(W[ii,]), statistic=fit.online.boot, R=boot.R, l=boot.l, sim=tsboot.sim,
+                               Time=Time, t1=t1, t2=t2, Err=E[ii], par=par2, 
+                               fit.routine=fit.routine)
   }
 
   Chi <- rep(0., times=2*T1)
@@ -173,7 +173,7 @@ onlinemeas <- function(data, t1, t2,
                         tauint = array(0.,dim=c((t2-t1+1))), dtauint = array(0.,dim=c((t2-t1+1))))
   i <- 1
   for(t in t1p1:t2p1) {
-    mass <- uwerrderived(pcacsym.online, data=W, S=S, pl=FALSE, t=t, T1=T1)
+    mass <- uwerrderived(pcacsym.online, data=t(W), S=S, pl=FALSE, t=t, T1=T1)
     dpaopp$t[i] <- t-1
     dpaopp$mass[i] <- mass$value[1]
     dpaopp$dmass[i] <- mass$dvalue[1]
@@ -195,7 +195,9 @@ onlinemeas <- function(data, t1, t2,
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
-              uwerrresultmps=fit.uwerrm, uwerrresultmpcac=fit.uwerrpcac, uwerrresultfps=fit.uwerrfpi, 
+              uwerrresultmps=fit.uwerrm, 
+              uwerrresultmpcac=fit.uwerrpcac, 
+              uwerrresultfps=fit.uwerrfpi, 
               boot=fit.boot, tsboot=fit.tsboot, method=method, skip=skip,
               effmass=mass.eff, fit.routine=fit.routine, dpaopp=dpaopp, MChist.dpaopp=MChist.dpaopp,
               iobs=iobs, mu=mu, kappa=kappa,
