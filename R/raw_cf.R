@@ -614,7 +614,7 @@ overview_plot_raw_cf <- function(cf,
       args$ylab <- ylabs[[onames[oidx]]]
       args$main <- title
       args$pch <- pch
-      if( (onames[lidx] == "real" | onames[lidx] == "imag") & value_logplot ){
+      if( (onames[oidx] == "real" | onames[oidx] == "imag") & value_logplot ){
         args$log <- 'y'
       }
       if( reim_same ){
