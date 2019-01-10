@@ -76,9 +76,15 @@ raw_cf_data <- function (cf, data) {
 #' @title Gamma method analysis on all time-slices in a 'raw_cf' object
 #'
 #' @param cf Correlation function container of class 'raw_cf'
-#' @return The return value is a list with elements \code{value}, \code{dvalue}
-#'         \code{ddvalue}, \code{tauint}, \code{dtauint}. Each of these
-#'         is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
+#' @return The return value is a list with elements
+#'         \describe{
+#'           \item{\code{value}}{central value}
+#'           \item{\code{dvalue}}{statistical error}
+#'           \item{\code{ddvalue}}{error of the statistical error}
+#'           \item{\code{tauint}}{auto-correlation time estimate}
+#'           \item{\code{dtauint}}{error of auto-correlation time estimate}
+#'         }
+#'         Each of these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
 #'         hance lacks the first dimension index compared for \code{cf$data}.
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))

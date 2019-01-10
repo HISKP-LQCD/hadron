@@ -10,9 +10,15 @@ uwerr.raw_cf(cf)
 \item{cf}{Correlation function container of class 'raw_cf'}
 }
 \value{
-The return value is a list with elements \code{value}, \code{dvalue}
-\code{ddvalue}, \code{tauint}, \code{dtauint}. Each of these
-is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
+The return value is a list with elements
+\describe{
+\item{\code{value}}{central value}
+\item{\code{dvalue}}{statistical error}
+\item{\code{ddvalue}}{error of the statistical error}
+\item{\code{tauint}}{auto-correlation time estimate}
+\item{\code{dtauint}}{error of auto-correlation time estimate}
+}
+Each of these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
 hance lacks the first dimension index compared for \code{cf$data}.
 }
 \description{
