@@ -29,10 +29,10 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   N <- 0
   threshold <- 10^(digits-1)
 
-  if (is.na(x[1])) {
+  if (!is.finite(x[1])) {
     base <- 0
   } else {
-    base <- round(log10(x[1]))
+    base <- round(log10(abs(x[1])))
   }
   split_base <- abs(base) > 19
   if (split_base) {
