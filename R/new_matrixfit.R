@@ -456,5 +456,16 @@ new_matrixfit <- function(cf,
   stopifnot(all(old_dim == dim(res$t)))
   
   return (res)
-  
+}
+
+#' @export
+make_parlist <- function (corr_matrix_size) {
+  ## Placeholder, this is not correct.
+  return (array(NA, dim = c(2, corr_matrix_size)))
+}
+
+#' @export
+make_parind <- function (parlist, length_time) {
+  ## Placeholder, this is not correct.
+  return (array(NA, dim = c(ncol(parlist) * length_time, 2)))
 }
