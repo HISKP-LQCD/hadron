@@ -13,5 +13,8 @@ fi
 cd hooks
 
 for hook in ../../hooks/*; do
-  ln -s "$hook" ./
+  basename="${hook##*/}"
+  if ! [[ -f "$basename" ]]; then
+    ln -vs "$hook" ./
+  fi
 done
