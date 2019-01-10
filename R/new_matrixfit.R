@@ -317,6 +317,7 @@ new_matrixfit <- function(cf,
   if (missing(parlist)) {
     if (mSize == 1) {
       parlist <- array(c(1, 1), dim = c(2, 1))
+
       warning("missing parlist, using default for single correlator!")
     }
     else if (mSize == 4) {
@@ -404,7 +405,7 @@ new_matrixfit <- function(cf,
   ov.sign.vec <- rep(1, times = len_t)
   for (i in 1:mSize) {
     parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
-
+    
     if (sym.vec[i] == "sinh")
       sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
     else if (sym.vec[i] == "exp")
@@ -465,8 +466,12 @@ new_matrixfit <- function(cf,
 #'
 #' @export
 make_parlist <- function (corr_matrix_size) {
-  ## Placeholder, this is not correct.
-  return (array(NA, dim = c(2, corr_matrix_size)))
+  n <- corr_matrix_size
+  row1 <- rep(1:n, each = n)
+  row2 <- rep(1:n, times = n)
+  parlist_matrix <- rbind(row1, row2)
+  
+  return(parlist_matrix)
 }
 
 #' Create a parameter index matrix for `matrixfit`
