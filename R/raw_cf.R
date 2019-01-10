@@ -409,7 +409,7 @@ get_plotdata_raw_cf <- function(cf,
                                 tauint,
                                 relerr)
 {
-  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(inherits(cf, 'raw_cf_meta'))
   
   data <- uwerr.raw_cf(cf)
@@ -453,7 +453,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_real =
                                       list(val = abs(data$dvalue$real[iselect] / data$value$real[iselect]),
-                                           dval = data$ddvalue$real[iselect])
+                                           dval = abs(data$ddvalue$real[iselect] / data$value$real[iselect]))
                                       )
                                  )
       }
@@ -461,7 +461,7 @@ get_plotdata_raw_cf <- function(cf,
         plotdata[[lidx]] <- append(plotdata[[lidx]],
                                  list(relerr_imag =
                                       list(val = abs(data$dvalue$imag[iselect] / data$value$imag[iselect]),
-                                           dval = data$ddvalue$imag[iselect])
+                                           dval = abs(data$ddvalue$imag[iselect] / data$value$imag[iselect]))
                                       )
                                  )
       }
@@ -485,6 +485,7 @@ get_plotdata_raw_cf <- function(cf,
       }
     }
   }
+  class(plotdata) <- append(class(plotdata), "plotdata_raw_cf")
   return(plotdata)
 }
 
@@ -503,7 +504,7 @@ plot.raw_cf <- function(x,
                         reim_same = FALSE)
 {
   cf <- x
-  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(inherits(cf, 'raw_cf_meta'))
   
   if( !(reim %in% c('real','imag','both') ) ){
@@ -537,15 +538,29 @@ plot.raw_cf <- function(x,
   return(invisible(plotdata))
 }
 
+#' @title create convenient overview plots for a `raw_cf` object
+#' @param reim Vector of strings, one of 'real', 'imag' or 'both'.
+#' @param reim_same Boolean, whether real and imaginary parts should be plotted
+#'                  on the same plot. If \code{TRUE}, then \code{reim} must
+#'                  be 'both'.
+#' @param relerr Boolean, whether a plot of the relative error per time slice
+#'               should be added.
+#' @param tauint Boolean, whether a plot of the integrated auto-correlation time
+#'               on each time slice should be added.
+#' @param value_logplot Boolean, whether the plot of the correlator should be
+#'                      on a logarithmic vertical axis. (does not affect \code{tauint}
+#'                      and \code{relerr}.
+#' @param title Character vector, will be passed as the \code{main} argument to
+#'              \link{plotwitherror} which in turn passes it to \link{plot}.
 overview_plot_raw_cf <- function(cf, 
                                  reim = 'real', 
                                  reim_same = FALSE,
                                  relerr = FALSE,
                                  tauint = FALSE,
-                                 logplot = '',
+                                 value_logplot = TRUE,
                                  title = '')
 {
-  stopifnot(any(inherits(cf, c('raw_cf_data'))))
+  stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(inherits(cf, 'raw_cf_meta'))
 
   if( !(reim %in% c('real','imag','both') ) ){
@@ -554,6 +569,23 @@ overview_plot_raw_cf <- function(cf,
   if( reim_same & !(reim == 'both') ){
     stop("'reim_same' can only be true if 'reim' is 'both'")
   }
+
+  # produce a vector of plot symbols such that we have one
+  # symbol per observable, all smearing types will be plotted
+  # with the same symbol and we wrap around when we run out of symbols
+  pch <- expand.grid(rep(1:cf$nts, times=cf$nrStypes), c(0:6, 15:18) )
+  pch <- rep(pch[,2], length.out=cf$nts*cf$nrObs*cf$nrStypes) 
+
+  ylabs <- list()
+  ylabs[["real"]] <- "Re[ C(t) ]"
+  ylabs[["imag"]] <- "Im[ C(t) ]"
+  ylabs[["real_imag"]] <- "Re:Im[ C(t) ]"
+  ylabs[["tauint_real"]] <- "tau_int{ Re[ C(t) ] }"
+  ylabs[["tauint_imag"]] <- "tau_int{ Im[ C(t) ] }"
+  ylabs[["tauint_real_imag"]] <- "tau_int{ Re:Im[ C(t) ] }"
+  ylabs[["relerr_real"]] <- "Re[ dC(t) ] / Re[ C(t) ]"
+  ylabs[["relerr_imag"]] <- "Im[ dC(t) ] / Im[ C(t) ]"
+  ylabs[["relerr_real_imag"]] <- "Re:Im[ dC(t) ] / Re:Im[ C(t) ]"
 
   tmax <- cf$nts-1  
   plotdata <- get_plotdata_raw_cf(cf, reim=reim, relerr=relerr, tauint=tauint)
@@ -564,25 +596,33 @@ overview_plot_raw_cf <- function(cf,
   step <- 1
   if( reim_same ) step <- 2
   for( lidx in 1:length(plotdata) ){
-    for( qidx in seq(1,length(plotdata[[lidx]]),step) ){
+    onames <- names(plotdata[[lidx]])
+    for( oidx in seq(1,length(onames),step) ){
       args <- list()
       args$x <- ts
-      if( any(names(plotdata[[lidx]][[qidx]]) == "ylim") ){
-        args$ylim <- plotdata[[lidx]][[qidx]]$ylim
-      }
       args$xlab <- "t/a"
-      args$log <- plotdata[[lidx]][[qidx]]$logplot
+      args$ylab <- ylabs[[onames[oidx]]]
       args$main <- title
+      args$pch <- pch
+      if( (onames[lidx] == "real" | onames[lidx] == "imag") & value_logplot ){
+        args$log <- 'y'
+      }
       if( reim_same ){
-        args$y <- c(plotdata[[lidx]][[qidx]]$val, plotdata[[lidx]][[qidx+1]]$val)
-        args$dy <- c(plotdata[[lidx]][[qidx]]$dval, plotdata[[lidx]][[qidx+1]]$dval)
+        args$y <- c(plotdata[[lidx]][[ onames[oidx] ]]$val, plotdata[[lidx]][[ onames[oidx+1] ]]$val)
+        args$dy <- c(plotdata[[lidx]][[ onames[oidx] ]]$dval, plotdata[[lidx]][[ onames[oidx+1] ]]$dval)
         args$col <- c(rep("black", cf$nrStypes*cf$nrObs*cf$nts),
                       rep("red", cf$nrStypes*cf$nrObs*cf$nts))
-        args$ylab <- plotdata[[lidx]][[qidx]]$same_ylab
+        args$ylab <- ylabs[[sprintf("%s_imag",onames[oidx])]]
       } else {
         args$y <- plotdata[[lidx]][[qidx]]$val
         args$dy <- plotdata[[lidx]][[qidx]]$dval
-        args$ylab <- plotdata[[lidx]][[qidx]]$ylab
+      }
+      # when plotting relative errors, it is not useful to plot errors larger than
+      # 100%
+      if( grepl("relerr",onames[oidx]) ){
+        if( max(args$y, na.rm=TRUE) > 1.0 ){
+          args$ylim <- c(0,1)
+        }
       }
       do.call(plotwitherror, args)
     }
