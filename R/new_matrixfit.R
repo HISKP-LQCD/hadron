@@ -1,6 +1,5 @@
 library(R6)
 
-
 MatrixModel <- R6Class(
   'MatrixModel',
   public = list(
@@ -195,13 +194,11 @@ TwoStateModel <- R6Class(
   )
 )
 
-
 #' 3 particle correlation function in phi^4 theory
 #'
 #' @description
 #' 3 particle correlator with thermal pollution term:
 #' \deqn{C_3 (t) = 0.5*A_1^(3)*A_2^(3)*(exp(-E_3*(T-t))+exp(-E_3*t)) + 0.5*A_3^(3)*A_4^(3)*exp(-(2/3)*E_3*(T/2)) * (exp(-(1/3)*E_3*(T-t)) + exp(-(1/3)*E_3*t))}
-
 Phi4Model <- R6Class(
   'Phi4Model',
   inherit = MatrixModel,
@@ -272,8 +269,6 @@ Phi4Model <- R6Class(
     delta_t = NA
   )
 )
-
-
 
 #' @export
 new_matrixfit <- function(cf,
@@ -418,8 +413,7 @@ new_matrixfit <- function(cf,
     if (neg.vec[i] == -1)
       ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
   }
-  
-  
+
   ## perform the bootstrap non-linear least-squares fit (NLS fit):
   
   if (model == 'single') {
@@ -452,7 +446,6 @@ new_matrixfit <- function(cf,
   }
   
   res <- do.call(bootstrap.nlsfit, args)
-  
 
   ## Some fit models have parameters in the absolute value. This means that in
   ## `res` they can be negative and we need to let the model fix that.
