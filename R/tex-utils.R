@@ -29,6 +29,22 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   N <- 0
   threshold <- 10^(digits-1)
 
+  ## In case the number is very small, printing it with fixed point (`%f`) will
+  ## not work. For this case we divide out the exponent from both value and
+  ## error and attach it at the end.
+  if (!is.finite(x[1])) {
+    base <- 0
+  } else {
+    base <- floor(log10(abs(x[1])))
+  }
+  split_base <- abs(base) > 19
+  if (split_base) {
+    x <- x / 10**base
+    if (!missing(dx)) {
+      dx <- dx / 10**base
+    }
+  }
+
   if(missing(dx) && lx < 2) {
     if( is.na(x) ) x <- 0.0
     ## just a number without error
@@ -89,11 +105,17 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
       else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
     }
   }
-  ret <- tmp
-  if(with.dollar) {
-    ret <- paste("$", tmp, "$", sep="")
+  if (with.dollar) {
+    if (split_base) {
+      tmp <- paste0(tmp, '\\cdot 10^{', base, '}')
+    }
+    tmp <- paste0("$", tmp, "$")
+  } else {
+    if (split_base) {
+      tmp <- paste0(tmp, 'e', base)
+    }
   }
-  return(ret)
+  return (tmp)
 }
 
 escape_underscore <- function(x){
