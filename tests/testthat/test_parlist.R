@@ -34,6 +34,9 @@ test_that('parind_4', {
 
   elements <- c(rep(c(2, 2, 2, 3, 3, 2, 3, 3), each = length_time))
   target <- array(elements, dim = c(corr_matrix_size * length_time, 2))
+  expect_equal(actual, target)
 
+  actual <- make_parind(parlist, length_time, 2)
+  target <- cbind(target, target + 2)
   expect_equal(actual, target)
 })

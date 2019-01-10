@@ -465,7 +465,7 @@ make_parlist <- function (corr_matrix_size) {
 }
 
 #' @export
-make_parind <- function (parlist, length_time) {
+make_parind <- function (parlist, length_time, summands = 1) {
   ## Placeholder, this is not correct.
-  return (array(NA, dim = c(ncol(parlist) * length_time, 2)))
+  return (array(NA, dim = c(ncol(parlist) * length_time, 2 * summands)))
 }
