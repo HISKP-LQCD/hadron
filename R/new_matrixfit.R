@@ -206,15 +206,19 @@ Phi4Model <- R6Class(
   'Phi4Model',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t) {
+    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t, param_vec) {
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$delta_t <- delta_t
+      self$param_vec <- param_vec
     },
-    prediction = function (par, x) {
-      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-      (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2)))) +
-      self$ov_sign_vec*par[self$parind[,3]]*par[self$parind[,4]]*exp(-(par[1]*(2/3))*(self$time_extent/2))*
-      (exp(-(par[1]*(1/3))*(x-self$delta_t/2)) + self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-(x-self$delta_t/2))))
+    prediction = function (par, x, ...) {
+      xx <- x - self$delta_t/2
+      (
+        self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
+          ( exp(-par[1] * xx) - self$sign_vec * exp(-par[1] * (self$time_extent - xx)) ) +
+          self$ov_sign_vec * par[self$parind[, 3]] * par[self$parind[, 4]] *
+          ( exp(-(self$param_vec[2] - self$param_vec[1]) * xx) - self$sign_vec * exp(-(self$param_vec[2] - self$param_vec[1]) * (self$time_extent - xx)) )
+      )
     },
     prediction_jacobian = function (par, x, ...) {
       xx <- x - self$delta_t/2
@@ -222,54 +226,37 @@ Phi4Model <- R6Class(
       res <- matrix(0.0, nrow = length(x), ncol = length(par))
       
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-            ((-xx) * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
-            exp(-par[1] * (self$time_extent - xx))) + self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]] *
-            (-2/3)*(self$time_extent/2)*exp(-(par[1]*(-2/3))*(self$time_extent/2))*(exp(-(par[1]*(1/3))*xx) +      
-            self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-xx))) +
-            self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]]*exp(-(par[1]*(2/3))*
-            (self$time_extent/2))*(-(1/3)*xx*exp(-(par[1]*(1/3))*xx) +
-            self$sign_vec*(-1/3)*(self$time_extent-xx)*exp(-(par[1]*(1/3))*(self$time_extent-xx)))
-      
+      zp <- self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
+        (-xx * exp(-par[1] * xx) + (self$time_extent - xx) * self$sign_vec *
+           exp(-par[1] * (self$time_extent - xx)))
       stopifnot(length(zp) == nrow(res))
+      
       res[, 1] <- zp
       
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
+        zp1 <- rep(0, length(zp))##
+        j <- which(self$parind[, 1] == i)
+        zp1[j] <- self$ov_sign_vec * par[self$parind[j, 2]] *
+          (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+             exp(-par[1] * (self$time_extent - xx[j])))
         
-        zp1 <- rep(0, length(zp))
-        j <- which(self$parind[,1]==i)
-        zp1 <- -self$ov_sign_vec*0.5*par[self$parind[j,2]] *
-               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp2 <- rep(0, length(zp))
-        j <- which(self$parind[,2]==i)
-        zp2 <- -self$ov_sign_vec*0.5*par[self$parind[j,1]] *
-               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp3 <- rep(0, length(zp))
-        j <- which(self$parind[,3]==i)
-        zp3 <- -self$ov_sign_vec[j]*par[self$parind[j,4]] * 
-               exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
-               self$sign_vec[j]*exp(-(par[1]*(1/3)) * (self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp4 <- rep(0, length(zp))
-        j <- which(self$parind[,4]==i)
-             zp4 <- -self$ov_sign_vec[j]*par[self$parind[j,3]]*
-             exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
-             self$sign_vec[j]*exp(-(par[1]*(1/3))*(self$time_extent-(x[j]-self$delta_t/2))))
+        zp2 <- rep(0, length(zp))##
+        j <- which(self$parind[, 2] == i)
+        zp2[j] <- self$ov_sign_vec * par[self$parind[j, 1]] *
+          (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+             exp(-par[1] * (self$time_extent - xx[j])))
         
         stopifnot(length(zp1) == nrow(res))
         stopifnot(length(zp2) == nrow(res))
-        stopifnot(length(zp3) == nrow(res))
-        stopifnot(length(zp4) == nrow(res))
         
-        res[, i] <- (zp1 + zp2 + zp3 + zp4)
+        res[, i] <- (zp1 + zp2)
       }
-      return(res)
+      
+      return (res)
     },
-    # n_particle = NA
-    delta_t = NA
+    delta_t = NA,
+    param_vec = NA
   )
 )
 
@@ -287,7 +274,8 @@ new_matrixfit <- function(cf,
                           fit.method = "optim",
                           autoproceed = FALSE,
                           par.guess,
-                          every) {
+                          every,
+                          ...) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
@@ -400,16 +388,23 @@ new_matrixfit <- function(cf,
     ii <- ii[ii %% every == 0]
   }
   
-  ## parind is the index vector for the matrix elements
-  ## signvec decides on cosh or sinh
-  ## ov.sign.vec indicates the overall sign
-  len_t <- length(t1:t2)
-  parind <- array(1, dim = c(len_t, 2))
-  sign.vec <- rep(1, times = len_t)
-  ov.sign.vec <- rep(1, times = len_t)
-  for (i in 1:mSize) {
-    parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
-
+  if (model == 'n_particles'){
+    
+    len_t <- length(t1:t2) # t1 and t2 are lower and upper bound of fit interval
+    sign.vec <- rep(1, times = len_t)
+    ov.sign.vec <- rep(1, times = len_t)
+  
+    parind1 <- array(1, dim = c(len_t, 2))
+    parind2 <- array(1, dim = c(len_t, 2))
+    parind <- array(1, dim = c(len_t, 4))
+  
+    for (i in 1:mSize) {
+      parind1[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
+      parind2[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + (1+len_t), dim = c(2, len_t)))
+    
+      parind <- cbind(parind1, parind2)
+      print(parind)
+  
     if (sym.vec[i] == "sinh")
       sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
     else if (sym.vec[i] == "exp")
@@ -417,8 +412,34 @@ new_matrixfit <- function(cf,
 
     if (neg.vec[i] == -1)
       ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
+    }
   }
   
+  else {
+    ## parind is the index vector for the matrix elements
+    ## signvec decides on cosh or sinh
+    ## ov.sign.vec indicates the overall sign
+    len_t <- length(t1:t2)
+    sign.vec <- rep(1, times = len_t)
+    ov.sign.vec <- rep(1, times = len_t)
+    
+    
+    parind <- array(1, dim = c(len_t, 2))
+    
+    for (i in 1:mSize) {
+      parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
+      print(parind)
+      
+      if (sym.vec[i] == "sinh")
+        sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
+      else if (sym.vec[i] == "exp")
+        sign.vec[((i-1)*len_t+1):(i*len_t)] <- 0
+      
+      if (neg.vec[i] == -1)
+        ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
+    }
+    
+  }
   
   ## perform the bootstrap non-linear least-squares fit (NLS fit):
   
@@ -430,15 +451,17 @@ new_matrixfit <- function(cf,
   } else if (model == 'pc') {
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
-    model_object <- Phi4Model$new(cf$Time, parind, sign.vec, ov.sign.vec)#cf$n_particles)
+    stopifnot(inherits(cf, 'cf_shifted'))
+    model_object <- Phi4Model$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat, ...)#cf$n_particles)
   }
+  
   
   if (missing(par.guess)) {
     par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
   }
 
   args <- list(fn = model_object$prediction,
-               gr = model_object$prediction_jacobian,
+               #gr = model_object$prediction_jacobian,
                par.guess = par.guess,
                y = CF$Cor[ii],
                x = CF$t[ii],
