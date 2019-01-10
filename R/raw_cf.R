@@ -5,8 +5,8 @@
 #' of class \code{raw_cf}. This class is particularly designed to deal with
 #' complex and matrix-valued correlation functions emerging in statistical
 #' mechanics and quantum field theory simulations. 
-#' Arithmetic operations are defined for this class in
-#' several ways, as well as concatenation and \link{is.raw_cf} and \link{as.raw_cf}.
+#' Arithmetic operations are defined for this class and utility functions
+#' such as \code{is.raw_cf} and \code{is_empty.raw_cf}.
 #'
 #' @family raw_cf constructors
 #'
@@ -42,7 +42,7 @@ raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=
   return (cf)
 }
 
-#' @title Original data RAW_val mixin constructor
+#' @title Original data mixin constructor for `raw_cf`
 #'
 #' @param cf `raw_cf` object to extend.
 #' @param data Numeric or complex array, original data for all observables and measurements. 
@@ -75,7 +75,11 @@ raw_cf_data <- function (cf, data) {
 
 #' @title Gamma method analysis on all time-slices in a 'raw_cf' object
 #'
-#' @param cf Correlation function container of class 'raw_cf'  
+#' @param cf Correlation function container of class 'raw_cf'
+#' @return The return value is a list with elements \code{value}, \code{dvalue}
+#'         \code{ddvalue}, \code{tauint}, \code{dtauint}. Each of these
+#'         is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
+#'         hance lacks the first dimension index compared for \code{cf$data}.
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))
   

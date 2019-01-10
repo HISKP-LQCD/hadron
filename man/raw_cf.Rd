@@ -11,8 +11,8 @@ This function \code{raw_cf()} creates containers for raw correlation functions
 of class \code{raw_cf}. This class is particularly designed to deal with
 complex and matrix-valued correlation functions emerging in statistical
 mechanics and quantum field theory simulations.
-Arithmetic operations are defined for this class in
-several ways, as well as concatenation and \link{is.raw_cf} and \link{as.raw_cf}.
+Arithmetic operations are defined for this class and utility functions
+such as \code{is.raw_cf} and \code{is_empty.raw_cf}.
 }
 \seealso{
 Other raw_cf constructors: \code{\link{raw_cf_data}},
