@@ -466,10 +466,10 @@ new_matrixfit <- function(cf,
 #'
 #' @export
 make_parlist <- function (corr_matrix_size) {
-  n <- corr_matrix_size
+  n <- sqrt(corr_matrix_size)
   row1 <- rep(1:n, each = n)
   row2 <- rep(1:n, times = n)
-  parlist_matrix <- matrix(cbind(row1, row2), nrow=2, ncol=n*n, byrow= TRUE)
+  parlist_matrix <- matrix(cbind(row1, row2), nrow = 2, ncol = n*n, byrow = TRUE)
   
   return(parlist_matrix)
 }
@@ -477,13 +477,20 @@ make_parlist <- function (corr_matrix_size) {
 #' Create a parameter index matrix for `matrixfit`
 #'
 #' @param parlist integer array. Parameter list generated with `make_parlist`.
+#' @param corr_matrix_size integer. Number of correlators in the matrix. This
+#' must be a the square of an integer.
 #' @param length_t integer. Number of time slices per correlator.
 #' @param summands integer. Number of summands in the fit model that shall be
 #' fitted. The signal counts as one summand, each explicit pollution term with
 #' independent amplitudes counts as its own summand.
 #'
 #' @export
-make_parind <- function (parlist, length_t, summands = 1) {
-  ## Placeholder, this is not correct.
-  return (array(NA, dim = c(ncol(parlist) * length_t, 2 * summands)))
+make_parind <- function (parlist, corr_matrix_size, length_t, summands = 1) {
+  n_corr <- corr_matrix_size
+  ## parind is the index vector for the matrix elements
+  parind <- array(1, dim = c(n_corr*length_t, 2))
+  for (i in 1:n_corr) {
+    parind[((i-1)*length_t+1):(i*length_t), ] <- t(array(parlist[, i] + 1, dim = c(2, length_t)))
+  }
+  return(parind)
 }
