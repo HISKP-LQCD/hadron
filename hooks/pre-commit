@@ -13,19 +13,30 @@ reset="$(tput sgr0)"
 
 diff_old=$(mktemp)
 diff_new=$(mktemp)
+status_old=$(mktemp)
+status_new=$(mktemp)
 
 cleanup() {
   rm -f "$diff_old"
   rm -f "$diff_new"
+  rm -f "$status_old"
+  rm -f "$status_new"
 }
 
 trap cleanup EXIT
 
 git diff > "$diff_old"
+git status --porcelain -u > "$status_old"
 Rscript -e 'devtools::document();'
 git diff > "$diff_new"
+git status --porcelain  -u> "$status_new"
 
 if ! diff -q "$diff_old" "$diff_new" &> /dev/null; then
   echo "${red}Generating the documentation has changed the tree, add them to the index and try to commit again.${reset}" >&2
+  exit 2
+fi
+
+if ! diff -q "$status_old" "$status_new" &> /dev/null; then
+  echo "${red}Generating the documentation has added new files, add them to the index and try to commit again.${reset}" >&2
   exit 2
 fi
