@@ -458,12 +458,25 @@ new_matrixfit <- function(cf,
   return (res)
 }
 
+#' Create a parameter list for `matrixfit`
+#'
+#' @param corr_matrix_size integer. Number of correlators in the matrix. This
+#' must be a the square of an integer.
+#'
 #' @export
 make_parlist <- function (corr_matrix_size) {
   ## Placeholder, this is not correct.
   return (array(NA, dim = c(2, corr_matrix_size)))
 }
 
+#' Create a parameter index matrix for `matrixfit`
+#'
+#' @param parlist integer array. Parameter list generated with `make_parlist`.
+#' @param length_time integer. Number of time slices per correlator.
+#' @param summands integer. Number of summands in the fit model that shall be
+#' fitted. The signal counts as one summand, each explicit pollution term with
+#' independent amplitudes counts as its own summand.
+#'
 #' @export
 make_parind <- function (parlist, length_time, summands = 1) {
   ## Placeholder, this is not correct.
