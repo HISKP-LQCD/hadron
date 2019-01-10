@@ -35,7 +35,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   if (!is.finite(x[1])) {
     base <- 0
   } else {
-    base <- round(log10(abs(x[1])))
+    base <- floor(log10(abs(x[1])))
   }
   split_base <- abs(base) > 19
   if (split_base) {
