@@ -370,7 +370,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
     temp <- NULL
 
   ## we set the seed for reproducability and correlation
-  set.seed(seed)
+  old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
@@ -382,10 +382,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                 sim = sim,
                 cf.tsboot = cf.tsboot)
 
-  ## restore random number generator state
-  if (!is.null(temp))
-    assign(".Random.seed", temp, envir = .GlobalEnv)
-  else rm(.Random.seed, pos = 1)
+  restore_seed(old_seed)
 
   return(invisible(cf))
 }
