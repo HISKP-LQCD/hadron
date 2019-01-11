@@ -118,7 +118,9 @@ uwerr.raw_cf <- function(cf){
     istart <- step*stepping + 1
     iend <- istart + stepping - 1
 
-    out_idcs <- idx_matrix_uwerr[step+1,]
+    # this is really annoying. When we subset a single row of the index matrix
+    # it's turned into a column vector
+    out_idcs <- t(idx_matrix_uwerr[step+1,])
 
     tseries <- cf$data[ idcs[istart:iend,] ]
     uw_real <- try(uwerrprimary(data = Re(tseries)), silent=TRUE)
@@ -194,8 +196,8 @@ block.raw_cf <- function(cf, block_length){
       # select block of measurements
       idcs_in <- idcs[istart:iend,]
       # place block average into element of 'out' array
-      # be mindful of automatic dropping of dimensions!!
-      idx_out <- idcs_out[iout:iout,,drop=FALSE]
+      # be mindful of conversion to column vector
+      idx_out <- t(idcs_out[iout,])
       out[idx_out] <- mean( cf$data[ idcs_in ] )
       iout <- iout+1
     }
@@ -737,16 +739,18 @@ summary.raw_cf <- function(cf, ...) {
   idcs <- uw$idx_matrix
   out <- NULL
   for( i in 1:nrow(idcs) ){
+    # annoying: subsetting a single row of the index matrix turns the
+    # result into a column vector, need to transpose  
+    i_out <- t(idcs[i,])
     out <- rbind(out,
-                 data.frame(t = idcs[i,1]-1, 
-                            value_real = uw$value$real[idcs[i,drop=FALSE]], 
-                            value_imag = uw$value$imag[idcs[i,drop=FALSE]],
-                            dvalue_real = uw$dvalue$real[idcs[i,drop=FALSE]],
-                            dvalue_imag = uw$dvalue$imag[idcs[i,drop=FALSE]])
+                 data.frame(t = idcs[i,1], 
+                            value_real = uw$value$real[ i_out ], 
+                            value_imag = uw$value$imag[ i_out ],
+                            dvalue_real = uw$dvalue$real[ i_out ],
+                            dvalue_imag = uw$dvalue$imag[ i_out ])
                  )
   }
   rownames(out) <- NULL
-  print(out)
   return(invisible(out))
 }
 
