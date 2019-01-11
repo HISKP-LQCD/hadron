@@ -676,11 +676,11 @@ shift.raw_cf <- function(cf, places) {
       out_dof <- as.matrix(do.call(expand.grid, args))
       
       if( places < 0 ){
-        ishift <- c( (iend - abs(places) + 1):iend,
-                     (istart:(iend-abs(places))) )
+        ishift <- c( (iend - abs(places)):iend,
+                     (istart:(iend-abs(places)-1)) )
       } else {
         ishift <- c( (istart+places):iend,
-                      istart:(istart+places-1) )
+                      istart:(istart+places-1))
       }
       args[[2]] <- ishift
       # construct the tensor index set for the input
