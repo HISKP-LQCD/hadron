@@ -734,8 +734,8 @@ shift.cf <- function(cf, places) {
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
-        ishift <- c( (iend - abs(places) + 1):iend,
-                     (istart:(iend-abs(places))) )
+        ishift <- c( (iend - abs(places)):iend,
+                     (istart:(iend-abs(places)-1)) )
       } else {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
