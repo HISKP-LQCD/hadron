@@ -29,6 +29,7 @@ export(jackknife_cov)
 export(jackknife_error)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
+export(h5_get_dataset)
 importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
            "rainbow", "rgb")
 importFrom("graphics", "abline", "arrows", "axis", "barplot",
