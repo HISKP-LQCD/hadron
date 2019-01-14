@@ -421,7 +421,7 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, boot_r = NA, ...)
+  first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
 
   if (!first.res$converged) {
     stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
