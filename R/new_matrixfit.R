@@ -487,7 +487,6 @@ make_parind <- function (parlist, length_time, summands = 1) {
   corr_matrix_size <- ncol(parlist)
   ## parind is the index vector for the matrix elements
   parind <- array(1, dim = c(corr_matrix_size * length_time, 2))
-  parind_aux <- array(1, dim = c(corr_matrix_size * length_time, 2))
   for (i in 1:(corr_matrix_size)) {
     parind[((i - 1) * length_time + 1):(i * length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
   }
