@@ -484,16 +484,16 @@ make_parlist <- function (corr_matrix_size) {
 #'
 #' @export
 make_parind <- function (parlist, length_time, summands = 1) {
-  n_corr <- ncol(parlist)
+  corr_matrix_size <- ncol(parlist)
   ## parind is the index vector for the matrix elements
-  parind <- array(1, dim = c(n_corr*length_time, 2))
-  parind_aux <- array(1, dim = c(n_corr*length_time, 2))
-  for (i in 1:n_corr) {
+  parind <- array(1, dim = c(corr_matrix_size*length_time, 2))
+  parind_aux <- array(1, dim = c(corr_matrix_size*length_time, 2))
+  for (i in 1:corr_matrix_size) {
     parind[((i-1)*length_time+1):(i*length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
     parind_aux[((i-1)*length_time+1):(i*length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
   }
   for(j in 1:(summands-1)){
-    parind <- cbind(parind, (parind_aux + sqrt(n_corr)*j))
+    parind <- cbind(parind, (parind_aux + sqrt(corr_matrix_size)*j))
   }
   return(parind)
 }
