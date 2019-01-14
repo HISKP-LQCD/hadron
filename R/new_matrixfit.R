@@ -194,7 +194,7 @@ TwoStateModel <- R6Class(
   )
 )
 
-#' 3 particle correlation function in phi^4 theory
+#' 3 particle correlation function
 #'
 #' @description
 #' 3 particle correlator with thermal pollution term:
@@ -469,7 +469,7 @@ make_parlist <- function (corr_matrix_size) {
   n <- sqrt(corr_matrix_size)
   row1 <- rep(1:n, each = n)
   row2 <- rep(1:n, times = n)
-  parlist_matrix <- matrix(cbind(row1, row2), nrow = 2, ncol = n*n, byrow = TRUE)
+  parlist_matrix <- matrix(cbind(row1, row2), nrow = 2, ncol = n * n, byrow = TRUE)
   
   return(parlist_matrix)
 }
@@ -486,14 +486,16 @@ make_parlist <- function (corr_matrix_size) {
 make_parind <- function (parlist, length_time, summands = 1) {
   corr_matrix_size <- ncol(parlist)
   ## parind is the index vector for the matrix elements
-  parind <- array(1, dim = c(corr_matrix_size*length_time, 2))
-  parind_aux <- array(1, dim = c(corr_matrix_size*length_time, 2))
-  for (i in 1:corr_matrix_size) {
-    parind[((i-1)*length_time+1):(i*length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
-    parind_aux[((i-1)*length_time+1):(i*length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
+  parind <- array(1, dim = c(corr_matrix_size * length_time, 2))
+  parind_aux <- array(1, dim = c(corr_matrix_size * length_time, 2))
+  for (i in 1:(corr_matrix_size)) {
+    parind[((i - 1) * length_time + 1):(i * length_time), ] <- t(array(parlist[, i] + 1, dim = c(2, length_time)))
   }
-  for(j in 1:(summands-1)){
-    parind <- cbind(parind, (parind_aux + sqrt(corr_matrix_size)*j))
+  parind_aux <- parind
+  if (summands > 1) {
+    for(j in 1:(summands - 1)){
+      parind <- cbind(parind, (parind_aux + sqrt(corr_matrix_size) * j))
+    }
   }
   return(parind)
 }
