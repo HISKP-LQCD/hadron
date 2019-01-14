@@ -363,8 +363,11 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #'                        1      \tab 2      \tab 0      \tab 0      \tab "P5P5"
 #'                      }
 #' @param sym.vec Integer or numeric vector. Specifies whether the correlator at
-#'                the given position is symmetric (+1.0) or anti-symmetric (-1.0)
-#'                under time reflection. This is passed to \code{symmetrise.cf}
+#'                the given position is symmetric (+1.0) or anti-symmetric (-1.0 )
+#'                under time reflection. This is passed to \code{symmetrise.cf}. This
+#'                should be of sufficient length to cover all correlators that are
+#'                going to be read (one number per row of \code{combs_to_read} and
+#'                per entry of \code{smear_combs_to_read})
 #' @param symmetrise Boolean, specifies whether averaging over backward and forward
 #'                   correlators should be done after the correlator has been read in.
 #' @param nts Integer, number of time slices to be read from the correlator files.
