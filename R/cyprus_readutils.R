@@ -45,7 +45,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 }
 
 
-#' @title read loop files created by the Cyprus CalcLoops application
+#' @title read HDF5 loop files in the Cyprus CalcLoops format
 #' @description The CalcLoops code produces HDF5 files which contain
 #'              a matrix of momenta and the data for the loops (without
 #'              spin projection) organised by stochastic sample. Currently, the
@@ -59,18 +59,18 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'
 #'                     \tabular{rrr}{
 #'                       \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
-#'                       0 \tab 0 \tab 1 \cr
-#'                       ... \tab ... \tab ...
+#'                       0           \tab 0           \tab 1           \cr
+#'                       "..."       \tab "..."       \tab "..."
 #'                     }
 #'
 #'                   specifying the momentum combinations to be extracted for each
 #'                   loop type.
 #' @param files Vector of strings, list of HDF5 files to be processed.
 #' @param accumulated Boolean, specifies whether the loops, as organised by stochastic sample,
-#'                     are accumulated, such that, say, element \code{n} corresponds to the 
-#'                     sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
-#'                     the data is post-processed to recover the measurements for the particular
-#'                     samples.
+#'                    are accumulated, such that, say, element \code{n} corresponds to the 
+#'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
+#'                    the data is post-processed to recover the measurements for the particular
+#'                    samples.
 #' @return Named list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format.
 #' @export

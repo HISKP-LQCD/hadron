@@ -2,7 +2,7 @@
 % Please edit documentation in R/cyprus_readutils.R
 \name{cyprus_read_loops}
 \alias{cyprus_read_loops}
-\title{read loop files created by the Cyprus CalcLoops application}
+\title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
 cyprus_read_loops(selections, files, accumulated = TRUE)
 }
@@ -12,8 +12,8 @@ cyprus_read_loops(selections, files, accumulated = TRUE)
 The elements of this list are in turn expected
 be data frames of the form\preformatted{                \tabular{rrr}{
                   \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
-                  0 \tab 0 \tab 1 \cr
-                  ... \tab ... \tab ...
+                  0           \tab 0           \tab 1           \cr
+                  "..."       \tab "..."       \tab "..."
                 }
 
               specifying the momentum combinations to be extracted for each
