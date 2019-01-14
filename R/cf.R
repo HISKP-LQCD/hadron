@@ -599,8 +599,9 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   ii <- c()
-  for(i in c(1:length(id))) {
-    ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
+  for (i in c(1:length(id))) {
+    num_time <- if (cf$symmetrised) cf$Time / 2 + 1 else cf$Time
+    ii <- c(ii, c(1:num_time) + (id[i]-1) * num_time)
   }
 
   # TODO: This should be done using constructors.
