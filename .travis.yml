@@ -36,3 +36,10 @@ env:
     - R_CHECK_TIME="TRUE"
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
+
+r_binary_packages:
+  - devtools
+  - roxygen2
+
+after_success:
+  - Rscript -e 'devtools::install(); devtools::test()'
