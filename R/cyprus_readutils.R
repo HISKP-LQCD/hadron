@@ -71,7 +71,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                     sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 #'                     the data is post-processed to recover the measurements for the particular
 #'                     samples.
-#' @return Names list of the same length as \code{selections} containg the loop data
+#' @return Named list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format.
 #' @export
 cyprus_read_loops <- function(selections, files, accumulated = TRUE){

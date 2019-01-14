@@ -29,7 +29,7 @@ the data is post-processed to recover the measurements for the particular
 samples.}
 }
 \value{
-Names list of the same length as \code{selections} containg the loop data
+Named list of the same length as \code{selections} containg the loop data
 in the \link{raw_cf} format.
 }
 \description{
