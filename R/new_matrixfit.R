@@ -312,22 +312,11 @@ new_matrixfit <- function(cf,
   
   if (model == 'pc' && mSize != 1) {
     stop('For model pc only a 1x1 matrix is allowed.')
-  }
   
   if (missing(parlist)) {
-    if (mSize == 1) {
-      parlist <- array(c(1, 1), dim = c(2, 1))
-
-      warning("missing parlist, using default for single correlator!")
-    }
-    else if (mSize == 4) {
-      parlist <- array(c(1, 1, 1, 2, 2, 1, 2, 2), dim = c(2, 4))
-      warning("missing parlist, using default for four correlators!")
-    }
-    else {
-      stop("parlist is missing and no default is available for this cf size!")
-    }
+    mp <- make_parlist(mSize)
   }
+  print(mp)
   
   if (missing(sym.vec)) {
     if (mSize == 1) {
@@ -469,9 +458,9 @@ make_parlist <- function (corr_matrix_size) {
   n <- sqrt(corr_matrix_size)
   row1 <- rep(1:n, each = n)
   row2 <- rep(1:n, times = n)
-  parlist_matrix <- matrix(cbind(row1, row2), nrow = 2, ncol = n * n, byrow = TRUE)
+  parlist <- matrix(cbind(row1, row2), nrow = 2, ncol = n * n, byrow = TRUE)
   
-  return(parlist_matrix)
+  return(parlist)
 }
 
 #' Create a parameter index matrix for `matrixfit`
