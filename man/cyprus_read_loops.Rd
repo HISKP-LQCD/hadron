@@ -4,7 +4,7 @@
 \alias{cyprus_read_loops}
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
-cyprus_read_loops(selections, files, accumulated = TRUE)
+cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Scalar', 'dOp', 'Loops'
@@ -21,6 +21,10 @@ specifying the momentum combinations to be extracted for each
 loop type.}
 
 \item{files}{Vector of strings, list of HDF5 files to be processed.}
+
+\item{Time}{Integer, time extent of the lattice.}
+
+\item{nstoch}{Integer, number of stochastic samples to be expected in file.}
 
 \item{accumulated}{Boolean, specifies whether the loops, as organised by stochastic sample,
 are accumulated, such that, say, element \code{n} corresponds to the

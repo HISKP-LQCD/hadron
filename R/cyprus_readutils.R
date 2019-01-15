@@ -65,6 +65,8 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                   specifying the momentum combinations to be extracted for each
 #'                   loop type.
 #' @param files Vector of strings, list of HDF5 files to be processed.
+#' @param Time Integer, time extent of the lattice.
+#' @param nstoch Integer, number of stochastic samples to be expected in file.
 #' @param accumulated Boolean, specifies whether the loops, as organised by stochastic sample,
 #'                    are accumulated, such that, say, element \code{n} corresponds to the 
 #'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
@@ -73,7 +75,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #' @return Named list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format.
 #' @export
-cyprus_read_loops <- function(selections, files, accumulated = TRUE){
+cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
   if( !rhdf5_avail | !dplyr_avail ){
@@ -82,6 +84,10 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
 
   rval <- list()
   selected_loop_types <- names(selections)
+
+  if( any( !(selected_loop_types %in% c("Scalar", "dOp") ) ) ){
+    stop("Currently only 'Scalar' and 'dOp' loop types are supported!")
+  }
 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
@@ -109,6 +115,10 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
                                        "_"),
                                  FUN = function(x){ x[2] })
                           )))
+    if( length(stoch_avail) != nstoch ){
+      stop(sprintf("Number of stochastic samples in file %s :\n%d, expected %d!",
+                   f, length(stoch_avail), nstoch))
+    }
 
     for( loop_type in selected_loop_types ){
       # check if all the momenta that we want are in the file
@@ -138,7 +148,7 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
                                             y = momenta_avail,
                                             by = c("qx","qy","qz"))
 
-      for( istoch in stoch_avail ){
+      for( istoch in 1:nstoch ){
         key <- cyprus_make_key_scalar(istoch = istoch,
                                       loop_type = loop_type)
 
@@ -148,6 +158,7 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
         #   time, gamma, complex, mom_idx
         # this is quite expensive, but it makes filling the target
         # array much easier below
+        # Note that 'gamma' is of length 16
         data <- aperm(h5_get_dataset(h5f, key),
                       perm = c(4,2,1,3))
         dims <- dim(data)
@@ -169,16 +180,28 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
             complex(real = data[1:nts, 1:16, 1, selected_momenta$idx[mom_idx] ],
                     imaginary = data[1:nts, 1:16, 2, selected_momenta$idx[mom_idx] ])
         }
-      }
-      # recover measurements from individual stochastic samples
-      if( accumulated ){
-        for( mom_idx in 1:nrow(selected_momenta) ){
-          for( istoch in 2:length(stoch_avail) ){
-            rval[[loop_type]][[mom_idx]][,,istoch,,] <- 
-              rval[[loop_type]][[mom_idx]][,,istoch,,] - rval[[loop_type]][[mom_idx]][,,(istoch-1),,]
-          }
+      } # istoch
+    } # loop_type
+  } # ifile
+  for( loop_type in selected_loop_types ){
+    # recover measurements from individual stochastic samples
+    if( accumulated ){
+      for( mom_idx in 1:nrow(selected_momenta) ){
+        for( istoch in 2:nstoch ){
+          rval[[loop_type]][[mom_idx]][,,istoch,,] <- 
+            rval[[loop_type]][[mom_idx]][,,istoch,,] - rval[[loop_type]][[mom_idx]][,,(istoch-1),,]
         }
       }
+    }
+    # finally make `raw_cf` objects
+    for( mom_idx in 1:nrow(selected_momenta) ){
+      rval[[loop_type]][[mom_idx]] <- 
+        raw_cf_data(raw_cf_meta(Time = Time,
+                                nrObs = 1,
+                                nrStypes = 1,
+                                dim = c(length(stoch_avail), 4, 4),
+                                nts = nts),
+                    data = rval[[loop_type]][[mom_idx]])
     }
   }
   return(rval)
