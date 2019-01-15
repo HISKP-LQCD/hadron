@@ -81,11 +81,10 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'         in the \link{raw_cf} format.
 #' @export
 cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE){
-  tools_avail <- requireNamespace("tools")
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
-  if( !rhdf5_avail | !dplyr_avail | !tools_avail ){
-    stop("The 'tools', 'dplyr' and 'rhdf5' packages are required to use this function!\n")
+  if( !rhdf5_avail | !dplyr_avail ){
+    stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
   }
 
   rval <- list()
