@@ -56,13 +56,12 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                   'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop types. 
 #'                   The elements of this list are in turn expected
 #'                   be data frames of the form
-#'
 #'                     \tabular{rrr}{
 #'                       \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
 #'                       0           \tab 0           \tab 1           \cr
-#'                       "..."       \tab "..."       \tab "..."
+#'                       -2          \tab 1           \tab -3          \cr
+#'                       ...         \tab ...         \tab ...
 #'                     }
-#'
 #'                   specifying the momentum combinations to be extracted for each
 #'                   loop type.
 #' @param files Vector of strings, list of HDF5 files to be processed.
@@ -169,6 +168,15 @@ cyprus_read_loops <- function(selections, files, accumulated = TRUE){
           rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
             complex(real = data[1:nts, 1:16, 1, selected_momenta$idx[mom_idx] ],
                     imaginary = data[1:nts, 1:16, 2, selected_momenta$idx[mom_idx] ])
+        }
+      }
+      # recover measurements from individual stochastic samples
+      if( accumulated ){
+        for( mom_idx in 1:nrow(selected_momenta) ){
+          for( istoch in 2:length(stoch_avail) ){
+            rval[[loop_type]][[mom_idx]][,,istoch,,] <- 
+              rval[[loop_type]][[mom_idx]][,,istoch,,] - rval[[loop_type]][[mom_idx]][,,(istoch-1),,]
+          }
         }
       }
     }

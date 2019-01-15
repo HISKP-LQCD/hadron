@@ -10,15 +10,15 @@ cyprus_read_loops(selections, files, accumulated = TRUE)
 \item{selections}{Named list with names from the list 'Scalar', 'dOp', 'Loops'
 'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop types.
 The elements of this list are in turn expected
-be data frames of the form\preformatted{                \tabular{rrr}{
-                  \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
-                  0           \tab 0           \tab 1           \cr
-                  "..."       \tab "..."       \tab "..."
-                }
-
-              specifying the momentum combinations to be extracted for each
-              loop type.
-}}
+be data frames of the form
+\tabular{rrr}{
+\strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
+0           \tab 0           \tab 1           \cr
+-2          \tab 1           \tab -3          \cr
+...         \tab ...         \tab ...
+}
+specifying the momentum combinations to be extracted for each
+loop type.}
 
 \item{files}{Vector of strings, list of HDF5 files to be processed.}
 
