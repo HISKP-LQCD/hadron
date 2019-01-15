@@ -4,7 +4,7 @@
 \alias{parametric.bootstrap}
 \title{Parametric bootstrap}
 \usage{
-parametric.bootstrap(boot.R, x, dx)
+parametric.bootstrap(boot.R, x, dx, seed)
 }
 \arguments{
 \item{boot.R}{numeric. Number of bootstrap samples to generate.}
@@ -13,6 +13,12 @@ parametric.bootstrap(boot.R, x, dx)
 
 \item{dx}{numeric vector of the same length as \code{x} or missing. Errors of the
 values.}
+
+\item{seed}{integer. Seed to use for the random number generation. If it is
+missing, the seed will not be set to any particular value. If there was a
+default value, all results would be exactly correlated. So if you want
+reproducability by fixing the seeds, make sure you choose different seeds
+for independent variables.}
 }
 \value{
 A matrix with as many columns as there are variables in \code{x} and as many rows

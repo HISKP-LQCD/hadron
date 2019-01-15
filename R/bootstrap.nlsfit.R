@@ -3,7 +3,12 @@
 #' @param boot.R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
 #' @param dx numeric vector of the same length as `x` or missing. Errors of the
-#'   values.
+#' values.
+#' @param seed integer. Seed to use for the random number generation. If it is
+#' missing, the seed will not be set to any particular value. If there was a
+#' default value, all results would be exactly correlated. So if you want
+#' reproducability by fixing the seeds, make sure you choose different seeds
+#' for independent variables.
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
@@ -16,13 +21,16 @@
 #' x <- 1:3
 #' dx <- 1:3 * 0.1
 #' parametric.bootstrap(5, x, dx)
-parametric.bootstrap <- function (boot.R, x, dx) {
+parametric.bootstrap <- function (boot.R, x, dx, seed) {
   stopifnot(length(x) == length(dx))
 
+  old_seed <- swap_seed(seed)
   samples.list <- lapply(dx, function (error) rnorm(boot.R, 0, error))
+  restore_seed(old_seed)
   samples <- do.call(cbind, samples.list)
 
   samples <- t(t(samples) + x)
+
 
   return (samples)
 }
@@ -47,7 +55,7 @@ parametric.bootstrap <- function (boot.R, x, dx) {
 #'                 0, 0.15, 0.02,
 #'                 0.01, 0.02, 0.2), nrow = 3)
 #' parametric.bootstrap.cov(5, x, cov)
-parametric.bootstrap.cov <- function (boot.R, x, cov) {
+parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
   stopifnot(nrow(cov) == length(x))
   stopifnot(ncol(cov) == length(x))
   stopifnot(isSymmetric(cov))
@@ -61,7 +69,9 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 
   errors <- sqrt(evalues)
   stopifnot(!any(is.complex(errors)))
+  old_seed <- swap_seed(seed)
   samples.list <- lapply(errors, function (error) rnorm(boot.R, 0, error))
+  restore_seed(old_seed)
   samples <- do.call(cbind, samples.list)
 
   samples <- samples %*% t(evectors)
