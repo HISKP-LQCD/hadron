@@ -526,21 +526,21 @@ plot.raw_cf <- function(x,
     stop("'reim_same' can only be true if 'reim' is 'both'")
   }
 
-  plotdata <- get_plotdata_raw_cf(cf, reim=reim, tauint=FALSE, relerr=FALSE) 
+  plotdata <- get_plotdata_raw_cf(cf, reim = reim, tauint = FALSE, relerr = FALSE) 
   for( lidx in 1:length(plotdata) ){
-    if( plot_reim %in% c('real', 'both') & plot_reim_same == FALSE){
+    if( reim %in% c('real', 'both') & reim_same == FALSE){
       plotwitherror(x = 0:(cf$nts-1),
                     y = plotdata[[lidx]]$real$val,
                     dy = plotdata[[lidx]]$real$dval,
                     ...)
     }
-    if( plot_reim %in% c('imag', 'both') & plot_reim_same == FALSE){
+    if( reim %in% c('imag', 'both') & reim_same == FALSE){
       plotwitherror(x = 0:(cf$nts-1),
                     y = plotdata[[lidx]]$imag$val,
                     dy = plotdata[[lidx]]$imag$dval,
                     ...)
     }
-    if( plot_reim_same ){
+    if( reim_same ){
       plotwitherror(x = rep(0:(cf$nts-1), times=2),
                     y = c(plotdata[[lidx]]$real$val, plotdata[[lidx]]$imag$val),
                     dy = c(plotdata[[lidx]]$real$dval, plotdata[[lidx]]$imag$dval),
