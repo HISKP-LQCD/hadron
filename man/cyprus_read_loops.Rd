@@ -4,7 +4,8 @@
 \alias{cyprus_read_loops}
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
-cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE)
+cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
+  legacy_traj = TRUE)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Scalar', 'dOp', 'Loops'
@@ -31,6 +32,12 @@ are accumulated, such that, say, element \code{n} corresponds to the
 sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 the data is post-processed to recover the measurements for the particular
 samples.}
+
+\item{legecy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+corresponds to what is passed via the 'traj' flag to CalcLoops. When
+left empty, this defaults to '0004'. If this was left emtpy when
+the loop files were generated, set this to \code{TRUE} and the paths
+will be constructed with 'conf_0004' as their root group.}
 }
 \value{
 Named list of the same length as \code{selections} containg the loop data

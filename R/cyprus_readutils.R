@@ -72,14 +72,20 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 #'                    the data is post-processed to recover the measurements for the particular
 #'                    samples.
+#' @param legecy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+#'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
+#'                    left empty, this defaults to '0004'. If this was left emtpy when
+#'                    the loop files were generated, set this to \code{TRUE} and the paths
+#'                    will be constructed with 'conf_0004' as their root group.
 #' @return Named list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format.
 #' @export
-cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE){
+cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE){
+  tools_avail <- requireNamespace("tools")
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
-  if( !rhdf5_avail | !dplyr_avail ){
-    stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
+  if( !rhdf5_avail | !dplyr_avail | !tools_avail ){
+    stop("The 'tools', 'dplyr' and 'rhdf5' packages are required to use this function!\n")
   }
 
   rval <- list()
@@ -91,6 +97,19 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
+    
+    # The file names are of the form 
+    # path/MG_loop_FLAVORquark_conf_conf.XXXX_runtype_probD8_part1_stoch_NeV0_NsYYYY_step0001_QsqZZ.h5
+    # and we want to recover XXXX
+    tokens <- unlist(strsplit(basename(path), split = ".", fixed = TRUE))
+    cid_in_filename <- as.integer(strsplit(tokens, split = "_", fixed = TRUE)[[2]][1])
+
+    if( legacy_traj ){
+      cid_to_read <- 4
+    } else {
+      cid_to_read <- cid_in_filename
+    }
+
     h5f <- rhdf5::H5Fopen(f)
     avail_loop_types <- h5_names_exist(h5f, selected_loop_types)
     if( any( !avail_loop_types ) ){
@@ -110,7 +129,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     momenta_avail <- cbind(momenta_avail, idx = 1:nrow(momenta_avail))
     
     group_names <- h5ls(h5f)$name
-    # how many stochastic sources are available?
+
+    # how many stochastic samples are available and does it match out expectation?
     stoch_avail <- sort(as.numeric(unlist(lapply(X = strsplit(unique(group_names[ grepl("Nstoch", group_names) ]),
                                        "_"),
                                  FUN = function(x){ x[2] })
@@ -120,6 +140,15 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
                    f, length(stoch_avail), nstoch))
     }
 
+    # check if there are multiple instances of 'conf_xxxx' group names
+    # in the file
+    if( length( unique( group_names[ grepl("conf", group_names) ] ) ) > 1 ){
+      warning(sprintf(paste("The file\n%s\ncontains more than one 'conf_xxxx'",
+                            "group names.\nThis is currently not really supported,",
+                            "but we will continue and attempt to read 'conf_%04d' (and no others!)"),
+                      f, cid_to_read),
+              immediate. = TRUE)
+    }
     for( loop_type in selected_loop_types ){
       # check if all the momenta that we want are in the file
       # we do this per loop_type as we could have different selections
