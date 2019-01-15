@@ -100,7 +100,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     # The file names are of the form 
     # path/MG_loop_FLAVORquark_conf_conf.XXXX_runtype_probD8_part1_stoch_NeV0_NsYYYY_step0001_QsqZZ.h5
     # and we want to recover XXXX
-    tokens <- unlist(strsplit(basename(path), split = ".", fixed = TRUE))
+    tokens <- unlist(strsplit(basename(f), split = ".", fixed = TRUE))
     cid_in_filename <- as.integer(strsplit(tokens, split = "_", fixed = TRUE)[[2]][1])
 
     if( legacy_traj ){
@@ -111,6 +111,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
     h5f <- rhdf5::H5Fopen(f)
     avail_loop_types <- h5_names_exist(h5f, selected_loop_types)
+
     if( any( !avail_loop_types ) ){
       msg <- sprintf("Some selected loop types could not be found in %s:\n %s",
                      f,
@@ -211,6 +212,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
         }
       } # istoch
     } # loop_type
+    H5Fclose(h5f)
   } # ifile
   for( loop_type in selected_loop_types ){
     # recover measurements from individual stochastic samples
