@@ -3,7 +3,7 @@
 \docType{data}
 \name{Phi4Model}
 \alias{Phi4Model}
-\title{3 particle correlation function in phi^4 theory}
+\title{3 particle correlation function}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 Phi4Model
