@@ -178,7 +178,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
       for( istoch in 1:nstoch ){
         key <- cyprus_make_key_scalar(istoch = istoch,
-                                      loop_type = loop_type)
+                                      loop_type = loop_type,
+                                      cid = cid_to_read)
 
         # read the data, which comes in the ordering
         #   complex, gamma, mom_idx, time
