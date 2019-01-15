@@ -390,7 +390,7 @@ readnissatextcf <- function(file_basenames_to_read,
   imagcols <- seq(2,2*total_nts,2)
 
   cf <- cf_meta(nrObs = nrow(combs_to_read), Time=Time, nrStypes = length(smear_combs_to_read), symmetrised = FALSE)
-  cf <- cf_orig(cf, cf = tmp[,realcols], icf = tmp[,imagcols])
+  cf <- cf_orig(cf, cf = tmp[,realcols,drop=FALSE], icf = tmp[,imagcols,drop=FALSE])
 
   if(symmetrise){
     # in some cases it makes sense to store only a subset of the time slices of a
