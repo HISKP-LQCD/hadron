@@ -34,10 +34,12 @@ git status --porcelain  -u> "$status_new"
 
 if ! diff -q "$diff_old" "$diff_new" &> /dev/null; then
   echo "${red}Generating the documentation or Rcpp exports has changed the tree, add them to the index and try to commit again.${reset}" >&2
+  git status
   exit 2
 fi
 
 if ! diff -q "$status_old" "$status_new" &> /dev/null; then
   echo "${red}Generating the documentation or Rcpp exports has added new files, add them to the index and try to commit again.${reset}" >&2
+  git status -u
   exit 2
 fi
