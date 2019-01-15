@@ -724,7 +724,10 @@ int_idx_matrix.raw_cf <- function(cf){
 #' @title Print summary of data contained in `raw_cf` container
 #' @param object `raw_cf` container with data and meta-data
 #' @param ... ignored
-summary.raw_cf <- function(object, ...) {
+#' @param statistics Boolean, return central value and error
+#'                   for all components of the 'raw_cf'. This can
+#'                   be slow so the default is \code{FALSE}.
+summary.raw_cf <- function(object, ..., statistics = FALSE) {
   cf <- object
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -735,24 +738,26 @@ summary.raw_cf <- function(object, ...) {
   cat("Nr Obs    = ", cf$nrObs, "\n")
   cat("dim       = ", cf$dim, "\n")
 
-  uw <- uwerr.raw_cf(cf)
+  if( statistics ){
+    uw <- uwerr.raw_cf(cf)
 
-  idcs <- uw$idx_matrix
-  out <- NULL
-  for( i in 1:nrow(idcs) ){
-    # annoying: subsetting a single row of the index matrix turns the
-    # result into a column vector, need to transpose  
-    i_out <- t(idcs[i,])
-    out <- rbind(out,
-                 data.frame(t = idcs[i,1], 
-                            value_real = uw$value$real[ i_out ], 
-                            value_imag = uw$value$imag[ i_out ],
-                            dvalue_real = uw$dvalue$real[ i_out ],
-                            dvalue_imag = uw$dvalue$imag[ i_out ])
-                 )
+    idcs <- uw$idx_matrix
+    out <- NULL
+    for( i in 1:nrow(idcs) ){
+      # annoying: subsetting a single row of the index matrix turns the
+      # result into a column vector, need to transpose  
+      i_out <- t(idcs[i,])
+      out <- rbind(out,
+                   data.frame(t = idcs[i,1], 
+                              value_real = uw$value$real[ i_out ], 
+                              value_imag = uw$value$imag[ i_out ],
+                              dvalue_real = uw$dvalue$real[ i_out ],
+                              dvalue_imag = uw$dvalue$imag[ i_out ])
+                   )
+    }
+    rownames(out) <- NULL
+    return(invisible(out))
   }
-  rownames(out) <- NULL
-  return(invisible(out))
 }
 
 #' @title Print summary of data contained in `raw_cf` container
