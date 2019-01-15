@@ -282,7 +282,8 @@ new_matrixfit <- function(cf,
                           fit.method = "optim",
                           autoproceed = FALSE,
                           par.guess,
-                          every) {
+                          every,
+                          ...) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
@@ -312,11 +313,11 @@ new_matrixfit <- function(cf,
   
   if (model == 'pc' && mSize != 1) {
     stop('For model pc only a 1x1 matrix is allowed.')
+  }
   
   if (missing(parlist)) {
-    mp <- make_parlist(mSize)
+    parlist <- make_parlist(mSize)
   }
-  print(mp)
   
   if (missing(sym.vec)) {
     if (mSize == 1) {
@@ -458,9 +459,9 @@ make_parlist <- function (corr_matrix_size) {
   n <- sqrt(corr_matrix_size)
   row1 <- rep(1:n, each = n)
   row2 <- rep(1:n, times = n)
-  parlist <- matrix(cbind(row1, row2), nrow = 2, ncol = n * n, byrow = TRUE)
+  parlist_matrix <- matrix(cbind(row1, row2), nrow = 2, ncol = n * n, byrow = TRUE)
   
-  return(parlist)
+  return(parlist_matrix)
 }
 
 #' Create a parameter index matrix for `matrixfit`
