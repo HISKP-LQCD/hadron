@@ -722,9 +722,10 @@ int_idx_matrix.raw_cf <- function(cf){
 
 
 #' @title Print summary of data contained in `raw_cf` container
-#' @param cf `raw_cf` container with data and meta-data
+#' @param object `raw_cf` container with data and meta-data
 #' @param ... ignored
-summary.raw_cf <- function(cf, ...) {
+summary.raw_cf <- function(object, ...) {
+  cf <- object
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
 
@@ -755,8 +756,9 @@ summary.raw_cf <- function(cf, ...) {
 }
 
 #' @title Print summary of data contained in `raw_cf` container
-#' @param cf `raw_cf` container with data and meta-data
+#' @param x `raw_cf` container with data and meta-data
 #' @param ... ignored
-print.raw_cf <- function(cf, ...) {
+print.raw_cf <- function(x, ...) {
+  cf <- x
   summary(cf, ...)
 }
