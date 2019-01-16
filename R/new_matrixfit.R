@@ -194,79 +194,46 @@ TwoStateModel <- R6Class(
   )
 )
 
-#' 3 particle correlation function
+#' n particle correlation function
 #'
 #' @description
-#' 3 particle correlator with thermal pollution term:
-#' \deqn{C_3 (t) = 0.5*A_1^(3)*A_2^(3)*(exp(-E_3*(T-t))+exp(-E_3*t)) + 0.5*A_3^(3)*A_4^(3)*exp(-(2/3)*E_3*(T/2)) * (exp(-(1/3)*E_3*(T-t)) + exp(-(1/3)*E_3*t))}
-Phi4Model <- R6Class(
-  'Phi4Model',
+#' n particle correlator with thermal pollution term(s)
+NParticleModel <- R6Class(
+  'NParticleModel',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t) {
+    initialize = function (time_extent, parind, sign_vec, ov_sign_vec) {
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
-      self$delta_t <- delta_t
-    },
-    prediction = function (par, x) {
-      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-      (exp(-par[1] * (x - self$delta_t/2)) + self$sign_vec * exp(-par[1] * (self$time_extent - (x - self$delta_t/2)))) +
-      self$ov_sign_vec*par[self$parind[,3]]*par[self$parind[,4]]*exp(-(par[1]*(2/3))*(self$time_extent/2))*
-      (exp(-(par[1]*(1/3))*(x-self$delta_t/2)) + self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-(x-self$delta_t/2))))
-    },
-    prediction_jacobian = function (par, x, ...) {
-      xx <- x - self$delta_t/2
-      
-      res <- matrix(0.0, nrow = length(x), ncol = length(par))
-      
-      ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-            ((-xx) * exp(-par[1] * xx) - (self$time_extent - xx) * self$sign_vec *
-            exp(-par[1] * (self$time_extent - xx))) + self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]] *
-            (-2/3)*(self$time_extent/2)*exp(-(par[1]*(-2/3))*(self$time_extent/2))*(exp(-(par[1]*(1/3))*xx) +      
-            self$sign_vec*exp(-(par[1]*(1/3))*(self$time_extent-xx))) +
-            self$ov_sign_vec * 0.5 * par[self$parind[,3]] * par[self$parind[,4]]*exp(-(par[1]*(2/3))*
-            (self$time_extent/2))*(-(1/3)*xx*exp(-(par[1]*(1/3))*xx) +
-            self$sign_vec*(-1/3)*(self$time_extent-xx)*exp(-(par[1]*(1/3))*(self$time_extent-xx)))
-      
-      stopifnot(length(zp) == nrow(res))
-      res[, 1] <- zp
-      
-      ## Derivatives with respect to the amplitudes.
-      for (i in 2:length(par)) {
-        
-        zp1 <- rep(0, length(zp))
-        j <- which(self$parind[,1]==i)
-        zp1 <- -self$ov_sign_vec*0.5*par[self$parind[j,2]] *
-               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp2 <- rep(0, length(zp))
-        j <- which(self$parind[,2]==i)
-        zp2 <- -self$ov_sign_vec*0.5*par[self$parind[j,1]] *
-               (exp(-par[1]*(x[j]-self$delta_t/2)) + self$sign_vec[j] * exp(-par[1]*(self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp3 <- rep(0, length(zp))
-        j <- which(self$parind[,3]==i)
-        zp3 <- -self$ov_sign_vec[j]*par[self$parind[j,4]] * 
-               exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
-               self$sign_vec[j]*exp(-(par[1]*(1/3)) * (self$time_extent-(x[j]-self$delta_t/2))))
-        
-        zp4 <- rep(0, length(zp))
-        j <- which(self$parind[,4]==i)
-             zp4 <- -self$ov_sign_vec[j]*par[self$parind[j,3]]*
-             exp(-(par[1]*(2/3))*(self$time_extent/2)) * 0.5*(exp(-(par[1]*(1/3))*(x[j]-self$delta_t/2)) +
-             self$sign_vec[j]*exp(-(par[1]*(1/3))*(self$time_extent-(x[j]-self$delta_t/2))))
-        
-        stopifnot(length(zp1) == nrow(res))
-        stopifnot(length(zp2) == nrow(res))
-        stopifnot(length(zp3) == nrow(res))
-        stopifnot(length(zp4) == nrow(res))
-        
-        res[, i] <- (zp1 + zp2 + zp3 + zp4)
+      self$sm <- SingleModel$new(time_extent, parind, sign_vec, ov_sign_vec)
+     },
+
+    prediction = function (par, x, ...) {
+      n <- length(par) / 2
+      y <- 0
+      par_aux <- numeric(2)
+      for (i in 1:n) {
+        par_aux[1] <- par[2*i - 1]
+        par_aux[2] <- par[2*i]
+        corr_part <- self$sm$prediction(par_aux, x, ...)
+        y <- y + corr_part
       }
-      return(res)
+      return(y)
     },
-    # n_particle = NA
-    delta_t = NA
+
+    prediction_jacobian = function (par, x, ...) {
+      n <- length(par) / 2
+      y <- 0
+      par_aux <- numeric(2)
+      for (i in 1:n) {
+        par_aux[1] <- par[2*i - 1]
+        par_aux[2] <- par[2*i]
+        jacobian_part <- self$sm$prediction_jacobian(par_aux, x, ...)
+        y <- y + jacobian_part
+      }
+      return(y)
+    },
+
+    sm = NA
   )
 )
 
@@ -283,7 +250,8 @@ new_matrixfit <- function(cf,
                           autoproceed = FALSE,
                           par.guess,
                           every,
-                          ...) {
+                          ...
+                          ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
@@ -318,6 +286,7 @@ new_matrixfit <- function(cf,
   if (missing(parlist)) {
     parlist <- make_parlist(mSize)
   }
+  print(parlist)
   
   if (missing(sym.vec)) {
     if (mSize == 1) {
@@ -387,14 +356,15 @@ new_matrixfit <- function(cf,
   }
   
   ## parind is the index vector for the matrix elements
-  ## signvec decides on cosh or sinh
-  ## ov.sign.vec indicates the overall sign
   len_t <- length(t1:t2)
-  parind <- array(1, dim = c(len_t, 2))
+  parind <- make_parind(parlist = parlist, length_time = len_t, summands = 1)
+  ## signvec decides on cosh or sinh
   sign.vec <- rep(1, times = len_t)
+  ## ov.sign.vec indicates the overall sign
   ov.sign.vec <- rep(1, times = len_t)
+  
   for (i in 1:mSize) {
-    parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
+    #parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
     
     if (sym.vec[i] == "sinh")
       sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
@@ -415,7 +385,26 @@ new_matrixfit <- function(cf,
   } else if (model == 'pc') {
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
-    model_object <- Phi4Model$new(cf$Time, parind, sign.vec, ov.sign.vec)#cf$n_particles)
+    model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
+  }
+  
+  if(model == 'n_particles') {
+    initial_guess = function(corr, summands, t1, t2){
+    t1p1 <- t1 + 1
+    t2p1 <- t2 + 1
+    par <- numeric(2*summands)
+    par[1] <- 0.2
+    for (i in 2:length(par)) {
+      if(i%%2==0){
+        par[i] <- 1
+      }
+      else {
+        par[i] <- (i-1)*0.2
+      }
+    }
+    return (par)
+    }
+    par.guess <- initial_guess(CF$Cor, 3, t1, t2)
   }
   
   if (missing(par.guess)) {
