@@ -626,8 +626,8 @@ overview_plot_raw_cf <- function(cf,
                       rep("red", cf$nrStypes*cf$nrObs*cf$nts))
         args$ylab <- ylabs[[sprintf("%s_imag",onames[oidx])]]
       } else {
-        args$y <- plotdata[[lidx]][[qidx]]$val
-        args$dy <- plotdata[[lidx]][[qidx]]$dval
+        args$y <- plotdata[[lidx]][[ onames[oidx] ]]$val
+        args$dy <- plotdata[[lidx]][[ onames[oidx] ]]$dval
       }
       # when plotting relative errors, it is not useful to plot errors larger than
       # 100%
