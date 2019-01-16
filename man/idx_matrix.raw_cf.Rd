@@ -9,8 +9,9 @@ idx_matrix.raw_cf(cf, component)
 \arguments{
 \item{cf}{'raw_cf' container with data and meta-data}
 
-\item{subset}{Optional argument to obtain a subset of the index matrix
-for a particular element of the interior dimension.}
+\item{component}{Integer vector. Optional argument to obtain a subset of the
+index matrix to access a particular element of the interior
+dimensions. Must of the the same length as cf$dim.}
 }
 \description{
 Construct the tensor index set for the entire raw correlator

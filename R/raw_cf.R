@@ -730,8 +730,9 @@ shift.raw_cf <- function(cf, places) {
 
 #' @title Construct the tensor index set for the entire raw correlator
 #' @param cf 'raw_cf' container with data and meta-data
-#' @param subset Optional argument to obtain a subset of the index matrix
-#'               for a particular element of the interior dimension.
+#' @param component Integer vector. Optional argument to obtain a subset of the
+#'                  index matrix to access a particular element of the interior
+#'                  dimensions. Must of the the same length as cf$dim.
 idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
