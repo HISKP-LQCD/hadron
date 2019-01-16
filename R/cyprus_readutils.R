@@ -88,7 +88,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
   }
   if( verbose ){
-    ticoc_avail <- requireNamespace("tictoc")
+    tictoc_avail <- requireNamespace("tictoc")
     if( !tictoc_avail ){
       stop("Time reporting requires the 'tictoc' package!")
     }
