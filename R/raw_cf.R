@@ -73,6 +73,39 @@ raw_cf_data <- function (cf, data) {
   return (cf)
 }
 
+#' @title Extract a particular internal component of a 'raw_cf'
+#' @param x 'raw_cf' container with 'raw_cf_data' and 'raw_cf_meta'
+#' @param component Integer vector of the same length as the internal dimension
+#'                  of the 'raw_cf' specifying which component should be extracted.
+raw_cf_to_cf <- function(x, component){
+  stopifnot(inherits(x, 'raw_cf_meta'))
+  stopifnot(inherits(x, 'raw_cf_data'))
+
+  if( length(component) != length(x$dim) ){
+    stop("The component specifier must be of the same length as the vector of internal dimensions of the 'raw_cf'!")
+  }
+
+  if( x$Time != x$nts ){
+    stop("The 'nts' dimension must be the same as the 'Time' dimension to convert to 'cf'")
+  }
+
+  idcs <- idx_matrix.raw_cf(x, component)
+
+  dims <- dim(x$data)
+
+  subset <- array(x$data[idcs], dim=c(dims[1],dims[2]))
+
+  cf <- cf_meta(Time = x$Time,
+                nrObs = x$nrObs,
+                nrStypes = x$nrStypes,
+                symmetrised = FALSE)
+
+  cf <- cf_orig(cf,
+                cf = Re(subset),
+                icf = Im(subset))
+  return(cf)
+}
+
 #' @title Gamma method analysis on all time-slices in a 'raw_cf' object
 #'
 #' @param cf Correlation function container of class 'raw_cf'
@@ -697,7 +730,9 @@ shift.raw_cf <- function(cf, places) {
 
 #' @title Construct the tensor index set for the entire raw correlator
 #' @param cf 'raw_cf' container with data and meta-data
-idx_matrix.raw_cf <- function(cf){
+#' @param subset Optional argument to obtain a subset of the index matrix
+#'               for a particular element of the interior dimension.
+idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
  
@@ -705,6 +740,17 @@ idx_matrix.raw_cf <- function(cf){
   args <- list()
   for( d in dims ){
     args[[length(args)+1]] <- 1:d
+  }
+
+  if(!missing(component)){
+    if( length(component) != length(cf$dim) ){
+      stop("'component' has to be of length length(cf$dim)!")
+    }
+    cidx <- 1
+    for( didx in 3:length(dims) ){
+      args[[didx]] <- component[cidx]
+      cidx <- cidx + 1
+    }
   }
   as.matrix(do.call(expand.grid, args))
 }
