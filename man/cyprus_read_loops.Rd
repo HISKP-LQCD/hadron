@@ -5,7 +5,7 @@
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
 cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
-  legacy_traj = TRUE)
+  legacy_traj = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Scalar', 'dOp', 'Loops'
@@ -32,6 +32,8 @@ are accumulated, such that, say, element \code{n} corresponds to the
 sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 the data is post-processed to recover the measurements for the particular
 samples.}
+
+\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package.}
 
 \item{legecy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 corresponds to what is passed via the 'traj' flag to CalcLoops. When

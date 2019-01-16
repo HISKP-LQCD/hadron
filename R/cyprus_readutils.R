@@ -77,14 +77,21 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                    left empty, this defaults to '0004'. If this was left emtpy when
 #'                    the loop files were generated, set this to \code{TRUE} and the paths
 #'                    will be constructed with 'conf_0004' as their root group.
+#' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package.
 #' @return Named list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format.
 #' @export
-cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE){
+cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
   if( !rhdf5_avail | !dplyr_avail ){
     stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
+  }
+  if( verbose ){
+    ticoc_avail <- requireNamespace("tictoc")
+    if( !tictoc_avail ){
+      stop("Time reporting requires the 'tictoc' package!")
+    }
   }
 
   rval <- list()
@@ -96,6 +103,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
+    if(verbose) tictoc::tic(sprintf("Reading %s",f))
     
     # The file names are of the form 
     # path/MG_loop_FLAVORquark_conf_conf.XXXX_runtype_probD8_part1_stoch_NeV0_NsYYYY_step0001_QsqZZ.h5
@@ -189,7 +197,11 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
         # this is quite expensive, but it makes filling the target
         # array much easier below
         # Note that 'gamma' is of length 16
-        data <- aperm(h5_get_dataset(h5f, key),
+        data <- h5_get_dataset(h5f, key)
+        # first we select the momenta that we actually want
+        data <- data[,,selected_momenta$idx,,drop=FALSE]
+        # and then perform the reshaping on this (possibly) reduced array
+        data <- aperm(data,
                       perm = c(4,2,1,3))
         dims <- dim(data)
         nts <- dims[1]
@@ -207,12 +219,13 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
                                                   )
           }
           rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
-            complex(real = data[1:nts, 1:16, 1, selected_momenta$idx[mom_idx] ],
-                    imaginary = data[1:nts, 1:16, 2, selected_momenta$idx[mom_idx] ])
+            complex(real = data[1:nts, 1:16, 1, mom_idx ],
+                    imaginary = data[1:nts, 1:16, 2, mom_idx ])
         }
       } # istoch
     } # loop_type
     H5Fclose(h5f)
+    if(verbose) tictoc::toc()
   } # ifile
   for( loop_type in selected_loop_types ){
     # recover measurements from individual stochastic samples
