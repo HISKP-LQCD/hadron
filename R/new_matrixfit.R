@@ -194,7 +194,7 @@ TwoStateModel <- R6Class(
   )
 )
 
-#' n particle correlation function
+#' Model for the n particle correlator fit
 #'
 #' @description
 #' n particle correlator with thermal pollution term(s)
@@ -206,7 +206,6 @@ NParticleModel <- R6Class(
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
       self$sm <- SingleModel$new(time_extent, parind, sign_vec, ov_sign_vec)
      },
-
     prediction = function (par, x, ...) {
       n <- length(par) / 2
       y <- 0
@@ -219,20 +218,22 @@ NParticleModel <- R6Class(
       }
       return(y)
     },
-
     prediction_jacobian = function (par, x, ...) {
       n <- length(par) / 2
-      y <- 0
       par_aux <- numeric(2)
-      for (i in 1:n) {
-        par_aux[1] <- par[2*i - 1]
-        par_aux[2] <- par[2*i]
-        jacobian_part <- self$sm$prediction_jacobian(par_aux, x, ...)
-        y <- y + jacobian_part
+      par_aux[1] <- par[1]
+      par_aux[2] <- par[2]
+      y <- self$sm$prediction_jacobian(par_aux, x, ...)
+      if (n > 1) {
+        for (i in 2:n) {
+          par_aux[1] <- par[2*i - 1]
+          par_aux[2] <- par[2*i]
+          jacobian_part_aux <- self$sm$prediction_jacobian(par_aux, x, ...)
+          y <- cbind(y, jacobian_part_aux)
+        }
       }
       return(y)
     },
-
     sm = NA
   )
 )
@@ -386,25 +387,6 @@ new_matrixfit <- function(cf,
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
     model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
-  }
-  
-  if(model == 'n_particles') {
-    initial_guess = function(corr, summands, t1, t2){
-    t1p1 <- t1 + 1
-    t2p1 <- t2 + 1
-    par <- numeric(2*summands)
-    par[1] <- 0.2
-    for (i in 2:length(par)) {
-      if(i%%2==0){
-        par[i] <- 1
-      }
-      else {
-        par[i] <- (i-1)*0.2
-      }
-    }
-    return (par)
-    }
-    par.guess <- initial_guess(CF$Cor, 3, t1, t2)
   }
   
   if (missing(par.guess)) {
