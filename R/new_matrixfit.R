@@ -383,8 +383,10 @@ new_matrixfit <- function(cf,
     stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
   } else if (model == 'pc') {
+    stopifnot(cf$nrObs == 1)
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
+    stopifnot(cf$nrObs == 1)
     model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
   }
   
