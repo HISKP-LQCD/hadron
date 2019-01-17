@@ -287,7 +287,6 @@ new_matrixfit <- function(cf,
   if (missing(parlist)) {
     parlist <- make_parlist(mSize)
   }
-  print(parlist)
   
   if (missing(sym.vec)) {
     if (mSize == 1) {
