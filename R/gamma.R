@@ -140,7 +140,7 @@ gm[['ukqcd']][4,3,3] <- -1
 gm[['ukqcd']][4,4,4] <- -1
 # gamma5
 gm[['ukqcd']][5,,] <- gm_mu(1, 'ukqcd') %*% gm_mu(2, 'ukqcd') %*%
-                      gm_mu(3, 'ukqcd') %*% gm_mu(3, 'ukqcd')
+                      gm_mu(3, 'ukqcd') %*% gm_mu(4, 'ukqcd')
 # parity projectors
 gm[['ukqcd']][6,,] <- 0.5*( diag(1,4,4) + gm_mu(4,'ukqcd') )
 gm[['ukqcd']][7,,] <- 0.5*( diag(1,4,4) - gm_mu(4,'ukqcd') )
