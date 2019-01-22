@@ -117,7 +117,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
       cid_to_read <- cid_in_filename
     }
 
-    h5f <- rhdf5::H5Fopen(f)
+    h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
     
     group_names <- h5ls(h5f)$name
     
