@@ -19,7 +19,6 @@ Suggests:
     tikzDevice,
     minpack.lm,
     parallel,
-    Rhdf5lib (>= 1.3.2),
     rhdf5,
     knitr,
     testthat
