@@ -8,7 +8,6 @@
 #' @param cid Integer, configuration number, internally produced by the CalcLoops
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
-#' @export
 cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
   if( any( !(loop_type %in% c("Scalar","dOp")) ) ){
     stop("The only scalar loop types are 'Scalar' and 'dOp'")
@@ -30,7 +29,6 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
 #' @param cid Integer, configuration number, internally produced by the CalcLoops
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
-#' @export
 cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
   deriv_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
   if( any( !(loop_type %in% deriv_loop_types ) ) ) {
@@ -78,8 +76,11 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                    the loop files were generated, set this to \code{TRUE} and the paths
 #'                    will be constructed with 'conf_0004' as their root group.
 #' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package.
-#' @return Named list of the same length as \code{selections} containg the loop data
-#'         in the \link{raw_cf} format.
+#' @return Named nested list of the same length as \code{selections} containg the loop data
+#'         in the \link{raw_cf} format. Each named element corresponds to one loop
+#'         type and each element of the underlying numbered list corresponds to one momentum
+#'         combination as specified via \code{selections} for this loop type in the same order.
+#'         
 #' @export
 cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")

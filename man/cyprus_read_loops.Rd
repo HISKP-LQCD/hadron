@@ -42,8 +42,10 @@ the loop files were generated, set this to \code{TRUE} and the paths
 will be constructed with 'conf_0004' as their root group.}
 }
 \value{
-Named list of the same length as \code{selections} containg the loop data
-in the \link{raw_cf} format.
+Named nested list of the same length as \code{selections} containg the loop data
+in the \link{raw_cf} format. Each named element corresponds to one loop
+type and each element of the underlying numbered list corresponds to one momentum
+combination as specified via \code{selections} for this loop type in the same order.
 }
 \description{
 The CalcLoops code produces HDF5 files which contain
