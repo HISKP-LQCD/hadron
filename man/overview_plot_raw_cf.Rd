@@ -9,11 +9,20 @@ overview_plot_raw_cf(cf, grid, reim = "real", reim_same = FALSE,
   value_factor = c(1), title = "")
 }
 \arguments{
-\item{reim}{Vector of strings, one of 'real', 'imag' or 'both'.}
+\item{cf}{'raw_cf' container with data and meta-data}
+
+\item{grid}{Optional, integer vector which satisfies
+\code{prod(grid) == prod(cf$dim)}. This is passed to \code{par} via
+\code{par(mfrow=grid)} to produce a grid of plots as defined by the
+components of \code{grid}.}
+
+\item{reim}{Vector of strings, one of 'real', 'imag' or 'both'. Specified whether
+the real or imaginary parts (or both) should be plotted.}
 
 \item{reim_same}{Boolean, whether real and imaginary parts should be plotted
 on the same plot. If \code{TRUE}, then \code{reim} must
-be 'both'.}
+be 'both'. If this is given, the imaginary part as well as its
+relative error and per-time-slice integrated autocorreation times}
 
 \item{relerr}{Boolean, whether a plot of the relative error per time slice
 should be added.}
@@ -23,7 +32,7 @@ on each time slice should be added.}
 
 \item{value_logplot}{Boolean, whether the plot of the correlator should be
 on a logarithmic vertical axis. (does not affect \code{tauint}
-and \code{relerr}.}
+and \code{relerr}).}
 
 \item{value_factor}{Numeric, either of length '1' or as long as the number of
 correlation functions in \code{cf}. The data will be scaled
