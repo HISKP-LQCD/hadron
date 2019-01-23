@@ -2,7 +2,7 @@
 % Please edit documentation in R/raw_cf.R
 \name{raw_cf_to_cf}
 \alias{raw_cf_to_cf}
-\title{Extract a particular internal component of a 'raw_cf'}
+\title{Extract a particular internal component of a 'raw_cf' into a 'cf'}
 \usage{
 raw_cf_to_cf(x, component)
 }
@@ -12,6 +12,9 @@ raw_cf_to_cf(x, component)
 \item{component}{Integer vector of the same length as the internal dimension
 of the 'raw_cf' specifying which component should be extracted.}
 }
+\value{
+'cf' object
+}
 \description{
-Extract a particular internal component of a 'raw_cf'
+Extract a particular internal component of a 'raw_cf' into a 'cf'
 }

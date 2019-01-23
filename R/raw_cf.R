@@ -73,10 +73,11 @@ raw_cf_data <- function (cf, data) {
   return (cf)
 }
 
-#' @title Extract a particular internal component of a 'raw_cf'
+#' @title Extract a particular internal component of a 'raw_cf' into a 'cf'
 #' @param x 'raw_cf' container with 'raw_cf_data' and 'raw_cf_meta'
 #' @param component Integer vector of the same length as the internal dimension
 #'                  of the 'raw_cf' specifying which component should be extracted.
+#' @return 'cf' object
 #' @export
 raw_cf_to_cf <- function(x, component){
   stopifnot(inherits(x, 'raw_cf_meta'))
