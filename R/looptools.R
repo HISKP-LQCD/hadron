@@ -37,8 +37,10 @@ disc_3pt <- function(cf_2pt,
   if( length(dim(loop$data)) == 5 ){
     stop("The loop data should already be averaged over stochastic samples")
   }
-  if( any(loop$dim != c(1,1)) ){
-    stop("The loop data should be spin-projected")
+  if( length(loop$dim) == 2 ){
+    if( any( loop$dim != 1 ) ){
+      stop("The loop data should be spin-projected")
+    }
   }
   if( length(src_ts) != dim(cf_2pt$data)[1] ){
     stop(paste("The number of source times 'src_ts' provided should be",
