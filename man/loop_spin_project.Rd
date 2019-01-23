@@ -4,19 +4,25 @@
 \alias{loop_spin_project}
 \title{spin projection of quark loop data}
 \usage{
-loop_spin_project(loop, gamma, stochav = FALSE, factor = as.complex(1))
+loop_spin_project(loop, gamma, reim = "both", stochav = FALSE,
+  scale_factor = as.complex(1), herm_conj = FALSE)
 }
 \arguments{
 \item{loop}{'raw_cf' container with loop data}
 
 \item{gamma}{4x4 complex matrix}
 
-\item{stochav}{Boolean, specified whether the average over stochastic samples should be
+\item{reim}{String, one of 'real', 'imag' or 'both'. After the spin projection and trace,
+the result can be restricted to just the real or imaginary part, if desired.
+Useful for the cases in which it is clear that only one or the other contains
+any signal.}
+
+\item{stochav}{Boolean, specifies whether the average over stochastic samples should be
 performed. This makes the projection much faster
 but of course prevents the projected loop data to be
 used for the construction of diagrams with multiple quark loops.}
 
-\item{factor}{Complex scaling factor to be applied.}
+\item{scale_factor}{Complex scaling factor to be applied.}
 }
 \description{
 Implements the operation
