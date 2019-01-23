@@ -1,9 +1,14 @@
 #' @title disconnected contribution to current insertion three-point function
+#' @description Computes the quark-line disconnected contribution to a three-point function
+#'              of the form
+#'                \deqn{ C_3(t, \Delta t = t_{snk} - t_{src}) = C_2(t_{snk}, t_{src}) * L(t) }
+#'              \eqn{\forall t} considering only the case t_{snk} > t_{src}.
 #' @param cf_2pt 'raw_cf' container holding two-point part of three-point function
 #'               in lattice-absolute coordinates (not relative to source!)         
 #' @param loop 'raw_cf' container holding loop contribution, suitably spin-projected
 #'             and averaged over stochastic samples.
-#' @param src_ts Integer vector, the source time slices in lattice-absolute coordinates.
+#' @param src_ts Integer vector, the source time slices that were used for the computation
+#'               of the two-point function in lattice-absolute coordinates.
 #'               Must be of the same length as the number of measurements in \code{cf_2pt}.
 #' @param dt Integer, the source-sink separation that should be computed.
 #' @param reim_loop String, one of 'real', 'imag' or 'both'. Specifies whether
@@ -77,7 +82,7 @@ disc_3pt <- function(cf_2pt,
   if( vev_subtract ){
     loop$data <- loop$data - mean(loop$data)
   }
-  
+
   # in general, multiple source locations have been used per configuration
   # to compute the 2pt function
   stat_rep <- dim(cf_2pt$data)[1] / dim(loop$data)[1]
@@ -93,11 +98,7 @@ disc_3pt <- function(cf_2pt,
   # to be done later
   for( i in 1:length(src_ts) ){
     data[i, , , ] <- reim_loop_fn(data[i, , , ,drop=FALSE]) * 
-                       reim_2pt_fn(cf_2pt$data[i,
-                                               ((src_ts[i]+cf_2pt$Time+dt) %% cf_2pt$Time) + 1,
-                                               1,
-                                               1,
-                                               drop=TRUE])
+                       reim_2pt_fn( cf_2pt$data[i, ((src_ts[i]+cf_2pt$Time+dt) %% cf_2pt$Time) + 1, 1, 1, drop=TRUE] )
   }
   
   cf_3pt <- raw_cf_meta(Time=cf_2pt$Time, dim=c(1,1))

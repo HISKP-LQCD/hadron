@@ -14,7 +14,8 @@ in lattice-absolute coordinates (not relative to source!)}
 \item{loop}{'raw_cf' container holding loop contribution, suitably spin-projected
 and averaged over stochastic samples.}
 
-\item{src_ts}{Integer vector, the source time slices in lattice-absolute coordinates.
+\item{src_ts}{Integer vector, the source time slices that were used for the computation
+of the two-point function in lattice-absolute coordinates.
 Must be of the same length as the number of measurements in \code{cf_2pt}.}
 
 \item{dt}{Integer, the source-sink separation that should be computed.}
@@ -30,5 +31,8 @@ contribution to the three-point function.}
 be subtracted.}
 }
 \description{
-disconnected contribution to current insertion three-point function
+Computes the quark-line disconnected contribution to a three-point function
+of the form
+\deqn{ C_3(t, \Delta t = t_{snk} - t_{src}) = C_2(t_{snk}, t_{src}) * L(t) }
+\eqn{\forall t} considering only the case t_{snk} > t_{src}.
 }
