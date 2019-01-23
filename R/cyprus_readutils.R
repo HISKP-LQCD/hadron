@@ -88,7 +88,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
   }
   if( verbose ){
-    ticoc_avail <- requireNamespace("tictoc")
+    tictoc_avail <- requireNamespace("tictoc")
     if( !tictoc_avail ){
       stop("Time reporting requires the 'tictoc' package!")
     }
@@ -117,9 +117,11 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
       cid_to_read <- cid_in_filename
     }
 
-    h5f <- rhdf5::H5Fopen(f)
-    avail_loop_types <- h5_names_exist(h5f, selected_loop_types)
-
+    h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
+    
+    group_names <- h5ls(h5f)$name
+    
+    avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
     if( any( !avail_loop_types ) ){
       msg <- sprintf("Some selected loop types could not be found in %s:\n %s",
                      f,
@@ -135,8 +137,6 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     colnames(momenta_avail) <- c("qx","qy","qz")
     # index the momentum combinations
     momenta_avail <- cbind(momenta_avail, idx = 1:nrow(momenta_avail))
-    
-    group_names <- h5ls(h5f)$name
 
     # how many stochastic samples are available and does it match out expectation?
     stoch_avail <- sort(as.numeric(unlist(lapply(X = strsplit(unique(group_names[ grepl("Nstoch", group_names) ]),
