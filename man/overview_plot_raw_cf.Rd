@@ -4,8 +4,9 @@
 \alias{overview_plot_raw_cf}
 \title{create convenient overview plots for a \code{raw_cf} object}
 \usage{
-overview_plot_raw_cf(cf, reim = "real", reim_same = FALSE,
-  relerr = FALSE, tauint = FALSE, value_logplot = TRUE, title = "")
+overview_plot_raw_cf(cf, grid, reim = "real", reim_same = FALSE,
+  relerr = FALSE, tauint = FALSE, value_logplot = TRUE,
+  value_factor = c(1), title = "")
 }
 \arguments{
 \item{reim}{Vector of strings, one of 'real', 'imag' or 'both'.}
@@ -24,8 +25,13 @@ on each time slice should be added.}
 on a logarithmic vertical axis. (does not affect \code{tauint}
 and \code{relerr}.}
 
+\item{value_factor}{Numeric, either of length '1' or as long as the number of
+correlation functions in \code{cf}. The data will be scaled
+by this factor before plotting.}
+
 \item{title}{Character vector, will be passed as the \code{main} argument to
-\link{plotwitherror} which in turn passes it to \link{plot}.}
+\link{plotwitherror} which in turn passes it to \link{plot}. Can
+be either of length '1' or \code{prod(cf$dim)}}
 }
 \description{
 create convenient overview plots for a \code{raw_cf} object

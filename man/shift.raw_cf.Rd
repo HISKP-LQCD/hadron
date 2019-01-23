@@ -9,8 +9,15 @@ shift.raw_cf(cf, places)
 \arguments{
 \item{cf}{\code{raw_cf} container}
 
-\item{places}{Integer, number of time slices that the correlation function
-should be shifted by. Can be positive or negative.}
+\item{places}{Integer (possibly a vector), number of time slices that the correlation function
+should be shifted by. Can be positive or negative. This can either
+be a single value such that a shift by this many time slices will be
+applied to every measurement or it can be a vector of values of the
+same length as the number of measurements in \code{cf}. In that case,
+a different shift will be applied to each measurement. This is useful
+if it is important to preserve the absolute time coordinates of a
+correlation function until some time-dependent transformations
+have been applied.}
 }
 \description{
 shift a \code{raw_cf} correlation function by 'places' time-slices

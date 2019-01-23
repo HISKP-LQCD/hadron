@@ -77,6 +77,7 @@ raw_cf_data <- function (cf, data) {
 #' @param x 'raw_cf' container with 'raw_cf_data' and 'raw_cf_meta'
 #' @param component Integer vector of the same length as the internal dimension
 #'                  of the 'raw_cf' specifying which component should be extracted.
+#' @export
 raw_cf_to_cf <- function(x, component){
   stopifnot(inherits(x, 'raw_cf_meta'))
   stopifnot(inherits(x, 'raw_cf_data'))
@@ -595,14 +596,20 @@ plot.raw_cf <- function(x,
 #' @param value_logplot Boolean, whether the plot of the correlator should be
 #'                      on a logarithmic vertical axis. (does not affect \code{tauint}
 #'                      and \code{relerr}.
+#' @param value_factor Numeric, either of length '1' or as long as the number of
+#'                     correlation functions in \code{cf}. The data will be scaled
+#'                     by this factor before plotting.
 #' @param title Character vector, will be passed as the \code{main} argument to
-#'              \link{plotwitherror} which in turn passes it to \link{plot}.
-overview_plot_raw_cf <- function(cf, 
+#'              \link{plotwitherror} which in turn passes it to \link{plot}. Can
+#'              be either of length '1' or \code{prod(cf$dim)}
+overview_plot_raw_cf <- function(cf,
+                                 grid,
                                  reim = 'real', 
                                  reim_same = FALSE,
                                  relerr = FALSE,
                                  tauint = FALSE,
                                  value_logplot = TRUE,
+                                 value_factor = c(1),
                                  title = '')
 {
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -614,11 +621,17 @@ overview_plot_raw_cf <- function(cf,
   if( reim_same & !(reim == 'both') ){
     stop("'reim_same' can only be true if 'reim' is 'both'")
   }
+  if(!missing(grid)){
+    if( prod(grid) != prod(cf$dim) ){
+      stop("'prod(grid)' must be equal to 'prod(cf$dim)'")
+    }
+    par(mfrow=grid)
+  }
 
   # produce a vector of plot symbols such that we have one
   # symbol per observable, all smearing types will be plotted
   # with the same symbol and we wrap around when we run out of symbols
-  pch <- expand.grid(rep(1:cf$nts, times=cf$nrStypes), c(0:6, 15:18) )
+  pch <- expand.grid(rep(1:cf$nts, times=cf$nrStypes), c(0:6, 15:18), KEEP.OUT.ATTRS=FALSE )
   pch <- rep(pch[,2], length.out=cf$nts*cf$nrObs*cf$nrStypes) 
 
   ylabs <- list()
@@ -634,11 +647,39 @@ overview_plot_raw_cf <- function(cf,
 
   tmax <- cf$nts-1  
   plotdata <- get_plotdata_raw_cf(cf, reim=reim, relerr=relerr, tauint=tauint)
+
+  if( length(value_factor) != 1 && length(value_factor) != prod(cf$dim) ){
+    message <- sprintf(paste("If 'value_factor' is of length > 1,",
+                             "it must be of the same length at the number of correlators",
+                             "to be plotted [prod(cf$dim)] !.",
+                             "In this case, length(value_factor)=%d, prod(cf$dim)=%d"),
+                       length(value_factor), prod(cf$dim) )
+    stop(message)
+  }
+  # if only a single factor has been provided, replicate it as many times as there
+  # are correlators to be ploted
+  if( length(value_factor) == 1 ){
+    value_factor <- rep(value_factor, times = prod(cf$dim) )
+  }
+
+  if( length(title) != 1 && length(title) != prod(cf$dim) ){
+    message <- sprintf(paste("If 'title' is of length > 1,",
+                             "it must be of the same length at the number of correlators",
+                             "to be plotted [prod(cf$dim)] !.",
+                             "In this case, length(title)=%d, prod(cf$dim)=%d"),
+                       length(title), prod(cf$dim) )
+    stop(message)
+  }
+  if( length(title) == 1 ){
+    title <- rep(title, times=prod(cf$dim))
+  }
+
   ts <- rep(0:tmax, times=cf$nrStypes*cf$nrObs)
   if( reim_same ){
     ts <- rep(ts,times=2)
   }
   step <- 1
+
   if( reim_same ) step <- 2
   for( lidx in 1:length(plotdata) ){
     onames <- names(plotdata[[lidx]])
@@ -647,7 +688,7 @@ overview_plot_raw_cf <- function(cf,
       args$x <- ts
       args$xlab <- "t/a"
       args$ylab <- ylabs[[onames[oidx]]]
-      args$main <- title
+      args$main <- title[lidx]
       args$pch <- pch
       if( (onames[oidx] == "real" | onames[oidx] == "imag") & value_logplot ){
         args$log <- 'y'
@@ -662,6 +703,12 @@ overview_plot_raw_cf <- function(cf,
         args$y <- plotdata[[lidx]][[ onames[oidx] ]]$val
         args$dy <- plotdata[[lidx]][[ onames[oidx] ]]$dval
       }
+      # apply the scaling factor to teh expectation value of the observable
+      if( (onames[oidx] == "real" | onames[oidx] == "imag") ){
+        args$y <- value_factor[lidx]*args$y
+        args$dy <- value_factor[lidx]*args$dy
+      }
+
       # when plotting relative errors, it is not useful to plot errors larger than
       # 100%
       if( grepl("relerr",onames[oidx]) ){
@@ -674,11 +721,17 @@ overview_plot_raw_cf <- function(cf,
   }
 }
 
-
 #' @title shift a \code{raw_cf} correlation function by 'places' time-slices
 #' @param cf \code{raw_cf} container
-#' @param places Integer, number of time slices that the correlation function
-#'               should be shifted by. Can be positive or negative.
+#' @param places Integer (possibly a vector), number of time slices that the correlation function
+#'               should be shifted by. Can be positive or negative. This can either
+#'               be a single value such that a shift by this many time slices will be
+#'               applied to every measurement or it can be a vector of values of the
+#'               same length as the number of measurements in \code{cf}. In that case,
+#'               a different shift will be applied to each measurement. This is useful
+#'               if it is important to preserve the absolute time coordinates of a
+#'               correlation function until some time-dependent transformations
+#'               have been applied.
 #' @details
 #' The correlation funtion \eqn{C(t)} is shifted in time to produce:
 #'   \deqn{C'(t) = C(t+places)}
@@ -688,41 +741,56 @@ shift.raw_cf <- function(cf, places) {
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
 
-  if(places == 0){
-    return(invisible(cf))
+  if( (length(places) != 1) & (length(places) != dim(cf$data)[1]) ){
+    stop("'places' should be either of length '1' or of a length equalling the number of measurements in 'cf'")
+  }
+  if(length(places) == 1 & places == 0){
+    return(cf)
   }
 
   dims <- dim(cf$data)
 
-  for( oidx in 0:(cf$nrObs-1) ){
-    for( sidx in 0:(cf$nrStypes-1) ){
-      # the 'time' indices of the observables and smearing types
-      istart <- cf$Time*cf$nrStypes*oidx + cf$Time*sidx + 1
-      iend <- istart + cf$Time - 1
+  if( length(places) == 1 ){
+    step <- dims[1]
+  } else {
+    step <- 1
+  }
 
-      # construct an argument list for do.call below
-      args <- list()
-      args[[1]] <- 1:dims[1]
-      args[[2]] <- istart:iend
-      for( d in cf$dim ){
-        args[[length(args)+1]] <- 1:d
+  # if places is of length '1', we do all measurements in one step (see index matrix construction below)
+  # else we do each measurement separately
+  for( imeas in seq(from = 1, to = dims[1], by = step) ){
+    # make sure that we don't do any work when places[
+    if( places[imeas] == 0 ) next
+    for( oidx in 0:(cf$nrObs-1) ){
+      for( sidx in 0:(cf$nrStypes-1) ){
+        # the 'time' indices of the observables and smearing types
+        istart <- cf$Time*cf$nrStypes*oidx + cf$Time*sidx + 1
+        iend <- istart + cf$Time - 1
+
+        # construct an argument list for do.call below
+        args <- list()
+        args[[1]] <- imeas:(imeas+step-1)
+        args[[2]] <- istart:iend
+        for( d in cf$dim ){
+          args[[length(args)+1]] <- 1:d
+        }
+        # construct the tensor index set for the output
+        out_dof <- as.matrix(do.call(expand.grid, args))
+        
+        if( places[imeas] < 0 ){
+          ishift <- c( (iend - abs(places[imeas])):iend,
+                       (istart:(iend-abs(places[imeas])-1)) )
+        } else {
+          ishift <- c( (istart+places[imeas]):iend,
+                        istart:(istart+places[imeas]-1))
+        }
+        args[[2]] <- ishift
+        # construct the tensor index set for the input
+        in_dof <- as.matrix(do.call(expand.grid, args))
+
+        # shift the correlator tensor
+        cf$data[out_dof] <- cf$data[in_dof]
       }
-      # construct the tensor index set for the output
-      out_dof <- as.matrix(do.call(expand.grid, args))
-      
-      if( places < 0 ){
-        ishift <- c( (iend - abs(places)):iend,
-                     (istart:(iend-abs(places)-1)) )
-      } else {
-        ishift <- c( (istart+places):iend,
-                      istart:(istart+places-1))
-      }
-      args[[2]] <- ishift
-      # construct the tensor index set for the input
-      in_dof <- as.matrix(do.call(expand.grid, args))
-      
-      # shift the correlator tensor
-      cf$data[out_dof] <- cf$data[in_dof]
     }
   }
   return(cf)
