@@ -23,6 +23,9 @@ but of course prevents the projected loop data to be
 used for the construction of diagrams with multiple quark loops.}
 
 \item{scale_factor}{Complex scaling factor to be applied.}
+
+\item{herm_conj}{Boolean, optionally the loop matrix \eqn{M} can be hermitian
+conjugated before the spin projection is performed.}
 }
 \description{
 Implements the operation

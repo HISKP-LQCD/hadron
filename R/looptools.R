@@ -274,7 +274,9 @@ loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
 #'                performed. This makes the projection much faster
 #'                but of course prevents the projected loop data to be
 #'                used for the construction of diagrams with multiple quark loops.
-#' @param scale_factor Complex scaling factor to be applied. 
+#' @param scale_factor Complex scaling factor to be applied.
+#' @param herm_conj Boolean, optionally the loop matrix \eqn{M} can be hermitian
+#'                  conjugated before the spin projection is performed.
 #' @export
 loop_spin_project <- function(loop,
                               gamma,
