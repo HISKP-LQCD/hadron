@@ -283,6 +283,10 @@ addStat.raw_cf <- function(cf1, cf2) {
 }
 
 #' @title add two `raw_cf` objects
+#' @param cf1 first 'raw_cf' container with data and meta-data
+#' @param cf2 second 'raw_cf' container with data and meta-data
+#' @param a Numeric or complex, scaling factor applied to \code{cf1}.
+#' @param b Numeric or complex, scaling factor applied to \code{cf2}.
 #' @return \code{a*cf1$data + b*cf2$data}
 add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   stopifnot(inherits(cf1, 'raw_cf'))
@@ -302,18 +306,24 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 
 
 #' @title add two `raw_cf` objects
+#' @param cf1 first 'raw_cf' container to be added
+#' @param cf2 second 'raw_cf' container to be added
 #' @return `raw_cf` object with \code{cf$data == cf1$data + cf2$data}
 '+.raw_cf' <- function (cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
 #' @title add two `raw_cf` objects
+#' @param cf1 first 'raw_cf' container to be subtracted
+#' @param cf2 second 'raw_cf' container to be subtracted
 #' @return `raw_cf` object with \code{cf$data == cf1$data - cf2$data}
 '-.raw_cf' <- function(cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
 #' @title divide two `raw_cf` objects
+#' @param cf1 'raw_cf' container with data and meta-data to be the dividend
+#' @param cf2 'raw_cf' container with data and meta-data to be the divisor
 #' @return `raw_cf` object with \code{cf$data == cf1$data / cf2$data}
 '/.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
@@ -330,6 +340,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 #' @title multiply two `raw_cf` objects
+#' @param cf1 first 'raw_cf' container with data and meta-data to be multiplied
+#' @param cf2 second 'raw_cf' container with data and meta-data to be multiplied
 #' @return `raw_cf` object with \code{cf$data == cf1$data * cf2$data}
 '*.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
@@ -346,6 +358,7 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 }
 
 #' @title scale `raw_cf` data
+#' @param cf 'raw_cf' container with data to be scaled by the factor \code{a}
 #' @param a Numeric or complex scaling factor, although it could also be
 #'          an array of dimensions compatible with \code{cf$data}
 #' @return `raw_cf` object with \code{res$data == a*cf$data}
@@ -423,7 +436,7 @@ concat.raw_cf <- function (left, right) {
   return (rval)
 }
 
-#' @title extract data in format convenient to plot
+#' @title extract data from 'raw_cf' in format convenient to plot
 #' @description When dealing with with tensorial `raw_cf` objects
 #'              pre-processing and reshaping is always required to
 #'              prepare the data for plotting (or similar). This function

@@ -2,7 +2,7 @@
 % Please edit documentation in R/raw_cf.R
 \name{get_plotdata_raw_cf}
 \alias{get_plotdata_raw_cf}
-\title{extract data in format convenient to plot}
+\title{extract data from 'raw_cf' in format convenient to plot}
 \usage{
 get_plotdata_raw_cf(cf, reim, tauint, relerr)
 }

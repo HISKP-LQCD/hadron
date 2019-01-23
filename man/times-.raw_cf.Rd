@@ -6,6 +6,11 @@
 \usage{
 \method{*}{raw_cf}(cf1, cf2)
 }
+\arguments{
+\item{cf1}{first 'raw_cf' container with data and meta-data to be multiplied}
+
+\item{cf2}{second 'raw_cf' container with data and meta-data to be multiplied}
+}
 \value{
 \code{raw_cf} object with \code{cf$data == cf1$data * cf2$data}
 }
