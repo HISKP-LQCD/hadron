@@ -544,7 +544,7 @@ get_plotdata_raw_cf <- function(cf,
 #' @param reim_same Boolean, determines whether the real and imaginary parts, if both
 #'                  are to be plotted, will be plotted in the same plot.
 #' @param ... Further parameters passed to \link{plotwitherror}.
-#' @return Invisibly returns the plotdata, see \link{plotdata.raw_cf}.
+#' @return Invisibly returns the plotdata, see \link{get_plotdata.raw_cf}.
 plot.raw_cf <- function(x,
                         ...,
                         reim = 'real', 
