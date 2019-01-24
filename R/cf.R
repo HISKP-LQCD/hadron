@@ -146,6 +146,10 @@ jackknife_error <- function (samples, na.rm = FALSE) {
   sqrt(factor * (N - 1)^2 / N) * sd(samples)
 }
 
+
+#' Computes covariance matrix for jackknife samples. The rows containing any NA will be deleted if na.rm = TRUE.
+#' 
+#'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     factor <- 1.0
@@ -153,9 +157,9 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     if (is.null(y)) {
         N <- nrow(x)
         if (na.rm) {
-            na_values <- apply(x, 2, function (row) any(is.na(row)))
+            na_values <- apply(x, 1, function (row) any(is.na(row)))
             m <- sum(na_values)
-            x <- x[!na_values, ]
+            x <- x[!na_values,]
             factor <- N / m
         }
     } else {
@@ -171,6 +175,8 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     
     (N-1)^2 / N * factor * cov(x, y, ...)
 }
+
+
 
 #' Original data CF mixin constructor
 #'
