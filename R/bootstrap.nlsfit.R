@@ -592,15 +592,18 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 
   ## to include additional parameter to x$fn originally given as ... to
   ## bootstrap.nlsfit requires some pull-ups
-  Y <- numeric()
-  Y <- do.call(what=x$fn, args=c(list(par=x$t0[1:npar], x=X), x$tofn))
+  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot_r = 0), x$tofn))
 
   ## error band
   ## define a dummy function to be used in apply
-  dummyfn <- function(par, x, object) {
-    return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
+  dummyfn <- function (par, x, object) {
+    do.call(object$fn, c(list(par = par, x = x), object$tofn))
   }
-  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=error, na.rm=TRUE)
+  se <- apply(
+    rbind(apply(x$t[, 1:npar, drop = FALSE], 1, dummyfn, x = X, object = x)),
+    1,
+    error,
+    na.rm = TRUE)
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))
