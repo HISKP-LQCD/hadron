@@ -596,14 +596,13 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 
   ## error band
   ## define a dummy function to be used in apply
-  dummyfn <- function (par, x, object) {
-    do.call(object$fn, c(list(par = par, x = x), object$tofn))
+  prediction_boot_fn <- function (boot_r) {
+    par <- x$t[boot_r, 1:npar, drop = FALSE]
+    do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
   }
-  se <- apply(
-    rbind(apply(x$t[, 1:npar, drop = FALSE], 1, dummyfn, x = X, object = x)),
-    1,
-    error,
-    na.rm = TRUE)
+  predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+  se <- apply(predictions, 2, error, na.rm = TRUE)
+  stopifnot(length(se) == length(X))
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))
