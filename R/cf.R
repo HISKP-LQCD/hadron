@@ -146,8 +146,10 @@ jackknife_error <- function (samples, na.rm = FALSE) {
   sqrt(factor * (N - 1)^2 / N) * sd(samples)
 }
 
-#' Computes covariance matrix for jackknife samples. The rows containing any NA will be deleted if na.rm = TRUE.
-#' 
+#' Computes covariance matrix for jackknife samples.
+#'
+#' @param na.rm logical. The rows containing any `NA` will be deleted if this
+#' option is set.
 #'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {

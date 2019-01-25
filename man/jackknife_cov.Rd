@@ -2,10 +2,14 @@
 % Please edit documentation in R/cf.R
 \name{jackknife_cov}
 \alias{jackknife_cov}
-\title{Computes covariance matrix for jackknife samples. The rows containing any NA will be deleted if na.rm = TRUE.}
+\title{Computes covariance matrix for jackknife samples.}
 \usage{
 jackknife_cov(x, y = NULL, na.rm = FALSE, ...)
 }
+\arguments{
+\item{na.rm}{logical. The rows containing any \code{NA} will be deleted if this
+option is set.}
+}
 \description{
-Computes covariance matrix for jackknife samples. The rows containing any NA will be deleted if na.rm = TRUE.
+Computes covariance matrix for jackknife samples.
 }
