@@ -247,7 +247,8 @@ bootstrap.nlsfit <- function(fn,
                              dfn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
-                             error = sd) {
+                             error = sd,
+                             cov_fn = cov) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -299,7 +300,7 @@ bootstrap.nlsfit <- function(fn,
     }
 
     if (missing(CovMatrix)) {
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE), silent = TRUE)
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
     } else {
@@ -422,7 +423,6 @@ bootstrap.nlsfit <- function(fn,
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
-
   if (!first.res$converged) {
     stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
   }

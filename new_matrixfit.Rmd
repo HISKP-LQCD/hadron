@@ -1,0 +1,71 @@
+```{r setup}
+devtools::load_all()
+```
+
+```{r}
+  
+
+boot.R <- 100#100        # Hier muss angepasst werden!
+boot.l <- 400#400        # block length
+seed <- 1234
+
+#==============================#
+# Read in correlator files:    #
+#==============================#
+
+read <- function(n_phi) {
+  corr <- readtextcf(paste0('/home/schlage/Master/R/correlators_',n_phi,'_phi_phi4p.tsv'), T = 24, skip = 4) # Hier muss angepasst werden!
+  return(corr)
+}
+
+corr1 <- read(1)
+corr2 <- read(2)
+corr3 <- read(3)
+corr4 <- read(4)
+corr5 <- read(5)
+
+#==============================#
+# 1 particle corr:             #
+#==============================#
+uw1 <- uwerr.cf(corr1)
+save(uw1, file = 'uw1.Rdata')
+uw2 <- uwerr.cf(corr2)
+save(uw2, file = 'uw2.Rdata')
+uw3 <- uwerr.cf(corr3)
+save(uw3, file = 'uw3.Rdata')
+```
+
+
+```{r}
+samplecf_boot1 <- bootstrap.cf(corr1, boot.R = boot.R, boot.l = boot.l, seed = seed)
+shifted_corr1 <- takeTimeDiff.cf(samplecf_boot1) # Calculate the shifted correlator
+
+z1 <- new_matrixfit(shifted_corr1, 1, 9, fit.method = 'lm', model = 'shifted', sym.vec = 'sinh')
+print(z1)
+cat('\n')
+print(z1$par)
+print(z1$t0[1])
+print(z1$t0[2])
+
+samplecf_boot2 <- bootstrap.cf(corr2, boot.R = boot.R, boot.l = boot.l, seed = seed)
+shifted_corr2 <- takeTimeDiff.cf(samplecf_boot2) # Calculate the shifted correlator
+
+z2 <- new_matrixfit(shifted_corr2, 1, 9, fit.method = 'lm', model = 'shifted', sym.vec = 'sinh')
+print(z2)
+cat('\n')
+print(z2$par)
+print(z2$t0)
+
+parin <- c(z1$t0[1], z2$t0[2])
+print(parin)
+
+samplecf_boot3 <- bootstrap.cf(corr3, boot.R = boot.R, boot.l = boot.l, seed = seed)
+shifted_corr3 <- takeTimeDiff.cf(samplecf_boot3) # Calculate the shifted correlator
+
+z3 <- new_matrixfit(shifted_corr3, 1, 5, fit.method = 'lm', model = 'n_particles', sym.vec = 'sinh', param_vec = parin)
+print(z3)
+cat('\n')
+print(z3$par)
+print(z3$t0)
+
+```

@@ -4,10 +4,10 @@
 \alias{summary.raw_cf}
 \title{Print summary of data contained in \code{raw_cf} container}
 \usage{
-\method{summary}{raw_cf}(cf, ...)
+\method{summary}{raw_cf}(object, ...)
 }
 \arguments{
-\item{cf}{\code{raw_cf} container with data and meta-data}
+\item{object}{\code{raw_cf} container with data and meta-data}
 
 \item{...}{ignored}
 }
