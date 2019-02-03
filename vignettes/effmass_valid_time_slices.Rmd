@@ -1,0 +1,52 @@
+---
+title: "Valid effective mass time slices"
+output: html_notebook
+---
+
+```{r setup}
+devtools::load_all()
+```
+
+```{r}
+corr <- bootstrap.cf(samplecf)
+corr_shift <- takeTimeDiff.cf(corr)
+corr_weight <- corr_shift
+corr_weight$weight.factor <- 1.0
+
+all_res <- list()
+```
+
+```{r}
+types <- c('solve', 'acosh', 'temporal', 'log')
+
+effmasses <- lapply(types, function (type) bootstrap.effectivemass(corr, type))
+names(effmasses) <- types
+
+res <- lapply(effmasses, function (effmass) !is.na(effmass$effMass))
+all_res <- c(all_res, res)
+```
+
+```{r}
+types <- c('shifted')
+
+effmasses <- lapply(types, function (type) bootstrap.effectivemass(corr_shift, type))
+names(effmasses) <- types
+
+res <- lapply(effmasses, function (effmass) !is.na(effmass$effMass))
+all_res <- c(all_res, res)
+```
+
+```{r}
+types <- c('weighted')
+
+effmasses <- lapply(types, function (type) bootstrap.effectivemass(corr_weight, type))
+names(effmasses) <- types
+
+res <- lapply(effmasses, function (effmass) !is.na(effmass$effMass))
+all_res <- c(all_res, res)
+```
+
+```{r}
+print(all_res)
+```
+
