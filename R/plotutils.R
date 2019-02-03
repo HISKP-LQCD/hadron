@@ -476,3 +476,12 @@ drawXbars <- function(x,y,dx,length=0.01,...) {
 #box()
 #dev.off()
 #par(opar)
+
+new_X11_if_appropriate <- function () {
+  is_X11 <- grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE)
+  is_null <- grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE)
+
+  if (interactive() && (is_X11 || is_null)) {
+    X11()
+  }
+}
