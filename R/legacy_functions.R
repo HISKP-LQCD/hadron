@@ -46,9 +46,7 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   rm(Z)
   attr(result, "class") <- c("massfit", "data.frame")
   if(pl == T) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_X11_if_appropriate()
     plot(result)
   }
   return(invisible(result))

@@ -111,9 +111,7 @@ analyse.hankel <- function(cf, t0=1, range=c(1./exp(1),1.), n=5,
                               submatrix.size=submatrix.size, element.order=element.order, id=id)
       ##cat(bla$evs, "\n")
       ##cat("n=", n, -log(bla$evs), apply(-log(bla$evs.tsboot), 1, sd, na.rm=TRUE), "\n")
-      if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-        X11()
-      }
+      new_X11_if_appropriate()
       hist(-log(unlist(bla$evs.tsboot))/deltat, breaks=200, xlim=c(0,2), xlabel=c(""), ylabel=c(""))
     }
   }
@@ -122,9 +120,7 @@ analyse.hankel <- function(cf, t0=1, range=c(1./exp(1),1.), n=5,
                             submatrix.size=submatrix.size, element.order=element.order, id=id)
     ##cat(bla$evs, "\n")
     ##cat("n=", n, -log(bla$evs), apply(-log(bla$evs.tsboot), 1, sd, na.rm=TRUE), "\n")
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_X11_if_appropriate()
     hist(-log(unlist(bla$evs.tsboot))/deltat, breaks=200, xlim=c(0,2))
   }
   ##par(def.par)  #- reset to default
