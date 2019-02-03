@@ -186,6 +186,8 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' @param error Function that takes a sample vector and returns the error
 #' estimate. This is a parameter in order to support different resampling
 #' methods like jackknife.
+#' @param maxiter integer. Maximum number of iterations that can be used in the
+#' optimization process.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -248,7 +250,8 @@ bootstrap.nlsfit <- function(fn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              error = sd,
-                             cov_fn = cov) {
+                             cov_fn = cov,
+                             maxiter = 500) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -401,7 +404,7 @@ bootstrap.nlsfit <- function(fn,
       suppressWarnings(
         res <- minpack.lm::nls.lm(
           par=par, fn=fitchi, y=y, jac=dfitchi,
-          control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500),
+          control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter),
           ...))
 
       list(converged = res$info %in% 1:3,
@@ -412,7 +415,7 @@ bootstrap.nlsfit <- function(fn,
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
     wrapper <- function(y, par, ...) {
-      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=500), ...)
+      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=maxiter), ...)
 
       list(converged = res$convergence == 0,
            info = NA,
