@@ -47,6 +47,12 @@ bootstrap.effectivemass(cf, type="solve")
   
   and \code{boot.R},
   \code{boot.l}, \code{Time}
+
+  \code{not_na_by_design}:\cr
+  Depending on the type of the effective mass, some time slices are NA by
+  design. These are pointless to examine further. This logical vector tells
+  whether a time slice is not NA by design. A time slice marked \code{TRUE} can
+  still be NA, it just is not so by design.
 }
 \details{
   A number of types is implemented to compute effective mass values from

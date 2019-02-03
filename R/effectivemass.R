@@ -113,6 +113,18 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
   ret$se <- apply(ret$t, MARGIN=2L, FUN=cf$error_fn, na.rm=TRUE)
+
+  ## We need to tell the user which time slices `NA` by design. We start with
+  ## all `TRUE` and then switch off the slices that we know to be `NA`.
+  not_na_by_design <- rep(TRUE, length(effMass))
+  if (type %in% c('acosh', 'shifted', 'temporal', 'weighted')) {
+    not_na_by_design[1] <- FALSE
+  }
+  if (type %in% c('shifted', 'temporal', 'weighted')) {
+    not_na_by_design[length(not_na_by_design)] <- FALSE
+  }
+  ret$not_na_by_design <- not_na_by_design
+
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
