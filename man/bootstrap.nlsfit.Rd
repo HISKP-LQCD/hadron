@@ -99,7 +99,7 @@ x <- c(1, 2, 3)
 dx <- c(0.1, 0.1, 0.1)
 boot.R <- 1500
 
-fn <- function (par, x, ...) par[1] + par[2] * x
+fn <- function (par, x, boot_r, ...) par[1] + par[2] * x
 
 ## Before we can use the fit with this data, we need to create bootstrap
 ## samples. We do not want to use the correlation matrix here. Note that you
@@ -110,6 +110,7 @@ head(bsamples)
 
 fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 summary(fit.result)
+plot(fit.result)
 
 }
 \seealso{
