@@ -6,6 +6,11 @@
 \usage{
 \method{/}{raw_cf}(cf1, cf2)
 }
+\arguments{
+\item{cf1}{'raw_cf' container with data and meta-data to be the dividend}
+
+\item{cf2}{'raw_cf' container with data and meta-data to be the divisor}
+}
 \value{
 \code{raw_cf} object with \code{cf$data == cf1$data / cf2$data}
 }

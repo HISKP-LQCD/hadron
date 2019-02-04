@@ -22,12 +22,14 @@ Imports:
 LinkingTo: 
     Rcpp
 Suggests: 
-    tikzDevice,
+    dplyr,
     minpack.lm,
     parallel,
     rhdf5,
     knitr,
-    testthat
+    testthat,
+    tictoc,
+    tikzDevice
 License: GPL-3
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues

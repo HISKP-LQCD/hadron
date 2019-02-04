@@ -19,7 +19,7 @@ should be plotted.}
 are to be plotted, will be plotted in the same plot.}
 }
 \value{
-Invisibly returns the plotdata, see \link{plotdata.raw_cf}.
+Invisibly returns the plotdata, see \link{get_plotdata.raw_cf}.
 }
 \description{
 plot all correlators in \code{raw_cf} object
