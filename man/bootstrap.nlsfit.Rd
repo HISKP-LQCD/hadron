@@ -6,7 +6,7 @@
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
   dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
-  cov_fn = cov)
+  cov_fn = cov, maxiter = 500)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -61,6 +61,9 @@ stable.}
 \item{error}{Function that takes a sample vector and returns the error
 estimate. This is a parameter in order to support different resampling
 methods like jackknife.}
+
+\item{maxiter}{integer. Maximum number of iterations that can be used in the
+optimization process.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input
