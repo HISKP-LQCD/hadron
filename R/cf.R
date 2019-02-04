@@ -83,7 +83,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
     .cf$cov_fn <- cov
   }
   else if (resampling_method == 'jackknife') {
-    .cf$error_fn <- jackknife_error
+    .cf$error_fn <- function (...) jackknife_error(..., boot.l = boot.l)
     .cf$cov_fn <- jackknife_cov
   } else {
     stop('This resampling method is not implemented')
