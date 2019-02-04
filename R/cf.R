@@ -128,7 +128,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' otherwise underestimate the uncertainty.
 #'
 #' @export
-jackknife_error <- function (samples, na.rm = FALSE) {
+jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   ## Number of jackknife samples.
   N <- length(samples)
 
@@ -143,7 +143,7 @@ jackknife_error <- function (samples, na.rm = FALSE) {
     factor <- 1.0
   }
 
-  sqrt(factor * (N - 1)^2 / N) * sd(samples)
+  sqrt(factor * (N - 1)^2 / (N * boot.l)) * sd(samples)
 }
 
 #' Computes covariance matrix for jackknife samples.
