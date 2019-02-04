@@ -465,6 +465,7 @@ new_window_if_appropriate <- function () {
   is_null <- grepl(pattern = "null", x = names(dev.cur()), ignore.case = TRUE)
 
   if (interactive() && (is_X11 || is_null)) {
-    X11()
+    cat('Opening a new X11 window.\n')
+    dev.new()
   }
 }
