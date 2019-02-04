@@ -392,7 +392,7 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
 
   if(x$primary && plot.hist) {
     if (x11 && has_plotted)
-      new_X11_if_appropriate()
+      new_window_if_appropriate()
     has_plotted <- TRUE
 
     hist(x$data, main = paste("Histogram of" , main))
@@ -415,7 +415,7 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
       Wmax <- x$Wmax[[index]]
     }
     if (x11 && has_plotted)
-      new_X11_if_appropriate()
+      new_window_if_appropriate()
     has_plotted <- TRUE
 
     plotwitherror(x=c(0:Wmax),y=GammaFbb[1:(Wmax+1)],
@@ -424,7 +424,7 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
     abline(h=0)
   }
   if (x11 && has_plotted)
-    new_X11_if_appropriate()
+    new_window_if_appropriate()
   has_plotted <- TRUE
 
   if(x$primary == 1) tauintplot(ti=x$tauintofW, dti=x$dtauintofW, Wmax=Wmax, Wopt=Wopt, main=main)  

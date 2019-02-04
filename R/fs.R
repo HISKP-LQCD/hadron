@@ -16,7 +16,7 @@ fs <- function(data) {
 
   fit.fpi.fs <- optim(par=c(0.15,-10.,1.), ChiSqr.fs.fps, method="BFGS",
                       L=L, y=fps, err=dfps, mpi=fit.mpi.fs$par[1], control=list(maxit=1000))
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, fps, dfps, xlab="mps*L", ylab="f_ps")
   yfit <- fit.fpi.fs$par[1] + fit.fpi.fs$par[2]/xfit^(3/2)*exp(-fit.fpi.fs$par[3]*fit.mpi.fs$par[1]*xfit)
   lines(spline(xfit*fit.mpi.fs$par[1], yfit), col="blue", lty=1)
@@ -26,7 +26,7 @@ fs <- function(data) {
   fit.comb <- optim(par=c(fit.mpi.fs$par, fit.fpi.fs$par[1], fit.fpi.fs$par[2]), ChiSqr.fs.comb, method="BFGS",
                     L=L, mps=mps, fps=fps, dmps=err, dfps=dfps, control=list(maxit=1000))
   print(fit.comb)
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")
   yfitm <- fit.comb$par[1] + fit.comb$par[2]/xfit^(3/2)*exp(-fit.comb$par[3]*fit.comb$par[1]*xfit)
 
@@ -34,7 +34,7 @@ fs <- function(data) {
   abline(h=fit.comb$par[1], col="red")
   title("FS effects in m_ps, combined fit")
 
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, fps, dfps, xlab="mps*L", ylab="f_ps")
   yfitf <- fit.comb$par[4] + fit.comb$par[5]/xfit^(3/2)*exp(-fit.comb$par[3]*fit.comb$par[1]*xfit)
   lines(spline(xfit*fit.comb$par[1], yfitf), col="blue", lty=1)
@@ -45,7 +45,7 @@ fs <- function(data) {
                     L=L, mps=mps, fps=fps, dmps=err, dfps=dfps)
   cat("fit.com2\n")
   print(fit.comb2)
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")
   yfitm <- fit.comb2$par[1] + fit.comb2$par[2]/xfit^(3/2)*exp(-fit.comb2$par[1]*xfit)
 
@@ -53,7 +53,7 @@ fs <- function(data) {
   abline(h=fit.comb2$par[1], col="red")
   title("FS effects in m_ps, combined fit (2)")
 
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, fps, dfps, xlab="mps*L", ylab="f_ps")
   yfitf <- fit.comb2$par[3] + fit.comb2$par[4]/xfit^(3/2)*exp(-fit.comb2$par[1]*xfit)
   lines(spline(xfit*fit.comb2$par[1], yfitf), col="blue", lty=1)
@@ -64,7 +64,7 @@ fs <- function(data) {
   fit.pow.mps <- optim(par=c(0.15,50.,3/2), ChiSqr.pow, method="BFGS",
                        L=L, y=mps, err=err)
   print(fit.pow.mps)
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")
   yfit <- fit.pow.mps$par[1] + fit.pow.mps$par[2]/xfit^fit.pow.mps$par[3]
   lines(spline(xfit*fit.pow.mps$par[1], yfit), col="blue", lty=1)
@@ -74,7 +74,7 @@ fs <- function(data) {
   fit.pow.fps <- optim(par=c(0.05,-5.,3/2), ChiSqr.pow, method="BFGS", control=list(maxit=10000),
                        L=L, y=fps, err=dfps)
   print(fit.pow.fps)
-  new_X11_if_appropriate()
+  new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, fps, dfps, xlab="mps*L", ylab="f_ps")
   yfit <- fit.pow.fps$par[1] + fit.pow.fps$par[2]/xfit^fit.pow.fps$par[3]
   lines(spline(xfit*fit.pow.fps$par[1], yfit), col="blue", lty=1)

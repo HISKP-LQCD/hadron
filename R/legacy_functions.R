@@ -46,7 +46,7 @@ effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   rm(Z)
   attr(result, "class") <- c("massfit", "data.frame")
   if(pl == T) {
-    new_X11_if_appropriate()
+    new_window_if_appropriate()
     plot(result)
   }
   return(invisible(result))

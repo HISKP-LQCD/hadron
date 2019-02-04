@@ -65,7 +65,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   df <- data.frame(Blocksize=Blocksize, Mean=Mean, Error=Error, DError=DError, Tauint=Tauint, Bias=Bias)
   if(pl) {
     plot(data.boot)
-    new_X11_if_appropriate()
+    new_window_if_appropriate()
     plotwitherror(df$Blocksize, df$Error, df$DError, xlab="l", ylab="Error")
   }
   return(invisible(df))
