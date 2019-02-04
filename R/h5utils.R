@@ -15,3 +15,21 @@ h5_get_dataset <- function(h5f,key)
   }
   return(rval)
 }
+
+#' @title check if group names exist in HDF5 file
+#' @description The group names in an HDF5 file are stored as full paths
+#'              as well as a flat vector. It is thus possible to check
+#'              if a particular set of group names exist in the file
+#'              by parsing the \code{name} member of the output
+#'              of \code{h5ls}. This function does just that.
+#' @param h5f HDF5 file openend with \code{H5Fopen}
+#' @param nms_to_find Vector of strings, group names (not full paths) which
+#'                    are to be located in the file.
+#' @return Vector of booleans of the same length as \code{nms_to_find}
+#'         indicating whether the name at the same index position
+#'         was located in the file.
+h5_names_exist <- function(h5f, nms_to_find){
+  nms <- h5ls(h5f)$name
+  unlist( lapply( nms_to_find, function(x){ x %in% nms } ) )
+}
+

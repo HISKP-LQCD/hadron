@@ -7,6 +7,8 @@
 mul.raw_cf(cf, a = 1)
 }
 \arguments{
+\item{cf}{'raw_cf' container with data to be scaled by the factor \code{a}}
+
 \item{a}{Numeric or complex scaling factor, although it could also be
 an array of dimensions compatible with \code{cf$data}}
 }
