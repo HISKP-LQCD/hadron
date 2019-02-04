@@ -220,7 +220,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' dx <- c(0.1, 0.1, 0.1)
 #' boot.R <- 1500
 #'
-#' fn <- function (par, x, ...) par[1] + par[2] * x
+#' fn <- function (par, x, boot_r, ...) par[1] + par[2] * x
 #'
 #' ## Before we can use the fit with this data, we need to create bootstrap
 #' ## samples. We do not want to use the correlation matrix here. Note that you
@@ -231,6 +231,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #'
 #' fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 #' summary(fit.result)
+#' plot(fit.result)
 #'
 #' @export
 #' @family NLS fit functions
@@ -592,15 +593,17 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 
   ## to include additional parameter to x$fn originally given as ... to
   ## bootstrap.nlsfit requires some pull-ups
-  Y <- numeric()
-  Y <- do.call(what=x$fn, args=c(list(par=x$t0[1:npar], x=X), x$tofn))
+  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot_r = 0), x$tofn))
 
   ## error band
   ## define a dummy function to be used in apply
-  dummyfn <- function(par, x, object) {
-    return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
+  prediction_boot_fn <- function (boot_r) {
+    par <- x$t[boot_r, 1:npar, drop = FALSE]
+    do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
   }
-  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=error, na.rm=TRUE)
+  predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+  se <- apply(predictions, 2, error, na.rm = TRUE)
+  stopifnot(length(se) == length(X))
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))
