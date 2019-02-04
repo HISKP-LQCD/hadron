@@ -13,7 +13,7 @@ bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
 data. Its first argument must be the fit parameters named \code{par}. The
 second must be \code{x}, the explaining variable. Additional parameters
 might be passed to the function. Currently we pass \code{boot_r} which is \code{0}
-for the original data and the ID (1, …) of the bootstrap sample otherwise.
+for the original data and the ID (1, ...) of the bootstrap sample otherwise.
 As more parameters might be added in the future it is recommended that the
 fit function accepts \code{...} as the last parameter to be forward compatible.}
 

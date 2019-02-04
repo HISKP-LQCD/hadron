@@ -120,8 +120,8 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 
 #' NLS fit with parametric bootstrap and covariance
 #'
-#' @inheritParams bootstrap.nlsfit.cov
-#' @inheritParams parametric.bootstrap
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap.cov
 #'
 #' @export
 #' @family NLS fit functions
@@ -150,7 +150,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' data. Its first argument must be the fit parameters named \code{par}. The
 #' second must be \code{x}, the explaining variable. Additional parameters
 #' might be passed to the function. Currently we pass `boot_r` which is `0`
-#' for the original data and the ID (1, …) of the bootstrap sample otherwise.
+#' for the original data and the ID (1, ...) of the bootstrap sample otherwise.
 #' As more parameters might be added in the future it is recommended that the
 #' fit function accepts `...` as the last parameter to be forward compatible.
 #' @param gr `gr(par, x, ...)`. \code{gr=d(fn) / d(par)} is a function to
@@ -428,7 +428,7 @@ bootstrap.nlsfit <- function(fn,
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
   if (!first.res$converged) {
-    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+    stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
 
   if (parallel)
@@ -449,7 +449,7 @@ bootstrap.nlsfit <- function(fn,
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
   if (!converged[1]) {
-    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+    stop(sprintf('The second fit to the original data has failed. The `info` from the algorithm is `%d`', info[1]))
   }
   
   if (any(!converged)) {
