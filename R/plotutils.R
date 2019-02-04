@@ -89,17 +89,19 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     stop("plotwitherror: if any dx, mdx, dy or mdy is a simple vector, it must be of the same length as the corresponing x/y, multiple errors must ALWAYS be specified in the form of arrays/data frames/matrices")
   }
 
-  fcall <- match.call(expand.dots=TRUE)
+  # if no plotting limits are passed, we calculate them automatically
+  # for this to work properly, we need to know if any of the axes
+  # are requested in log scale
+  dots <- list(...)
   ylog <- FALSE
   xlog <- FALSE
-  if(any(names(fcall) == "log")) {
-    i <- match(c("log"), names(fcall))
-    ylog <- any(eval(fcall[[i]]) == "y")
-    xlog <- any(eval(fcall[[i]]) == "x")
+  if( 'log' %in% names(dots) ) {
+    logidx <- which(names(dots) == 'log')
+    if(any( grepl('y', dots[logidx]) ) ){ ylog <- TRUE }
+    if(any( grepl('x', dots[logidx]) ) ){ xlog <- TRUE }
   }
   my.xlim <- c()
   my.ylim <- c()
-
  
   # cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
@@ -171,6 +173,11 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     plot(x, y, col=col, ...)
   }
 
+  # We will need some langth in inches, so let's define the proportionality factor as
+  # size of the output in inches devided by the differnce of boundary coordinates.
+  x.to.inches <- par("pin")[1]/diff(par("usr")[1:2])
+  y.to.inches <- par("pin")[2]/diff(par("usr")[3:4])
+
   options(show.error.messages = FALSE)
   if(!is.null(cumul.dy)) {
     for(cumul.err in list(cumul.dy,cumul.mdy)){
@@ -187,8 +194,9 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
+          dy.in.inches <- abs(end-start)*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
 
-          if (!is.na(start) && !is.na(end) && start != end) {
+          if (!is.na(start) && !is.na(end) && dy.in.inches > 1/1000) {
             arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
             arwhd.len <- arwhd.len + 0.01
           }
@@ -214,8 +222,12 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
-          arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
-          arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
+          dx.in.inches <- abs(end-start)*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+
+          if (!is.na(start) && !is.na(end) && dx.in.inches > 1/1000) {
+            arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
+            arwhd.len <- arwhd.len+0.01
+          }
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           arwhd.len <- arwhd.len + 0.02

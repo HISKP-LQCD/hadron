@@ -146,6 +146,11 @@ jackknife_error <- function (samples, na.rm = FALSE) {
   sqrt(factor * (N - 1)^2 / N) * sd(samples)
 }
 
+#' Computes covariance matrix for jackknife samples.
+#'
+#' @param na.rm logical. The rows containing any `NA` will be deleted if this
+#' option is set.
+#'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     factor <- 1.0
@@ -153,7 +158,7 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     if (is.null(y)) {
         N <- nrow(x)
         if (na.rm) {
-            na_values <- apply(x, 2, function (row) any(is.na(row)))
+            na_values <- apply(x, 1, function (row) any(is.na(row)))
             m <- sum(na_values)
             x <- x[!na_values, ]
             factor <- N / m
@@ -620,8 +625,9 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   ii <- c()
-  for(i in c(1:length(id))) {
-    ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
+  for (i in c(1:length(id))) {
+    num_time <- if (cf$symmetrised) cf$Time / 2 + 1 else cf$Time
+    ii <- c(ii, c(1:num_time) + (id[i]-1) * num_time)
   }
 
   # TODO: This should be done using constructors.
@@ -759,8 +765,8 @@ shift.cf <- function(cf, places) {
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
-        ishift <- c( (iend - abs(places) + 1):iend,
-                     (istart:(iend-abs(places))) )
+        ishift <- c( (iend - abs(places)):iend,
+                     (istart:(iend-abs(places)-1)) )
       } else {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
@@ -836,7 +842,6 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   return(invisible(cf))
 }
 
-
 summary.cf <- function(object, ...) {
   cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
@@ -860,7 +865,6 @@ summary.cf <- function(object, ...) {
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
   }
-
 
   if (inherits(cf, 'cf_jackknife')) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)

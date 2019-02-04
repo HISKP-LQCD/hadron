@@ -28,6 +28,7 @@ export(jackknife_cov)
 export(jackknife_error)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
+export(h5_get_dataset)
 importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
            "rainbow", "rgb")
 importFrom("graphics", "abline", "arrows", "axis", "barplot",
@@ -40,3 +41,6 @@ importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
            "uniroot", "var", "weighted.mean", "cor", "rgeom")
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
+# for Rcpp components
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
