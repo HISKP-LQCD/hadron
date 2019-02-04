@@ -6,6 +6,15 @@
 \usage{
 add.raw_cf(cf1, cf2, a = 1, b = 1)
 }
+\arguments{
+\item{cf1}{first 'raw_cf' container with data and meta-data}
+
+\item{cf2}{second 'raw_cf' container with data and meta-data}
+
+\item{a}{Numeric or complex, scaling factor applied to \code{cf1}.}
+
+\item{b}{Numeric or complex, scaling factor applied to \code{cf2}.}
+}
 \value{
 \code{a*cf1$data + b*cf2$data}
 }

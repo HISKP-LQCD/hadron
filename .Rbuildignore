@@ -1,6 +1,7 @@
 \.swp$
 ^.*\.Rproj$
 ^\.\.Rcheck$
+^\.clang-format$
 ^\.git$
 ^\.git/
 ^\.gitignore$
@@ -8,5 +9,5 @@
 ^\.Rhistory$
 ^\.Rproj\.user$
 ^\.travis\.yml$
-^\.vimrc$
 ^\.travis\.yml$
+^\.vimrc$

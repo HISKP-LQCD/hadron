@@ -4,15 +4,25 @@
 \alias{overview_plot_raw_cf}
 \title{create convenient overview plots for a \code{raw_cf} object}
 \usage{
-overview_plot_raw_cf(cf, reim = "real", reim_same = FALSE,
-  relerr = FALSE, tauint = FALSE, value_logplot = TRUE, title = "")
+overview_plot_raw_cf(cf, grid, reim = "real", reim_same = FALSE,
+  relerr = FALSE, tauint = FALSE, value_logplot = TRUE,
+  value_factor = c(1), title = "")
 }
 \arguments{
-\item{reim}{Vector of strings, one of 'real', 'imag' or 'both'.}
+\item{cf}{'raw_cf' container with data and meta-data}
+
+\item{grid}{Optional, integer vector which satisfies
+\code{prod(grid) == prod(cf$dim)}. This is passed to \code{par} via
+\code{par(mfrow=grid)} to produce a grid of plots as defined by the
+components of \code{grid}.}
+
+\item{reim}{Vector of strings, one of 'real', 'imag' or 'both'. Specified whether
+the real or imaginary parts (or both) should be plotted.}
 
 \item{reim_same}{Boolean, whether real and imaginary parts should be plotted
 on the same plot. If \code{TRUE}, then \code{reim} must
-be 'both'.}
+be 'both'. If this is given, the imaginary part as well as its
+relative error and per-time-slice integrated autocorreation times}
 
 \item{relerr}{Boolean, whether a plot of the relative error per time slice
 should be added.}
@@ -22,10 +32,15 @@ on each time slice should be added.}
 
 \item{value_logplot}{Boolean, whether the plot of the correlator should be
 on a logarithmic vertical axis. (does not affect \code{tauint}
-and \code{relerr}.}
+and \code{relerr}).}
+
+\item{value_factor}{Numeric, either of length '1' or as long as the number of
+correlation functions in \code{cf}. The data will be scaled
+by this factor before plotting.}
 
 \item{title}{Character vector, will be passed as the \code{main} argument to
-\link{plotwitherror} which in turn passes it to \link{plot}.}
+\link{plotwitherror} which in turn passes it to \link{plot}. Can
+be either of length '1' or \code{prod(cf$dim)}}
 }
 \description{
 create convenient overview plots for a \code{raw_cf} object
