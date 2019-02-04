@@ -95,7 +95,7 @@ plot_timeseries <- function(dat,
   if(uw.summary){
     plot(uw.data, 
          main=paste(ylab,paste("UWErr analysis",titletext)),
-         x11=FALSE, plot.hist=FALSE)
+         plot.hist=FALSE)
   }
    
   if(!missing(pdf.filename)){

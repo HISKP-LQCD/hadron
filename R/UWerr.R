@@ -387,12 +387,10 @@ summary.uwerr <- function (object, ...) {
   }
 }
 
-plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lambda=100) {
+plot.uwerr <- function(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100) {
 
   if(x$primary && plot.hist) {
-    if (x11)
-      new_window_if_appropriate()
-
+    new_window_if_appropriate()
     hist(x$data, main = paste("Histogram of" , main))
   }
   if(!is.null(x$Gamma)) {
@@ -412,17 +410,15 @@ plot.uwerr <- function(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lamb
       Wopt <- x$Wopt[[index]]
       Wmax <- x$Wmax[[index]]
     }
-    if (x11)
-      new_window_if_appropriate()
 
+    new_window_if_appropriate()
     plotwitherror(x=c(0:Wmax),y=GammaFbb[1:(Wmax+1)],
                   dy=Gamma.err[1:(Wmax+1)], ylab="Gamma(t)", xlab="t", main=main)
     abline(v=Wopt+1)
     abline(h=0)
   }
-  if (x11)
-    new_window_if_appropriate()
 
+  new_window_if_appropriate()
   if(x$primary == 1) tauintplot(ti=x$tauintofW, dti=x$dtauintofW, Wmax=Wmax, Wopt=Wopt, main=main)  
   else tauintplot(ti=x$tauintofW[[index]], dti=x$dtauintofW[[index]], Wmax=Wmax, Wopt=Wopt, main=main)  
   return(invisible(data.frame(t=c(0:Wmax),Gamma=GammaFbb[1:(Wmax+1)],dGamma=Gamma.err[1:(Wmax+1)])))

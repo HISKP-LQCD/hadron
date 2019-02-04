@@ -5,7 +5,7 @@
   Plot Command For Class UWerr
 }
 \usage{
-\method{plot}{uwerr}(x, ..., main="x", x11=TRUE, plot.hist=TRUE, index=1, Lambda=100)
+\method{plot}{uwerr}(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100)
 }
 \arguments{
   \item{x}{
@@ -16,9 +16,6 @@
   }
   \item{main}{
     main title of the plot
-  }
-  \item{x11}{
-    whether or not to generate X11 plots
   }
   \item{plot.hist}{
     whether or not to generate a histogram
