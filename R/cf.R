@@ -146,6 +146,11 @@ jackknife_error <- function (samples, na.rm = FALSE) {
   sqrt(factor * (N - 1)^2 / N) * sd(samples)
 }
 
+#' Computes covariance matrix for jackknife samples.
+#'
+#' @param na.rm logical. The rows containing any `NA` will be deleted if this
+#' option is set.
+#'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     factor <- 1.0
@@ -153,7 +158,7 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     if (is.null(y)) {
         N <- nrow(x)
         if (na.rm) {
-            na_values <- apply(x, 2, function (row) any(is.na(row)))
+            na_values <- apply(x, 1, function (row) any(is.na(row)))
             m <- sum(na_values)
             x <- x[!na_values, ]
             factor <- N / m
@@ -538,7 +543,7 @@ avg.cbt.cf <- function(cf){
 
 #' Arithmetically adds two correlation functions
 #'
-#' @param cf1,cf2 `cf` object.
+#' @param cf1,cf2 `cf_orig` object.
 #' @param a,b Numeric. Factors that multiply the correlation function before
 #' the addition.
 #'
@@ -563,14 +568,29 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   return(cf)
 }
 
+#' Arithmetically add correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '+.cf' <- function (cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
+#' Arithmetically subtract correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '-.cf' <- function(cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
+#' Arithmetically divide correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
 '/.cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
@@ -585,6 +605,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   return (cf)
 }
 
+#' Arithmetically scale a correlator
+#'
+#' @param cf1 `cf_orig` objects.
+#' @param a Numeric, scaling factor.
+#'
+#' @export
 mul.cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(is.numeric(a))
@@ -599,8 +625,9 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   ii <- c()
-  for(i in c(1:length(id))) {
-    ii <- c(ii, c(1:(cf$Time/2+1)) + (id[i]-1)*(cf$Time/2+1))
+  for (i in c(1:length(id))) {
+    num_time <- if (cf$symmetrised) cf$Time / 2 + 1 else cf$Time
+    ii <- c(ii, c(1:num_time) + (id[i]-1) * num_time)
   }
 
   # TODO: This should be done using constructors.
@@ -677,20 +704,24 @@ concat.cf <- function (left, right) {
   return (invisible(rval))
 }
 
+#' Plot a correlation function
+#'
+#' @param x `cf_boot` object
+#' @param neg.vec Numeric vector of length `cf$cf0`. This allows switching the
+#' sign for certain time slices or observables such that displaying in
+#' log-scale is sensible.
+#' @param rep See \code{\link{plotwitherror}}.
+#'
+#' @inheritParams plotwitherror
+#'
+#' @export
 plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
   cf <- x
-  stopifnot(any(inherits(cf, c('cf_orig', 'cf_boot', 'cf_jackknife'))))
+  stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_meta'))
 
-  if (inherits(cf, 'cf_boot')) {
-    val <- cf$cf0
-    err <- cf$tsboot.se
-  } else if (inherits(cf, 'cf_jackknife')) {
-    val <- cf$cf0
-    err <- cf$jackknife.se
-  } else {
-    stop('A correlation function must be bootstrapped before it can be plotted.')
-  }
+  val <- cf$cf0
+  err <- cf$tsboot.se
 
   if(!cf$symmetrised){
     tmax <- cf$Time - 1
@@ -734,8 +765,8 @@ shift.cf <- function(cf, places) {
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
-        ishift <- c( (iend - abs(places) + 1):iend,
-                     (istart:(iend-abs(places))) )
+        ishift <- c( (iend - abs(places)):iend,
+                     (istart:(iend-abs(places)-1)) )
       } else {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
@@ -811,7 +842,6 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   return(invisible(cf))
 }
 
-
 summary.cf <- function(object, ...) {
   cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
@@ -835,7 +865,6 @@ summary.cf <- function(object, ...) {
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
   }
-
 
   if (inherits(cf, 'cf_jackknife')) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)

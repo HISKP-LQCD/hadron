@@ -5,14 +5,14 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
   
   jack.boot <- function(indices, xstar, f) {
     if(is.null(dim(xstar)))   apply(xstar[!indices], MARGIN=2L, FUN=f)
-    else apply(xstar[!indices, ], MARGIN=2L, FUN=f)
+    else apply(X=xstar[!indices, ], MARGIN=2L, FUN=f)
   }
   
   ## total number of blocks
   N <- ncol(starts)
   ## number of blocks of blocks
   M <- N - m + 1
-  duplicates <- t(apply(starts, MARGIN=1L, FUN=find.duplicates, x=c(1:N)))
+  duplicates <- t(apply(X=starts, MARGIN=1L, FUN=find.duplicates, x=c(1:N)))
   if(m > 1) {
     for(i in c(1:M)) {
       duplicates[,i] <- apply(duplicates[,c(i:(i+m-1))], MARGIN=1L, FUN=any)
@@ -20,11 +20,11 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
     duplicates <- duplicates[,c(1:M)]
   }
 
-  jack.boot.values <- apply(duplicates, MARGIN=2L, FUN=jack.boot, xstar=t, f=fn)
+  jack.boot.values <- apply(X=duplicates, MARGIN=2L, FUN=jack.boot, xstar=t, f=fn)
   phitilde <- (N*t0 - (N-m)*jack.boot.values)/m - t0
 
   jack.boot.se <- sqrt(m/(N-m)/M *
-                       apply(phitilde, MARGIN=1L, FUN=function(x) {sum(x^2)})
+                       apply(X=phitilde, MARGIN=1L, FUN=function(x) {sum(x^2)})
                        )
   return(jack.boot.se)
 }

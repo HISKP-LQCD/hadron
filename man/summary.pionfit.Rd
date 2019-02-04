@@ -6,6 +6,11 @@
 \usage{
 \method{summary}{pionfit}(object, ...)
 }
+\arguments{
+\item{object}{class pionfit. object to summarise}
+
+\item{...}{additional parameters to be passed on}
+}
 \description{
 pionfit summary
 }

@@ -28,6 +28,9 @@ invertCovMatrix(cf, boot.l=1, boot.samples=FALSE, cov_fn = cov)
     If set to \code{TRUE} the data is treated a pseudo data from a
     bootstrap procedure.
   }
+  \item{cov_fn}{
+    Function that computes the covariance matrix from the given samples.
+  }
 }
 \value{
   Returns the inverse covariance matrix as an object of class

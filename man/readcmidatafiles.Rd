@@ -12,11 +12,11 @@ readcmicor(filename,
            colClasses=c("integer","integer","integer","numeric","numeric","integer"), skip=0)
 
 readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
-             colClasses, obs=NULL, obs.index)
+             colClasses, obs=NULL, obs.index, avg=1, stride=1)
 
 readcmidatafiles(files, excludelist=c(""), skip=1, verbose=FALSE,
-                 colClasses=c("integer","integer","integer","numeric","numeric"),
-                 obs=NULL, obs.index=1)
+                 colClasses=c("integer", "integer","integer","numeric","numeric"),
+                 obs=NULL, obs.index=1, avg=1, stride=1)
 
 readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
                  colClasses=c("integer", "integer","integer","integer",

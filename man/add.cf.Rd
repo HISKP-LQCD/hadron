@@ -7,7 +7,7 @@
 add.cf(cf1, cf2, a = 1, b = 1)
 }
 \arguments{
-\item{cf1, cf2}{\code{cf} object.}
+\item{cf1, cf2}{\code{cf_orig} object.}
 
 \item{a, b}{Numeric. Factors that multiply the correlation function before
 the addition.}

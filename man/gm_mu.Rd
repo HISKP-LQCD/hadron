@@ -4,18 +4,30 @@
 \alias{gm_mu}
 \title{Accessor function for \code{\link{gm}}}
 \usage{
-gm_mu(mu)
+gm_mu(mu, basis = "chiral_tmlqcd")
 }
 \arguments{
 \item{mu}{Number or string denoting
 \itemize{
-\item Lorentz index (0,1,2,3) for \eqn{\gamma^\mu}
+\item Lorentz index (0,1,2,3,4) for \eqn{\gamma^\mu}
 \item 5 for \eqn{\gamma^5}
 \item "Pp" or "Pm" for the positive and negative parity projectors respectively
 }}
+
+\item{basis}{String, gamma basis to use. Possible values
+\describe{
+\item{'ukqcd':}{UKQCD gamma basis with \eqn{\gamma^i, i \in [1,2,3,4]}
+and \eqn{\gamma^5 = \gamma^1 \gamma^2 \gamma^3 \gamma^4},
+such that \eqn{1 = x}, \eqn{4 = t}.}
+\item{'chiral_tmlqcd':}{Chiral gamma basis used by tmLQCD with
+\eqn{\gamma^\mu, \mu \in [0,1,2,3]} and
+\eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3},
+such that \eqn{0 = t}, \eqn{3 = z}.}
+}}
 }
 \description{
-Retrieve the entries of the \code{\link[hadron]{gm}} three-index array containing various
+Retrieve the entries of the \code{\link[hadron]{gm}} list of
+three-index arrays containing various
 gamma structures in a natural indexing.
 }
 \concept{Dirac}

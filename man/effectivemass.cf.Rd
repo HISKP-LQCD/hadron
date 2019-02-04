@@ -4,7 +4,7 @@
 \description{
   Computes effective mass values for a correlation function using
   different type of definitions for the effective mass. This function is
-  mainly indented for internal usage by \code{\link{bootstrap.effectivmass}}.
+  mainly indented for internal usage by \code{\link{bootstrap.effectivemass}}.
 }
 \usage{
 effectivemass.cf(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), weight.factor = NULL, deltat=1, tmax=Thalf)
