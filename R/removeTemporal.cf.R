@@ -281,6 +281,13 @@ extract_mass.matrixfit <- function (object) {
        t = object$opt.tsboot[1,])
 }
 
+make_weight_factor <- function (energy_difference, time_extent, time_start,
+                                time_end, cosh_factor) {
+  time_slices <- time_start:time_end
+  exp(energy_difference * time_slices) +
+    cosh_factor * exp(energy_difference * (time_extent - time_slices))
+}
+
 new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
@@ -331,27 +338,30 @@ new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   }
 
   ## multiply with the exponential correction factor
-  Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
+  Exptt <- make_weight_factor(mass2$t0 - mass1$t0, Time, 0, Time/2,
+                              cosh.factor)
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
+    Exptt <- make_weight_factor(mass2$t[i] - mass1$t[i], Time, 0, Time/2, cosh.factor)
+    cf$cf.tsboot$t[i, ] <- cf$cf.tsboot$t[i, ] * Exptt
   }
   ## take the differences of C(t+1) and C(t)
   cf <- takeTimeDiff.cf(cf)
 
   ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
+  Exptt <- make_weight_factor(- (mass2$t0 - mass1$t0), Time, -1, Time/2-1,
+                              cosh.factor)
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
+    Exptt <- make_weight_factor(- (mass2$t[i] - mass1$t[i]), Time, -1,
+                                Time/2-1, cosh.factor)
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i, ] * Exptt
   }
 
   # We perform a clean copy of the data now to make sure that all invariants
