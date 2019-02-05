@@ -26,11 +26,13 @@
 #'   they are removed simulalteously.
 #'
 #' @export
-removeTemporal.cf <- function(cf, single.cf1, single.cf2,
+old_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
+
+  warning('old_removeTemporal.cf is deprecated')
 
   if(missing(single.cf1)) {
     ## take the differences of C(t+1) and C(t)
@@ -333,7 +335,7 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
   return (invisible(ret))
 }
 
-new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
+removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
