@@ -288,6 +288,23 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
     cosh_factor * exp(energy_difference * (time_extent - time_slices))
 }
 
+weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
+                       cosh_factor, offset = 0) {
+  Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
+                              cf$Time/2 + offset, cosh_factor)
+  if (!is.null(cf$cf)) {
+    cf$cf <- cf$cf * t(array(Exptt, dim = dim(cf$cf)[c(2, 1)]))
+  }
+  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0 * Exptt
+  for (i in c(1:cf$boot.R)) {
+    Exptt <- make_weight_factor(energy_difference_boot[i], cf$Time, offset,
+                                cf$Time/2 + offset, cosh_factor)
+    cf$cf.tsboot$t[i, ] <- cf$cf.tsboot$t[i, ] * Exptt
+  }
+
+  return (cf)
+}
+
 new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
@@ -337,32 +354,10 @@ new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     cosh.factor <- 0.
   }
 
-  ## multiply with the exponential correction factor
-  Exptt <- make_weight_factor(mass2$t0 - mass1$t0, Time, 0, Time/2,
-                              cosh.factor)
-  if(!is.null(cf$cf)) {
-    cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
-  }
-  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
-  for(i in c(1:cf$boot.R)) {
-    Exptt <- make_weight_factor(mass2$t[i] - mass1$t[i], Time, 0, Time/2, cosh.factor)
-    cf$cf.tsboot$t[i, ] <- cf$cf.tsboot$t[i, ] * Exptt
-  }
-  ## take the differences of C(t+1) and C(t)
+  cf <- weight.cf(cf, mass2$t0 - mass1$t0, mass2$t - mass1$t, cosh.factor, 0)
   cf <- takeTimeDiff.cf(cf)
-
-  ## multiply with the exponetial inverse
-  Exptt <- make_weight_factor(- (mass2$t0 - mass1$t0), Time, -1, Time/2-1,
-                              cosh.factor)
-  if(!is.null(cf$cf)) {
-    cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
-  }
-  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
-  for(i in c(1:cf$boot.R)) {
-    Exptt <- make_weight_factor(- (mass2$t[i] - mass1$t[i]), Time, -1,
-                                Time/2-1, cosh.factor)
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i, ] * Exptt
-  }
+  cf <- weight.cf(cf, - (mass2$t0 - mass1$t0), - (mass2$t - mass1$t),
+                  cosh.factor, -1)
 
   # We perform a clean copy of the data now to make sure that all invariants
   # hold and that no new fields have been added that we are not aware of.
