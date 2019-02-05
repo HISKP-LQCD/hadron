@@ -151,9 +151,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                     forwardshift = cf$forwardshift)
   ret <- cf_weighted(ret,
                      weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
-                     weight.cosh = weight.cosh,
-                     mass1 = mass1,
-                     mass2 = mass2)
+                     weight.cosh = weight.cosh)
 
   return (invisible(ret))
 }
@@ -305,6 +303,36 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
   return (cf)
 }
 
+weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
+  cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
+                  cosh_factor, 0)
+  cf <- takeTimeDiff.cf(cf)
+  cf <- weight.cf(cf, -energy_difference_val, -energy_difference_boot,
+                  cosh_factor, -1)
+
+  # We perform a clean copy of the data now to make sure that all invariants
+  # hold and that no new fields have been added that we are not aware of.
+  ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+                 symmetrised = cf$symmetrised)
+  ret <- cf_orig(ret,
+                 cf = cf$cf)
+  ret <- cf_boot(ret,
+                 boot.R = cf$boot.R,
+                 boot.l = cf$boot.l,
+                 seed = cf$seed,
+                 sim = cf$sim,
+                 cf.tsboot = cf$cf.tsboot,
+                 resampling_method = cf$resampling_method)
+  ret <- cf_shifted(ret,
+                    deltat = cf$deltat,
+                    forwardshift = cf$forwardshift)
+  ret <- cf_weighted(ret,
+                     weight.factor = 1 / (exp(energy_difference_val) * 1),
+                     weight.cosh = cosh_factor == +1)
+
+  return (invisible(ret))
+}
+
 new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
@@ -349,37 +377,10 @@ new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   }
 
   if (weight.cosh) {
-    cosh.factor  <- 1.
+    cosh_factor  <- 1.
   } else {
-    cosh.factor <- 0.
+    cosh_factor <- 0.
   }
 
-  cf <- weight.cf(cf, mass2$t0 - mass1$t0, mass2$t - mass1$t, cosh.factor, 0)
-  cf <- takeTimeDiff.cf(cf)
-  cf <- weight.cf(cf, - (mass2$t0 - mass1$t0), - (mass2$t - mass1$t),
-                  cosh.factor, -1)
-
-  # We perform a clean copy of the data now to make sure that all invariants
-  # hold and that no new fields have been added that we are not aware of.
-  ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
-                 symmetrised = cf$symmetrised)
-  ret <- cf_orig(ret,
-                 cf = cf$cf)
-  ret <- cf_boot(ret,
-                 boot.R = cf$boot.R,
-                 boot.l = cf$boot.l,
-                 seed = cf$seed,
-                 sim = cf$sim,
-                 cf.tsboot = cf$cf.tsboot,
-                 resampling_method = cf$resampling_method)
-  ret <- cf_shifted(ret,
-                    deltat = cf$deltat,
-                    forwardshift = cf$forwardshift)
-  ret <- cf_weighted(ret,
-                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
-                     weight.cosh = weight.cosh,
-                     mass1 = mass1,
-                     mass2 = mass2)
-
-  return (invisible(ret))
+  weight_shift_reweight.cf(cf, mass2$t0 - mass1$t0, mass2$t - mass1$t, cosh_factor)
 }
