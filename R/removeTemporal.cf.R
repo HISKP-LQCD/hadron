@@ -272,13 +272,13 @@ extract_mass <- function (object) {
 }
 
 extract_mass.effectivemassfit <- function (object) {
-  list(t0 <- object$opt.res$par[1],
-       t <- object$massfit.tsboot[,1])
+  list(t0 = object$opt.res$par[1],
+       t = object$massfit.tsboot[,1])
 }
 
 extract_mass.matrixfit <- function (object) {
-  list(t0 <- object$opt.res$par[1],
-       t <- object$opt.tsboot[1,])
+  list(t0 = object$opt.res$par[1],
+       t = object$opt.tsboot[1,])
 }
 
 new_removeTemporal.cf <- function(cf, single.cf1, single.cf2,
