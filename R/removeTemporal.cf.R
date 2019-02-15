@@ -32,9 +32,9 @@ old_removeTemporal.cf <- function(cf,
                               p1=c(0,0,0), 
                               p2=c(0,0,0), 
                               L,
-                              deltat = 1,
                               lat.disp=TRUE, 
-                              weight.cosh=FALSE) {
+                              weight.cosh=FALSE,
+                              deltat = 1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
