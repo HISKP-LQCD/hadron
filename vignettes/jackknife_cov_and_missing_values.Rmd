@@ -1,0 +1,68 @@
+---
+title: "Jackknife Covariance and Missing Values"
+author: "Martin Ueding"
+output: pdf_document
+---
+
+```{r}
+devtools::load_all()
+```
+
+# Missing column
+
+We create some data and replace one column with `NA`.
+
+```{r}
+data <- matrix(rnorm(120), ncol = 10)
+data[, 3] <- NA
+print(data)
+```
+
+The covariance, with the implicit `use = 'everything'` will give us a “cross” of `NA` in the covariance matrix.
+
+```{r}
+cov(data)
+```
+
+The jackknife covariance does the same thing.
+
+```{r}
+jackknife_cov(data)
+```
+
+# Missing row
+
+When we have some `NA` values in a row, we have a conceptual problem with the jackknife as the width of the jackknife distribution is linked to the number of measurements.
+
+```{r}
+data <- matrix(rnorm(120), ncol = 10)
+data[2, ] <- NA
+print(data)
+```
+
+Also here we get the same behavior by default:
+
+```{r}
+cov(data)
+```
+
+```{r}
+jackknife_cov(data)
+```
+
+When we use `complete`, we get the same thing as just dropping the `NA` rows.
+
+```{r}
+cov(data, use = 'complete')
+```
+
+```{r}
+all(cov(data, use = 'complete') == cov(data[complete.cases(data), ]))
+```
+
+With our jackknife function we get a failure, which should not happen!
+
+```{r}
+jackknife_cov(data, na.rm = TRUE)
+```
+

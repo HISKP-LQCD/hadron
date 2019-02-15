@@ -6,6 +6,11 @@
 \usage{
 \method{print}{pionfit}(x, ...)
 }
+\arguments{
+\item{x}{class pionfit. object to print}
+
+\item{...}{additional parameters to be passed on}
+}
 \description{
 pionfit print
 }

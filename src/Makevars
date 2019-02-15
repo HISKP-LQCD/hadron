@@ -1,4 +1,1 @@
 PKG_LIBS=-lgsl -lgslcblas
-PKG_CFLAGS=-O3 -Wall
-
-
