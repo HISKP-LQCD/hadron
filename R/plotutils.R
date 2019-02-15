@@ -194,7 +194,15 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
-          dy.in.inches <- abs(end-start)*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+          if(par("ylog")){
+            if(start > 0 && end > 0){
+              dy.in.inches <- abs(log10(end/start))*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+            }else{
+              dy.in.inches <- 0
+            }
+          }else{
+            dy.in.inches <- abs(end-start)*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+          }
 
           if (!is.na(start) && !is.na(end) && dy.in.inches > 1/1000) {
             arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
@@ -222,7 +230,15 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
-          dx.in.inches <- abs(end-start)*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+          if(par("xlog")){
+            if(start > 0 && end > 0){
+              dx.in.inches <- abs(log10(end/start))*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+            }else{
+              dx.in.inches <- 0
+            }
+          }else{
+            dx.in.inches <- abs(end-start)*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+          }
 
           if (!is.na(start) && !is.na(end) && dx.in.inches > 1/1000) {
             arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
