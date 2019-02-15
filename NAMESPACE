@@ -45,5 +45,4 @@ importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
            "uniroot", "var", "weighted.mean", "cor", "rgeom")
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
-# for Rcpp components
 importFrom(Rcpp, evalCpp)
