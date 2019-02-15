@@ -46,5 +46,4 @@ importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
 # for Rcpp components
-exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
