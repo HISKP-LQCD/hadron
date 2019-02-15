@@ -206,8 +206,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
 
           if (!is.na(start) && !is.na(end) && dy.in.inches > 1/1000) {
             arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
-            arwhd.len <- arwhd.len + 0.01
+          }else{
+            lines(x[rw]+c(1,-1)*arwhd.len/x.to.inches, rep(y[rw],2), col=clr)
           }
+          arwhd.len <- arwhd.len + 0.01
         } 
         # for the linear.quadrature method, show the total error as a line of triple thickness
         # without drawing any "arrowstems"
@@ -242,8 +244,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
 
           if (!is.na(start) && !is.na(end) && dx.in.inches > 1/1000) {
             arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
-            arwhd.len <- arwhd.len+0.01
+          }else{
+            lines(rep(x[rw],2), y[rw]+c(1,-1)*arwhd.len/y.to.inches, col=clr)
           }
+          arwhd.len <- arwhd.len+0.01
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           arwhd.len <- arwhd.len + 0.02
