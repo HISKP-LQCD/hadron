@@ -93,19 +93,21 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
                                  symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
       ## sort depending on input by values or vectors
       sortindex <- integer(matrix.size)
+      decreasing <- TRUE
+      if(t <= t0) decreasing <- FALSE
       if(sort.type == "values" || t == t0+1) {
-        sortindex <- order(variational.solve$values, decreasing=TRUE)
+        sortindex <- order(variational.solve$values, decreasing=decreasing)
       }
       else if(sort.type == "vectors") {
         ## compute the scalar product of eigenvectors with those at t0+1
-        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=decreasing)
         sortindex <- idx[,1]
         if(!all(order(sortindex) == c(1:matrix.size))) {
-          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=decreasing)
           sortindex <- idx[,1]
         }
         if(!all(order(sortindex) == c(1:matrix.size))) {
-          sortindex <- order(variational.solve$values, decreasing=TRUE)
+          sortindex <- order(variational.solve$values, decreasing=decreasing)
         }
       }
       else {
@@ -125,6 +127,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
         }
         sortindex <- Perms[which.max(DMp),]
       }
+      if(!decreasing) sortindex <- rev(sortindex)
       evalues[t+1,] <- variational.solve$values[sortindex]
       evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
       tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
