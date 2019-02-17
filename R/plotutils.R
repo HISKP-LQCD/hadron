@@ -197,19 +197,29 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
           if(par("ylog")){
             if(start > 0 && end > 0){
               dy.in.inches <- abs(log10(end/start))*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+              if(dy.in.inches <= 1/1000) {
+                start <- y[rw] / 10^(1.01/2000/y.to.inches)
+                end <- y[rw] * 10^(1.01/2000/y.to.inches)
+              }
             }else{
               dy.in.inches <- 0
             }
           }else{
             dy.in.inches <- abs(end-start)*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+            if(dy.in.inches <= 1/1000) {
+              start <- y[rw] - 1.01/2000/y.to.inches
+              end <- y[rw] + 1.01/2000/y.to.inches
+            }
           }
 
-          if (!is.na(start) && !is.na(end) && dy.in.inches > 1/1000) {
-            arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
-          }else{
-            lines(x[rw]+c(1,-1)*arwhd.len/x.to.inches, rep(y[rw],2), col=clr)
+          if (!is.na(start) && !is.na(end)){
+            if(dy.in.inches > 1/1000) {
+              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
+            }else if(dy.in.inches > 0){
+              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=3, col=clr)
+            }
+            arwhd.len <- arwhd.len + 0.01
           }
-          arwhd.len <- arwhd.len + 0.01
         } 
         # for the linear.quadrature method, show the total error as a line of triple thickness
         # without drawing any "arrowstems"
@@ -235,19 +245,29 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
           if(par("xlog")){
             if(start > 0 && end > 0){
               dx.in.inches <- abs(log10(end/start))*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+              if(dx.in.inches <= 1/1000) {
+                start <- x[rw] / 10^(1.01/2000/x.to.inches)
+                end <- x[rw] * 10^(1.01/2000/x.to.inches)
+              }
             }else{
               dx.in.inches <- 0
             }
           }else{
             dx.in.inches <- abs(end-start)*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
+            if(dx.in.inches <= 1/1000) {
+              start <- x[rw] - 1.01/2000/x.to.inches
+              end <- x[rw] + 1.01/2000/x.to.inches
+            }
           }
 
-          if (!is.na(start) && !is.na(end) && dx.in.inches > 1/1000) {
-            arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
-          }else{
-            lines(rep(x[rw],2), y[rw]+c(1,-1)*arwhd.len/y.to.inches, col=clr)
+          if (!is.na(start) && !is.na(end)){
+            if(dx.in.inches > 1/1000) {
+              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
+            }else if(dx.in.inches > 0){
+              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=3, col=clr)
+            }
+            arwhd.len <- arwhd.len + 0.01
           }
-          arwhd.len <- arwhd.len+0.01
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           arwhd.len <- arwhd.len + 0.02
