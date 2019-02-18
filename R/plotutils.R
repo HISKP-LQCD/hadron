@@ -2,7 +2,7 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   tmp <- val - 0.1*abs(val)
   tmpp <- val + 0.1*abs(val)
   if(!is.null(cumul.dval)) {
-    # cumul.mdx is implicitly negative
+    ## cumul.mdx is implicitly negative
     tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
     tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
   }
@@ -18,7 +18,7 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
 }
 
-# there are two possibilities for one-dimensional vectors: the vector class or the array class
+## there are two possibilities for one-dimensional vectors: the vector class or the array class
 is.vectorial <- function(x) {
   ( is.vector(x) || length(dim(x))==1 )
 }
@@ -47,13 +47,13 @@ errorpos <- function(dx,errsum.method="linear") {
     rval[,2] <- dx[,1]^2
   }
   
-  # compute error bar deviations from the columns of dx depending on the errsum.method
-  # so for the "quadrature" method we will have
+  ## compute error bar deviations from the columns of dx depending on the errsum.method
+  ## so for the "quadrature" method we will have
   # norm[j] <- sqrt(sum(dx[j,]^2))
   # rval[j,] == c(0, dx[j,1]^2/norm[j], (dx[j,1]^2+dx[j,2]^2)/norm[j], (dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
   if(ncol(dx)>1){ 
     for( i in 2:ncol(dx) ){
-      # when dx has only one row, dx[,1:i] is returned as a vector, making apply fail....
+      ## when dx has only one row, dx[,1:i] is returned as a vector, making apply fail....
       if(nrow(dx)>1){
         rval[,(i+1)] <- apply( X=dx[,1:i],MARGIN=1,
                              FUN=function(x){
@@ -70,7 +70,7 @@ errorpos <- function(dx,errsum.method="linear") {
     }
   }
   if(ncol(dx)>1 && errsum.method=="linear.quadrature"){
-    # unlike above, even if dx has only one row, this works fine
+    ## unlike above, even if dx has only one row, this works fine
     rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
   rval <- rval/norm
@@ -89,9 +89,9 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     stop("plotwitherror: if any dx, mdx, dy or mdy is a simple vector, it must be of the same length as the corresponing x/y, multiple errors must ALWAYS be specified in the form of arrays/data frames/matrices")
   }
 
-  # if no plotting limits are passed, we calculate them automatically
-  # for this to work properly, we need to know if any of the axes
-  # are requested in log scale
+  ## if no plotting limits are passed, we calculate them automatically
+  ## for this to work properly, we need to know if any of the axes
+  ## are requested in log scale
   dots <- list(...)
   ylog <- FALSE
   xlog <- FALSE
@@ -103,16 +103,16 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   my.xlim <- c()
   my.ylim <- c()
  
-  # cumulative errors as computed with errsum.method 
+  ## cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
   cumul.mdx <- NULL
   cumul.dy <- NULL
   cumul.mdy <- NULL
   
-  # compute cumulative error bar positions, first convert vectorial dx, dy into arrays 
-  # see above for description of what errorpos does
+  ## compute cumulative error bar positions, first convert vectorial dx, dy into arrays 
+  ## see above for description of what errorpos does
   if(!missing(dx)){
-    # if dx is a simple vector, convert into an appropriately sized array
+    ## if dx is a simple vector, convert into an appropriately sized array
     if(is.vectorial(dx)){
       dx <- array(data=dx,dim=c(length(dx),1))
     }
@@ -173,8 +173,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     plot(x, y, col=col, ...)
   }
 
-  # We will need some langth in inches, so let's define the proportionality factor as
-  # size of the output in inches devided by the differnce of boundary coordinates.
+  ## We will need some langth in inches, so let's define the proportionality factor as
+  ## size of the output in inches devided by the differnce of boundary coordinates.
   x.to.inches <- par("pin")[1]/diff(par("usr")[1:2])
   y.to.inches <- par("pin")[2]/diff(par("usr")[3:4])
 
@@ -182,11 +182,11 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     for(cumul.err in list(cumul.dy,cumul.mdy)){
       rng <- 2:ncol(cumul.err)
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
-      # this loop is necessary because the "length" parameter of "arrows" is not vectorial...
-      # so to accomodate the generalisations below, we need to draw the error for each point
-      # individually, it doesn't make it much slower
+      ## this loop is necessary because the "length" parameter of "arrows" is not vectorial...
+      ## so to accomodate the generalisations below, we need to draw the error for each point
+      ## individually, it doesn't make it much slower
       for(rw in 1:length(y)){
-        # the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
+        ## the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
         arwhd.len <- 0.02
         clr <- col
         if(length(col)>1) clr <- col[rw]
@@ -195,12 +195,12 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
           end <- y[rw]+cumul.err[rw,level]
           if (!is.na(start) && !is.na(end)){
             if(par("ylog")){
-              # logarithmic scaling means distances are multiplicative
+              ## logarithmic scaling means distances are multiplicative
               if(start > 0 && end > 0){
                 dy.in.inches <- abs(log10(end/start))*y.to.inches
-                # An arrow can only be plotted if it is longer than 1/1000 inches.
+                ## An arrow can only be plotted if it is longer than 1/1000 inches.
                 if(dy.in.inches <= 1/1000) {
-                  # We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
+                  ## We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
                   start <- y[rw] / 10^(1.01/2000/y.to.inches)
                   end <- y[rw] * 10^(1.01/2000/y.to.inches)
                 }
@@ -223,10 +223,10 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
             arwhd.len <- arwhd.len + 0.01
           }
         } 
-        # for the linear.quadrature method, show the total error as a line of triple thickness
-        # without drawing any "arrowstems"
+        ## for the linear.quadrature method, show the total error as a line of triple thickness
+        ## without drawing any "arrowstems"
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
-          # to be consistent, drawX/Ybars uses inches just like arrows
+          ## to be consistent, drawX/Ybars uses inches just like arrows
           arwhd.len <- arwhd.len + 0.02
           drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
         }
@@ -417,7 +417,7 @@ plot.effmass <- function (x, ll, lf, ff, ...) {
 plot.averx <- function(x, ...) {
   averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
-  ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
+  #plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
   if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
     X11()
@@ -479,10 +479,10 @@ plot.outputdata <- function (x, skip = 0, ...) {
   return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))
 }
 
-# draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
-# like for arrows, the bar width is specified in inches
-# and additonal parameters (like lwd and col) can be passed
-# to segments
+## draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
+## like for arrows, the bar width is specified in inches
+## and additonal parameters (like lwd and col) can be passed
+## to segments
 drawYbars <- function(x,y,dy,length=0.01,...) {
   x.inch <- grconvertX(x=x,from="user",to="inches")
   xp.inch <- x.inch+length
