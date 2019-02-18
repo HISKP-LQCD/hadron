@@ -178,7 +178,6 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   x.to.inches <- par("pin")[1]/diff(par("usr")[1:2])
   y.to.inches <- par("pin")[2]/diff(par("usr")[3:4])
 
-  options(show.error.messages = FALSE)
   if(!is.null(cumul.dy)) {
     for(cumul.err in list(cumul.dy,cumul.mdy)){
       rng <- 2:ncol(cumul.err)
@@ -194,25 +193,28 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
-          if(par("ylog")){
-            if(start > 0 && end > 0){
-              dy.in.inches <- abs(log10(end/start))*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
-              if(dy.in.inches <= 1/1000) {
-                start <- y[rw] / 10^(1.01/2000/y.to.inches)
-                end <- y[rw] * 10^(1.01/2000/y.to.inches)
+          if (!is.na(start) && !is.na(end)){
+            if(par("ylog")){
+              # logarithmic scaling means distances are multiplicative
+              if(start > 0 && end > 0){
+                dy.in.inches <- abs(log10(end/start))*y.to.inches
+                # An arrow can only be plotted if it is longer than 1/1000 inches.
+                if(dy.in.inches <= 1/1000) {
+                  # We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
+                  start <- y[rw] / 10^(1.01/2000/y.to.inches)
+                  end <- y[rw] * 10^(1.01/2000/y.to.inches)
+                }
+              }else{
+                dy.in.inches <- 0
               }
             }else{
-              dy.in.inches <- 0
+              dy.in.inches <- abs(end-start)*y.to.inches
+              if(dy.in.inches <= 1/1000) {
+                start <- y[rw] - 1.01/2000/y.to.inches
+                end <- y[rw] + 1.01/2000/y.to.inches
+              }
             }
-          }else{
-            dy.in.inches <- abs(end-start)*y.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
-            if(dy.in.inches <= 1/1000) {
-              start <- y[rw] - 1.01/2000/y.to.inches
-              end <- y[rw] + 1.01/2000/y.to.inches
-            }
-          }
 
-          if (!is.na(start) && !is.na(end)){
             if(dy.in.inches > 1/1000) {
               arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
             }else if(dy.in.inches > 0){
@@ -242,25 +244,25 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
-          if(par("xlog")){
-            if(start > 0 && end > 0){
-              dx.in.inches <- abs(log10(end/start))*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
-              if(dx.in.inches <= 1/1000) {
-                start <- x[rw] / 10^(1.01/2000/x.to.inches)
-                end <- x[rw] * 10^(1.01/2000/x.to.inches)
+          if (!is.na(start) && !is.na(end)){
+            if(par("xlog")){
+              if(start > 0 && end > 0){
+                dx.in.inches <- abs(log10(end/start))*x.to.inches
+                if(dx.in.inches <= 1/1000) {
+                  start <- x[rw] / 10^(1.01/2000/x.to.inches)
+                  end <- x[rw] * 10^(1.01/2000/x.to.inches)
+                }
+              }else{
+                dx.in.inches <- 0
               }
             }else{
-              dx.in.inches <- 0
+              dx.in.inches <- abs(end-start)*x.to.inches
+              if(dx.in.inches <= 1/1000) {
+                start <- x[rw] - 1.01/2000/x.to.inches
+                end <- x[rw] + 1.01/2000/x.to.inches
+              }
             }
-          }else{
-            dx.in.inches <- abs(end-start)*x.to.inches # an arrow can only be plotted if it is longer than 1/1000 inches
-            if(dx.in.inches <= 1/1000) {
-              start <- x[rw] - 1.01/2000/x.to.inches
-              end <- x[rw] + 1.01/2000/x.to.inches
-            }
-          }
 
-          if (!is.na(start) && !is.na(end)){
             if(dx.in.inches > 1/1000) {
               arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
             }else if(dx.in.inches > 0){
@@ -277,7 +279,6 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     } 
   }
   
-  options(show.error.messages = TRUE)
   return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
