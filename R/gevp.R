@@ -73,11 +73,14 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in c((t0 + 1):(Thalf), (t0-1):0)) {
+    ## the +2 comes from the fact that evectors are stored at evectors[t+1,,]
+    ## C to R index convention
     t.sort <- t0+2
     ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1 for t > t0
     if((t > t0+1) && !sort.t0) t.sort <- t
     ## and t.sort <- t + 1 + 1 for t < t0
     if((t < t0-1) && !sort.t0) t.sort <- t + 2
+    ## for t=t0-1 t.sort = t0+2, the default
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
@@ -102,10 +105,12 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
         ## compute the scalar product of eigenvectors with those at t0+1
         idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=decreasing)
         sortindex <- idx[,1]
-        if(!all(order(sortindex) == c(1:matrix.size))) {
-          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=decreasing)
+        ## if that failed us t0+2 as a reference
+        if(!all(order(sortindex) == c(1:matrix.size)) && !sort.t0) {
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=decreasing)
           sortindex <- idx[,1]
         }
+        ## Fallback is simply sort by eigenvalues, i.e. sort.type="values"
         if(!all(order(sortindex) == c(1:matrix.size))) {
           sortindex <- order(variational.solve$values, decreasing=decreasing)
         }
@@ -126,8 +131,8 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
           DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
         }
         sortindex <- Perms[which.max(DMp),]
+        if(!decreasing) sortindex <- rev(sortindex)
       }
-      if(!decreasing) sortindex <- rev(sortindex)
       evalues[t+1,] <- variational.solve$values[sortindex]
       evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
       tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
@@ -141,6 +146,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
       rm(tmp)
     }
   }
+  ## at t0 we set to 1
   evalues[t0+1,] <- 1.
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
   ## is concatenated into a single vector
