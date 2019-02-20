@@ -97,21 +97,25 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
       ## sort depending on input by values or vectors
       sortindex <- integer(matrix.size)
       decreasing <- TRUE
-      if(t <= t0) decreasing <- FALSE
+      if(t < t0) decreasing <- FALSE
       if(sort.type == "values" || t == t0+1) {
         sortindex <- order(variational.solve$values, decreasing=decreasing)
       }
       else if(sort.type == "vectors") {
-        ## compute the scalar product of eigenvectors with those at t0+1
-        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=decreasing)
-        sortindex <- idx[,1]
-        ## if that failed us t0+2 as a reference
-        if(!all(order(sortindex) == c(1:matrix.size)) && !sort.t0) {
-          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=decreasing)
-          sortindex <- idx[,1]
+        ## compute the scalar product of eigenvectors with those at t.sort
+        X <- abs( t(variational.solve$vectors) %*% evectors[t.sort,,] )
+        ## for each column apply order
+        idx <- apply(X, 1, order, decreasing=TRUE)
+        ## obtain the indices of the maxima (depending on variable decreasing) per row
+        sortindex <- idx[1,]
+        ## if that fails, i.e. sortindex not a permutation, use t0+2 (i.e. physical t0+1) as reference time slice
+        if(anyDuplicated(sortindex) && !sort.t0) {
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=TRUE)
+          sortindex <- idx[1,]
         }
+        if(!decreasing) sortindex <- rev(sortindex)
         ## Fallback is simply sort by eigenvalues, i.e. sort.type="values"
-        if(!all(order(sortindex) == c(1:matrix.size))) {
+        if(anyDuplicated(sortindex)) {
           sortindex <- order(variational.solve$values, decreasing=decreasing)
         }
       }
@@ -179,8 +183,16 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
   ## and the the N*N*(Thalf+1) eigenvectors
   
-  ret <- list(cf=cf, res.gevp=res, gevp.tsboot=gevp.tsboot, boot.R=boot.R, boot.l=boot.l, seed=seed, matrix.size=matrix.size,
-              sort.type=sort.type, t0=t0, sort.t0=sort.t0)
+  ret <- list(cf=cf,
+              res.gevp=res,
+              gevp.tsboot=gevp.tsboot,
+              boot.R=boot.R,
+              boot.l=boot.l,
+              seed=seed,
+              matrix.size=matrix.size,
+              sort.type=sort.type,
+              t0=t0,
+              sort.t0=sort.t0)
   class(ret) <- c("gevp", class(ret))
   return(invisible(ret))
 }
