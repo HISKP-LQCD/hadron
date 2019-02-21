@@ -6,7 +6,7 @@
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
   dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
-  cov_fn = cov, maxiter = 500)
+  cov_fn = cov, maxiter = 500, relative.weights = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -64,6 +64,11 @@ methods like jackknife.}
 
 \item{maxiter}{integer. Maximum number of iterations that can be used in the
 optimization process.}
+
+\item{relative.weights}{are the errors on y (and x) to be interpreted as
+relative weights instead of absolute ones? If TRUE, the covariance martix
+of the fit parameter results is multiplied by chi^2/dof. This is the default
+in many fit programs, e.g. gnuplot.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input

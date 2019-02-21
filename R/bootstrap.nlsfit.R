@@ -348,6 +348,10 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
 #' methods like jackknife.
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
+#' @param relative.weights are the errors on y (and x) to be interpreted as
+#' relative weights instead of absolute ones? If TRUE, the covariance martix
+#' of the fit parameter results is multiplied by chi^2/dof. This is the default
+#' in many fit programs, e.g. gnuplot.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -412,7 +416,8 @@ bootstrap.nlsfit <- function(fn,
                              parallel = FALSE,
                              error = sd,
                              cov_fn = cov,
-                             maxiter = 500) {
+                             maxiter = 500,
+                             relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -506,6 +511,9 @@ bootstrap.nlsfit <- function(fn,
   dof = length(y) - length(par.guess)
 
   errors <- apply(par.boot[rr, , drop=FALSE], 2, error, na.rm = TRUE)
+  if(relative.weights){
+      errors <- errors * sqrt(chisq/dof)
+  }
 
   res <- list(y=y, dy=dy, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
@@ -522,6 +530,7 @@ bootstrap.nlsfit <- function(fn,
               dof = dof,
               error.function = error,
               info.boot = info.boot,
+              relative.weights = relative.weights,
               tofn=list(...))
 
   if (errormodel == 'xyerrors') {
