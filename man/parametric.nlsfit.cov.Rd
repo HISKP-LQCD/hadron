@@ -4,7 +4,8 @@
 \alias{parametric.nlsfit.cov}
 \title{NLS fit with parametric bootstrap and covariance}
 \usage{
-parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...)
+parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...,
+  bootstrap = TRUE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the

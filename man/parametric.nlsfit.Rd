@@ -4,7 +4,8 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...,
+  bootstrap = TRUE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the

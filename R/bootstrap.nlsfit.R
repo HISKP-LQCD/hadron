@@ -100,7 +100,7 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #'
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
-parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
+parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ..., bootstrap=TRUE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
@@ -108,14 +108,23 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
   if (missing(dx)) {
     values <- y
     errors <- dy
+    errormodel <- "yerrors"
   } else {
     values <- c(y, x)
     errors <- c(dy, dx)
+    errormodel <- "xyerrors"
   }
 
-  bsamples <- parametric.bootstrap(boot.R, values, errors)
-
-  bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy)
+  if (bootstrap) {
+    stopifnot(!missing(boot.R))
+    bsamples <- parametric.bootstrap(boot.R, values, errors)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy)
+  }else {
+    if(missing(boot.R)) {
+      boot.R = 0
+    }
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R)
+  }
 }
 
 #' NLS fit with parametric bootstrap and covariance
@@ -125,23 +134,32 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 #'
 #' @export
 #' @family NLS fit functions
-parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
+parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ..., bootstrap=TRUE) {
   stopifnot(length(x) == length(y))
 
   if (ncol(cov) == length(y)) {
     values <- y
+    errormodel <- "yerrors"
   } else if (ncol(cov) == length(y) + length(x)) {
     values <- c(y, x)
+    errormodel <- "xyerrors"
   } else {
     stop('The covariance matrix must either be as large as `y` or as `y` and `x` together.')
   }
 
-  bsamples <- parametric.bootstrap.cov(boot.R, values, cov)
-
-  bootstrap.nlsfit(fn, par.guess, y, x, bsamples, cov, ...)
+  if (bootstrap) {
+    stopifnot(!missing(boot.R))
+    bsamples <- parametric.bootstrap.cov(boot.R, values, cov)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., CovMatrix = cov)
+  }else {
+    if(missing(boot.R)) {
+      boot.R = 0
+    }
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., CovMatrix = cov, boot.R = boot.R)
+  }
 }
 
-get.errors <- function (useCov, y, dy, dx, errormodel, bsamples, cov_fn, error) {
+get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error) {
   ## invert covariance matrix, if applicable
   if (useCov) {
     if (!missing(dx) || !missing(dy)) {
@@ -301,6 +319,122 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
   return(wrapper)
 }
 
+simple.nlsfit <- function(fn,
+                          par.guess,
+                          y,
+                          x,
+                          errormodel,
+                          ...,
+                          dy,
+                          dx,
+                          CovMatrix,
+                          boot.R = 0,
+                          gr,
+                          dfn,
+                          use.minpack.lm = TRUE,
+                          error = sd,
+                          cov_fn = cov,
+                          maxiter = 500,
+                          relative.weights = FALSE) {
+  stopifnot(!missing(y))
+  stopifnot(!missing(x))
+  stopifnot(!missing(par.guess))
+  stopifnot(!missing(fn))
+
+  useCov <- !missing(CovMatrix)
+
+  if (use.minpack.lm) {
+    lm.avail <- requireNamespace('minpack.lm')
+  } else {
+    lm.avail <- FALSE
+  }
+
+  ## cast y and dy to Y and dY, respectively
+  if (errormodel == 'yerrors') {
+    Y <- y
+    par.Guess <- par.guess
+  } else {
+    Y <- c(y, x)
+    par.Guess <- c(par.guess, x)
+  }
+
+  nx <- length(x)
+  ipx <- length(par.Guess)-seq(nx-1,0)
+  
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+  dY <- all.errors$dY
+  dy <- all.errors$dy
+  dx <- all.errors$dx
+
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter)
+
+  ## now the actual fit is performed
+  first.res <- wrapper(Y, par.Guess, ...)
+  if (!first.res$converged) {
+    stop(sprintf('The fit has failed. The `info` from the algorithm is `%d`', first.res$info))
+  }
+
+  chisq <- first.res$chisq
+  dof = length(y) - length(par.guess)
+
+  if (missing(gr) || (errormodel == "xyerrors" && missing(dfn))) {
+    if (!requireNamespace(numDeriv)) {
+      stop("Errors on the fit results cannot be computed. Either provide the jacobian yourself, or install the package numDeriv.")
+    }
+    if(errormodel == "yerrors"){
+      ## We have to hide the argument x from the function jacobian
+      hidden <- function(par, my.x, ...) { fn(par=par, x=my.x, ...) }
+      jac <- numDeriv::jacobian(hidden, first.res$par, my.x=x, ...)
+    }else{
+      composition <- function(par, ...) { c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx]) }
+      jac <- numDeriv::jacobian(composition, first.res$par, ...)
+    }
+  }else {
+    if(errormodel == "yerrors"){
+      jac <- gr(par=first.res$par, x=x, ...)
+    }else{
+      jacobian <- function(par, ...) {
+        df.dpar <- rbind(gr(par=par[-ipx], x=par[ipx], ...), array(0,dim=c(nx,length(par.guess))))
+        df.dx <- rbind(diag(dfn(par=par[-ipx], x=par[ipx], ...)), diag(1,nx))
+        return(cbind(df.dpar, df.dx))
+      }
+      jac <- jacobian(par, ...)
+    }
+  }
+
+  cov <- solve(t(jac) %*% jac)
+  if(!relative.weights){
+      cov <- cov / (chisq/dof)
+  }
+  errors <- sqrt(diag(cov))
+
+  res <- list(y=y, dy=dy, x=x, nx=nx,
+              fn=fn, par.guess=par.guess, boot.R=boot.R,
+              errormodel=errormodel,
+              t0=first.res$par,
+              se=errors,
+              useCov=useCov,
+              invCovMatrix=dY,
+              Qval = 1 - pchisq(chisq, dof),
+              chisqr = chisq,
+              dof = dof,
+              error.function = error,
+              info.boot = info.boot,
+              relative.weights = relative.weights,
+              tofn=list(...))
+
+  if (errormodel == 'xyerrors') {
+    res$dx <- dx
+  }
+
+  if(boot.R > 0){
+    res$t <- parametric.bootstrap.cov(boot.R, first.res$par, cov)
+  }
+
+  attr(res, "class") <- c("bootstrapfit", "list")
+  return(invisible(res))
+}
+
 #' Bootstrap a non-linear least-squares fit
 #'
 #' Performs and bootstraps a non-linear least-squares fit to data with y and x
@@ -456,7 +590,7 @@ bootstrap.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  all.errors <- get.errors(useCov, y, dy, dx, errormodel, bsamples, cov_fn, error)
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
   dY <- all.errors$dY
   dy <- all.errors$dy
   dx <- all.errors$dx
@@ -643,26 +777,28 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   ## bootstrap.nlsfit requires some pull-ups
   Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot_r = 0), x$tofn))
 
-  ## error band
-  ## define a dummy function to be used in apply
-  prediction_boot_fn <- function (boot_r) {
-    par <- x$t[boot_r, 1:npar, drop = FALSE]
-    do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
-  }
-  predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
-  se <- apply(predictions, 2, error, na.rm = TRUE)
-  stopifnot(length(se) == length(X))
+  if(!is.null(x$t)) {
+    ## error band
+    ## define a dummy function to be used in apply
+    prediction_boot_fn <- function (boot_r) {
+      par <- x$t[boot_r, 1:npar, drop = FALSE]
+      do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
+    }
+    predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+    se <- apply(predictions, 2, error, na.rm = TRUE)
+    stopifnot(length(se) == length(X))
 
-  ## plot it
-  polyval <- c(Y+se, rev(Y-se))
-  if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
-    polyval[polyval < my.ylim[1]] <- my.ylim[1]
-    polyval[polyval > my.ylim[2]] <- my.ylim[2]
+    ## plot it
+    polyval <- c(Y+se, rev(Y-se))
+    if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
+      polyval[polyval < my.ylim[1]] <- my.ylim[1]
+      polyval[polyval > my.ylim[2]] <- my.ylim[2]
+    }
+    pcol <- col2rgb(col.band, alpha=TRUE)/255 
+    pcol[4] <- opacity.band
+    pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
+    polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
   }
-  pcol <- col2rgb(col.band, alpha=TRUE)/255 
-  pcol[4] <- opacity.band
-  pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
-  polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
 
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
