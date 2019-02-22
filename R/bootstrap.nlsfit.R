@@ -84,6 +84,9 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #'
 #' @inheritParams bootstrap.nlsfit
 #' @inheritParams parametric.bootstrap
+#' @param bootstrap. Shall the error calculation be performed using boostrap?
+#' If not, the errors are estimated with help of the jacobian (either provided
+#' in \code{gr} or calculated using the \code{numDeriv}-package).
 #'
 #' @export
 #' @family NLS fit functions
@@ -364,6 +367,24 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
   return(wrapper)
 }
 
+#' NLS fit with without bootstrap
+#'
+#' @inheritParams bootstrap.nlsfit
+#'
+#' @export
+#' @family NLS fit functions
+#' 
+#' @examples
+#' ## Declare some data.
+#' value <- c(0.1, 0.2, 0.3)
+#' dvalue <- c(0.01, 0.01, 0.015)
+#' x <- c(1, 2, 3)
+#' dx <- c(0.1, 0.1, 0.1)
+#'
+#' fn <- function (par, x, ...) par[1] + par[2] * x
+#'
+#' fit.result <- parametric.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
+#' summary(fit.result)
 simple.nlsfit <- function(fn,
                           par.guess,
                           y,
