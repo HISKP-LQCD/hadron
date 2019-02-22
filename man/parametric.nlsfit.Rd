@@ -42,7 +42,7 @@ is given.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 
-\item{bootstrap.}{Shall the error calculation be performed using boostrap?
+\item{bootstrap}{Shall the error calculation be performed using boostrap?
 If not, the errors are estimated with help of the jacobian (either provided
 in \code{gr} or calculated using the \code{numDeriv}-package).}
 }
