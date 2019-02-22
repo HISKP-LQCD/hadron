@@ -73,11 +73,14 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in c((t0 + 1):(Thalf), (t0-1):0)) {
+    ## the +2 comes from the fact that evectors are stored at evectors[t+1,,]
+    ## C to R index convention
     t.sort <- t0+2
     ## if wanted sort by the previous t, i.e. t.sort <- t + 1 - 1 for t > t0
     if((t > t0+1) && !sort.t0) t.sort <- t
     ## and t.sort <- t + 1 + 1 for t < t0
     if((t < t0-1) && !sort.t0) t.sort <- t + 2
+    ## for t=t0-1 t.sort = t0+2, the default
     ## matrix at t and symmetrise
     cM <- 0.5*matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size)
     cM <- cM + t(cM)
@@ -93,19 +96,24 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
                                  symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
       ## sort depending on input by values or vectors
       sortindex <- integer(matrix.size)
+      decreasing <- (t >= t0)
       if(sort.type == "values" || t == t0+1) {
-        sortindex <- order(variational.solve$values, decreasing=TRUE)
+        sortindex <- order(variational.solve$values, decreasing=decreasing)
       }
       else if(sort.type == "vectors") {
-        ## compute the scalar product of eigenvectors with those at t0+1
+        ## compute the scalar product of eigenvectors with those at t.sort
+        ## for each column apply order
         idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-        sortindex <- idx[,1]
-        if(!all(order(sortindex) == c(1:matrix.size))) {
-          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
-          sortindex <- idx[,1]
+        ## obtain the indices of the maxima (depending on variable decreasing) per row
+        sortindex <- idx[1,]
+        ## if that fails, i.e. sortindex not a permutation, use t0+2 (i.e. physical t0+1) as reference time slice
+        if(anyDuplicated(sortindex) && !sort.t0) {
+          idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=TRUE)
+          sortindex <- idx[1,]
         }
-        if(!all(order(sortindex) == c(1:matrix.size))) {
-          sortindex <- order(variational.solve$values, decreasing=TRUE)
+        ## Fallback is simply sort by eigenvalues, i.e. sort.type="values"
+        if(anyDuplicated(sortindex)) {
+          sortindex <- order(variational.solve$values, decreasing=decreasing)
         }
       }
       else {
@@ -124,20 +132,25 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
           DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
         }
         sortindex <- Perms[which.max(DMp),]
+        ##if(!decreasing) sortindex <- rev(sortindex)
       }
       evalues[t+1,] <- variational.solve$values[sortindex]
-      evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
-      tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
-      ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
-      ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
-      ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
-      ## we set them to NA first
-      d <- diag(t(evectors[t+1,,]) %*% tmp)
-      d[d < 0] <- NA
-      amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
-      rm(tmp)
+      evectors[t+1,,] <- variational.solve$vectors[, sortindex]
     }
   }
+  for(t in c((0:(t0-1)), (t0 + 1):(Thalf))) {
+    evectors[t+1,,] <- invL %*% evectors[t+1,,]
+    tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
+    ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
+    ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
+    ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
+    ## we set them to NA first
+    d <- diag(t(evectors[t+1,,]) %*% tmp)
+    d[d < 0] <- NA
+    amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
+    rm(tmp)
+  }
+  ## at t0 we set to 1
   evalues[t0+1,] <- 1.
   ## in case of bootstrapping everything (eigenvalues and eigenvectors)
   ## is concatenated into a single vector
@@ -170,8 +183,16 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
   ## gevp.tsboot contains first the N*(Thalf+1) eigenvalues
   ## and the the N*N*(Thalf+1) eigenvectors
   
-  ret <- list(cf=cf, res.gevp=res, gevp.tsboot=gevp.tsboot, boot.R=boot.R, boot.l=boot.l, seed=seed, matrix.size=matrix.size,
-              sort.type=sort.type, t0=t0, sort.t0=sort.t0)
+  ret <- list(cf=cf,
+              res.gevp=res,
+              gevp.tsboot=gevp.tsboot,
+              boot.R=boot.R,
+              boot.l=boot.l,
+              seed=seed,
+              matrix.size=matrix.size,
+              sort.type=sort.type,
+              t0=t0,
+              sort.t0=sort.t0)
   class(ret) <- c("gevp", class(ret))
   return(invisible(ret))
 }
