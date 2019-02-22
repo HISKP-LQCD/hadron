@@ -96,16 +96,14 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
                                  symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
       ## sort depending on input by values or vectors
       sortindex <- integer(matrix.size)
-      decreasing <- TRUE
-      if(t < t0) decreasing <- FALSE
+      decreasing <- (t >= t0)
       if(sort.type == "values" || t == t0+1) {
         sortindex <- order(variational.solve$values, decreasing=decreasing)
       }
       else if(sort.type == "vectors") {
         ## compute the scalar product of eigenvectors with those at t.sort
-        X <- abs( t(variational.solve$vectors) %*% evectors[t.sort,,] )
         ## for each column apply order
-        idx <- apply(X, 1, order, decreasing=TRUE)
+        idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t.sort,,] ), 1, order, decreasing=TRUE)
         ## obtain the indices of the maxima (depending on variable decreasing) per row
         sortindex <- idx[1,]
         ## if that fails, i.e. sortindex not a permutation, use t0+2 (i.e. physical t0+1) as reference time slice
@@ -113,7 +111,6 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
           idx <- apply(abs( t(variational.solve$vectors) %*% evectors[t0+2,,] ), 1, order, decreasing=TRUE)
           sortindex <- idx[1,]
         }
-        if(!decreasing) sortindex <- rev(sortindex)
         ## Fallback is simply sort by eigenvalues, i.e. sort.type="values"
         if(anyDuplicated(sortindex)) {
           sortindex <- order(variational.solve$values, decreasing=decreasing)
@@ -135,20 +132,23 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
           DMp[p] <- determinant(Mp, logarithm=FALSE)$modulus
         }
         sortindex <- Perms[which.max(DMp),]
-        if(!decreasing) sortindex <- rev(sortindex)
+        ##if(!decreasing) sortindex <- rev(sortindex)
       }
       evalues[t+1,] <- variational.solve$values[sortindex]
-      evectors[t+1,,] <- invL %*% variational.solve$vectors[, sortindex]
-      tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
-      ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
-      ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
-      ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
-      ## we set them to NA first
-      d <- diag(t(evectors[t+1,,]) %*% tmp)
-      d[d < 0] <- NA
-      amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
-      rm(tmp)
+      evectors[t+1,,] <- variational.solve$vectors[, sortindex]
     }
+  }
+  for(t in c((0:(t0-1)), (t0 + 1):(Thalf))) {
+    evectors[t+1,,] <- invL %*% evectors[t+1,,]
+    tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
+    ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
+    ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
+    ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
+    ## we set them to NA first
+    d <- diag(t(evectors[t+1,,]) %*% tmp)
+    d[d < 0] <- NA
+    amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
+    rm(tmp)
   }
   ## at t0 we set to 1
   evalues[t0+1,] <- 1.
