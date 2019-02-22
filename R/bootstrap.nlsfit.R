@@ -388,7 +388,7 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
 #'
 #' fn <- function (par, x, ...) par[1] + par[2] * x
 #'
-#' fit.result <- parametric.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
+#' fit.result <- simple.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
 #' summary(fit.result)
 simple.nlsfit <- function(fn,
                           par.guess,
