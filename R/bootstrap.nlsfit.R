@@ -224,6 +224,51 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
   return(list(dY=dY, dy=dy, dx=dx))
 }
 
+get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
+  ## invert covariance matrix, if applicable
+  if (useCov) {
+    if (!missing(dx) || !missing(dy)) {
+      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
+    }
+
+    inversion.worked <- function(InvCovMatrix) {
+      if (inherits(InvCovMatrix, "try-error")) {
+        stop("Variance-covariance matrix could not be inverted!")
+      }
+    }
+
+    if (missing(CovMatrix)) {
+        stop("If you want to use covariance, you have to provide the matrix.")
+    } else {
+      CholCovMatrix <- chol(CovMatrix)
+      InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
+      inversion.worked(InvCovMatrix)
+      dY <- t(InvCovMatrix)
+    }
+
+    dydx <- 1.0 / diag(dY)
+
+    if (errormodel == 'yerrors') {
+      dy <- dydx
+    } else {
+      dy <- dydx[1:length(y)]
+      dx <- dydx[(length(y)+1):length(dydx)]
+    }
+  }
+  else {
+    if (errormodel == 'yerrors') {
+      dY <- 1.0 / dy
+    } else {
+      dY <- 1.0 / c(dy, dx)
+    }
+  }
+
+  if (errormodel == 'yerrors') {
+    dx <- NULL
+  }
+  return(list(dY=dY, dy=dy, dx=dx))
+}
+
 set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx) {
   ## define the chi-vector, the sum of squares of which has to be minimized
   ## the definitions depend on the errormodel and the use of covariance
@@ -361,7 +406,7 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, NULL, cov_fn, error)
+  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
   dY <- all.errors$dY
   dy <- all.errors$dy
   dx <- all.errors$dx
@@ -378,7 +423,7 @@ simple.nlsfit <- function(fn,
   dof = length(y) - length(par.guess)
 
   if (missing(gr) || (errormodel == "xyerrors" && missing(dfn))) {
-    if (!requireNamespace(numDeriv)) {
+    if (!requireNamespace("numDeriv")) {
       stop("Errors on the fit results cannot be computed. Either provide the jacobian yourself, or install the package numDeriv.")
     }
     if(errormodel == "yerrors"){
@@ -402,9 +447,16 @@ simple.nlsfit <- function(fn,
     }
   }
 
+  ## Normalise the errors
+  if(useCov) {
+    jac <- dY %*% jac
+  }else{
+    jac <- diag(dY) %*% jac
+  }
+
   cov <- solve(t(jac) %*% jac)
-  if(!relative.weights){
-      cov <- cov / (chisq/dof)
+  if(relative.weights){
+      cov <- cov * chisq/dof
   }
   errors <- sqrt(diag(cov))
 
@@ -413,13 +465,13 @@ simple.nlsfit <- function(fn,
               errormodel=errormodel,
               t0=first.res$par,
               se=errors,
+              cov=cov,
               useCov=useCov,
               invCovMatrix=dY,
               Qval = 1 - pchisq(chisq, dof),
               chisqr = chisq,
               dof = dof,
               error.function = error,
-              info.boot = info.boot,
               relative.weights = relative.weights,
               tofn=list(...))
 
@@ -694,19 +746,31 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
   
   ## parameters with errors as strings
   tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=digits, human.readable=FALSE)
-  bias <- object$t0-apply(X=object$t, MARGIN=2, FUN=mean, na.rm=TRUE)
-  dim(bias) <- c(length(bias), 1)
-  bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
-  ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE, na.rm=TRUE)
-  dim(ci16) <- c(length(ci16), 1)
-  ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
-  ci84 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.84), drop=FALSE, na.rm=TRUE)
-  dim(ci84) <- c(length(ci84), 1)
-  ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
-  cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
-  print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
+  if(!is.null(object$t)) {
+    bias <- object$t0-apply(X=object$t, MARGIN=2, FUN=mean, na.rm=TRUE)
+    dim(bias) <- c(length(bias), 1)
+    bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE, na.rm=TRUE)
+    dim(ci16) <- c(length(ci16), 1)
+    ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci84 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.84), drop=FALSE, na.rm=TRUE)
+    dim(ci84) <- c(length(ci84), 1)
+    ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
+    print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
+  }else{
+    cat("    best fit parameters with errors\n\n")
+    print(data.frame(par=tmp[1:npar]))
+  }
   if(print.correlation){
-    correlation <- cor(object$t, object$t, use="na.or.complete")
+    if(!is.null(object$cov)) {
+      cov.to.cor <- diag(1 / errors)
+      correlation <- cov.to.cor %*% object$cov %*% cov.to.cor
+    }else if(!is.null(object$t)) {
+      correlation <- cor(object$t, object$t, use="na.or.complete")
+    }else{
+      stop("Correlation cannot be computed.")
+    }
     cat("\n   correlation matrix of the fit parameters\n\n")
     print(data.frame(correlation))
   }
@@ -718,8 +782,10 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
   cat("\n   chi^2 and fit quality\n")
   cat("chisqr / dof =", object$chisqr, "/", object$dof, "=", object$chisqr/object$dof, "\n")
   cat("p-value", object$Qval, "\n")
-  cat('\nRatio of converged fits on samples:', sum(object$converged.boot), '/', length(object$converged.boot), '=', mean(object$converged.boot), '\n')
-  if (!all(is.na(object$info.boot))) {
+  if(!is.null(object$converged.boot)){
+    cat('\nRatio of converged fits on samples:', sum(object$converged.boot), '/', length(object$converged.boot), '=', mean(object$converged.boot), '\n')
+  }
+  if (!is.null(object$info.boot) && !all(is.na(object$info.boot))) {
       cat('Table of nls.lm info values (1, 2, 3 are convergence):\n')
       df <- as.data.frame(table(object$info.boot))
       colnames(df) <- c('value', 'frequency')
