@@ -361,7 +361,7 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, NULL, cov_fn, error)
   dY <- all.errors$dY
   dy <- all.errors$dy
   dx <- all.errors$dx
