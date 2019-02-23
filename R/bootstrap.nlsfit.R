@@ -799,7 +799,7 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
     cat("\n   correlation matrix of the fit parameters\n\n")
     print(data.frame(correlation))
   }
-  if(object$errormodel != "yerrors") {
+  if(!is.null(object$t) && object$errormodel != "yerrors") {
     cat("\n estimates for x-values with errors, bootstrap bias and 68% confidence interval\n\n")
     ii <- c((npar+1):length(tmp))
     print(data.frame(x=tmp[ii], bias=bias[ii], ci16=ci16[ii], ci84=ci84[ii]))
