@@ -408,7 +408,7 @@ bootstrap.nlsfit <- function(fn,
           control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter),
           ...))
 
-      list(converged = res$info %in% 1:3,
+      list(converged = res$info %in% 1:4,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
