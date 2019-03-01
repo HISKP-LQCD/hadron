@@ -9,8 +9,8 @@
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
 cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
-  if( any( !(loop_type %in% c("Scalar","dOp")) ) ){
-    stop("The only scalar loop types are 'Scalar' and 'dOp'")
+  if( any( !(loop_type %in% c("Scalar","dOp","Naive")) ) ){
+    stop("The only scalar loop types are 'Scalar', 'Naive' and 'dOp'")
   }
   return(sprintf("/conf_%04d/Nstoch_%04d/%s/loop",
                  cid, istoch, loop_type)
@@ -50,7 +50,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'              reading code assumes that there is a single configuration stored per
 #'              file and the "trajectory" parameter in CalcLoops is assumed
 #'              to take its default value of '4'.
-#' @param selections Named list with names from the list 'Scalar', 'dOp', 'Loops'
+#' @param selections Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
 #'                   'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop types. 
 #'                   The elements of this list are in turn expected
 #'                   be data frames of the form
@@ -98,8 +98,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
   rval <- list()
   selected_loop_types <- names(selections)
 
-  if( any( !(selected_loop_types %in% c("Scalar", "dOp") ) ) ){
-    stop("Currently only 'Scalar' and 'dOp' loop types are supported!")
+  if( any( !(selected_loop_types %in% c("Scalar", "dOp", "Naive") ) ) ){
+    stop("Currently only 'Scalar', 'dOp' and 'Naive' loop types are supported!")
   }
 
   for( ifile in 1:length(files) ){
@@ -232,9 +232,9 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     # recover measurements from individual stochastic samples
     if( accumulated ){
       for( mom_idx in 1:nrow(selected_momenta) ){
+        temp <- rval[[loop_type]][[mom_idx]]
         for( istoch in 2:nstoch ){
-          rval[[loop_type]][[mom_idx]][,,istoch,,] <- 
-            rval[[loop_type]][[mom_idx]][,,istoch,,] - rval[[loop_type]][[mom_idx]][,,(istoch-1),,]
+          rval[[loop_type]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
         }
       }
     }
