@@ -4,7 +4,7 @@
 \alias{loop_2pt}
 \title{compute two-point correlation function between quark loops}
 \usage{
-loop_2pt(loop_snk, loop_src, outer_product = FALSE)
+loop_2pt(loop_snk, loop_src, random_vectors_outer_product = FALSE)
 }
 \arguments{
 \item{loop_snk}{'raw_cf' container with spin-projected quark loop
@@ -13,12 +13,13 @@ at sink (see \link{loop_spin_project})}
 \item{loop_src}{'raw_cf' container with spin-projected quark loop
 at source (see \link{loop_spin_project})}
 
-\item{outer_product}{Boolean. For testing purposes, the average over all
+\item{random_vectors_outer_product}{Boolean.
+For testing purposes, the average over all
 random sample combinations can be carried out explicitly
 as \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] }
 instead of the (much faster) equivalent
 \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
-                           \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.}
+                    \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.}
 }
 \value{
 'raw_cf' container with two-point function of these two quark loops.
