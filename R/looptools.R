@@ -113,18 +113,19 @@ disc_3pt <- function(cf_2pt,
 #'                 at sink (see \link{loop_spin_project})
 #' @param loop_src 'raw_cf' container with spin-projected quark loop 
 #'                 at source (see \link{loop_spin_project})
-#' @param outer_product Boolean. For testing purposes, the average over all
-#'                      random sample combinations can be carried out explicitly
-#'                      as \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] }
-#'                      instead of the (much faster) equivalent
-#'                      \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
-#'                            \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.
+#' @param random_vectors_outer_product Boolean. 
+#'               For testing purposes, the average over all
+#'               random sample combinations can be carried out explicitly
+#'               as \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] }
+#'               instead of the (much faster) equivalent
+#'               \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
+#'                     \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.
 #' @return 'raw_cf' container with two-point function of these two quark loops.
 #'         In the calculation, both averaging over all source locations and
 #'         the average over all stochastic sample combinations are performed.
 #' @export
 loop_2pt <- function(loop_snk, loop_src,
-                     outer_product = FALSE){
+                     random_vectors_outer_product = FALSE){
   stopifnot( inherits(loop_snk, 'raw_cf_meta') )
   stopifnot( inherits(loop_snk, 'raw_cf_data') )
   stopifnot( inherits(loop_src, 'raw_cf_meta') )
@@ -148,9 +149,9 @@ loop_2pt <- function(loop_snk, loop_src,
 
   dims <- loop_snk$dim
 
-  if( outer_product ){
+  if( random_vectors_outer_product ){
     dplyr_avail <- requireNamespace("dplyr")
-    if( !dplyr_avail ) stop("To use this function with 'outer_product = TRUE', the 'dplyr' package must be available.")
+    if( !dplyr_avail ) stop("To use this function with 'random_vectors_outer_product = TRUE', the 'dplyr' package must be available.")
     random_idcs <- expand.grid( 1:dims[1], 1:dims[1], KEEP.OUT.ATTRS = FALSE)
     colnames(random_idcs) <- c("r1", "r2")
     random_idcs <- dplyr::filter(random_idcs,
@@ -160,7 +161,7 @@ loop_2pt <- function(loop_snk, loop_src,
   for( t_sep in 0:(Time-1) ){
     loop_snk_shift <- shift.raw_cf(loop_snk, t_sep)
 
-    if( outer_product ){
+    if( random_vectors_outer_product ){
       cf_2pt$data[,(t_sep+1),,] <- (1.0/Time)*apply(loop_src$data[,,random_idcs$r1,,,drop=FALSE] * 
                                                       loop_snk_shift$data[,,random_idcs$r2,,,drop=FALSE], 
                                                     c(1,4,5), 
@@ -169,8 +170,8 @@ loop_2pt <- function(loop_snk, loop_src,
       loop_snk_avg_shift <- loop_stochav(loop_snk_shift)
       
       # Compute (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ])
-      c_sep_cross <- loop_src_avg * loop_snk_avg_shift
-      
+      c_sep_full <- loop_src_avg * loop_snk_avg_shift
+
       # Compute \sum_i Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ]
       c_sep <- loop_src * loop_snk_shift
       c_sep_diag <- loop_stochav(c_sep)
@@ -180,7 +181,9 @@ loop_2pt <- function(loop_snk, loop_src,
       # \sum_{i != j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] =
       # (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
       #  \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] )
-      cf_2pt$data[,(t_sep+1),,] <- (1.0/Time)*( apply(c_sep_cross$data - c_sep_diag$data, 
+      # note that since we work with averages (rather than sums), we need to account for the relative normalisation
+      # of the full and diagonal random vector product
+      cf_2pt$data[,(t_sep+1),,] <- (1.0/Time)*( apply(c_sep_full$data - c_sep_diag$data/dims[1], 
                                                       c(1,3,4), 
                                                       mean) )
     }
@@ -297,6 +300,8 @@ loop_spin_project <- function(loop,
     stop("'reim' can only be one of 'real', 'imag' or 'both'")
   }
 
+  ## in some cases, we want to extract just the real or imaginary
+  ## part of the estimate of the loop trace
   if( reim == 'real' ){
     reim_fn <- function(x){ Re(x) }
   } else if ( reim == 'imag' ) {
@@ -317,16 +322,19 @@ loop_spin_project <- function(loop,
   # perform gamma projection
   # using apply along the dimensions that we want to preserve (i.e., anything
   # but the spin degrees of freedom) 
-  proj_loop <- scale_factor*array(apply(X = loop$data,
-                                        MARGIN = c(1:(length(dims)-2)),
-                                        FUN = function(x){
-                                                if( herm_conj ){
-                                                  return( as.complex( reim_fn( sum(diag( gamma %*% Conj(t(x)))) ) ) )
-                                                }else{
-                                                  return( as.complex( reim_fn( sum(diag( gamma %*% x )) ) ) )
-                                                }
-                                              }),
-                            dim = c(dims[1:(length(dims)-2)],1,1)
+  proj_loop <- array(apply(X = loop$data,
+                           MARGIN = c(1:(length(dims)-2)),
+                           FUN = function(x){
+                                   # the as.complex is required to retain the same data type going in
+                                   # and coming out. If that is not done, proj_loop will
+                                   # be coerced to something that is not an array.
+                                   if( herm_conj ){
+                                     return( as.complex(reim_fn(scale_factor*sum(diag( gamma %*% Conj(t(x)))) ) ) )
+                                   }else{
+                                     return( as.complex(reim_fn(scale_factor*sum(diag( gamma %*% x )) ) ) )
+                                   }
+                                 }),
+                           dim = c(dims[1:(length(dims)-2)],1,1)
                            )
 
   proj_dims <- dim(proj_loop)
