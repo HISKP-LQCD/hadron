@@ -911,7 +911,8 @@ print.raw_cf <- function(x, ...) {
 #' in the member \code{obj} of \code{cmap}. The data frame passed via \code{desc} will be
 #' appended as a row to \code{cmap[[out_key]]$map}. If \code{out_key} does not exist
 #' as a key in \code{cmap}, a new element will be created. If it already exists,
-#' \code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}.
+#' \code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}. Requires
+#' the 'hash' package.
 #' @return Since objects of class \code{hash} are passed and modified by reference, there
 #'         is no explicit return value. Instead, the passed \code{cmap} is modified.
 #' @param cmap Object of class \code{hash} to act as storage for 'raw_cf' correlators.
@@ -920,12 +921,16 @@ print.raw_cf <- function(x, ...) {
 #' @param desc Single row data frame containing some descriptive parameters for \code{cf}.
 store_correl <- function(cmap, cf, out_key, desc)
 {
+  hash_avail <- requireNamespace("hash")
+  if( !hash_avail ){
+    stop("The 'hash' package is required to use this function!\n")
+  }
   stopifnot( "hash" %in% class(cmap) )
   stopifnot( "raw_cf" %in% class(cf) )
   stopifnot( "raw_cf_meta" %in% class(cf) )
   stopifnot( "raw_cf_data" %in% class(cf) )
 
-  if( has.key(out_key, cmap) ){
+  if( hash::has.key(out_key, cmap) ){
     cmap[[out_key]]$obj <- addStat.raw_cf(cmap[[out_key]]$obj, cf)
     cmap[[out_key]]$map <- rbind(cmap[[out_key]]$map, desc)
   } else {

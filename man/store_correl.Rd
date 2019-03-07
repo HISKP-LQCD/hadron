@@ -7,7 +7,8 @@ The object \code{cf} will be stored as an element of \code{cmap} under key \code
 in the member \code{obj} of \code{cmap}. The data frame passed via \code{desc} will be
 appended as a row to \code{cmap[[out_key]]$map}. If \code{out_key} does not exist
 as a key in \code{cmap}, a new element will be created. If it already exists,
-\code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}.}
+\code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}. Requires
+the 'hash' package.}
 \usage{
 store_correl(cmap, cf, out_key, desc)
 }
@@ -30,5 +31,6 @@ The object \code{cf} will be stored as an element of \code{cmap} under key \code
 in the member \code{obj} of \code{cmap}. The data frame passed via \code{desc} will be
 appended as a row to \code{cmap[[out_key]]$map}. If \code{out_key} does not exist
 as a key in \code{cmap}, a new element will be created. If it already exists,
-\code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}.
+\code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}. Requires
+the 'hash' package.
 }
