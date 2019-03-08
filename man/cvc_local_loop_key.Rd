@@ -4,12 +4,14 @@
 \alias{cvc_local_loop_key}
 \title{Generate HDF5 key for a momentum and spin-projected CVC loop}
 \usage{
-cvc_local_loop_key(loop_type, gamma, p)
+cvc_local_loop_key(loop_type, istoch, gamma, p)
 
-cvc_local_loop_key(loop_type, gamma, p)
+cvc_local_loop_key(loop_type, istoch, gamma, p)
 }
 \arguments{
 \item{loop_type}{String, loop type.}
+
+\item{istoch}{Integer, index of the stochastic sample.}
 
 \item{gamma}{Integer, CVC convention gamma matrix identifier.}
 

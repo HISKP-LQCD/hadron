@@ -4,7 +4,8 @@
 \alias{loop_2pt}
 \title{compute two-point correlation function between quark loops}
 \usage{
-loop_2pt(loop_snk, loop_src, random_vectors_outer_product = FALSE)
+loop_2pt(loop_snk, loop_src, random_vectors_outer_product = FALSE,
+  nstoch_to_avg = "all")
 }
 \arguments{
 \item{loop_snk}{'raw_cf' container with spin-projected quark loop
@@ -20,6 +21,10 @@ as \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] }
 instead of the (much faster) equivalent
 \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
                     \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.}
+
+\item{nstoch_to_avg}{String or integer, how many of the available stochastic
+samples should be averaged over. See \link{loop_stochav} for
+details.}
 }
 \value{
 'raw_cf' container with two-point function of these two quark loops.
