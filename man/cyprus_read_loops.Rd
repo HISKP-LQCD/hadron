@@ -8,7 +8,7 @@ cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
   legacy_traj = TRUE, verbose = FALSE)
 }
 \arguments{
-\item{selections}{Named list with names from the list 'Scalar', 'dOp', 'Loops'
+\item{selections}{Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
 'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop types.
 The elements of this list are in turn expected
 be data frames of the form
