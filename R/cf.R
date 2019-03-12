@@ -138,12 +138,11 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
 
     ## Number of non-NA samples.
     m <- sum(selection)
-    factor <- N / m
   } else {
-    factor <- 1.0
+    m <- N
   }
 
-  sqrt(factor * (N - 1)^2 / (N * boot.l)) * sd(samples)
+  sqrt((N - 1) * (m - 1) / (N * boot.l)) * sd(samples)
 }
 
 #' Computes covariance matrix for jackknife samples.
