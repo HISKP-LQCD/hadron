@@ -142,7 +142,7 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
     m <- N
   }
 
-  sqrt((N - 1) * (m - 1) / (N * boot.l)) * sd(samples)
+  sqrt((N - 1) * (m - 1) / (m * boot.l)) * sd(samples)
 }
 
 #' Computes covariance matrix for jackknife samples.
