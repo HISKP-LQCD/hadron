@@ -145,7 +145,10 @@ loop_2pt <- function(loop_snk,
 
   Time <- loop_snk$Time
 
-  if( nstoch_to_avg != 'all' && nstoch_to_avg >= 1 && nstoch_to_avg <= loop_src$dim[1] ){
+  if( nstoch_to_avg == "all" ){
+    nstoch_to_avg <- loop_src$dim[1]
+  }
+  if( nstoch_to_avg >= 1 && nstoch_to_avg <= loop_src$dim[1] ){
     loop_src$data <- loop_src$data[,,c(1:nstoch_to_avg),,,drop=FALSE]
     loop_src$dim[1] <- nstoch_to_avg
     loop_snk$data <- loop_snk$data[,,c(1:nstoch_to_avg),,,drop=FALSE]
