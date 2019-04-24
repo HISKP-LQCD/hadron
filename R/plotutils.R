@@ -2,7 +2,7 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   tmp <- val - 0.1*abs(val)
   tmpp <- val + 0.1*abs(val)
   if(!is.null(cumul.dval)) {
-    # cumul.mdx is implicitly negative
+    ## cumul.mdx is implicitly negative
     tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
     tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
   }
@@ -18,7 +18,7 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   range(c(as.vector(tmp),as.vector(tmpp)),na.rm=TRUE)
 }
 
-# there are two possibilities for one-dimensional vectors: the vector class or the array class
+## there are two possibilities for one-dimensional vectors: the vector class or the array class
 is.vectorial <- function(x) {
   ( is.vector(x) || length(dim(x))==1 )
 }
@@ -47,13 +47,13 @@ errorpos <- function(dx,errsum.method="linear") {
     rval[,2] <- dx[,1]^2
   }
   
-  # compute error bar deviations from the columns of dx depending on the errsum.method
-  # so for the "quadrature" method we will have
+  ## compute error bar deviations from the columns of dx depending on the errsum.method
+  ## so for the "quadrature" method we will have
   # norm[j] <- sqrt(sum(dx[j,]^2))
   # rval[j,] == c(0, dx[j,1]^2/norm[j], (dx[j,1]^2+dx[j,2]^2)/norm[j], (dx[j,1]^2+dx[j,2]^2+dx[j,3]^2)/norm[j],..,norm[j])
   if(ncol(dx)>1){ 
     for( i in 2:ncol(dx) ){
-      # when dx has only one row, dx[,1:i] is returned as a vector, making apply fail....
+      ## when dx has only one row, dx[,1:i] is returned as a vector, making apply fail....
       if(nrow(dx)>1){
         rval[,(i+1)] <- apply( X=dx[,1:i],MARGIN=1,
                              FUN=function(x){
@@ -70,7 +70,7 @@ errorpos <- function(dx,errsum.method="linear") {
     }
   }
   if(ncol(dx)>1 && errsum.method=="linear.quadrature"){
-    # unlike above, even if dx has only one row, this works fine
+    ## unlike above, even if dx has only one row, this works fine
     rval[,(ncol(dx)+2)] <- apply(X=dx,MARGIN=1,FUN=function(x){ sqrt(sum(x^2)) })
   }
   rval <- rval/norm
@@ -89,28 +89,30 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     stop("plotwitherror: if any dx, mdx, dy or mdy is a simple vector, it must be of the same length as the corresponing x/y, multiple errors must ALWAYS be specified in the form of arrays/data frames/matrices")
   }
 
-  fcall <- match.call(expand.dots=TRUE)
+  ## if no plotting limits are passed, we calculate them automatically
+  ## for this to work properly, we need to know if any of the axes
+  ## are requested in log scale
+  dots <- list(...)
   ylog <- FALSE
   xlog <- FALSE
-  if(any(names(fcall) == "log")) {
-    i <- match(c("log"), names(fcall))
-    ylog <- any(eval(fcall[[i]]) == "y")
-    xlog <- any(eval(fcall[[i]]) == "x")
+  if( 'log' %in% names(dots) ) {
+    logidx <- which(names(dots) == 'log')
+    if(any( grepl('y', dots[logidx]) ) ){ ylog <- TRUE }
+    if(any( grepl('x', dots[logidx]) ) ){ xlog <- TRUE }
   }
   my.xlim <- c()
   my.ylim <- c()
-
  
-  # cumulative errors as computed with errsum.method 
+  ## cumulative errors as computed with errsum.method 
   cumul.dx <- NULL
   cumul.mdx <- NULL
   cumul.dy <- NULL
   cumul.mdy <- NULL
   
-  # compute cumulative error bar positions, first convert vectorial dx, dy into arrays 
-  # see above for description of what errorpos does
+  ## compute cumulative error bar positions, first convert vectorial dx, dy into arrays 
+  ## see above for description of what errorpos does
   if(!missing(dx)){
-    # if dx is a simple vector, convert into an appropriately sized array
+    ## if dx is a simple vector, convert into an appropriately sized array
     if(is.vectorial(dx)){
       dx <- array(data=dx,dim=c(length(dx),1))
     }
@@ -171,32 +173,60 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     plot(x, y, col=col, ...)
   }
 
-  options(show.error.messages = FALSE)
+  ## We will need some langth in inches, so let's define the proportionality factor as
+  ## size of the output in inches devided by the differnce of boundary coordinates.
+  x.to.inches <- par("pin")[1]/diff(par("usr")[1:2])
+  y.to.inches <- par("pin")[2]/diff(par("usr")[3:4])
+
   if(!is.null(cumul.dy)) {
     for(cumul.err in list(cumul.dy,cumul.mdy)){
       rng <- 2:ncol(cumul.err)
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
-      # this loop is necessary because the "length" parameter of "arrows" is not vectorial...
-      # so to accomodate the generalisations below, we need to draw the error for each point
-      # individually, it doesn't make it much slower
+      ## this loop is necessary because the "length" parameter of "arrows" is not vectorial...
+      ## so to accomodate the generalisations below, we need to draw the error for each point
+      ## individually, it doesn't make it much slower
       for(rw in 1:length(y)){
-        # the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
+        ## the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
         arwhd.len <- 0.02
         clr <- col
         if(length(col)>1) clr <- col[rw]
         for(level in rng){
           start <- y[rw]+cumul.err[rw,(level-1)]
           end <- y[rw]+cumul.err[rw,level]
+          if (!is.na(start) && !is.na(end)){
+            if(par("ylog")){
+              ## logarithmic scaling means distances are multiplicative
+              if(start > 0 && end > 0){
+                dy.in.inches <- abs(log10(end/start))*y.to.inches
+                ## An arrow can only be plotted if it is longer than 1/1000 inches.
+                if(dy.in.inches <= 1/1000) {
+                  ## We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
+                  start <- y[rw] / 10^(1.01/2000/y.to.inches)
+                  end <- y[rw] * 10^(1.01/2000/y.to.inches)
+                }
+              }else{
+                dy.in.inches <- 0
+              }
+            }else{
+              dy.in.inches <- abs(end-start)*y.to.inches
+              if(dy.in.inches <= 1/1000) {
+                start <- y[rw] - 1.01/2000/y.to.inches
+                end <- y[rw] + 1.01/2000/y.to.inches
+              }
+            }
 
-          if (!is.na(start) && !is.na(end) && start != end) {
-            arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
+            if(dy.in.inches > 1/1000) {
+              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
+            }else if(dy.in.inches > 0){
+              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=3, col=clr)
+            }
             arwhd.len <- arwhd.len + 0.01
           }
         } 
-        # for the linear.quadrature method, show the total error as a line of triple thickness
-        # without drawing any "arrowstems"
+        ## for the linear.quadrature method, show the total error as a line of triple thickness
+        ## without drawing any "arrowstems"
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
-          # to be consistent, drawX/Ybars uses inches just like arrows
+          ## to be consistent, drawX/Ybars uses inches just like arrows
           arwhd.len <- arwhd.len + 0.02
           drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
         }
@@ -214,8 +244,32 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
         for(level in rng){
           start <- x[rw]+cumul.err[rw,(level-1)]
           end <- x[rw]+cumul.err[rw,level]
-          arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
-          arwhd.len <- arwhd.len+0.01*as.numeric(start!=end)
+          if (!is.na(start) && !is.na(end)){
+            if(par("xlog")){
+              if(start > 0 && end > 0){
+                dx.in.inches <- abs(log10(end/start))*x.to.inches
+                if(dx.in.inches <= 1/1000) {
+                  start <- x[rw] / 10^(1.01/2000/x.to.inches)
+                  end <- x[rw] * 10^(1.01/2000/x.to.inches)
+                }
+              }else{
+                dx.in.inches <- 0
+              }
+            }else{
+              dx.in.inches <- abs(end-start)*x.to.inches
+              if(dx.in.inches <= 1/1000) {
+                start <- x[rw] - 1.01/2000/x.to.inches
+                end <- x[rw] + 1.01/2000/x.to.inches
+              }
+            }
+
+            if(dx.in.inches > 1/1000) {
+              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
+            }else if(dx.in.inches > 0){
+              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=3, col=clr)
+            }
+            arwhd.len <- arwhd.len + 0.01
+          }
         }
         if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
           arwhd.len <- arwhd.len + 0.02
@@ -225,7 +279,6 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     } 
   }
   
-  options(show.error.messages = TRUE)
   return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
@@ -262,76 +315,70 @@ plot.cfit <- function(x, ...) {
   fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
   if(!is.null(fit$effmass$mll)) {
+    new_window_if_appropriate()
     plot.effmass(m=fit.mass,
                  ll=data.frame(t=fit$effmass$t, mass=fit$effmass$mll, dmass=fit$effmass$dmll),
                  lf=data.frame(t=fit$effmass$t, mass=fit$effmass$mlf, dmass=fit$effmass$dmlf),
                  ff=data.frame(t=fit$effmass$t, mass=fit$effmass$mff, dmass=fit$effmass$dmff))
   }
   if(!is.null(fit$effmass$m)) {
+    new_window_if_appropriate()
     plot.effmass(m=fit.mass, ll=data.frame(t=fit$effmass$t, mass=fit$effmass$m, dmass=fit$effmass$dm))
   }
   if(!is.null(fit$uwerrresultmpcac)) {
+    new_window_if_appropriate()
     plot(fit$uwerrresultmpcac, main=expression(m[PCAC]))
   }
   if(!is.null(fit$uwerrresultmps)) {
+    new_window_if_appropriate()
     plot(fit$uwerrresultmps, main=expression(m[PS]))
   }
   if(!is.null(fit$uwerrresultfps)) {
+    new_window_if_appropriate()
     plot(fit$uwerrresultfps, main=expression(f[PS]))
   }
   if(!is.null(fit$uwerrresultmv)) {
+    new_window_if_appropriate()
     plot(fit$uwerrresultmv, main=expression(m[V]))
   }
   if(!is.null(fit$boot)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plot(fit$boot, main="Bootstrap analysis for mps")
   }
   if(!is.null(fit$tsboot)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plot(fit$tsboot, main="TS Boostrap analysis for mps")
   }
   if(!is.null(fit$mv.boot)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plot(fit$mv.boot, main="Bootstrap analysis for mv")
   }
   if(!is.null(fit$mv.tsboot)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plot(fit$mv.tsboot, main="TS Bootstrap analysis for mv")
   }
   if(!is.null(fit$fitdata)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plot(fit$fitdata$Chi, main="Chi per data point", xlab="data point", ylab=expression(chi), type="h")
   }
   if(!is.null(fit$dpaopp)) {
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plotwitherror(fit$dpaopp$t, fit$dpaopp$mass, fit$dpaopp$dmass,
                   main=expression(m[PCAC]), xlab="t", ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
   }
   if(!is.null(fit$MChist.dpaopp)) {
+    new_window_if_appropriate()
     plot(seq(1, length(fit$MChist.dpaopp))+fit$skip, fit$MChist.dpaopp, type="l",
          main=expression(m[PCAC]), xlab=expression(t[HMC]), ylab=expression(m[PCAC]))
     abline(h=fit$fitresult$par[3]*fit$fitresult$par[2]/fit$fitresult$par[1]/2., col="red")
   }
 }
 
-plot.effmass <- function(m, ll, lf, ff, ...) {
+plot.effmass <- function (x, ll, lf, ff, ...) {
+  m <- x
 
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   if(!missing(ff)) {
     plot.massfit(ff, ylab=expression(m[eff]), xlab="t", ...)
     points((ll$t-0.2), ll$mass, pch=1, col="blue")
@@ -356,27 +403,26 @@ plot.effmass <- function(m, ll, lf, ff, ...) {
 }
 
 
-plot.averx <- function(averx, ...) {
+#' Plots averx data
+#'
+#' @param x `averx` object
+#' @param ... ignored
+plot.averx <- function(x, ...) {
+  averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
-  ##plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
+  #plot(averx$effmass, ylim=c(averx$effmass$opt.res$par[1]/2, 3/2*averx$effmass$opt.res$par[1]), main=c("Pion Effectivemass"), xlab=c("t/a"), ylab=c("a Meff"))
   
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   plot(averx$Cf3pt, xlab=c("t/a"), ylab=c("C3pt"), ylim=c(0, 2*averx$plateau), main=c("3pt ov 2pt"))
   plothlinewitherror(m=averx$plateau, dp=sd(averx$plateau.tsboot[,1]), dm=sd(averx$plateau.tsboot[,1]),
                     x0=averx$t1, x1=averx$t2)
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   plotwitherror(c(0:(averx$Cf2pt$Time/2)),
                 averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
                 apply(averx$Cf3pt$cf.tsboot$t/averx$matrixfit$opt.tsboot[1,]/averx$Cf2pt$cf.tsboot$t[,Thalfp1], 2, sd),
                 ylim=c(0,0.6), xlab=c("t/a"), ylab=c("C3pt"), main=c("<x>")
                 )
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   qqplot(averx$plateau.tsboot[,2], rchisq(n=averx$boot.R, df=averx$dof), main=paste("qqplot chisq"))
   return(invisible(data.frame(t=c(0:(averx$Cf2pt$Time/2)),
                               averx=averx$Cf3pt$cf0/averx$matrixfit$opt.res$par[1]/averx$Cf2pt$cf0[Thalfp1],
@@ -386,23 +432,23 @@ plot.averx <- function(averx, ...) {
          )
 }
 
-plot.pionff <- function(ff, ...) {
+plot.pionff <- function (x, ...) {
+  ff <- x
   T <- ff$Cf2ptp0$Time
   Thalfp1 <- T/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
   plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)
 
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   plot(mul.cf(ff$Cf3ptratio, ff$Cf2ptratio$cf0[Thalfp1]), ylim=c(0,1.3), main=c("F(q^2)"), xlab=c("t/a"), ylab=c("F(q^2)"))
   plothlinewitherror(m=ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], dp=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitFF$t1, x1=ff$plateaufitFF$t2)
 }
 
 
-plot.outputdata <- function(data, skip=0, ...) {
+plot.outputdata <- function (x, skip = 0, ...) {
+  data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])
   dH.res <- uwerrprimary( exp(-data$V3[skip:length(data$V3)]))
   plot(data$V1, data$V2, type="l",
@@ -410,18 +456,16 @@ plot.outputdata <- function(data, skip=0, ...) {
   abline(h=plaq.res$value, col="blue")
   abline(h=plaq.res$value+plaq.res$dvalue)
   abline(h=plaq.res$value-plaq.res$dvalue)
-  if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-    X11()
-  }
+  new_window_if_appropriate()
   plot(data$V1, data$V3, type="l",
        main=expression(paste(Delta, "H")), xlab=expression(t[HMC]), ylab=expression(paste(Delta, "H")), ...)
   return(invisible(list(data=data, plaq.res=plaq.res, dH.res = dH.res)))
 }
 
-# draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
-# like for arrows, the bar width is specified in inches
-# and additonal parameters (like lwd and col) can be passed
-# to segments
+## draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
+## like for arrows, the bar width is specified in inches
+## and additonal parameters (like lwd and col) can be passed
+## to segments
 drawYbars <- function(x,y,dy,length=0.01,...) {
   x.inch <- grconvertX(x=x,from="user",to="inches")
   xp.inch <- x.inch+length
@@ -456,3 +500,13 @@ drawXbars <- function(x,y,dx,length=0.01,...) {
 #box()
 #dev.off()
 #par(opar)
+
+new_window_if_appropriate <- function () {
+  is_X11 <- grepl(pattern = "X11", x = names(dev.cur()), ignore.case = TRUE)
+  is_null <- grepl(pattern = "null", x = names(dev.cur()), ignore.case = TRUE)
+
+  if (interactive() && (is_X11 || is_null)) {
+    cat('Opening a new X11 window.\n')
+    dev.new()
+  }
+}

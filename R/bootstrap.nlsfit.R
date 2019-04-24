@@ -3,7 +3,12 @@
 #' @param boot.R numeric. Number of bootstrap samples to generate.
 #' @param x numeric vector. Actual values for the data.
 #' @param dx numeric vector of the same length as `x` or missing. Errors of the
-#'   values.
+#' values.
+#' @param seed integer. Seed to use for the random number generation. If it is
+#' missing, the seed will not be set to any particular value. If there was a
+#' default value, all results would be exactly correlated. So if you want
+#' reproducability by fixing the seeds, make sure you choose different seeds
+#' for independent variables.
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
@@ -16,23 +21,26 @@
 #' x <- 1:3
 #' dx <- 1:3 * 0.1
 #' parametric.bootstrap(5, x, dx)
-parametric.bootstrap <- function (boot.R, x, dx) {
+parametric.bootstrap <- function (boot.R, x, dx, seed) {
   stopifnot(length(x) == length(dx))
 
+  old_seed <- swap_seed(seed)
   samples.list <- lapply(dx, function (error) rnorm(boot.R, 0, error))
+  restore_seed(old_seed)
   samples <- do.call(cbind, samples.list)
 
   samples <- t(t(samples) + x)
+
 
   return (samples)
 }
 
 #' Parametric bootstrap with covariance
 #'
-#' @param boot.R numeric. Number of bootstrap samples to generate.
-#' @param x numeric vector. Actual values for the data.
 #' @param cov numeric matrix, square, length of `x` or missing. Covariance
 #'   between the various variables in the vector `x`.
+#'
+#' @inheritParams parametric.bootstrap
 #'
 #' @return
 #' A matrix with as many columns as there are variables in `x` and as many rows
@@ -47,7 +55,7 @@ parametric.bootstrap <- function (boot.R, x, dx) {
 #'                 0, 0.15, 0.02,
 #'                 0.01, 0.02, 0.2), nrow = 3)
 #' parametric.bootstrap.cov(5, x, cov)
-parametric.bootstrap.cov <- function (boot.R, x, cov) {
+parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
   stopifnot(nrow(cov) == length(x))
   stopifnot(ncol(cov) == length(x))
   stopifnot(isSymmetric(cov))
@@ -61,7 +69,9 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 
   errors <- sqrt(evalues)
   stopifnot(!any(is.complex(errors)))
+  old_seed <- swap_seed(seed)
   samples.list <- lapply(errors, function (error) rnorm(boot.R, 0, error))
+  restore_seed(old_seed)
   samples <- do.call(cbind, samples.list)
 
   samples <- samples %*% t(evectors)
@@ -72,11 +82,13 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 
 #' NLS fit with parametric bootstrap
 #'
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap
+#'
 #' @export
 #' @family NLS fit functions
 #' 
 #' @examples
-#'
 #' ## Declare some data.
 #' value <- c(0.1, 0.2, 0.3)
 #' dvalue <- c(0.01, 0.01, 0.015)
@@ -84,7 +96,7 @@ parametric.bootstrap.cov <- function (boot.R, x, cov) {
 #' dx <- c(0.1, 0.1, 0.1)
 #' boot.R <- 1500
 #'
-#' fn <- function (par, x) par[1] + par[2] * x
+#' fn <- function (par, x, ...) par[1] + par[2] * x
 #'
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
@@ -107,6 +119,9 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ...) {
 }
 
 #' NLS fit with parametric bootstrap and covariance
+#'
+#' @inheritParams bootstrap.nlsfit
+#' @inheritParams parametric.bootstrap.cov
 #'
 #' @export
 #' @family NLS fit functions
@@ -131,18 +146,19 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' Performs and bootstraps a non-linear least-squares fit to data with y and x
 #' errors.
 #'
-#' @param fn the (non-linear) function to be fitted to the data. Its first
-#' argument must be the fit parameters named \code{par}. The second must be
-#' \code{x}, the explaining variable. Additional parameters might be passed to
-#' the function. Currently we pass `boot_r` which is `NA` for the original data
-#' and the ID of the bootstrap sample otherwise. As more parameters might be
-#' added in the future it is recommended that the fit function accepts `...` as
-#' the last parameter to be forward compatible.
-#' @param gr \code{gr=d(fn) / d(par)} is a function to return the gradient of
-#' \code{fn}. It must return an array with \code{length(x)} rows and
-#' \code{length(par)} columns.
-#' @param dfn \code{dfn=d(fn) / dx} is the canonical derivative of \code{fn} by
-#' \code{x} and only relevant if x-errors are provided.
+#' @param fn `fn(par, x, ...)`. The (non-linear) function to be fitted to the
+#' data. Its first argument must be the fit parameters named \code{par}. The
+#' second must be \code{x}, the explaining variable. Additional parameters
+#' might be passed to the function. Currently we pass `boot_r` which is `0`
+#' for the original data and the ID (1, ...) of the bootstrap sample otherwise.
+#' As more parameters might be added in the future it is recommended that the
+#' fit function accepts `...` as the last parameter to be forward compatible.
+#' @param gr `gr(par, x, ...)`. \code{gr=d(fn) / d(par)} is a function to
+#' return the gradient of \code{fn}. It must return an array with
+#' \code{length(x)} rows and \code{length(par)} columns.
+#' @param dfn `dfn(par, x, ...)`. \code{dfn=d(fn) / dx} is the canonical
+#' derivative of \code{fn} by \code{x} and only relevant if x-errors are
+#' provided.
 #' @param par.guess initial guess values for the fit parameters.
 #' @param y the data as a one-dimensional numerical vector to be described by
 #' the fit function. 
@@ -152,6 +168,13 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 #' equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 #' \code{length(y) + length(x)}.
+#' @param ... Additional parameters passed to `fn`, `gr` and `dfn`.
+#' @param dy,dx Numeric vector. Errors of the dependent and independent
+#' variable, respectively. These do not need to be specified as they can be
+#' computed from the bootstrap samples. In the case of parametric bootstrap it
+#' might would lead to a loss of information if they were computed from the
+#' pseudo-bootstrap samples. They must not be specified if a covariance matrix
+#' is given.
 #' @param CovMatrix complete variance-covariance matrix of dimensions
 #' \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 #' length(y)+length(x))} depending on the errormodel.
@@ -160,6 +183,11 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' stable.
 #' @param parallel parallelise over bootstrap samples. The package
 #' \code{parallel} is required.
+#' @param error Function that takes a sample vector and returns the error
+#' estimate. This is a parameter in order to support different resampling
+#' methods like jackknife.
+#' @param maxiter integer. Maximum number of iterations that can be used in the
+#' optimization process.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -194,7 +222,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' dx <- c(0.1, 0.1, 0.1)
 #' boot.R <- 1500
 #'
-#' fn <- function (par, x) par[1] + par[2] * x
+#' fn <- function (par, x, boot_r, ...) par[1] + par[2] * x
 #'
 #' ## Before we can use the fit with this data, we need to create bootstrap
 #' ## samples. We do not want to use the correlation matrix here. Note that you
@@ -205,6 +233,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #'
 #' fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 #' summary(fit.result)
+#' plot(fit.result)
 #'
 #' @export
 #' @family NLS fit functions
@@ -221,7 +250,9 @@ bootstrap.nlsfit <- function(fn,
                              dfn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
-                             error = sd) {
+                             error = sd,
+                             cov_fn = cov,
+                             maxiter = 500) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -232,13 +263,13 @@ bootstrap.nlsfit <- function(fn,
   useCov <- !missing(CovMatrix)
 
   if (use.minpack.lm) {
-    lm.avail <- require(minpack.lm)
+    lm.avail <- requireNamespace('minpack.lm')
   } else {
     lm.avail <- FALSE
   }
 
   if (parallel) {
-    parallel <- require(parallel)
+    parallel <- requireNamespace('parallel')
   }
 
   crr <- c(1:(boot.R+1))
@@ -273,7 +304,7 @@ bootstrap.nlsfit <- function(fn,
     }
 
     if (missing(CovMatrix)) {
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE), silent = TRUE)
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
     } else {
@@ -326,16 +357,16 @@ bootstrap.nlsfit <- function(fn,
   ## BUT it always has the same name
   if(errormodel == "yerrors"){
     if(useCov){
-      fitchi <- function(y, par) { dY %*% (y - fn(par=par, x=x, ...)) }
+      fitchi <- function(y, par, ...) { dY %*% (y - fn(par=par, x=x, ...)) }
     }else{
-      fitchi <- function(y, par) { dY * (y - fn(par=par, x=x, ...)) }
+      fitchi <- function(y, par, ...) { dY * (y - fn(par=par, x=x, ...)) }
     }
   }else{
     ipx <- length(par.Guess)-seq(nx-1,0)
     if(useCov){
-      fitchi <- function(y, par) { dY %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { dY %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
     }else{
-      fitchi <- function(y, par) { dY * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { dY * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
     }
   }
 
@@ -354,26 +385,28 @@ bootstrap.nlsfit <- function(fn,
         dfitchi <- function(par, ...) { -dY * gr(par=par, x=x, ...) }
       }
     }else{
-      jacobian <- function(par) {
+      jacobian <- function(par, ...) {
         df.dpar <- rbind(gr(par=par[-ipx], x=par[ipx], ...), array(0,dim=c(nx,length(par.guess))))
         df.dx <- rbind(diag(dfn(par=par[-ipx], x=par[ipx], ...)), diag(1,nx))
         return(cbind(df.dpar, df.dx))
       }
       if(useCov){
-        dfitchi <- function(par, ...) { -dY %*% jacobian(par) }
+        dfitchi <- function(par, ...) { -dY %*% jacobian(par, ...) }
       }else{
-        dfitchi <- function(par, ...) { -dY * jacobian(par) }
+        dfitchi <- function(par, ...) { -dY * jacobian(par, ...) }
       }
     }
-    dfitchisqr <- function(y, par) { 2 * crossprod(fitchi(y, par), dfitchi(par)) }
+    dfitchisqr <- function(y, par, ...) { 2 * crossprod(fitchi(y, par, ...), dfitchi(par, ...)) }
   }
 
   ## define the wrapper-functions for optimization
   if (lm.avail) {
-    wrapper <- function(y, par) {
+    wrapper <- function(y, par, ...) {
       suppressWarnings(
-        res <- nls.lm(par=par, fn=fitchi, y=y, jac=dfitchi,
-                      control = nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=10000, maxiter=500)))
+        res <- minpack.lm::nls.lm(
+          par=par, fn=fitchi, y=y, jac=dfitchi,
+          control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter),
+          ...))
 
       list(converged = res$info %in% 1:3,
            info = res$info,
@@ -382,8 +415,8 @@ bootstrap.nlsfit <- function(fn,
     }
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
-    wrapper <- function(y, par) {
-      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=500))
+    wrapper <- function(y, par, ...) {
+      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=maxiter), ...)
 
       list(converged = res$convergence == 0,
            info = NA,
@@ -393,19 +426,18 @@ bootstrap.nlsfit <- function(fn,
   }
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess)
-
+  first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
   if (!first.res$converged) {
-    stop(sprintf('The first fit to the original data has failed. The “info” from the algorithm is “%d”', first.res$info))
+    stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
 
   if (parallel)
-    my.lapply <- mclapply
+    my.lapply <- parallel::mclapply
   else {
     my.lapply <- lapply
   }
 
-  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par) })
+  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par, boot_r = sample - 1, ...) })
 
   par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
@@ -417,7 +449,7 @@ bootstrap.nlsfit <- function(fn,
   ## might have helped it to convergence, and we want to give the original data
   ## this second chance.
   if (!converged[1]) {
-    stop(sprintf('The second fit to the original data has failed. The “info” from the algorithm is “%d”', info[1]))
+    stop(sprintf('The second fit to the original data has failed. The `info` from the algorithm is `%d`', info[1]))
   }
   
   if (any(!converged)) {
@@ -467,11 +499,14 @@ bootstrap.nlsfit <- function(fn,
 #' Summarize a bootstrap NLS fit
 #'
 #' @param object object returned by \code{bootstrap.nlsfit}
+#' @param ... ignored
 #' @param digits number of significant digits to print in summary or print.
+#' @param print.correlation Logical. Whether to show the correlation between of
+#' the fit parameters.
 #'
 #' @export
 #' @family NLS fit functions
-summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
+summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TRUE) {
   cat("bootstrap nls fit\n\n")
   cat("model", object$errormodel, "\n")
   errors <- object$se
@@ -516,21 +551,17 @@ summary.bootstrapfit <- function(object, digits=2, print.correlation=TRUE) {
 #' Print a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
+#' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
 #' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
-print.bootstrapfit <- function(x, digits=2) {
+print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
 
 #' Plot a bootstrap NLS fit
 #'
 #' @param x object returned by \code{bootstrap.nlsfit}
-#' @param xlim x limits of the plot.
-#' @param ylim y limits of the plot.
-#' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
-#' adding points with error bars to the current plot. Switches the underlying
-#' plotting routine from \code{plot} to \code{points}.
 #' @param col.line line colour.
 #' @param col.band error band colour.
 #' @param opacity.band error band opacity.
@@ -540,11 +571,11 @@ print.bootstrapfit <- function(x, digits=2) {
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
 #' range in which fitline and errorband are plotted. Default is the range of
 #' the data.
-#' @param ... Additional parameters passed to the generic `plot` function.
+#' @param ... Additional parameters passed to the `plotwitherror` function.
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), xlab="x", ylab="y", supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
   if(missing(plot.range)){
     rx <- range(x$x)
   }else{
@@ -555,25 +586,27 @@ plot.bootstrapfit <- function(x, ..., xlim, ylim, rep=FALSE, col.line="black", c
 
   ## use the xylimits computation of plotwitherror
   if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
   }
   else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep=rep, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
   }
   my.xlim <- mylims$xlim
   my.ylim <- mylims$ylim
 
   ## to include additional parameter to x$fn originally given as ... to
   ## bootstrap.nlsfit requires some pull-ups
-  Y <- numeric()
-  Y <- do.call(what=x$fn, args=c(list(par=x$t0[1:npar], x=X), x$tofn))
+  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot_r = 0), x$tofn))
 
   ## error band
   ## define a dummy function to be used in apply
-  dummyfn <- function(par, x, object) {
-    return(do.call(what=object$fn, args=c(list(par=par, x=x), object$tofn)))
+  prediction_boot_fn <- function (boot_r) {
+    par <- x$t[boot_r, 1:npar, drop = FALSE]
+    do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
   }
-  se <- apply(X=rbind(apply(X=x$t[, c(1:npar), drop=FALSE], MARGIN=1, FUN=dummyfn, x=X, object=x)), MARGIN=1, FUN=error, na.rm=TRUE)
+  predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+  se <- apply(predictions, 2, error, na.rm = TRUE)
+  stopifnot(length(se) == length(X))
 
   ## plot it
   polyval <- c(Y+se, rev(Y-se))

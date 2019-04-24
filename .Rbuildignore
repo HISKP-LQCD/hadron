@@ -1,6 +1,13 @@
-^\.travis\.yml$
+\.swp$
 ^.*\.Rproj$
-^\.Rproj\.user$
+^\.\.Rcheck$
+^\.clang-format$
 ^\.git$
+^\.git/
+^\.gitignore$
+^\.RData$
 ^\.Rhistory$
+^\.Rproj\.user$
+^\.travis\.yml$
+^\.travis\.yml$
 ^\.vimrc$

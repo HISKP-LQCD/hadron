@@ -3,25 +3,34 @@
 \docType{data}
 \name{gm}
 \alias{gm}
-\title{Array of gamma structures}
-\format{An object of class \code{array} of dimension 7 x 4 x 4.}
+\title{List of arrays of gamma structures}
+\format{An object of class \code{list} of length 2.}
 \usage{
 gm
 }
 \description{
-Array of 4x4 complex gamma matrices in the tmLQCD chiral gamma basis,
-where \eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3 = } diag(c(1,1,-1,-1))
-}
-\details{
-The index mapping is as follows
+List of arrays of 4x4 complex gamma matrices in the tmLQCD chiral gamma basis,
+where \eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3 = } \code{diag(c(1,1,-1,-1))}
+and the UKQCD gamma basis, where \eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3}.
+
+The index mappings are as follows
 \itemize{
-\item \code{gm[1,,]} \eqn{\gamma^0}
-\item \code{gm[2,,]} \eqn{\gamma^1}
-\item \code{gm[3,,]} \eqn{\gamma^2}
-\item \code{gm[4,,]} \eqn{\gamma^3}
-\item \code{gm[5,,]} \eqn{\gamma^5}
-\item \code{gm[6,,]} positive parity projector \eqn{ \frac{1}{2} (1 + \gamma^0) }
-\item \code{gm[7,,]} negative parity projector \eqn{ \frac{1}{2} (1 - \gamma^0) }
+\item \code{gm[['chiral_tmlqcd']][1,,]} \eqn{\gamma^0}
+\item \code{gm[['chiral_tmlqcd']][2,,]} \eqn{\gamma^1}
+\item \code{gm[['chiral_tmlqcd']][3,,]} \eqn{\gamma^2}
+\item \code{gm[['chiral_tmlqcd']][4,,]} \eqn{\gamma^3}
+\item \code{gm[['chiral_tmlqcd']][5,,]} \eqn{\gamma^5}
+\item \code{gm[['chiral_tmlqcd']][6,,]} positive parity projector \eqn{ \frac{1}{2} (1 + \gamma^0) }
+\item \code{gm[['chiral_tmlqcd']][7,,]} negative parity projector \eqn{ \frac{1}{2} (1 - \gamma^0) }
+}
+\itemize{
+\item \code{gm[['ukqcd']][1,,]} \eqn{\gamma^1}
+\item \code{gm[['ukqcd']][2,,]} \eqn{\gamma^2}
+\item \code{gm[['ukqcd']][3,,]} \eqn{\gamma^3}
+\item \code{gm[['ukqcd']][4,,]} \eqn{\gamma^4}
+\item \code{gm[['ukqcd']][5,,]} \eqn{\gamma^5}
+\item \code{gm[['ukqcd']][6,,]} positive parity projector \eqn{ \frac{1}{2} (1 + \gamma^4) }
+\item \code{gm[['ukqcd']][7,,]} negative parity projector \eqn{ \frac{1}{2} (1 - \gamma^4) }
 }
 
 The function \code{\link{gm_mu}} can be used to access its elements using a more

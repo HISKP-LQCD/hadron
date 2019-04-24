@@ -5,7 +5,6 @@ exportPattern("^analysis_*")
 exportPattern("^print.*")
 exportPattern("^summary.*")
 exportPattern("^bootstrap.*")
-exportPattern("^gevp.*")
 exportPattern("^read.*")
 exportPattern("^tikz.*")
 exportPattern("^uwerr.*")
@@ -13,10 +12,14 @@ exportPattern("^eff.*")
 exportPattern("^fs\\..*")
 exportPattern("^[^\\.].*cf")
 exportPattern("^computefps.*")
-exportPattern("^weighted.*")
 exportPattern("^extract.*")
 exportPattern("^jab\\..*")
 exportPattern("^compute\\..*")
+exportPattern("^loop_*")
+exportPattern("^disc_*")
+export(gevp, gevp2cf, gevp2amplitude)
+export("overview_plot_raw_cf")
+export("cyprus_read_loops")
 export(g1, onlinemeas, alphas, cdh, cdhnew, matrixfit, subtract.excitedstates, invertCovMatrix, getorderedfilelist, averx, LuescherZeta, computeacf, computeDisc, CExp, pcac, pion, zetazp, proton, getorderedconfignumbers, fit.effectivemass, invcosh, tex.catwitherror, fit.cosh)
 export(gm,gm_mu)
 export(foldr1)
@@ -29,7 +32,8 @@ export(jackknife_cov)
 export(jackknife_error)
 ##exportPattern("^[^\\.]")
 useDynLib(hadron)
-importFrom("grDevices", "X11", "col2rgb", "dev.cur", "dev.off",
+export(h5_get_dataset)
+importFrom("grDevices", "col2rgb", "dev.cur", "dev.off",
            "rainbow", "rgb")
 importFrom("graphics", "abline", "arrows", "axis", "barplot",
            "grconvertX", "grconvertY", "hist", "legend", "lines",
@@ -38,6 +42,7 @@ importFrom("graphics", "abline", "arrows", "axis", "barplot",
 importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
            "na.omit", "optim", "pchisq", "pgamma", "qchisq", "qqplot",
            "quantile", "rchisq", "rnorm", "sd", "spec.pgram", "spline",
-           "uniroot", "var", "weighted.mean")
+           "uniroot", "var", "weighted.mean", "cor", "rgeom")
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
+importFrom(Rcpp, evalCpp)

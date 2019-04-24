@@ -279,7 +279,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   return(invisible(cf))
 }
 
-summary.effectivemass <- function(effMass) {
+summary.effectivemass <- function (object, ...) {
+  effMass <- object
   cat("\n ** effective mass values **\n\n")
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
@@ -290,7 +291,8 @@ summary.effectivemass <- function(effMass) {
   print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
 }
 
-summary.effectivemassfit <- function(effMass, verbose=FALSE) {
+summary.effectivemassfit <- function(object, verbose = FALSE, ...) {
+  effMass <- object
   cat("\n ** Result of effective mass analysis **\n\n")
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("type\t=\t", effMass$type, "\n")
@@ -317,11 +319,13 @@ summary.effectivemassfit <- function(effMass, verbose=FALSE) {
 
 }
 
-print.effectivemassfit <- function(effMass, verbose=FALSE) {
-  summary(effMass, verbose=verbose)
+print.effectivemassfit <- function (x, verbose = FALSE, ...) {
+  effMass <- x
+  summary(effMass, verbose = verbose, ...)
 }
 
-plot.effectivemass <- function(effMass, ref.value, col, col.fitline,...) {
+plot.effectivemass <- function (x, ref.value, col, col.fitline, ...) {
+  effMass <- x
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))
   }

@@ -5,9 +5,7 @@
   finite size corrections a la Colangelo, Duerr, Haefeli
 }
 \usage{
-   cdh(parm=NULL, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
-                 ampiV, afpiV, aF0, a_fm, L, printit=F, incim6 = TRUE,
-                 rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE)
+cdh(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV, afpiV, aF0, a_fm, L, printit=FALSE, incim6 = FALSE, rtilde=c(-1.5,  3.2, -4.2, -2.5,  3.8, 1.0), use.cimpl=TRUE)
 }
 \arguments{
   \item{parm}{

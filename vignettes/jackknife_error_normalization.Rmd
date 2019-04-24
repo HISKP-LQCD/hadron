@@ -1,6 +1,10 @@
 ---
 title: "Jackknife Error Normalization"
 output: html_notebook
+vignette: >
+  %\VignetteIndexEntry{Jackknife Error Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 # Standard deviation
@@ -92,5 +96,17 @@ jackknife_cov(x, y)
 
 cov(cbind(x, y))
 jackknife_cov(cbind(x, y))
+```
+
+```{r}
+x <- rnorm(1000)
+
+jackknife_samples_1 <- sapply(1:length(x), function (i) mean(x[-i]))
+jackknife_samples_2 <- sapply(2:length(x), function (i) mean(x[-c(i-1, i)]))
+
+jse1 <- jackknife_error(jackknife_samples_1)
+jse2 <- jackknife_error(jackknife_samples_2)
+
+jse2/jse1
 ```
 

@@ -4,7 +4,7 @@
 \alias{parametric.bootstrap.cov}
 \title{Parametric bootstrap with covariance}
 \usage{
-parametric.bootstrap.cov(boot.R, x, cov)
+parametric.bootstrap.cov(boot.R, x, cov, seed)
 }
 \arguments{
 \item{boot.R}{numeric. Number of bootstrap samples to generate.}
@@ -13,6 +13,12 @@ parametric.bootstrap.cov(boot.R, x, cov)
 
 \item{cov}{numeric matrix, square, length of \code{x} or missing. Covariance
 between the various variables in the vector \code{x}.}
+
+\item{seed}{integer. Seed to use for the random number generation. If it is
+missing, the seed will not be set to any particular value. If there was a
+default value, all results would be exactly correlated. So if you want
+reproducability by fixing the seeds, make sure you choose different seeds
+for independent variables.}
 }
 \value{
 A matrix with as many columns as there are variables in \code{x} and as many rows
@@ -37,3 +43,4 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{print.bootstrapfit}},
   \code{\link{summary.bootstrapfit}}
 }
+\concept{NLS fit functions}

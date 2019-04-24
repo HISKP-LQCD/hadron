@@ -41,10 +41,10 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   while((length(data))/boot.l > 20) {
     ndata <- block.ts(data, l=boot.l)
     j <- j+1
-    data.tsboot <- boot(ndata, statistic=meanindexed, R=boot.R)
+    data.tsboot <- boot::boot(ndata, statistic=meanindexed, R=boot.R)
     ## use the same seed ...
     set.seed(data.tsboot$seed)
-    data.sdboot <- boot(ndata, statistic=sd.index, R=boot.R)
+    data.sdboot <- boot::boot(ndata, statistic=sd.index, R=boot.R)
     ##data.tsboot.ci <- boot.ci(data.tsboot, type = c("norm", "basic", "perc"))
     Blocksize[j] <- boot.l
     Mean[j] <- data.tsboot$t0[1]
@@ -65,9 +65,7 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   df <- data.frame(Blocksize=Blocksize, Mean=Mean, Error=Error, DError=DError, Tauint=Tauint, Bias=Bias)
   if(pl) {
     plot(data.boot)
-    if(interactive() && (grepl(pattern="X11", x=names(dev.cur()), ignore.case=TRUE) || grepl(pattern="null", x=names(dev.cur()), ignore.case=TRUE))) {
-      X11()
-    }
+    new_window_if_appropriate()
     plotwitherror(df$Blocksize, df$Error, df$DError, xlab="l", ylab="Error")
   }
   return(invisible(df))

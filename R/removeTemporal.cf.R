@@ -155,6 +155,14 @@ removeTemporal.cf <- function(cf,
   return (invisible(ret))
 }
 
+#' Take time difference
+#'
+#' Performs the calculation of the shifted correlator C_shift(t) = C(t) - C(t +/- deltat).
+#'
+#' @param cf Object of type `cf`, a particle correlation function which shall be shifted.
+#' @param deltat
+#' @param forwardshift
+#'
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))

@@ -7,7 +7,7 @@
   arise from too much noise in the data.
 }
 \usage{
-invertCovMatrix(cf, boot.l=1, boot.samples=FALSE)
+invertCovMatrix(cf, boot.l=1, boot.samples=FALSE, cov_fn = cov)
 }
 \arguments{
   \item{cf}{
@@ -27,6 +27,9 @@ invertCovMatrix(cf, boot.l=1, boot.samples=FALSE)
   \item{boot.samples}{
     If set to \code{TRUE} the data is treated a pseudo data from a
     bootstrap procedure.
+  }
+  \item{cov_fn}{
+    Function that computes the covariance matrix from the given samples.
   }
 }
 \value{

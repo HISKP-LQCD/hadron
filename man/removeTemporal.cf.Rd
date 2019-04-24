@@ -4,8 +4,8 @@
 \alias{removeTemporal.cf}
 \title{Remove temporal states}
 \usage{
-removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0), p2 = c(0, 0,
-  0), L, lat.disp = TRUE, weight.cosh = FALSE)
+removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0),
+  p2 = c(0, 0, 0), L, lat.disp = TRUE, weight.cosh = FALSE)
 }
 \arguments{
 \item{cf}{Object of type \code{cf}, two-to-two particle correlation function which shall be weighted and shifted. It must be a correlation function in the frame \eqn{p_1 + p_2}.}
