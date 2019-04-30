@@ -29,9 +29,9 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
 #' @param cid Integer, configuration number, internally produced by the CalcLoops
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
-cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
-  deriv_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
-  if( any( !(loop_type %in% deriv_loop_types ) ) ) {
+cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4){
+  vector_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
+  if( any( !(loop_type %in% vector_loop_types ) ) ) {
     stop(sprintf("The only derivative loop types are %s",
                  do.call(paste, list(deriv_loop_types))
                  )
@@ -55,7 +55,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                   The elements of this list are in turn expected
 #'                   be data frames of the form
 #'                     \tabular{rrr}{
-#'                       \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
+#'                       \strong{px} \tab \strong{py} \tab \strong{pz} \cr
 #'                       0           \tab 0           \tab 1           \cr
 #'                       -2          \tab 1           \tab -3          \cr
 #'                       ...         \tab ...         \tab ...
@@ -78,8 +78,16 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package.
 #' @return Named nested list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format. Each named element corresponds to one loop
-#'         type and each element of the underlying numbered list corresponds to one momentum
-#'         combination as specified via \code{selections} for this loop type in the same order.
+#'         type.
+#'         For scalar-valued loop types, each element of the underlying numbered list
+#'         corresponds to one momentum combination as specified via \code{selections} 
+#'         for this loop type in the same order.
+#'         For the vector-valued loop types, the first level of the underlying numbered
+#'         list has four elements corresponding to the four derivative directions 
+#'         in the order t,x,y,z.
+#'         At the next level, the underlying numbered list corresponds to the momentum
+#'         combinations for this loop type and derivative direction, just as for the
+#'         scalar type.
 #'         
 #' @export
 cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE, verbose = FALSE){
@@ -95,11 +103,21 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     }
   }
 
+  scalar_loop_types <- c("Scalar", "dOp", "Naive")
+  vector_loop_types <- c("Loops", "LpsDw", "LpsDwCv", "LoopsCv")
+  supported_loop_types <- c(scalar_loop_types, vector_loop_types)
+
   rval <- list()
   selected_loop_types <- names(selections)
 
-  if( any( !(selected_loop_types %in% c("Scalar", "dOp", "Naive") ) ) ){
-    stop("Currently only 'Scalar', 'dOp' and 'Naive' loop types are supported!")
+  if( any( !(selected_loop_types %in% supported_loop_types ) ) ){
+    invalid_loop_types <- selected_loop_types[
+                            !(selected_loop_types %in% supported_loop_types)]
+    args <- lapply(X=1:length(invalid_loop_types),
+                   FUN=function(x){ invalid_loop_types[x] })
+    args$sep <- ", "
+    stop(sprintf("Loop types '%s' are not supported!",
+                do.call(paste, args)))
   }
 
   for( ifile in 1:length(files) ){
@@ -135,11 +153,11 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
     }
     # we transpose this to get the momenta as the rows of a matrix
     momenta_avail <- as.data.frame(t(h5_get_dataset(h5f, "Momenta_list_xyz")))
-    colnames(momenta_avail) <- c("qx","qy","qz")
+    colnames(momenta_avail) <- c("px","py","pz")
     # index the momentum combinations
     momenta_avail <- cbind(momenta_avail, idx = 1:nrow(momenta_avail))
 
-    # how many stochastic samples are available and does it match out expectation?
+    # how many stochastic samples are available and does it match our expectation?
     stoch_avail <- sort(as.numeric(unlist(lapply(X = strsplit(unique(group_names[ grepl("Nstoch", group_names) ]),
                                        "_"),
                                  FUN = function(x){ x[2] })
@@ -164,7 +182,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
       # for different loop types
       missing_momenta <- dplyr::anti_join(x = selections[[ loop_type ]],
                                           y = momenta_avail,
-                                          by = c("qx","qy","qz"))
+                                          by = c("px","py","pz"))
       if( nrow(missing_momenta) > 0 ){
         msg <- sprintf("\nMomenta\n%s\ncould not be found in %s!",
                       do.call(paste,
@@ -184,71 +202,152 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
       # select which elements we need to read
       selected_momenta <- dplyr::inner_join(x = selections[[ loop_type ]],
                                             y = momenta_avail,
-                                            by = c("qx","qy","qz"))
+                                            by = c("px","py","pz"))
 
       for( istoch in 1:nstoch ){
-        key <- cyprus_make_key_scalar(istoch = istoch,
-                                      loop_type = loop_type,
-                                      cid = cid_to_read)
+        if( loop_type %in% scalar_loop_types ){
+          key <- cyprus_make_key_scalar(istoch = istoch,
+                                        loop_type = loop_type,
+                                        cid = cid_to_read)
 
-        # read the data, which comes in the ordering
-        #   complex, gamma, mom_idx, time
-        # we permute it to
-        #   time, gamma, complex, mom_idx
-        # this is quite expensive, but it makes filling the target
-        # array much easier below
-        # Note that 'gamma' is of length 16
-        data <- h5_get_dataset(h5f, key)
-        # first we select the momenta that we actually want
-        data <- data[,,selected_momenta$idx,,drop=FALSE]
-        # and then perform the reshaping on this (possibly) reduced array
-        data <- aperm(data,
-                      perm = c(4,2,1,3))
-        dims <- dim(data)
-        nts <- dims[1]
+          # read the data, which comes in the ordering
+          #   complex, gamma, mom_idx, time
+          # we permute it to
+          #   time, gamma, complex, mom_idx
+          # this is quite expensive, but it makes filling the target
+          # array much easier below
+          # Note that 'gamma' is of length 16
+          data <- h5_get_dataset(h5f, key)
+          # first we select the momenta that we actually want
+          data <- data[,,selected_momenta$idx,,drop=FALSE]
+          # and then perform the reshaping on this (possibly) reduced array
+          data <- aperm(data,
+                        perm = c(4,2,1,3))
+          dims <- dim(data)
+          nts <- dims[1]
 
-        if( !(loop_type %in% names(rval) ) ){
-          rval[[ loop_type ]] <- list()
-        }
-        for( mom_idx in 1:nrow(selected_momenta) ){
-          if( length(rval[[ loop_type ]]) < mom_idx ){
-            rval[[loop_type]][[mom_idx]] <- array(as.complex(NA), dim=c(length(files),
-                                                                        nts,
-                                                                        length(stoch_avail),
-                                                                        4,
-                                                                        4)
-                                                  )
+          if( !(loop_type %in% names(rval) ) ){
+            rval[[ loop_type ]] <- list()
           }
-          rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
-            complex(real = data[1:nts, 1:16, 1, mom_idx ],
-                    imaginary = data[1:nts, 1:16, 2, mom_idx ])
-        }
-      } # istoch
-    } # loop_type
+          for( mom_idx in 1:nrow(selected_momenta) ){
+            # if the list element corresponding to 'mom_idx' is empty,
+            # we pre-allocate some space for an array there
+            if( length(rval[[ loop_type ]]) < mom_idx ){
+              rval[[loop_type]][[mom_idx]] <- array(as.complex(NA), dim=c(length(files),
+                                                                          nts,
+                                                                          length(stoch_avail),
+                                                                          4,
+                                                                          4)
+                                                    )
+            }
+            rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
+              complex(real = data[1:nts, 1:16, 1, mom_idx ],
+                      imaginary = data[1:nts, 1:16, 2, mom_idx ])
+          }
+        } else if( loop_type %in% vector_loop_types ){
+          # we are going to interchange t <-> x as direction 0 below
+          deriv_dirs_out <- c(1,2,3,0)
+          for( deriv_dir_in in c(0,1,2,3) ){
+            key <- cyprus_make_key_vector(istoch = istoch,
+                                          loop_type = loop_type,
+                                          dir = deriv_dir_in,
+                                          cid = cid_to_read)
+
+            # read the data, which comes in the ordering
+            #   complex, gamma, mom_idx, time
+            # we permute it to
+            #   time, gamma, complex, mom_idx
+            # this is quite expensive, but it makes filling the target
+            # array much easier below
+            # Note that 'gamma' is of length 16
+            data <- h5_get_dataset(h5f, key)
+            # first we select the momenta that we actually want
+            data <- data[,,selected_momenta$idx,,drop=FALSE]
+            # and then perform the reshaping on this (possibly) reduced array
+            data <- aperm(data,
+                          perm = c(4,2,1,3))
+            dims <- dim(data)
+            nts <- dims[1]
+
+            # we interchange t <-> x as direction 0
+            # and assign an idx in 1:4 -> (t,1),(x,2),(y,3),(z,4) 
+            deriv_dir_out_idx <- deriv_dirs_out[ deriv_dir_in+1 ]+1
+
+            if( !(loop_type %in% names(rval) ) ){
+              rval[[loop_type]] <- list()
+            }
+            if( length(rval[[loop_type]]) == 0 ){
+              for( dir_idx in 1:4 ){
+                rval[[loop_type]][[dir_idx]] <- list()
+              }
+            }
+            for( mom_idx in 1:nrow(selected_momenta) ){
+              if( length(rval[[loop_type]][[deriv_dir_out_idx]]) < mom_idx ){
+                rval[[loop_type]][[deriv_dir_out_idx]][[mom_idx]] <- 
+                  array(as.complex(NA), dim=c(length(files),
+                                              nts,
+                                              length(stoch_avail),
+                                              4,
+                                              4)
+                        )
+              }
+              rval[[loop_type]][[deriv_dir_out_idx]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
+                complex(real = data[1:nts, 1:16, 1, mom_idx ],
+                        imaginary = data[1:nts, 1:16, 2, mom_idx ])
+            } # for(mom_idx)
+          } # for(deriv_dir_in)
+        } # if(loop_type)
+      } # for(istoch)
+    } # for(loop_type)
     H5Fclose(h5f)
     if(verbose) tictoc::toc()
   } # ifile
+
+  # necessary post-processing
   for( loop_type in selected_loop_types ){
     # recover measurements from individual stochastic samples
     if( accumulated ){
       for( mom_idx in 1:nrow(selected_momenta) ){
-        temp <- rval[[loop_type]][[mom_idx]]
-        for( istoch in 2:nstoch ){
-          rval[[loop_type]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
-        }
-      }
-    }
-    # finally make `raw_cf` objects
+        if( loop_type %in% scalar_loop_types ){
+          temp <- rval[[loop_type]][[mom_idx]]
+          for( istoch in 2:nstoch ){
+            rval[[loop_type]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
+          }
+        } else if( loop_type %in% vector_loop_types ){
+          # for the vector-valued loop types we need to duplicate some code
+          for( dir_idx in 1:4 ){
+            temp <- rval[[loop_type]][[dir_idx]][[mom_idx]]
+            for( istoch in 2:nstoch ){
+              rval[[loop_type]][[dir_idx]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
+            }
+          } # for(dir_idx)
+        } # if(loop_type)
+      } # for(mom_idx) 
+    } # if(accumulated)
+
+    # we complete the reading by turning the loops into 'raw_cf' objects
     for( mom_idx in 1:nrow(selected_momenta) ){
-      rval[[loop_type]][[mom_idx]] <- 
-        raw_cf_data(raw_cf_meta(Time = Time,
-                                nrObs = 1,
-                                nrStypes = 1,
-                                dim = c(length(stoch_avail), 4, 4),
-                                nts = nts),
-                    data = rval[[loop_type]][[mom_idx]])
-    }
-  }
+      if( loop_type %in% scalar_loop_types ){
+        rval[[loop_type]][[mom_idx]] <- 
+          raw_cf_data(raw_cf_meta(Time = Time,
+                                  nrObs = 1,
+                                  nrStypes = 1,
+                                  dim = c(length(stoch_avail), 4, 4),
+                                  nts = nts),
+                      data = rval[[loop_type]][[mom_idx]])
+      } else if ( loop_type %in% vector_loop_types ){
+        for( dir_idx in 1:4 ){
+          rval[[loop_type]][[dir_idx]][[mom_idx]] <- 
+            raw_cf_data(raw_cf_meta(Time = Time,
+                                    nrObs = 1,
+                                    nrStypes = 1,
+                                    dim = c(length(stoch_avail), 4, 4),
+                                    nts = nts),
+                        data = rval[[loop_type]][[dir_idx]][[mom_idx]])
+        } # for(dir_idx)
+      } # if(loop_type)
+    } # for(mom_idx)
+  } # for(loop_types)
   return(rval)
 }
 

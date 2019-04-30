@@ -13,7 +13,7 @@ cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
 The elements of this list are in turn expected
 be data frames of the form
 \tabular{rrr}{
-\strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
+\strong{px} \tab \strong{py} \tab \strong{pz} \cr
 0           \tab 0           \tab 1           \cr
 -2          \tab 1           \tab -3          \cr
 ...         \tab ...         \tab ...
@@ -44,8 +44,16 @@ will be constructed with 'conf_0004' as their root group.}
 \value{
 Named nested list of the same length as \code{selections} containg the loop data
 in the \link{raw_cf} format. Each named element corresponds to one loop
-type and each element of the underlying numbered list corresponds to one momentum
-combination as specified via \code{selections} for this loop type in the same order.
+type.
+For scalar-valued loop types, each element of the underlying numbered list
+corresponds to one momentum combination as specified via \code{selections}
+for this loop type in the same order.
+For the vector-valued loop types, the first level of the underlying numbered
+list has four elements corresponding to the four derivative directions
+in the order t,x,y,z.
+At the next level, the underlying numbered list corresponds to the momentum
+combinations for this loop type and derivative direction, just as for the
+scalar type.
 }
 \description{
 The CalcLoops code produces HDF5 files which contain
