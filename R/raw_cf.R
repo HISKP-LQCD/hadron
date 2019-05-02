@@ -648,6 +648,7 @@ overview_plot_raw_cf <- function(cf,
     if( prod(grid) != prod(cf$dim) ){
       stop("'prod(grid)' must be equal to 'prod(cf$dim)'")
     }
+    par_save <- par()
     par(mfrow=grid)
   }
 
@@ -741,6 +742,10 @@ overview_plot_raw_cf <- function(cf,
       }
       do.call(plotwitherror, args)
     }
+  }
+  # reset par which was modified above
+  if(!missing(grid)){
+    par(par_save)
   }
 }
 
