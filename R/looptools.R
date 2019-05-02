@@ -310,8 +310,13 @@ loop_spin_project <- function(loop,
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )
   stopifnot( all(dim(gamma) == 4) & length(dim(gamma)) == 2 )
-  stopifnot( length(dim(loop$data)) == 5 )
   stopifnot( length(factor) == 1 )
+  
+  if( stochav ){
+    stopifnot( length(dim(loop$data)) == 5 )
+  } else {
+    stopifnot( length(dim(loop$data)) == 4 | length(dim(loop$data)) == 5 )
+  }
 
   if( !(reim %in% c('real','imag','both') ) ){
     stop("'reim' can only be one of 'real', 'imag' or 'both'")
