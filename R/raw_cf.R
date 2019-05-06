@@ -806,8 +806,8 @@ shift.raw_cf <- function(cf, places) {
         out_dof <- as.matrix(do.call(expand.grid, args))
         
         if( places[imeas] < 0 ){
-          ishift <- c( (iend - abs(places[imeas])):iend,
-                       (istart:(iend-abs(places[imeas])-1)) )
+          ishift <- c( (iend - abs(places[imeas]) + 1):iend,
+                       (istart:(iend-abs(places[imeas]))) )
         } else {
           ishift <- c( (istart+places[imeas]):iend,
                         istart:(istart+places[imeas]-1))
