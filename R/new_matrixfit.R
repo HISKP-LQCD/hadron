@@ -239,20 +239,20 @@ NParticleModel <- R6Class(
 )
 
 #' @export
-new_matrixfit <- function(cf,
-                          t1, t2,
-                          parlist,
-                          sym.vec,
-                          neg.vec,
-                          useCov = FALSE,
-                          model = "single",
-                          boot.fit = TRUE,
-                          fit.method = "optim",
-                          autoproceed = FALSE,
-                          par.guess,
-                          every,
-                          ...
-                          ) {
+matrixfit <- function(cf,
+                      t1, t2,
+                      parlist,
+                      sym.vec,
+                      neg.vec,
+                      useCov = FALSE,
+                      model = "single",
+                      boot.fit = TRUE,
+                      fit.method = "optim",
+                      autoproceed = FALSE,
+                      par.guess,
+                      every,
+                      ...
+                      ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
