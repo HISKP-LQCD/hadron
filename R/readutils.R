@@ -81,7 +81,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   
   pb <- NULL
   if(!verbose) {
-    pb <- txtProgressBar(min = 1, max = nFiles, style = 3)
+    pb <- txtProgressBar(min = 0, max = nFiles, style = 3)
   }
   for(i in c(1:nFiles)) {
     # update progress bar
