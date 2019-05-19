@@ -81,7 +81,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   
   pb <- NULL
   if(!verbose) {
-    pb <- txtProgressBar(min = 1, max = nFiles, style = 3)
+    pb <- txtProgressBar(min = 0, max = nFiles, style = 3)
   }
   for(i in c(1:nFiles)) {
     # update progress bar
@@ -675,7 +675,7 @@ readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
   rm(tmpdata)
   
   pb <- NULL
-  pb <- txtProgressBar(min = 1, max = length(files), style = 3)
+  pb <- txtProgressBar(min = 0, max = length(files), style = 3)
   for( i in 1:length(files) ){
     setTxtProgressBar(pb, i)
     tmp <- data.frame()
