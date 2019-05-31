@@ -83,7 +83,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
     .cf$cov_fn <- cov
   }
   else if (resampling_method == 'jackknife') {
-    .cf$error_fn <- jackknife_error
+    .cf$error_fn <- function (...) jackknife_error(..., boot.l = boot.l)
     .cf$cov_fn <- jackknife_cov
   } else {
     stop('This resampling method is not implemented')
@@ -128,7 +128,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' otherwise underestimate the uncertainty.
 #'
 #' @export
-jackknife_error <- function (samples, na.rm = FALSE) {
+jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   ## Number of jackknife samples.
   N <- length(samples)
 
@@ -138,12 +138,11 @@ jackknife_error <- function (samples, na.rm = FALSE) {
 
     ## Number of non-NA samples.
     m <- sum(selection)
-    factor <- N / m
   } else {
-    factor <- 1.0
+    m <- N
   }
 
-  sqrt(factor * (N - 1)^2 / N) * sd(samples)
+  sqrt((N - 1) * (m - 1) / (m * boot.l)) * sd(samples)
 }
 
 #' Computes covariance matrix for jackknife samples.

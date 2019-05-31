@@ -87,7 +87,7 @@ test_that('TwoStateModel', {
   fit_old <- do.call(matrixfit, args)
   fit_new <- do.call(new_matrixfit, args)
   
-  expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-6)
+  expect_equal(fit_old$t0, fit_new$t0, tolerance = 1e-5)
   
   expect_gte(fit_new$t0[1], 0)
   expect_gte(fit_new$t0[2], 0)

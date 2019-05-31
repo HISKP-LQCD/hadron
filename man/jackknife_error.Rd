@@ -4,7 +4,7 @@
 \alias{jackknife_error}
 \title{Estimates error from jackknife samples}
 \usage{
-jackknife_error(samples, na.rm = FALSE)
+jackknife_error(samples, boot.l = 1, na.rm = FALSE)
 }
 \arguments{
 \item{samples}{Numeric vector.}
