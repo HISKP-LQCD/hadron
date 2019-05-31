@@ -122,7 +122,10 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
-    if(verbose) tictoc::tic(sprintf("Reading %s",f))
+    if(verbose){
+      cat(sprintf("Opening %s\n",f))
+      tictoc::tic("Loop extraction")
+    }
     
     # The file names are of the form 
     # path/MG_loop_FLAVORquark_conf_conf.XXXX_runtype_probD8_part1_stoch_NeV0_NsYYYY_step0001_QsqZZ.h5

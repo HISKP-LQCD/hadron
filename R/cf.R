@@ -541,6 +541,39 @@ avg.cbt.cf <- function(cf){
   return(invisible(cf))
 }
 
+avg.sparsify.cf <- function(cf, avg, sparsity){
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_orig'))
+  if( sparsity > 1 ){
+    stop("avg.sparsify.cf: Sparsification has not been implemented yet, only sparsity = 1 supported for now.\n")
+  }
+
+  Lt <- cf$Time
+  if(cf$symmetrised){
+    Lt <- cf$Time/2 + 1 
+  }
+  nmeas <- length(cf$cf) / Lt
+  targetstats <- nmeas / avg 
+
+  cf2 <- invalidate.samples.cf(cf)
+  cf2$cf <- cf$cf[(1:targetstats),]
+  cf2$icf <- cf$icf[(1:targetstats),]
+  
+  for( m_idx in 1:targetstats ){
+    from <- (m_idx-1)*avg + 1 
+    to <- m_idx*avg
+    avg_idx <- c(from:to)
+    cf2$cf[m_idx,] <- apply(X = cf$cf[avg_idx,],
+                            MARGIN = 2,
+                            FUN = sum)/avg
+    cf2$icf[m_idx,] <- apply(X = cf$icf[avg_idx,],
+                             MARGIN = 2,
+                             FUN = sum)/avg
+  }
+  return(cf2)
+}
+
+
 #' Arithmetically adds two correlation functions
 #'
 #' @param cf1,cf2 `cf_orig` object.
@@ -765,12 +798,13 @@ shift.cf <- function(cf, places) {
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
-        ishift <- c( (iend - abs(places)):iend,
-                     (istart:(iend-abs(places)-1)) )
+        ishift <- c( (iend - abs(places) + 1):iend,
+                     (istart:(iend-abs(places))) )
       } else {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
       }
+
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
       if( !is.null(cf$icf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
@@ -803,6 +837,19 @@ invalidate.samples.cf <- function (cf) {
   return(invisible(cf))
 }
 
+#' Average backward and forward-dominated parts of the correlation function
+#' 
+#' When a correlation function is symmetric or anti-symmetric in time,
+#' this symmetry can be exploited by averaging the part from source-sink
+#' separation 1 to cf$Time/2 with the part from cf$Time/2+1 to cf$Time-1
+#' in order to improve statistical precision. This function
+#' reduces the number of time slices in a `cf` object from cf$Time to 
+#' cf$Time/2+1 by performing this averaging.
+#' 
+#' @param cf `cf` object
+#' @param sym.vec Integer vector of length cf$nrOb*cf$nrStypes giving the
+#'                time-reflection symmetry (1 for symmetric, -1 for anti-symmetric)
+#'                of the observable in question.
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -839,7 +886,66 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
     cf$icf <- cf$icf[, -isub]
   }
   cf$symmetrised <- TRUE
-  return(invisible(cf))
+  return(invisible(invalidate.samples.cf(cf)))
+}
+
+#' Unfold a correlation function which has been symmetrised
+#' 
+#' After a symmetric correlation function has been averaged across the central
+#' time slice, it is sometimes useful to explicitly duplicate the resulting
+#' average to span all cf$Time time slices. This function takes a `cf` with
+#' cf$Time/2+1 time slices and turns it into one with cf$Time time slices by
+#' reflecting the correlation function along the cf$Time/2 axis.
+#'
+#' @param cf `cf` object. All contained correlators must have originally been
+#'           symmetric under time-reflection.
+#' @param sym.vec Integer vector giving the symmetry properties (see \link{symmetrise.cf})
+#'                of the original unsymmetrised correlation function. This should be of
+#'                length cf$nrObs * cf$nrStypes
+unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  if(!cf$symmetrised){
+    stop("unsymmetrise.cf: cf is not symmetrised!")
+  }
+
+  if( cf$nrObs > 1 & length(sym.vec) == 1 ){
+    sym.vec <- rep(sym.vec[1],times=cf$nrObs)
+  } else if( cf$nrObs != length(sym.vec) ) {
+    stop("symmetrise.cf: length of sym.vec must either be 1 or match cf$nrObs!\n")
+  }
+
+  if( any(sym.vec < 0) ){
+    stop("only correlation functions symmetric in time can be unfolded!\n")
+  }
+
+  cf2 <- cf$cf
+  cf$cf <- array(NA, dim=c(nrow(cf$cf), cf$nrObs*cf$nrStypes*cf$Time))
+  
+  if( !is.null(cf$icf) ){
+    icf2 <- cf$icf
+    cf$icf <- array(NA, dim=c(nrow(cf$icf), cf$nrObs*cf$nrStypes*cf$Time))
+  }
+
+  Thalf <- cf$Time/2
+  isub <- c()
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
+      ihalf <- istart + Thalf
+      iend <- istart + cf$Time - 1
+      cf$cf[, (istart):(ihalf)] <- cf2[, (istart):(ihalf)]
+      cf$cf[, (ihalf+1):(iend)] <- cf2[, rev((istart+1):(ihalf-1))]
+
+      if( !is.null(cf$icf) ){
+        cf$icf[, (istart):(ihalf)] <- icf2[, (istart):(ihalf)]
+        cf$icf[, (ihalf+1):(iend)] <- icf2[, rev((istart+1):(ihalf-1))]
+      }
+    }
+  }
+  cf$symmetrised <- FALSE
+  return(invisible(invalidate.samples.cf(cf)))
 }
 
 summary.cf <- function(object, ...) {
