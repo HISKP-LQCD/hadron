@@ -4,7 +4,8 @@
 \alias{cvc_read_loops}
 \title{read HDF5 loop files in the CVC loop format}
 \usage{
-cvc_read_loops(selections, files, Time, nstoch, verbose = FALSE)
+cvc_read_loops(selections, files, Time, nstoch, verbose = FALSE,
+  check_group_names = FALSE)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
@@ -26,7 +27,11 @@ loop type.}
 
 \item{nstoch}{Integer, number of stochastic samples to be expected in file.}
 
-\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package.}
+\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package. Default FALSE.}
+
+\item{check_group_names}{Boolean, check if the group names that we're about to read actually
+exist in the file. This is quite slow because it uses \code{rhdf5::h5ls}.
+Default FALSE.}
 }
 \value{
 Named nested list of the same length as \code{selections} containg the loop data

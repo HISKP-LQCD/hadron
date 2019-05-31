@@ -5,7 +5,7 @@
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
 cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
-  legacy_traj = TRUE, verbose = FALSE)
+  legacy_traj = TRUE, verbose = FALSE, check_group_names = FALSE)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
@@ -31,15 +31,19 @@ loop type.}
 are accumulated, such that, say, element \code{n} corresponds to the
 sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 the data is post-processed to recover the measurements for the particular
-samples.}
+samples. Default TRUE.}
 
-\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package.}
+\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package. Default FALSE.}
+
+\item{check_group_names}{Boolean, employ \code{rhdf5::h5ls} to check if all the group names
+that we want to read are actually in the file. This can be slow
+for large files. Default FALSE.}
 
 \item{legecy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 corresponds to what is passed via the 'traj' flag to CalcLoops. When
 left empty, this defaults to '0004'. If this was left emtpy when
 the loop files were generated, set this to \code{TRUE} and the paths
-will be constructed with 'conf_0004' as their root group.}
+will be constructed with 'conf_0004' as their root group. Default TRUE.}
 }
 \value{
 Named nested list of the same length as \code{selections} containg the loop data

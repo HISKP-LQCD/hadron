@@ -22,5 +22,7 @@ The group names in an HDF5 file are stored as full paths
 as well as a flat vector. It is thus possible to check
 if a particular set of group names exist in the file
 by parsing the \code{name} member of the output
-of \code{h5ls}. This function does just that.
+of \code{h5ls}. This function does just that. Note that
+it can be extremely slow as it runs \code{rhdf5::h5ls}
+as many times as it is called!
 }

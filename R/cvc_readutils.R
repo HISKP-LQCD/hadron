@@ -333,14 +333,17 @@ cvc_to_raw_cf <- function(cf_dat)
 #' @param files Vector of strings, list of HDF5 files to be processed.
 #' @param Time Integer, time extent of the lattice.
 #' @param nstoch Integer, number of stochastic samples to be expected in file.
-#' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package.
+#' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package. Default FALSE.
+#' @param check_group_names Boolean, check if the group names that we're about to read actually
+#'                          exist in the file. This is quite slow because it uses \code{rhdf5::h5ls}.
+#'                          Default FALSE.
 #' @return Named nested list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format. Each named element corresponds to one loop
 #'         type and each element of the underlying numbered list corresponds to one momentum
 #'         combination as specified via \code{selections} for this loop type in the same order.
 #'         
 #' @export
-cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE){
+cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE, check_group_names = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
   if( !rhdf5_avail | !dplyr_avail ){
@@ -370,26 +373,28 @@ cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE){
     cid_in_filename <- as.integer(strsplit(basename(f), split = ".", fixed = TRUE)[[1]][2])
 
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
-    
-    group_names <- h5ls(h5f)$name
-    
-    avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
-    if( any( !avail_loop_types ) ){
-      msg <- sprintf("Some selected loop types could not be found in %s :\n %s",
-                     f,
-                     do.call(paste, as.list( selected_loop_types[!avail_loop_types] ) )
-                     )
-      stop(msg)
-    }
-    
-    # how many stochastic samples are available and does it match out expectation?
-    stoch_avail <- sort(as.numeric(unlist(lapply(X = strsplit(unique(group_names[ grepl("istoch", group_names) ]),
-                                       "_"),
-                                 FUN = function(x){ x[2] })
-                          )))
-    if( length(stoch_avail) != nstoch ){
-      stop(sprintf("Number of stochastic samples in file %s :\n%d, expected %d!",
-                   f, length(stoch_avail), nstoch))
+   
+    if( check_group_names ){ 
+      group_names <- h5ls(h5f)$name
+      
+      avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
+      if( any( !avail_loop_types ) ){
+        msg <- sprintf("Some selected loop types could not be found in %s :\n %s",
+                       f,
+                       do.call(paste, as.list( selected_loop_types[!avail_loop_types] ) )
+                       )
+        stop(msg)
+      }
+      
+      # how many stochastic samples are available and does it match out expectation?
+      stoch_avail <- sort(as.numeric(unlist(lapply(X = strsplit(unique(group_names[ grepl("istoch", group_names) ]),
+                                         "_"),
+                                   FUN = function(x){ x[2] })
+                            )))
+      if( length(stoch_avail) != nstoch ){
+        stop(sprintf("Number of stochastic samples in file %s :\n%d, expected %d!",
+                     f, length(stoch_avail), nstoch))
+      }
     }
 
     for( loop_type in selected_loop_types ){

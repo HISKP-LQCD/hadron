@@ -21,7 +21,9 @@ h5_get_dataset <- function(h5f,key)
 #'              as well as a flat vector. It is thus possible to check
 #'              if a particular set of group names exist in the file
 #'              by parsing the \code{name} member of the output
-#'              of \code{h5ls}. This function does just that.
+#'              of \code{h5ls}. This function does just that. Note that
+#'              it can be extremely slow as it runs \code{rhdf5::h5ls}
+#'              as many times as it is called!
 #' @param h5f HDF5 file openend with \code{H5Fopen}
 #' @param nms_to_find Vector of strings, group names (not full paths) which
 #'                    are to be located in the file.
@@ -29,7 +31,7 @@ h5_get_dataset <- function(h5f,key)
 #'         indicating whether the name at the same index position
 #'         was located in the file.
 h5_names_exist <- function(h5f, nms_to_find){
-  nms <- h5ls(h5f)$name
+  nms <- rhdf5::h5ls(h5f)$name
   unlist( lapply( nms_to_find, function(x){ x %in% nms } ) )
 }
 
