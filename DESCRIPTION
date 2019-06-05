@@ -29,7 +29,8 @@ Suggests:
     knitr,
     testthat,
     tictoc,
-    tikzDevice
+    tikzDevice,
+    numDeriv
 License: GPL-3
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
