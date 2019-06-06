@@ -18,6 +18,8 @@
 #'                 contribution to the three-point function.
 #' @param vev_subtract Boolean, whether the loop contains a vev which should
 #'                     be subtracted.
+#' @return `raw_cf` container with the product of loop and 2pt function, shifted
+#'         in time to be relative to source using the info from \code{src_ts}
 disc_3pt <- function(cf_2pt, 
                      loop,
                      src_ts,
@@ -105,6 +107,8 @@ disc_3pt <- function(cf_2pt,
   cf_3pt <- raw_cf_data(cf_3pt,
                         data = data
                         )
+  cf_3pt <- shift.raw_cf(cf_3pt, places = src_ts)
+
   return(cf_3pt)
 }
 

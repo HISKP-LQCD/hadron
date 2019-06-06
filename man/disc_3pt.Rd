@@ -30,6 +30,10 @@ contribution to the three-point function.}
 \item{vev_subtract}{Boolean, whether the loop contains a vev which should
 be subtracted.}
 }
+\value{
+\code{raw_cf} container with the product of loop and 2pt function, shifted
+in time to be relative to source using the info from \code{src_ts}
+}
 \description{
 Computes the quark-line disconnected contribution to a three-point function
 of the form
