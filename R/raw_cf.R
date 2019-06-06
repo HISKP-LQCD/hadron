@@ -357,6 +357,15 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
+#' @title Take the complex conjugate of a `raw_cf` object
+#' @param cf `raw_cf` cotnainer with data
+#' @return `raw_cf`
+conj_raw_cf <- function(cf){
+  stopifnot(inherits(cf, 'raw_cf_data'))
+  cf$data <- Conj(cf$data)
+  return(cf)
+}
+
 #' @title scale `raw_cf` data
 #' @param cf 'raw_cf' container with data to be scaled by the factor \code{a}
 #' @param a Numeric or complex scaling factor, although it could also be
