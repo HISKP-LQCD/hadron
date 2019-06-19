@@ -1,3 +1,7 @@
+append_pdf_filename <- function(basename, pdf_filenames){
+  return( c(pdf_filenames, sprintf("%s.pdf", basename)) )
+}
+
 # convenience function for analyzing online data from a tmLQCD run
 ### the various parameters are used to build a directory name into which R descends to read
 ### onlinemeas.xxxxxx and output.data
@@ -24,6 +28,13 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             boot.R=1500, boot.l=2,
                             outname_suffix="", verbose=FALSE)
 {
+  staplr_avail <- requireNamespace("staplr")
+  if( !staplr_avail ){
+    stop("The 'staplr' package is required")
+  }
+
+  pdf_filenames <- c()
+
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
   if( missing(L) | missing(T) | missing(beta) | missing(type) ){
@@ -146,6 +157,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       plotcounter <- plotcounter+1
       dpaopp_filename <- sprintf("%02d_dpaopp_%s",plotcounter,filelabel)
+      pdf_filenames <- append_pdf_filename(basename = dpaopp_filename,
+                                           pdf_filenames = pdf_filenames)
       result$obs$mpcac_mc <- plot_timeseries(dat=data.frame(y=onlineout$MChist.dpaopp,
                                                             t=omeas.cnums),
                                              stat_range=c( stat_skip+1, length(onlineout$MChist.dpaopp) ),
@@ -174,6 +187,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       plotcounter <- plotcounter+1
       dpaopp_plateau_filename <- sprintf("%02d_dpaopp_plateau_%s",plotcounter,filelabel)
+      pdf_filenames <- append_pdf_filename(basename = dpaopp_plateau_filename,
+                                           pdf_filenames = pdf_filenames)
+
       tikzfiles <- tikz.init(basename=dpaopp_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
       par(mgp=c(2,1,0))
@@ -200,6 +216,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       
       plotcounter <- plotcounter+1
       mpi_plateau_filename <- sprintf("%02d_mpi_plateau_%s",plotcounter,filelabel)
+      pdf_filenames <- append_pdf_filename(basename = mpi_plateau_filename,
+                                           pdf_filenames = pdf_filenames)
+
       tikzfiles <- tikz.init(mpi_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
       par(mgp=c(2,1,0))
@@ -319,6 +338,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if(plaquette) {
     plotcounter <- plotcounter+1
     plaquette_filename <- sprintf("%02d_plaquette_%s",plotcounter,filelabel,title=filelabel)
+    pdf_filenames <- append_pdf_filename(basename = plaquette_filename,
+                                        pdf_filenames = pdf_filenames)
+
     result$params$N.plaq <- length(tidx)-stat_skip
     result$obs$P <- plot_timeseries(dat=data.frame(y=outdat$P[tidx],
                                                    t=outdat$traj[tidx]),
@@ -335,6 +357,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if(dH) {
     plotcounter <- plotcounter+1
     dH_filename <- sprintf("%02d_dH_%s",plotcounter,filelabel)
+    pdf_filenames <- append_pdf_filename(basename = dH_filename,
+                                         pdf_filenames = pdf_filenames)
+
     result$obs$dH <- plot_timeseries(dat=data.frame(y=outdat$dH[tidx],
                                                     t=outdat$traj[tidx]),
                                      stat_range=c( 1+stat_skip, length(tidx) ),
@@ -350,6 +375,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
     plotcounter <- plotcounter+1
     expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
+    pdf_filenames <- append_pdf_filename(basename = expdH_filename,
+                                         pdf_filenames = pdf_filenames)
+
     result$obs$expdH <- plot_timeseries(dat=data.frame(y=outdat$expdH[tidx],
                                                        t=outdat$traj[tidx]),
                                         stat_range=c( 1+stat_skip, length(tidx) ),
@@ -367,6 +395,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if( !missing("cg_col") ) {
     plotcounter <- plotcounter+1
     cg_filename <- sprintf("%02d_cg_iter_%s", plotcounter, filelabel)
+    pdf_filenames <- append_pdf_filename(basename = cg_filename,
+                                         pdf_filenames = pdf_filenames)
+
     result$obs$CG.iter <- plot_timeseries(dat=data.frame(y=outdat[tidx,cg_col],
                                                          t=outdat$traj[tidx]),
                                           stat_range=c( 1+stat_skip, length(tidx) ),
@@ -383,6 +414,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     plotcounter <- plotcounter+1
     ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals )
+    pdf_filenames <- append_pdf_filename(basename = ev_filename,
+                                         pdf_filenames = pdf_filenames)
     
     evaldata <- tryCatch(read.table(ev_filename, stringsAsFactors=FALSE, 
                                     col.names=c("traj","min_ev","max_ev","ev_range_min","ev_range_max") ), 
@@ -407,7 +440,10 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if( acc == TRUE ){
     # finally add acceptance rate
     plotcounter <- plotcounter+1
-    accrate_filename <- sprintf("%02d_accrate_%s",plotcounter,filelabel,title=filelabel)
+    accrate_filename <- sprintf("%02d_accrate_%s",plotcounter,filelabel)
+    pdf_filenames <- append_pdf_filename(basename = accrate_filename,
+                                         pdf_filenames = pdf_filenames)
+
     result$obs$accrate <- plot_timeseries(dat=data.frame(y=outdat$acc[tidx],
                                                          t=outdat$traj[tidx]),
                                           stat_range=c( 1+stat_skip, length(tidx) ),
@@ -423,6 +459,10 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   if( trajtime == TRUE ){
     plotcounter <- plotcounter+1
     trajtime_filename <- sprintf("%02d_trajtime_%s",plotcounter,filelabel,title=filelabel)
+    pdf_filenames <- append_pdf_filename(basename = trajtime_filename,
+                                         pdf_filenames = pdf_filenames)
+
+
     result$obs$trajtime <- plot_timeseries(data.frame(y=outdat$trajtime[tidx],
                                                       t=outdat$traj[tidx]),
                                            stat_range=c( 1+stat_skip, length(tidx) ),
@@ -438,26 +478,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   print(result$params)
   print(t(result$obs))
 
-  # if the script "pdfcat" exists, concatenate the plots and remove the individual files
-  if( Sys.which("pdfcat") != "" ) {
-    commands <- c(sprintf("pdfcat analysis_%s.pdf ??_*_%s.pdf",filelabel,filelabel),
-                  sprintf("rm -f ??_*_%s.pdf",filelabel) )
-    for( command in commands ) {
-      print(paste("calling",command))
-      system(command=command)
-    } 
-  } else {
-    print("pdfcat not found, not concatenating plots!")
-  }
-  if( Sys.which("pdfcrop") != "" ) {
-    commands <- c(sprintf("pdfcrop analysis_%s.pdf analysis_%s.pdf",filelabel,filelabel))
-    for( command in commands ) {
-      print(paste("calling",command))
-      system(command=command)
-    } 
-  } else {
-    print("pdfcrop not found, not cropping plots!")
-  }
+  # concatenate the individual files
+  staplr::staple_pdf(input_files = pdf_filenames,
+                     output_filepath = sprintf("analysis_%s.pdf", filelabel))
+  # and remove them
+  system(command=sprintf("rm -f ??_*_%s.pdf", filelabel))
 
   resultsum[[rundir]] <- result
   cat("Storing analysis result database in ", resultsfile, "\n")
