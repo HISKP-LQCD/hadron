@@ -130,17 +130,15 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
 # from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
 escapeLatexSpecials <- function(x) {
   x <- gsub("\\", "$\\backslash$", x, fixed = TRUE)
-  x <- gsub("#", "\\\\#", x)
-  x <- gsub("$", "\\\\$", x)
-  x <- gsub("%", "\\\\%", x)
-  x <- gsub("&", "\\\\&", x)
-  x <- gsub("~", "\\\\~", x)
-  x <- gsub("_", "\\\\_", x)
-  x <- gsub("^", "\\\\^", x)
-  x <- gsub("\\{", "\\\\{", x)
-  x <- gsub("\\}", "\\\\}", x)
-  x <- gsub(">", "$>$", x)
-  x <- gsub("<", "$<$", x)
+  x <- gsub("#", "\\#", x, fixed=TRUE)
+  x <- gsub("$", "\\$", x, fixed=TRUE)
+  x <- gsub("%", "\\%", x, fixed=TRUE)
+  x <- gsub("&", "\\&", x, fixed=TRUE)
+  x <- gsub("~", "\\~", x, fixed=TRUE)
+  x <- gsub("_", "\\_", x, fixed=TRUE)
+  x <- gsub("^", "\\^", x, fixed=TRUE)
+  x <- gsub(">", "$>$", x, fixed=TRUE)
+  x <- gsub("<", "$<$", x, fixed=TRUE)
   return(x)
 }
 
