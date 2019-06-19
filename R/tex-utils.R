@@ -123,7 +123,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
 #'
 #' @param x String or vector of strings.
 #' @value String or vector of strings with all occurences of "#", "$", "%",
-#'        "&", "~", "_", "^", "\\{", "\\}", ">", "<" replaced by escaped
+#'        "&", "~", "_", "^", ">", "<" replaced by escaped
 #'        counterparts which should render fine when used in a tikz plot, for
 #'        example.
 #' @export
