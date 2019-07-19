@@ -30,7 +30,9 @@ Suggests:
     testthat,
     tictoc,
     tikzDevice,
-    hash
+    hash,
+    numDeriv,
+    staplr
 License: GPL-3
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues

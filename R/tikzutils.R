@@ -35,19 +35,4 @@ tikz.finalize <- function(tikzfiles, crop=TRUE, margins=0, clean=TRUE) {
   }
 }
 
-# from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
-escapeLatexSpecials <- function(x) {
-  x <- gsub("\\", "$\\backslash$", x, fixed = TRUE)
-  x <- gsub("#", "\\\\#", x)
-  x <- gsub("$", "\\\\$", x)
-  x <- gsub("%", "\\\\%", x)
-  x <- gsub("&", "\\\\&", x)
-  x <- gsub("~", "\\\\~", x)
-  x <- gsub("_", "\\\\_", x)
-  x <- gsub("^", "\\\\^", x)
-  x <- gsub("\\{", "\\\\{", x)
-  x <- gsub("\\}", "\\\\}", x)
-  x <- gsub(">", "$>$", x)
-  x <- gsub("<", "$<$", x)
-  return(x)
-}
+
