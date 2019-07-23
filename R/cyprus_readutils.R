@@ -8,12 +8,19 @@
 #' @param cid Integer, configuration number, internally produced by the CalcLoops
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
-cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
+#' @param accumulated Boolean, depending on whether the loop data was accumulated
+#'                    over the stochastic source d.o.f. or not, the keys are
+#'                    different. Default: FALSE
+cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4, accumulated = FALSE){
   if( any( !(loop_type %in% c("Scalar","dOp","Naive")) ) ){
     stop("The only scalar loop types are 'Scalar', 'Naive' and 'dOp'")
   }
-  return(sprintf("/conf_%04d/Nstoch_%04d/%s/loop",
-                 cid, istoch, loop_type)
+
+  nchar <- "n"
+  if( accumulated ){ nchar <- "N" }
+
+  return(sprintf("/conf_%04d/%sstoch_%04d/%s/loop",
+                 cid, nchar, istoch, loop_type)
         )
 }
 
@@ -29,7 +36,10 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
 #' @param cid Integer, configuration number, internally produced by the CalcLoops
 #'            tool via the "trajectory" input flag. The default is '4' as this is
 #'            often not used in practice.
-cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4){
+#' @param accumulated Boolean, depending on whether the loop data was accumulated
+#'                    over the stochastic source d.o.f. or not, the keys are
+#'                    different. Default: FALSE
+cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated = FALSE){
   vector_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
   if( any( !(loop_type %in% vector_loop_types ) ) ) {
     stop(sprintf("The only derivative loop types are %s",
@@ -38,8 +48,12 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4){
         )
   }
   stopifnot( dir %in% c(0:3) )
-  return(sprintf("/conf_%04d/Nstoch_%04d/%s/dir_%02d/loop",
-                 cid, istoch, loop_type, dir))
+
+  nchar <- "n"
+  if( accumulated ){ nchar <- "N" }
+
+  return(sprintf("/conf_%04d/%sstoch_%04d/%s/dir_%02d/loop",
+                 cid, nchar, istoch, loop_type, dir))
 }
 
 
@@ -65,20 +79,24 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4){
 #' @param files Vector of strings, list of HDF5 files to be processed.
 #' @param Time Integer, time extent of the lattice.
 #' @param nstoch Integer, number of stochastic samples to be expected in file.
-#' @param accumulated Boolean, specifies whether the loops, as organised by stochastic sample,
+#' @param accumulated Boolean or vector of boolean, specifies whether the loops, 
+#'                    as organised by stochastic sample,
 #'                    are accumulated, such that, say, element \code{n} corresponds to the 
 #'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 #'                    the data is post-processed to recover the measurements for the particular
-#'                    samples. Default TRUE.
-#' @param legecy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+#'                    samples. In case this is specified as a vector, it must be of the same
+#'                    length as \code{files}. Default: TRUE.
+#' @param legecy_traj Boolean or vector of boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 #'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
 #'                    left empty, this defaults to '0004'. If this was left emtpy when
 #'                    the loop files were generated, set this to \code{TRUE} and the paths
-#'                    will be constructed with 'conf_0004' as their root group. Default TRUE.
+#'                    will be constructed with 'conf_0004' as their root group. 
+#'                    When specified as a vector, it must be of length \code{length(files)}.
+#'                    Default: TRUE.
 #' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package. Default FALSE.
 #' @param check_group_names Boolean, employ \code{rhdf5::h5ls} to check if all the group names
 #'                          that we want to read are actually in the file. This can be slow
-#'                          for large files. Default FALSE.
+#'                          for large files. Default: FALSE.
 #' @return Named nested list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format. Each named element corresponds to one loop
 #'         type.
@@ -94,7 +112,8 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4){
 #'         
 #' @export
 cyprus_read_loops <- function(selections, files, Time, nstoch,
-                              accumulated = TRUE, legacy_traj = TRUE, verbose = FALSE,
+                              accumulated = TRUE, legacy_traj = TRUE, 
+                              verbose = FALSE,
                               check_group_names = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
@@ -107,7 +126,17 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
       stop("Time reporting requires the 'tictoc' package!")
     }
   }
-
+ 
+  # we require 'accumulated' and 'legacy_traj' to be vectors below 
+  if( length(accumulated) == 1 ){
+    accumulated <- rep(x = accumulated,
+                       times = length(files))
+  }
+  if( length(legacy_traj) == 1 ){
+    legacy_traj <- rep(x = legacy_traj,
+                       times = length(files))
+  }
+   
   scalar_loop_types <- c("Scalar", "dOp", "Naive")
   vector_loop_types <- c("Loops", "LpsDw", "LpsDwCv", "LoopsCv")
   supported_loop_types <- c(scalar_loop_types, vector_loop_types)
@@ -142,7 +171,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     # on PizDaint from Oct. 2018 - Oct. 2019, there was an issue with the naming of
     # the "trajectory" group name in the HDF5 files. If files were affected,
     # the stored "trajectory" id was always "4" instead of the actual configuration number.
-    if( legacy_traj ){
+    if( legacy_traj[ifile] ){
       cid_to_read <- 4
     } else {
       cid_to_read <- cid_in_filename
@@ -223,7 +252,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
         if( loop_type %in% scalar_loop_types ){
           key <- cyprus_make_key_scalar(istoch = istoch,
                                         loop_type = loop_type,
-                                        cid = cid_to_read)
+                                        cid = cid_to_read,
+                                        accumulated = accumulated[ifile])
 
           # read the data, which comes in the ordering
           #   complex, gamma, mom_idx, time
@@ -266,7 +296,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
             key <- cyprus_make_key_vector(istoch = istoch,
                                           loop_type = loop_type,
                                           dir = deriv_dir_in,
-                                          cid = cid_to_read)
+                                          cid = cid_to_read,
+                                          accumulated = accumulated[ifile])
 
             # read the data, which comes in the ordering
             #   complex, gamma, mom_idx, time
@@ -315,31 +346,35 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
       } # for(istoch)
     } # for(loop_type)
     H5Fclose(h5f)
+
+    # if the current file was produced in the "accumulated" convention -> de-accumulate it
+    if( accumulated[ifile] ){
+      for( loop_type in selected_loop_types ){
+        # recover measurements from individual stochastic samples
+          for( mom_idx in 1:nrow(selected_momenta) ){
+            if( loop_type %in% scalar_loop_types ){
+              temp <- rval[[loop_type]][[mom_idx]]
+              for( istoch in 2:nstoch ){
+                rval[[loop_type]][[mom_idx]][ifile,,istoch,,] <- temp[ifile,,istoch,,] - temp[ifile,,(istoch-1),,]
+              }
+            } else if( loop_type %in% vector_loop_types ){
+              # for the vector-valued loop types we need to duplicate some code
+              for( dir_idx in 1:4 ){
+                temp <- rval[[loop_type]][[dir_idx]][[mom_idx]]
+                for( istoch in 2:nstoch ){
+                  rval[[loop_type]][[dir_idx]][[mom_idx]][ifile,,istoch,,] <- temp[ifile,,istoch,,] - temp[ifile,,(istoch-1),,]
+                }
+              } # for(dir_idx)
+            } # if(loop_type)
+          } # for(mom_idx) 
+        } # for(selected_loop_types)
+    } # if(accumulated)
+
     if(verbose) tictoc::toc()
   } # ifile
 
   # necessary post-processing
   for( loop_type in selected_loop_types ){
-    # recover measurements from individual stochastic samples
-    if( accumulated ){
-      for( mom_idx in 1:nrow(selected_momenta) ){
-        if( loop_type %in% scalar_loop_types ){
-          temp <- rval[[loop_type]][[mom_idx]]
-          for( istoch in 2:nstoch ){
-            rval[[loop_type]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
-          }
-        } else if( loop_type %in% vector_loop_types ){
-          # for the vector-valued loop types we need to duplicate some code
-          for( dir_idx in 1:4 ){
-            temp <- rval[[loop_type]][[dir_idx]][[mom_idx]]
-            for( istoch in 2:nstoch ){
-              rval[[loop_type]][[dir_idx]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
-            }
-          } # for(dir_idx)
-        } # if(loop_type)
-      } # for(mom_idx) 
-    } # if(accumulated)
-
     # we complete the reading by turning the loops into 'raw_cf' objects
     for( mom_idx in 1:nrow(selected_momenta) ){
       if( loop_type %in% scalar_loop_types ){
