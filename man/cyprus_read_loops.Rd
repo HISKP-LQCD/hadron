@@ -5,7 +5,8 @@
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
 cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
-  legacy_traj = TRUE, verbose = FALSE, check_group_names = FALSE)
+  legacy_traj = TRUE, verbose = FALSE, check_group_names = FALSE,
+  spin_project = FALSE, project_gamma = NULL)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
@@ -27,23 +28,35 @@ loop type.}
 
 \item{nstoch}{Integer, number of stochastic samples to be expected in file.}
 
-\item{accumulated}{Boolean, specifies whether the loops, as organised by stochastic sample,
+\item{accumulated}{Boolean or vector of boolean, specifies whether the loops,
+as organised by stochastic sample,
 are accumulated, such that, say, element \code{n} corresponds to the
 sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 the data is post-processed to recover the measurements for the particular
-samples. Default TRUE.}
+samples. In case this is specified as a vector, it must be of the same
+length as \code{files}. Default: TRUE.}
 
 \item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package. Default FALSE.}
 
 \item{check_group_names}{Boolean, employ \code{rhdf5::h5ls} to check if all the group names
 that we want to read are actually in the file. This can be slow
-for large files. Default FALSE.}
+for large files. Default: FALSE.}
 
-\item{legecy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+\item{spin_project}{Boolean, whether the loops should be spin projected after being read.
+Must be provided to together with \code{project_gamma}! Default: FALSE}
+
+\item{project_gamma}{Named list of the same length as \code{selections} containing, for each
+selected loop type a 4x4 complex-valued projection matrix. For vector
+loop types, one matrix must be provided per direction (so \code{project_gamma$loop_type}
+is a numbered list with indices \code{c(1,2,3,4)}. Default: NULL}
+
+\item{legecy_traj}{Boolean or vector of boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 corresponds to what is passed via the 'traj' flag to CalcLoops. When
 left empty, this defaults to '0004'. If this was left emtpy when
 the loop files were generated, set this to \code{TRUE} and the paths
-will be constructed with 'conf_0004' as their root group. Default TRUE.}
+will be constructed with 'conf_0004' as their root group.
+When specified as a vector, it must be of length \code{length(files)}.
+Default: TRUE.}
 }
 \value{
 Named nested list of the same length as \code{selections} containg the loop data

@@ -21,7 +21,7 @@ Block \code{block_length} sequential measurements of the correlation
 function together. This occurs, for example, when multiple
 stochastic noise vectors are used per measurement or multiple
 source locations. Alternatively, it can also be used to
-account for auto-correlations in the data. If the total numbers
+account for auto-correlations in the data. If the total number
 of measurements is not divisible by \code{block_length}, the last
 measurements are discarded.
 }

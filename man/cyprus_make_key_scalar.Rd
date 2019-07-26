@@ -4,7 +4,7 @@
 \alias{cyprus_make_key_scalar}
 \title{HDF5 key for Cyprus CalcLoops scalar-type loops}
 \usage{
-cyprus_make_key_scalar(istoch, loop_type, cid = 4)
+cyprus_make_key_scalar(istoch, loop_type, cid = 4, accumulated = FALSE)
 }
 \arguments{
 \item{istoch}{Integer, index of the stochastic sample that the key should
@@ -16,6 +16,10 @@ be generated for.}
 \item{cid}{Integer, configuration number, internally produced by the CalcLoops
 tool via the "trajectory" input flag. The default is '4' as this is
 often not used in practice.}
+
+\item{accumulated}{Boolean, depending on whether the loop data was accumulated
+over the stochastic source d.o.f. or not, the keys are
+different. Default: FALSE}
 }
 \description{
 Generates an HDF5 key (full path) for the scalar

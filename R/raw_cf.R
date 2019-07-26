@@ -190,7 +190,7 @@ uwerr.raw_cf <- function(cf){
 #'              function together. This occurs, for example, when multiple
 #'              stochastic noise vectors are used per measurement or multiple
 #'              source locations. Alternatively, it can also be used to
-#'              account for auto-correlations in the data. If the total numbers
+#'              account for auto-correlations in the data. If the total number
 #'              of measurements is not divisible by `block_length`, the last
 #'              measurements are discarded.
 #'
@@ -781,8 +781,10 @@ shift.raw_cf <- function(cf, places) {
   if( (length(places) != 1) & (length(places) != dim(cf$data)[1]) ){
     stop("'places' should be either of length '1' or of a length equalling the number of measurements in 'cf'")
   }
-  if(length(places) == 1 & places == 0){
-    return(cf)
+  if(length(places) == 1){
+    if(places == 0){
+      return(cf)
+    }
   }
 
   dims <- dim(cf$data)
