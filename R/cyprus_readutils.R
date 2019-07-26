@@ -97,6 +97,12 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
 #' @param check_group_names Boolean, employ \code{rhdf5::h5ls} to check if all the group names
 #'                          that we want to read are actually in the file. This can be slow
 #'                          for large files. Default: FALSE.
+#' @param spin_project Boolean, whether the loops should be spin projected after being read.
+#'                     Must be provided to together with \code{project_gamma}! Default: FALSE
+#' @param project_gamma Named list of the same length as \code{selections} containing, for each
+#'                      selected loop type a 4x4 complex-valued projection matrix. For vector
+#'                      loop types, one matrix must be provided per direction (so \code{project_gamma$loop_type}
+#'                      is a numbered list with indices \code{c(1,2,3,4)}. Default: NULL
 #' @return Named nested list of the same length as \code{selections} containg the loop data
 #'         in the \link{raw_cf} format. Each named element corresponds to one loop
 #'         type.
@@ -112,9 +118,12 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
 #'         
 #' @export
 cyprus_read_loops <- function(selections, files, Time, nstoch,
-                              accumulated = TRUE, legacy_traj = TRUE, 
+                              accumulated = TRUE,
+                              legacy_traj = TRUE, 
                               verbose = FALSE,
-                              check_group_names = FALSE){
+                              check_group_names = FALSE,
+                              spin_project = FALSE,
+                              project_gamma = NULL){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
   if( !rhdf5_avail | !dplyr_avail ){
@@ -136,7 +145,8 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     legacy_traj <- rep(x = legacy_traj,
                        times = length(files))
   }
-   
+
+
   scalar_loop_types <- c("Scalar", "dOp", "Naive")
   vector_loop_types <- c("Loops", "LpsDw", "LpsDwCv", "LoopsCv")
   supported_loop_types <- c(scalar_loop_types, vector_loop_types)
@@ -152,6 +162,27 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     args$sep <- ", "
     stop(sprintf("Loop types '%s' are not supported!",
                 do.call(paste, args)))
+  }
+
+  # if we want to spin project, projection gamma matrices should be provided
+  # for all selected loop types
+  if( spin_project ){
+    stopifnot( !is.null(project_gamma) )
+    stopifnot( all( names(selections) == names(project_gamma) ) )
+    selected_vec_loop_types <- which( names(selections) %in% vector_loop_types )
+
+    incorrectly_sized_projectors <- NULL
+    for( loop_type in selected_vec_loop_types ){
+      if( length(project_gamma[[loop_type]] != 4) ){
+        incorrectly_sized_projectors <- c(incorrectly_sized_projectors, loop_type)
+      }
+    }
+    if( length(incorrectly_sized_projectors) > 0 ){
+      stop(sprintf("'project_gamma' for loop types '%s' were not of the right length!",
+                   do.call(paste, incorrectly_sized_projectors)
+                   )
+          )
+    }
   }
 
   for( ifile in 1:length(files) ){
@@ -385,6 +416,10 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                                   dim = c(nstoch, 4, 4),
                                   nts = nts),
                       data = rval[[loop_type]][[mom_idx]])
+        if( spin_project ){
+          rval[[loop_type]][[mom_idx]] <- loop_spin_project(loop = rval[[loop_type]][[mom_idx]],
+                                                            gamma = project_gamma[[loop_type]])
+        }
       } else if ( loop_type %in% vector_loop_types ){
         for( dir_idx in 1:4 ){
           rval[[loop_type]][[dir_idx]][[mom_idx]] <- 
@@ -394,10 +429,16 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                                     dim = c(nstoch, 4, 4),
                                     nts = nts),
                         data = rval[[loop_type]][[dir_idx]][[mom_idx]])
+          if( spin_project ){
+            rval[[loop_type]][[dir_idx]][[mom_idx]] <- loop_spin_project(
+              loop = rval[[loop_type]][[mom_idx]],
+              gamma = project_gamma[[loop_type]][[dir_idx]])
+          }
         } # for(dir_idx)
       } # if(loop_type)
     } # for(mom_idx)
   } # for(loop_types)
+  gc()
   return(rval)
 }
 
