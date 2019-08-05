@@ -6,7 +6,7 @@
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dy, dx, CovMatrix, gr,
   dfn, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
-  cov_fn = cov, maxiter = 500)
+  cov_fn = cov, maxiter = 500, success_infos = 1:3)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -64,6 +64,11 @@ methods like jackknife.}
 
 \item{maxiter}{integer. Maximum number of iterations that can be used in the
 optimization process.}
+
+\item{success_infos}{integer vector. When using \code{minpack.lm} there is the
+\code{info} in the return value. Values of 1, 2 or 3 are certain success. A value
+of 4 could either be a success or a saddle point. If you want to interpret
+this as a success as well just pass \code{1:4} instead of the default \code{1:3}.}
 }
 \value{
 returns a list of class 'bootstrapfit'. It returns all input

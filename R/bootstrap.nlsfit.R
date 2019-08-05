@@ -188,6 +188,10 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ...) {
 #' methods like jackknife.
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
+#' @param success_infos integer vector. When using `minpack.lm` there is the
+#' `info` in the return value. Values of 1, 2 or 3 are certain success. A value
+#' of 4 could either be a success or a saddle point. If you want to interpret
+#' this as a success as well just pass `1:4` instead of the default `1:3`.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -252,7 +256,8 @@ bootstrap.nlsfit <- function(fn,
                              parallel = FALSE,
                              error = sd,
                              cov_fn = cov,
-                             maxiter = 500) {
+                             maxiter = 500,
+                             success_infos = 1:3) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -408,7 +413,7 @@ bootstrap.nlsfit <- function(fn,
           control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter),
           ...))
 
-      list(converged = res$info %in% 1:4,
+      list(converged = res$info %in% success_infos,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
