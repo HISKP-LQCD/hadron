@@ -27,6 +27,7 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{parametric.nlsfit.cov}},
   \code{\link{parametric.nlsfit}},
   \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}}
+  \code{\link{print.bootstrapfit}},
+  \code{\link{simple.nlsfit}}
 }
 \concept{NLS fit functions}

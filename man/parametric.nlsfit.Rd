@@ -4,7 +4,8 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...,
+  bootstrap = TRUE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -40,6 +41,10 @@ pseudo-bootstrap samples. They must not be specified if a covariance matrix
 is given.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{bootstrap}{Shall the error calculation be performed using boostrap?
+If not, the errors are estimated with help of the jacobian (either provided
+in \code{gr} or calculated using the \code{numDeriv}-package).}
 }
 \description{
 NLS fit with parametric bootstrap
@@ -64,6 +69,7 @@ Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
   \code{\link{parametric.nlsfit.cov}},
   \code{\link{plot.bootstrapfit}},
   \code{\link{print.bootstrapfit}},
+  \code{\link{simple.nlsfit}},
   \code{\link{summary.bootstrapfit}}
 }
 \concept{NLS fit functions}
