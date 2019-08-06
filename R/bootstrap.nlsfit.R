@@ -333,7 +333,7 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_info) {
+set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos) {
   fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx)
   dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx)
   ## define the wrapper-functions for optimization
@@ -346,7 +346,7 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
           control = control,
           ...))
 
-      list(converged = res$info %in% success_info,
+      list(converged = res$info %in% success_infos,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
@@ -436,7 +436,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_info)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
@@ -680,7 +680,7 @@ bootstrap.nlsfit <- function(fn,
   ## add original data as first row
   bsamples <- rbind(Y, bsamples)
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_info)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
