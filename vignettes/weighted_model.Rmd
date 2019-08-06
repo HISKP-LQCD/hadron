@@ -1,6 +1,7 @@
 ---
 title: "Weighted Models"
-output: html_notebook
+output: pdf_document
+
 vignette: >
   %\VignetteIndexEntry{Weighted Models}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +12,7 @@ We have the “weighted” model. It is implemented for the effective mass but n
 
 ```{r setup}
 devtools::load_all()
+library(hadron)
 ```
 
 # Analytic considerations
