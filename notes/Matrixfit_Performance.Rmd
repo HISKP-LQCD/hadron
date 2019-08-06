@@ -39,8 +39,14 @@ table(fit_old$niter)
 table(fit_new$niter)
 ```
 
-
 ```{r}
+summary(fit_old)
+```
+
+
+
+
+```{r eval=FALSE, include=FALSE}
 print(profile_old)
 print(profile_new)
 ```
