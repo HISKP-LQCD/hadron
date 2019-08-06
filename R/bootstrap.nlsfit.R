@@ -405,6 +405,7 @@ simple.nlsfit <- function(fn,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
+                          success_infos = 1:3,
                           relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
