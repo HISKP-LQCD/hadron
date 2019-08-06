@@ -349,7 +349,8 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
       list(converged = res$info %in% 1:3,
            info = res$info,
            par = res$par,
-           chisq = res$rsstrace[length(res$rsstrace)])
+           chisq = res$rsstrace[length(res$rsstrace)],
+           niter = res$niter)
     }
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
@@ -360,7 +361,8 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
       list(converged = res$convergence == 0,
            info = NA,
            par = res$par,
-           chisq = res$value)
+           chisq = res$value,
+           niter = res$counts[1])
     }
   }
 
@@ -695,6 +697,7 @@ bootstrap.nlsfit <- function(fn,
 
   converged <- sapply(boot.list, function (elem) elem$converged)
   info <- sapply(boot.list, function (elem) elem$info)
+
   
   ## The fit on the original data must have converged, otherwise the results
   ## are worthless. We do not check directly after the first fit as the restart
@@ -711,6 +714,8 @@ bootstrap.nlsfit <- function(fn,
   ## We guarantee that the fit on the original data has converged, therefore we can discard this information.
   converged.boot <- converged[2:(boot.R + 1)]
   info.boot <- info[2:(boot.R + 1)]
+
+  niter_valboot <- sapply(boot.list, function (elem) elem$niter)
 
   ## If most of the bootstrap samples have failed to converged, something else
   ## is clearly wrong. We take 50% as the cutoff.
@@ -742,7 +747,8 @@ bootstrap.nlsfit <- function(fn,
               error.function = error,
               info.boot = info.boot,
               relative.weights = relative.weights,
-              tofn=list(...))
+              tofn=list(...),
+              niter = niter_valboot)
 
   if (errormodel == 'xyerrors') {
     res$dx <- dx

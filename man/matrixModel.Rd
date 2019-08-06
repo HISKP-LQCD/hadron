@@ -5,8 +5,27 @@
 \title{Correlator matrix model.}
 \usage{
 matrixModel(par, t, T, parind, sign.vec, ov.sign.vec, deltat = 0)
+
+matrixModel(par, t, T, parind, sign.vec, ov.sign.vec, deltat = 0)
 }
 \arguments{
+\item{par}{Numeric vector: Fit parameters of the model. In an
+object of type \code{matrixfit}, this should be located at
+\code{$opt.res$par}.}
+
+\item{t}{Numeric vector: Time of interest.}
+
+\item{T}{Numeric: Time extent of the lattice.}
+
+\item{parind}{See \code{\link{matrixfit}}.}
+
+\item{sign.vec}{Numeric vector: Relative sign between forward and
+backwards propagating part. A plus makes it cosh, a minus makes it sinh.}
+
+\item{ov.sign.vec}{Numeric vector: Overal sign.}
+
+\item{deltat}{Numeric: time shift.}
+
 \item{par}{Numeric vector: Fit parameters of the model. In an
 object of type \code{matrixfit}, this should be located at
 \code{$opt.res$par}.}
@@ -26,7 +45,11 @@ backwards propagating part. A plus makes it cosh, a minus makes it sinh.}
 }
 \description{
 Correlator matrix model.
+
+Correlator matrix model.
 }
 \seealso{
+\code{\link{matrixfit}}
+
 \code{\link{matrixfit}}
 }

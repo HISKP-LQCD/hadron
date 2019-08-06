@@ -5,8 +5,20 @@
 \title{Principal correlator two state model.}
 \usage{
 pcModel(par, t, T, delta1 = 1, reference_time)
+
+pcModel(par, t, T, delta1 = 1, reference_time)
 }
 \arguments{
+\item{par}{Numeric vector: Fit parameters of the model. In an
+object of type \code{matrixfit}, this should be located at
+\code{$opt.res$par}.}
+
+\item{t}{Numeric vector: Time of interest.}
+
+\item{T}{Numeric: Time extent of the lattice.}
+
+\item{reference_time}{Numeric: GEVP reference time value in physical time convention}
+
 \item{par}{Numeric vector: Fit parameters of the model. In an
 object of type \code{matrixfit}, this should be located at
 \code{$opt.res$par}.}
@@ -19,7 +31,11 @@ object of type \code{matrixfit}, this should be located at
 }
 \description{
 Principal correlator two state model.
+
+Principal correlator two state model.
 }
 \seealso{
+\code{\link{matrixfit}}
+
 \code{\link{matrixfit}}
 }
