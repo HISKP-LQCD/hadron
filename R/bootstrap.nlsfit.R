@@ -333,7 +333,7 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter) {
+set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos) {
   fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx)
   dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx)
   ## define the wrapper-functions for optimization
@@ -346,7 +346,7 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
           control = control,
           ...))
 
-      list(converged = res$info %in% 1:3,
+      list(converged = res$info %in% success_infos,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)])
@@ -405,6 +405,7 @@ simple.nlsfit <- function(fn,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
+                          success_infos = 1:3,
                           relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -436,7 +437,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
@@ -559,6 +560,10 @@ simple.nlsfit <- function(fn,
 #' methods like jackknife.
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
+#' @param success_infos integer vector. When using `minpack.lm` there is the
+#' `info` in the return value. Values of 1, 2 or 3 are certain success. A value
+#' of 4 could either be a success or a saddle point. If you want to interpret
+#' this as a success as well just pass `1:4` instead of the default `1:3`.
 #' @param relative.weights are the errors on y (and x) to be interpreted as
 #' relative weights instead of absolute ones? If TRUE, the covariance martix
 #' of the fit parameter results is multiplied by chi^2/dof. This is the default
@@ -628,6 +633,7 @@ bootstrap.nlsfit <- function(fn,
                              error = sd,
                              cov_fn = cov,
                              maxiter = 500,
+                             success_infos = 1:3,
                              relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -675,7 +681,7 @@ bootstrap.nlsfit <- function(fn,
   ## add original data as first row
   bsamples <- rbind(Y, bsamples)
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)

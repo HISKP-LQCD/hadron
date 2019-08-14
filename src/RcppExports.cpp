@@ -28,11 +28,11 @@ RcppExport SEXP LuscherZetaArray(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP,
 
 static const R_CallMethodDef CallEntries[] = {
     {"_hadron_read_nissa_textcf_kernel", (DL_FUNC) &_hadron_read_nissa_textcf_kernel, 4},
-    {"alphas",                           (DL_FUNC) &alphas,                            5},
-    {"cdh_c",                            (DL_FUNC) &cdh_c,                            13},
-    {"cdhnew_c",                         (DL_FUNC) &cdhnew_c,                         11},
-    {"invcosh",                          (DL_FUNC) &invcosh,                           5},
-    {"LuscherZetaArray",                 (DL_FUNC) &LuscherZetaArray,                  9},
+    {"alphas",           (DL_FUNC) &alphas,            5},
+    {"cdh_c",            (DL_FUNC) &cdh_c,            13},
+    {"cdhnew_c",         (DL_FUNC) &cdhnew_c,         11},
+    {"invcosh",          (DL_FUNC) &invcosh,           5},
+    {"LuscherZetaArray", (DL_FUNC) &LuscherZetaArray,  9},
     {NULL, NULL, 0}
 };
 
