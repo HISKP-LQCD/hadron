@@ -317,13 +317,11 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 #' @family cf constructors
 #'
 #' @export
-cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
+cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$weight.factor <- weight.factor
   .cf$weight.cosh <- weight.cosh
-  .cf$mass1 <- mass1
-  .cf$mass2 <- mass2
 
   .cf$weighted <- TRUE
 

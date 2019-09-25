@@ -3,7 +3,7 @@ sink("average.data.log", append=FALSE, split=TRUE)
 ## extracts irrep and frame from directory name
 ## also defines N for the matrix size
 ## and path
-source(paste(args$path.to.hadron, "/exec/rho-phaseshift/detect_irrep_frame.R", sep="/"))
+source(paste(path.to.hadron, "/detect_irrep_frame.R", sep="/"))
 
 pdf(file=paste("histograms", ens, frame, irrep, "pdf", sep="."))
 res <- list()
