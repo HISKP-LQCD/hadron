@@ -343,7 +343,39 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 
   return (invisible(ret))
 }
+#' @title reading reweighting factors for a list of gauge configuration 
+#'        and random samples from ASCII files in CMI format
+#' @param file_names_to_read list of filenames for the reweighting factors
+#' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
+#' @param nsamples number of stochastic samples used for computing the reweighting factors
+readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples ) 
+{
+  stopifnot(nsamples*length(gauge_conf_list)==length(file_names_to_read)) 
+  ret <- rw_meta(conf.index=gauge_conf_list)
+  tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
 
+# Number of reweighted determinants for each gauge configuration
+
+  n_rew_factors <- length(tmp$V7)/(nsamples*length(gauge_conf_list)
+
+# Exponentianing and Averaging over the stochastic samples
+  
+  tmp2 <- matrix(tmp$V7,nrow=nsamples_rew,ncol=length(gauge_conf_list)*n_rew_factors)
+  tmp3 <- apply(exp(-tmp2),2,mean)
+
+# Taking the product for the different determinants
+  tmp4 <- matrix(tmp3,nrow=n_rew_factors,ncol=nconf_rew)
+  tmp5 <- apply(tmp4,2,prod)
+
+# Normalize the largest reweighting factor to be one and storing this factor
+# this is neccessary due to the large value of the reweighting factor 
+# after exponentiating
+#  max_value <- max(tmp5)
+  tmp6 <- tmp5/max(tmp5)
+  
+  ret <- rw_orig(ret, rw = tmp6 )
+
+}
 #' @title reader for Nissa text format correlation functions
 #' @param file_baseames_to_read Character vector of file names without the
 #'                              smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
