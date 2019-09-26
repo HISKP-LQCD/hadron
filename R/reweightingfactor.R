@@ -14,6 +14,15 @@
 #' @family rw constructors
 #'
 #' @export
+rw_orig <- function (.rw = rw(), rw) {
+  stopifnot(inherits(.rw, 'rw'))
+
+  .rw$rw <- rw
+
+  class(.rw) <- append(class(.rw), 'rw_orig')
+  return (.rw)
+}
+#' @export
 rw <- function () {
   rw <- list()
   class(rw) <- append(class(rw), 'rw')
@@ -33,7 +42,7 @@ rw_meta <- function (.rw = rw(), conf.index = NA) {
 
    .rw$conf.index = conf.index
 
-   class(.rw) <- append(class(.rw), 'cf_meta')
+   class(.rw) <- append(class(.rw), 'rw_meta')
    return (.rw)
 }
 
