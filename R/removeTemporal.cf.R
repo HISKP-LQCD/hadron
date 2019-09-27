@@ -297,9 +297,12 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 }
 
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
-                       cosh_factor, offset = 0) {
+                       cosh_factor, offset = 0, inverse = FALSE) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
                               cf$Time/2 + offset, cosh_factor)
+  if (inverse) {
+    Exptt <- 1 / Exptt
+  }
   if (!is.null(cf$cf)) {
     cf$cf <- cf$cf * t(array(Exptt, dim = dim(cf$cf)[c(2, 1)]))
   }
@@ -315,10 +318,10 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
-                  cosh_factor, 0)
+                  cosh_factor, 0, FALSE)
   cf <- takeTimeDiff.cf(cf)
-  cf <- weight.cf(cf, -energy_difference_val, -energy_difference_boot,
-                  cosh_factor, -1)
+  cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
+                  cosh_factor, -1, TRUE)
 
   # We perform a clean copy of the data now to make sure that all invariants
   # hold and that no new fields have been added that we are not aware of.
