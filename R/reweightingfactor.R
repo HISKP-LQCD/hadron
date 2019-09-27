@@ -149,7 +149,7 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
 
-  stopifnot(identical(rw1$conf.index == rw2$conf.index)
+  stopifnot(identical(rw1$conf.index == rw2$conf.index))
   stopifnot(dim(rw1$rw)[2] == dim(rw2$rw)[2])
 
   rw <- rw1
