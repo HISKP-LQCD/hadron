@@ -350,7 +350,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #' @param nsamples number of stochastic samples used for computing the reweighting factors
 readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples ) 
 {
-  stopifnot(nsamples*length(gauge_conf_list)==length(file_names_to_read)) 
+  stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
   tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
 
@@ -360,11 +360,11 @@ readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples )
 
 # Exponentianing and Averaging over the stochastic samples
   
-  tmp2 <- matrix(tmp$V7,nrow=nsamples_rew,ncol=length(gauge_conf_list)*n_rew_factors)
+  tmp2 <- matrix(tmp$V7,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
   tmp3 <- apply(exp(-tmp2),2,mean)
 
 # Taking the product for the different determinants
-  tmp4 <- matrix(tmp3,nrow=n_rew_factors,ncol=nconf_rew)
+  tmp4 <- matrix(tmp3,nrow=n_rew_factors,ncol=length(gauge_conf_list))
   tmp5 <- apply(tmp4,2,prod)
 
 # Normalize the largest reweighting factor to be one and storing this factor
