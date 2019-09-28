@@ -348,11 +348,15 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #' @param file_names_to_read list of filenames for the reweighting factors
 #' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
 #' @param nsamples number of stochastic samples used for computing the reweighting factors
-readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples ) 
+readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
 {
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
   tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
+
+# Select the reweighting factor for a particular monomial
+  
+  tmp <- filter(tmp,V1==monomial_id)
 
 # Number of reweighted determinants for each gauge configuration
 
@@ -370,10 +374,9 @@ readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples )
 # Normalize the largest reweighting factor to be one and storing this factor
 # this is neccessary due to the large value of the reweighting factor 
 # after exponentiating
-#  max_value <- max(tmp5)
   tmp6 <- tmp5/max(tmp5)
   
-  ret <- rw_orig(ret, rw = tmp6 )
+  ret <- rw_orig(ret, rw = tmp6, max_value = max(tmp5))
 
 }
 #' @title reader for Nissa text format correlation functions

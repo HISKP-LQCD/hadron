@@ -14,10 +14,11 @@
 #' @family rw constructors
 #'
 #' @export
-rw_orig <- function (.rw = rw(), rw) {
+rw_orig <- function (.rw = rw(), rw, max_value) {
   stopifnot(inherits(.rw, 'rw'))
 
   .rw$rw <- rw
+  .rw$max_value <- max_value
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   return (.rw)
@@ -119,12 +120,12 @@ is.rw <- function (x) {
 #' @inheritParams plotwitherror
 #'
 #' @export
-plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw0)), rep = FALSE, ...) {
+plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...) {
   rw <- x
   stopifnot(inherits(rw, 'rw'))
 
-  val <- rw$rw0/mean(rw$rw0)
-  err <- rep(x=0,length(rw$rw0))
+  val <- rw$rw/mean(rw$rw)
+  err <- rep(x=0,length(rw$rw))
 
   df <- data.frame(t = c(1:length(val)),
                    CF = val,
@@ -149,24 +150,35 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
 
-  stopifnot(identical(rw1$conf.index == rw2$conf.index))
-  stopifnot(dim(rw1$rw)[2] == dim(rw2$rw)[2])
+  #stopifnot(identical(rw1$conf.index == rw2$conf.index))
+  #stopifnot(dim(rw1$rw)[2] == dim(rw2$rw)[2])
 
-  rw <- rw1
+  rw    <- rw1
 
   if (reverse1 == TRUE){
-    rw_1 <-  rev(rw1$rw)
+    rw_1   <- rev(rw1$rw)
+    conf_1 <- rev(rw1$conf.index)
   }
   else{
-    rw_1 <- rw1$rw
+    rw_1   <- rw1$rw
+    conf_1 <- rw1$conf.index 
   }
   if (reverse2 == TRUE){
-    rw_2 <-  rev(rw2$rw)
+    rw_2   <- rev(rw2$rw)
+    conf_2 <- rev(rw2$conf.index)
   }
   else{
-    rw_2 <- rw2$rw
+    rw_2   <- rw2$rw
+    conf_2 <- rw2$conf.index 
   }
+  rw_1 <- rw_1*rw$max_value
+  rw_2 <- rw_2*rw$max_value
+
   rw$rw <- rbind(rw_1, rw_2)
+  max_value <- max(rw$rw)
+  rw$rw <- rw$rw/max_value
+  rw$conf.index <- rbind(conf_1, conf_2) 
+  rw$max_value  <- max_value 
 
   return (invisible(rw))
 }
