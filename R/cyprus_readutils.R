@@ -146,7 +146,6 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                        times = length(files))
   }
 
-
   scalar_loop_types <- c("Scalar", "dOp", "Naive")
   vector_loop_types <- c("Loops", "LpsDw", "LpsDwCv", "LoopsCv")
   supported_loop_types <- c(scalar_loop_types, vector_loop_types)
@@ -183,7 +182,13 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                    )
           )
     }
+    # when spin-projecting, we pre-allocate an internal dimension of 1x1
+    internal_dim <- 1
+  } else {
+    # otherwise, we pre-allocate 4x4 matrices internally
+    internal_dim <- 4
   }
+
 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
@@ -312,13 +317,29 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
               rval[[loop_type]][[mom_idx]] <- array(as.complex(NA), dim=c(length(files),
                                                                           nts,
                                                                           nstoch,
-                                                                          4,
-                                                                          4)
+                                                                          internal_dim,
+                                                                          internal_dim)
                                                     )
             }
-            rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
-              complex(real = data[1:nts, 1:16, 1, mom_idx ],
-                      imaginary = data[1:nts, 1:16, 2, mom_idx ])
+            # in order to make spin projection easier, we create an intermediate raw_cf object
+            # with a single measurement
+            temp_raw_cf <- raw_cf_data(raw_cf_meta(Time = Time,
+                                                   nrObs = 1,
+                                                   nrStypes = 1,
+                                                   dim = c(1, 4, 4),
+                                                   nts = nts),
+                                       data = array(complex(real = data[1:nts, 1:16, 1, mom_idx ],
+                                                            imaginary = data[1:nts, 1:16, 2, mom_idx ]),
+                                                    dim = c(1, nts, 1, 4, 4)))
+            if(spin_project){
+              temp_raw_cf <- loop_spin_project(loop = temp_raw_cf,
+                                               gamma = project_gamma[[loop_type]])
+            }
+            # and now we extract the data into our pre-allocated tensor again
+            # further below, the entire tensor will be turned back into raw_cf
+            # This is wasteful, but allows us to reuse loop_spin_project here
+            rval[[loop_type]][[mom_idx]][ifile, 1:nts, istoch, 1:internal_dim, 1:internal_dim] <-
+              temp_raw_cf$data
           }
         } else if( loop_type %in% vector_loop_types ){
           # we are going to interchange t <-> x as direction 0 below
@@ -364,13 +385,29 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                   array(as.complex(NA), dim=c(length(files),
                                               nts,
                                               nstoch,
-                                              4,
-                                              4)
+                                              internal_dim,
+                                              internal_dim)
                         )
               }
-              rval[[loop_type]][[deriv_dir_out_idx]][[mom_idx]][ifile, 1:nts, istoch, 1:4, 1:4] <-
-                complex(real = data[1:nts, 1:16, 1, mom_idx ],
-                        imaginary = data[1:nts, 1:16, 2, mom_idx ])
+              # in order to make spin projection easier, we create an intermediate raw_cf object
+              # with a single measurement
+              temp_raw_cf <- raw_cf_data(raw_cf_meta(Time = Time,
+                                                     nrObs = 1,
+                                                     nrStypes = 1,
+                                                     dim = c(1, 4, 4),
+                                                     nts = nts),
+                                         data = array(complex(real = data[1:nts, 1:16, 1, mom_idx ],
+                                                              imaginary = data[1:nts, 1:16, 2, mom_idx ]),
+                                                      dim = c(1,nts,1,4,4)))
+              if(spin_project){
+                temp_raw_cf <- loop_spin_project(loop = temp_raw_cf,
+                                                 gamma = project_gamma[[loop_type]][[deriv_dir_out_idx]])
+              }
+              # And now we extract the data into our pre-allocated tensor again
+              # further below, the entire tensor will be turned back into raw_cf
+              # This is wasteful, but allows us to reuse loop_spin_project here
+              rval[[loop_type]][[deriv_dir_out_idx]][[mom_idx]][ifile, 1:nts, istoch, 1:internal_dim, 1:internal_dim] <-
+                temp_raw_cf$data
             } # for(mom_idx)
           } # for(deriv_dir_in)
         } # if(loop_type)
@@ -413,27 +450,18 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
           raw_cf_data(raw_cf_meta(Time = Time,
                                   nrObs = 1,
                                   nrStypes = 1,
-                                  dim = c(nstoch, 4, 4),
+                                  dim = c(nstoch, internal_dim, internal_dim),
                                   nts = nts),
                       data = rval[[loop_type]][[mom_idx]])
-        if( spin_project ){
-          rval[[loop_type]][[mom_idx]] <- loop_spin_project(loop = rval[[loop_type]][[mom_idx]],
-                                                            gamma = project_gamma[[loop_type]])
-        }
       } else if ( loop_type %in% vector_loop_types ){
         for( dir_idx in 1:4 ){
           rval[[loop_type]][[dir_idx]][[mom_idx]] <- 
             raw_cf_data(raw_cf_meta(Time = Time,
                                     nrObs = 1,
                                     nrStypes = 1,
-                                    dim = c(nstoch, 4, 4),
+                                    dim = c(nstoch, internal_dim, internal_dim),
                                     nts = nts),
                         data = rval[[loop_type]][[dir_idx]][[mom_idx]])
-          if( spin_project ){
-            rval[[loop_type]][[dir_idx]][[mom_idx]] <- loop_spin_project(
-              loop = rval[[loop_type]][[mom_idx]],
-              gamma = project_gamma[[loop_type]][[dir_idx]])
-          }
         } # for(dir_idx)
       } # if(loop_type)
     } # for(mom_idx)
