@@ -487,20 +487,23 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(cf1$nrObs == cf2$nrObs )
   stopifnot(cf1$nrStypes == cf2$nrStypes)
 
-
   cf <- cf1
 
   cf1_temp<- cf1$cf
   icf1_temp <- cf1$icf
   if (reverse1 == TRUE){
     apply(cf1_temp,2,rev)
-    apply(icf1_temp,2,rev)
+    if (!is.na(icf1_temp)){
+      apply(icf1_temp,2,rev)
+    }
   }
   cf2_temp <- cf2$cf
   icf2_temp <- cf2$icf
   if (reverse2 == TRUE){
     apply(cf2_temp,2,rev)
-    apply(icf2_temp,2,rev)
+    if (!is.na(icf2_temp)){
+      apply(icf2_temp,2,rev)
+    }
   }
      
 

@@ -14,16 +14,6 @@
 #' @family rw constructors
 #'
 #' @export
-rw_orig <- function (.rw = rw(), rw, max_value) {
-  stopifnot(inherits(.rw, 'rw'))
-
-  .rw$rw <- rw
-  .rw$max_value <- max_value
-
-  class(.rw) <- append(class(.rw), 'rw_orig')
-  return (.rw)
-}
-#' @export
 rw <- function () {
   rw <- list()
   class(rw) <- append(class(rw), 'rw')
@@ -45,6 +35,18 @@ rw_meta <- function (.rw = rw(), conf.index = NA) {
 
    class(.rw) <- append(class(.rw), 'rw_meta')
    return (.rw)
+}
+
+#' @export
+rw_orig <- function (.rw = rw(), rw, max_value) {
+  print("sasas")
+  stopifnot(inherits(.rw, 'rw'))
+
+  .rw$rw <- rw
+  .rw$max_value <- max_value
+
+  class(.rw) <- append(class(.rw), 'rw_orig')
+  return (.rw)
 }
 
 #' Checks whether the cf object contains no data
@@ -136,6 +138,14 @@ plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...
   return(invisible(df))
 }
 
+#' Combine statistics for reweighting factor 
+#'
+#' @param rw1 `rw` object
+#' @param rw2 `rw` object
+#' @param reverse1 boolean object
+#' @param reverse1 boolean object
+#'
+#' @export
 addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))
   stopifnot(inherits(rw2, 'rw'))
