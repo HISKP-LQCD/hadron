@@ -49,7 +49,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 
 
 #' Bootstrapped CF reweighting constructor 
-#'
+
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
@@ -57,14 +57,11 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
 #' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
-#' @param rw 'rw' object that contains the reweighting factors
 #'
 #' @details
 #'
 #' The following fields will also be made available:
 #'
-#' - `rw` : Numeric vector, weight of each gauge configuration
-#' - 'rw0': Numeric, average of the weighting factors
 #' - `cf0`: Numeric vector, mean value of original measurements, convenience copy of `cf.tsboot$t0`.
 #' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
@@ -106,7 +103,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 
 
 #' Bootstrapped reweighted CF mixin constructor
-#'
+
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
@@ -165,7 +162,7 @@ cfrw_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, rwcf.ts
 }
 
 #' Estimates error from jackknife samples
-#'
+
 #' Currently this uses the mean over the jackknife samples in order to compute
 #' the error. It would be better in the case of a bias to use the mean over the
 #' original data instead. This would require a second parameter and therefore
@@ -211,7 +208,7 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
 }
 
 #' Computes covariance matrix for jackknife samples.
-#'
+
 #' @param na.rm logical. The rows containing any `NA` will be deleted if this
 #' option is set.
 #'
