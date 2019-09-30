@@ -361,22 +361,19 @@ readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_
 # Number of reweighted determinants for each gauge configuration
 
   n_rew_factors <- length(tmp$V7)/(nsamples*length(gauge_conf_list))
+  stopifnot(n_rew_factors == 1)
 
 # Exponentianing and Averaging over the stochastic samples
   
   tmp2 <- matrix(tmp$V7,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
   tmp3 <- apply(exp(-tmp2),2,mean)
 
-# Taking the product for the different determinants
-  tmp4 <- matrix(tmp3,nrow=n_rew_factors,ncol=length(gauge_conf_list))
-  tmp5 <- apply(tmp4,2,prod)
-
 # Normalize the largest reweighting factor to be one and storing this factor
 # this is neccessary due to the large value of the reweighting factor 
 # after exponentiating
-  tmp6 <- tmp5/max(tmp5)
+  tmp4 <- tmp3/max(tmp3)
   
-  ret <- rw_orig(ret, rw = tmp6, max_value = max(tmp5))
+  ret <- rw_orig(ret, rw = tmp4, max_value = max(tmp3))
 
 }
 #' @title reader for Nissa text format correlation functions

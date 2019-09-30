@@ -48,6 +48,7 @@ rw_orig <- function (.rw = rw(), rw, conf.index, max_value) {
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   class(.rw) <- append(class(.rw), 'rw_meta')
+  class(.rw) <- append(class(.rw), 'rw_norm')
   return (.rw)
 }
 
@@ -88,22 +89,29 @@ is_empty.rw <- function (.rw) {
 #'
 #' @return
 #' The value is
-#' \deqn{exp(C_1*nf1)*exp(C_2*nf2) \,.}
+#' \deqn{rw_1*nf1*rw_2*nf2) \,.}
 #'
 #' @export
 multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 
   stopifnot(inherits(rw1, 'rw'))
   stopifnot(inherits(rw2, 'rw'))
+ 
   stopifnot(inherits(rw1, 'rw_orig'))
   stopifnot(inherits(rw2, 'rw_orig'))
+
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
-  #stopifnot(all(dim(rw$rw) == dim(rw2$rw)))
+ 
   stopifnot(rw1$conf.index == rw2$conf.index)
 
-  rw <- rw1
-  rw$rw <- exp(nf1*rw1$rw + nf2*rw2$rw)
+  rw <- rw()
+  rw$rw <- nf1*rw1$rw * nf2*rw2$rw
+  rw$max_value <- NA
+  rw$conf.index <- rw1$conf.index 
+
+  class(rw) <- append(class(rw), 'rw_orig')
+  class(rw) <- append(class(rw), 'rw_meta')
   
   return(rw)
 }
@@ -174,8 +182,16 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
     return (invisible(rw1))
   }
 
+  stopifnot(inherits(rw1, 'rw_orig'))
+  stopifnot(inherits(rw2, 'rw_orig'))
+
+
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
+ 
+  stopifnot(inherits(rw1, 'rw_norm'))
+  stopifnot(inherits(rw2, 'rw_norm'))
+
 
   #stopifnot(identical(rw1$conf.index == rw2$conf.index))
   #stopifnot(dim(rw1$rw)[2] == dim(rw2$rw)[2])
