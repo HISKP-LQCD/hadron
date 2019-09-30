@@ -47,7 +47,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
   return (.cf)
 }
 
-#' Bootstrapped CF mixin constructor
+
+#' Bootstrapped CF reweighting constructor 
 #'
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
@@ -56,11 +57,14 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
 #' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
+#' @param rw 'rw' object that contains the reweighting factors
 #'
 #' @details
 #'
 #' The following fields will also be made available:
 #'
+#' - `rw` : Numeric vector, weight of each gauge configuration
+#' - 'rw0': Numeric, average of the weighting factors
 #' - `cf0`: Numeric vector, mean value of original measurements, convenience copy of `cf.tsboot$t0`.
 #' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
 #' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
@@ -96,6 +100,67 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
   .cf$boot.samples <- TRUE
 
   class(.cf) <- append(class(.cf), 'cf_boot')
+  return (.cf)
+}
+
+
+
+#' Bootstrapped reweighted CF mixin constructor
+#'
+#' @param .cf `cf` object to extend.
+#' @param boot.R Integer, number of bootstrap samples used.
+#' @param boot.l Integer, block length in the time-series bootstrap process.
+#' @param seed Integer, random number generator seed used in bootstrap.
+#' @param sim Character, `sim` argument of \link[boot]{tsboot}.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param rwcf.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param rw.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param resampling_method Character, either 'bootstrap' or 'jackknife'
+#'
+#' @details
+#'
+#' The following fields will also be made available:
+#'
+#' - `cf0`: Numeric vector, mean value of reweighted original measurements: <W0>/<W>.
+#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
+#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
+#' - `error_fn`: Function, takes a vector of samples and computes the error. In the bootstrap case this is just the `sd` function. Use this function instead of a `sd` in order to make the code compatible with jackknife samples.
+#'
+#' @family cf constructors
+#'
+#' @export
+cfrw_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, rwcf.tsboot, rw.tsboot, resampling_method = 'bootstrap') {
+  stopifnot(inherits(.cf, 'cf'))
+
+  .cf$boot.R <- boot.R
+  .cf$boot.l <- boot.l
+  .cf$seed <- seed
+  .cf$sim <- sim
+  .cf$cf.tsboot <- cf.tsboot
+
+  if (resampling_method == 'bootstrap') {
+    .cf$error_fn <- sd
+    .cf$cov_fn <- cov
+  }
+  else if (resampling_method == 'jackknife') {
+    .cf$error_fn <- function (...) jackknife_error(..., boot.l = boot.l)
+    .cf$cov_fn <- jackknife_cov
+  } else {
+    stop('This resampling method is not implemented')
+  }
+
+  .cf$resampling_method <- resampling_method
+
+  .cf$cf0 <- rwcf.tsboot$t0/rw.tsboot$t0
+  .cf$cf.tsboot$t <- rwcf.tsboot$t/rw.tsboot$t
+  .cf$tsboot.se <- apply(.cf$cf.tsboot$t/rw.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
+  .cf$boot.samples <- TRUE
+
+  class(.cf) <- append(class(.cf), 'cf_boot')
+  class(.cf) <- append(class(.cf), 'cfrw_boot')
+
+  class(.cf) <- setdiff(class(.cf), 'cf_orig')
+
   return (.cf)
 }
 
@@ -355,6 +420,107 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
   return(list(starts = st, lengths = lens))
 }
 
+#' Computes the samples for reweighted correlation function
+#'
+#' @param cf `cf` object.
+#' @param rw `rw` object.
+#' @param nsamples Integer (Number of stochastic samples)
+#' @param boot.R Integer
+#' @param boot.l Integer
+#' @param seed Integer
+#' @param sim string
+#' @param endcorr boolean
+#' @export
+bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(inherits(rw, 'rw_orig'))
+  stopifnot(inherits(rw, 'rw_meta'))
+
+  ##We should also check that the cf object and the rw object contains the same gauge configurations
+ 
+  stopifnot( nrow(cf$cf) ==nsamples*length(rw$conf.index) )
+
+  ##Average over the samples
+
+  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
+                                       new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(rw$conf.index));
+                                       new2 <- apply(new,2,mean);
+                                       new2
+                                    }
+               )
+  cf$cf <- do.call(cbind,tmp)
+
+  boot.l <- ceiling(boot.l)
+  boot.R <- floor(boot.R)
+
+  stopifnot(boot.l >= 1)
+  stopifnot(boot.l <= nrow(cf$cf))
+  stopifnot(boot.R >= 1)
+
+  ##Construct correlation function for the reweighting samples
+  rw_cf <- cf
+  rw_cf$cf <- replicate(ncol(cf$cf), rw$rw)
+
+  ## save random number generator state
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  else
+    temp <- NULL
+
+  ## we set the seed for reproducability and correlation
+  old_seed <- swap_seed(seed)
+
+  ## now we bootstrap the correlators
+  cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+
+  restore_seed(old_seed)
+
+  ## save random number generator state
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  else
+    temp <- NULL
+
+  ## we set the seed for reproducability and correlation
+  old_seed <- swap_seed(seed)
+
+  ## now we bootstrap the correlators*reweighting factor
+  rwcf.tsboot <- boot::tsboot(cf$cf*rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+
+
+  restore_seed(old_seed)
+
+  ## save random number generator state
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  else
+    temp <- NULL
+
+  ## we set the seed for reproducability and correlation
+  old_seed <- swap_seed(seed)
+
+  ## now we bootstrap the reweighting factor
+  rw.tsboot <- boot::tsboot(rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+
+
+
+  cf <- cfrw_boot(cf,
+                boot.R = boot.R,
+                boot.l = boot.l,
+                seed = seed,
+                sim = sim,
+                cf.tsboot = cf.tsboot,
+                rwcf.tsboot = rwcf.tsboot,
+                rw.tsboot=rw.tsboot)
+
+  restore_seed(old_seed)
+
+  return(invisible(cf))
+}
+
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -388,6 +554,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 
   return(invisible(cf))
 }
+
 
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
@@ -427,8 +594,113 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 resampling_method = 'jackknife')
 
   return (invisible(cf))
+
 }
 
+
+jackknife_rw.cf <- function(cf, rw, nsamples, boot.l = 1) {
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(inherits(rw, 'rw_orig'))
+  stopifnot(inherits(rw, 'rw_meta'))
+
+  ##We should also check that the cf object and the rw object contains the same gauge configurations
+
+  stopifnot( nrow(cf$cf) == nsamples*length(rw$conf.index) )
+
+  ##Average over the samples
+
+  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
+                                       new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(rw$conf.index));
+                                       new2 <- apply(new,2,mean);
+                                       new2
+                                    }
+               )
+  cf$cf <- do.call(cbind,tmp)
+
+  stopifnot(boot.l >= 1)
+  boot.l <- ceiling(boot.l)
+
+  ##Construct correlation function for the reweighting samples
+  rw_cf <- cf
+  rw_cf$cf <- replicate(ncol(cf$cf), rw$rw)
+
+
+  ## blocking with fixed block length, but overlapping blocks
+  ## number of observations
+  n <- nrow(cf$cf)
+  ## number of overlapping blocks
+  N <- n-boot.l+1
+
+  
+  tmp <- apply(cf$cf, 2, mean)
+
+  t <- array(NA, dim = c(N, ncol(cf$cf)))
+  t0 <- tmp
+  for (i in 1:N) {
+    ## The measurements that we are going to leave out.
+    ii <- c(i:(i+boot.l-1))
+    ## jackknife replications of the mean
+    t[i, ] <- 
+
+    numerator <- apply(cf$cf[-ii, ]* rw_cf$cf[ ii, ], 2L, mean)
+    denominator <- apply( rw_cf$cf[ ii, ] , 2L, mean )
+    t[i, ] < numerator/denominator 
+  }
+
+
+  cf.tsboot <- list(t = t,
+                    t0 = t0,
+                    R = N,
+                    l = boot.l)
+
+
+  tmp <- apply(rw_cf$cf*cf$cf, 2, mean)
+
+  t <- array(NA, dim = c(N, ncol(cf$cf)))
+  t0 <- tmp
+  for (i in 1:N) {
+    ## The measurements that we are going to leave out.
+    ii <- c(i:(i+boot.l-1))
+    ## jackknife replications of the mean
+    t[i, ] <- apply(cf$cf[-ii, ]* rw_cf$cf[ ii, ], 2L, mean)
+  }
+
+
+  rwcf.tsboot <- list(t = t,
+                    t0 = t0,
+                    R = N,
+                    l = boot.l)
+
+
+  tmp <- apply(rw_cf$cf*cf$cf, 2, mean)
+
+  t <- array(NA, dim = c(N, ncol(cf$cf)))
+  t0 <- tmp
+  for (i in 1:N) {
+    ## The measurements that we are going to leave out.
+    ii <- c(i:(i+boot.l-1))
+    ## jackknife replications of the mean
+    t[i, ] <- apply( rw_cf$cf[ ii, ], 2L, mean)
+  }
+
+
+  rwcf.tsboot <- list(t = t,
+                    t0 = t0,
+                    R = N,
+                    l = boot.l)
+  cf <- invalidate.samples.cf(cf)
+  cf <- cfrw_boot(cf,
+                boot.R = cf.tsboot$R,
+                boot.l = cf.tsboot$l,
+                seed = 0,
+                sim = 'geom',
+                cf.tsboot = cf.tsboot,
+                rwcf.tsboot = rwcf.tsboot, 
+                rw.tsboot = rw.tsboot,
+                resampling_method = 'jackknife')
+
+  return (invisible(cf))
+}
 # Gamma method analysis on all time-slices in a 'cf' object
 uwerr.cf <- function(cf, absval=FALSE){
   stopifnot(inherits(cf, 'cf_orig'))

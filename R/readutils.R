@@ -360,8 +360,14 @@ readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_
 
 # Number of reweighted determinants for each gauge configuration
 
+  print(length(tmp$V7))
+  print(nsamples)
+  print(length(gauge_conf_list))
+
   n_rew_factors <- length(tmp$V7)/(nsamples*length(gauge_conf_list))
+  print(n_rew_factors)
   stopifnot(n_rew_factors == 1)
+  
 
 # Exponentianing and Averaging over the stochastic samples
   
