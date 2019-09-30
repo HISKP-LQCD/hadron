@@ -373,7 +373,7 @@ readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_
 # after exponentiating
   tmp4 <- tmp3/max(tmp3)
   
-  ret <- rw_orig(ret, rw = tmp4, max_value = max(tmp3))
+  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3))
 
 }
 #' @title reader for Nissa text format correlation functions
