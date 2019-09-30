@@ -37,15 +37,29 @@ rw_meta <- function (.rw = rw(), conf.index = NA) {
    return (.rw)
 }
 
+
 #' @export
-rw_orig <- function (.rw = rw(), rw, max_value) {
-  print("sasas")
+rw_orig <- function (.rw = rw(), rw, conf.index, max_value) {
   stopifnot(inherits(.rw, 'rw'))
 
   .rw$rw <- rw
   .rw$max_value <- max_value
+  .rw$conf.index <- conf.index
 
   class(.rw) <- append(class(.rw), 'rw_orig')
+  return (.rw)
+}
+
+#' @export
+rw_unit <- function (.rw = rw(), conf.index) {
+  stopifnot(inherits(.rw, 'rw'))
+
+  .rw$conf.index=conf.index
+  .rw$rw <- rep(1,length(conf.index))
+  .rw$max_value <- 1.0
+
+  class(.rw) <- append(class(.rw), 'rw_orig')
+  class(.rw) <- append(class(.rw), 'rw_meta')
   return (.rw)
 }
 
@@ -183,11 +197,11 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   }
   rw_1 <- rw_1*rw$max_value
   rw_2 <- rw_2*rw$max_value
-
-  rw$rw <- rbind(rw_1, rw_2)
+  
+  rw$rw <- c(rw_1, rw_2)
   max_value <- max(rw$rw)
   rw$rw <- rw$rw/max_value
-  rw$conf.index <- rbind(conf_1, conf_2) 
+  rw$conf.index <- c(conf_1, conf_2) 
   rw$max_value  <- max_value 
 
   return (invisible(rw))
