@@ -432,8 +432,13 @@ bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234,
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
+  stopifnot(inherits(cf, 'cf_index'))
+
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
+
+
+  stopifnot(rw$conf.index == cf$conf.index)
  
   stopifnot( nrow(cf$cf) ==nsamples*length(rw$conf.index) )
 
@@ -734,6 +739,7 @@ addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
     cf$conf.index <- conf.index
   }
+  class(cf) <- append(class(cf), 'cf_indexed')
   return(cf)
 }
 
@@ -750,6 +756,9 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
 
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
+
+  ##Either both should have an index or none of them
+  stopifnot(inherits(cf1, 'cf_indexed') == inherits(cf1, 'cf_indexed') )
 
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
@@ -773,6 +782,17 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
     if (!is.na(icf2_temp)){
       apply(icf2_temp,2,rev)
     }
+  }
+  if (inherits(cf1, 'cf_indexed')){
+    conflist_temp1 <- cf1$conf.index 
+    if (reverse1 == TRUE){
+      conflist_temp1 <- rev(conflist_temp1) 
+    }
+    conflist_temp2 <- cf2$conf.index
+    if (reverse2 == TRUE){
+      conflist_temp2 <- rev(conflist_temp2)
+    }
+    cf$conf.index <- c(conflist_temp1,conflist_temp2)
   }
      
 
