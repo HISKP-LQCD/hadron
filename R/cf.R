@@ -432,7 +432,7 @@ bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234,
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
-  stopifnot(inherits(cf, 'cf_index'))
+  stopifnot(inherits(cf, 'cf_indexed'))
 
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
