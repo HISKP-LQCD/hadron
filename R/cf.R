@@ -604,6 +604,9 @@ jackknife_rw.cf <- function(cf, rw, nsamples, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
+  stopifnot(inherits(cf, 'cf_index'))
+
+  stopifnot(rw1$conf.index == rw2$conf.index)
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
 
