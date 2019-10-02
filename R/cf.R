@@ -103,7 +103,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 
 
 #' Bootstrapped reweighted CF mixin constructor
-
+#'
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
