@@ -23,7 +23,7 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }
 \description{
-Bootstrapped CF reweighting constructor
+Bootstrapped CF constructor
 }
 \details{
 The following fields will also be made available:
