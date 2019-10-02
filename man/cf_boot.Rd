@@ -2,7 +2,7 @@
 % Please edit documentation in R/cf.R
 \name{cf_boot}
 \alias{cf_boot}
-\title{Bootstrapped CF mixin constructor}
+\title{Bootstrapped CF constructor}
 \usage{
 cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
   resampling_method = "bootstrap")
@@ -23,7 +23,7 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }
 \description{
-Bootstrapped CF mixin constructor
+Bootstrapped CF reweighting constructor
 }
 \details{
 The following fields will also be made available:
@@ -40,6 +40,7 @@ Other cf constructors: \code{\link{cf_meta}},
   \code{\link{cf_principal_correlator}},
   \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
   \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
-  \code{\link{cf}}
+  \code{\link{cfrw_boot}}, \code{\link{cf}},
+  \code{\link{rw_meta}}
 }
 \concept{cf constructors}

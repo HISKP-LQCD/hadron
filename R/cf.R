@@ -162,7 +162,7 @@ cfrw_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, rwcf.ts
 }
 
 #' Estimates error from jackknife samples
-
+#'
 #' Currently this uses the mean over the jackknife samples in order to compute
 #' the error. It would be better in the case of a bias to use the mean over the
 #' original data instead. This would require a second parameter and therefore
