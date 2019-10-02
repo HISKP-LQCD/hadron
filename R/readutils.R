@@ -344,19 +344,22 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   return (invisible(ret))
 }
 #' @title reading reweighting factors for a list of gauge configuration 
-#'        and random samples from ASCII files in CMI format
+#'        and random samples from ASCII files
 #' @param file_names_to_read list of filenames for the reweighting factors
 #' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
 #' @param nsamples number of stochastic samples used for computing the reweighting factors
-readcmi.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
+read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
 {
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
   tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
 
 # Select the reweighting factor for a particular monomial
+
+  dplyr_avail <- requireNamespace("dplyr")
+  stopifnot(dplyr_avail)
   
-  tmp <- filter(tmp,V1==monomial_id)
+  tmp <- dplyr::filter(tmp,V1==monomial_id)
 
 # Number of reweighted determinants for each gauge configuration
 
