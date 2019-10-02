@@ -5,12 +5,10 @@
 #' factors for each gauge configuration, that can be applied on 
 #' correlation functions emerging in statistical and quantum field theory
 #' simulations. Arithmetic operations are defined for this class in
-#' several ways, as well as concatenation and \link{is.rw}.
+#' several ways, as well as for increasing statistics and \link{is.rw}.
 #'
 #' @details
-#'
-#' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
-#'
+#'#'
 #' @family rw constructors
 #'
 #' @export
@@ -48,6 +46,9 @@ rw_orig <- function (.rw = rw(), rw, conf.index, max_value) {
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   class(.rw) <- append(class(.rw), 'rw_meta')
+
+  ## Norm is needed in order to be able to extend statistics
+  ## If the object does not have `rw_norm` it cannot be extended
   class(.rw) <- append(class(.rw), 'rw_norm')
   return (.rw)
 }
@@ -62,6 +63,7 @@ rw_unit <- function (.rw = rw(), conf.index) {
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   class(.rw) <- append(class(.rw), 'rw_meta')
+  class(.rw) <- append(class(.rw), 'rw_norm')
   return (.rw)
 }
 
@@ -81,7 +83,7 @@ is_empty.rw <- function (.rw) {
 }
 
 
-#' Arithmetically multiplies two reweighting factors functions
+#' Arithmetically multiplies two reweighting factors 
 #'
 #' @param rw1,rw2 `rw_orig` object.
 #' @param nf1,nf2 Integer. Factors that determines the number of flavours you 
@@ -103,7 +105,7 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
  
-  stopifnot(rw1$conf.index == rw2$conf.index)
+  stopifnot(identical( rw1$conf.index, rw2$conf.index ))
 
   rw <- rw()
   rw$rw <- nf1*rw1$rw * nf2*rw2$rw
