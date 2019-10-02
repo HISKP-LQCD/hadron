@@ -48,8 +48,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 }
 
 
-#' Bootstrapped CF reweighting constructor 
-
+#' Bootstrapped CF constructor 
+#'
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
