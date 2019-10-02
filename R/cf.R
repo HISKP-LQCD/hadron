@@ -604,7 +604,7 @@ jackknife_rw.cf <- function(cf, rw, nsamples, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
-  stopifnot(inherits(cf, 'cf_index'))
+  stopifnot(inherits(cf, 'cf_indexed'))
 
   stopifnot(rw1$conf.index == rw2$conf.index)
 
@@ -825,6 +825,29 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   cf$cf <- cf$cf[,-ind.sl]
   cf$nrStypes <- cf$nrStypes-1
   return (cf)
+}
+
+## averages correlation functions over different random sources
+avg.samples.cf <- function(cf, nsamples) {
+
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  stopifnot(inherits(cf, 'cf_indexed'))
+
+  stopifnot(length(cf$conf.index)*nsamples == nrow(cf$cf))
+
+  ##Average over the samples
+
+  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
+                     new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(cf$conf.index));
+                                       new2 <- apply(new,2,mean);
+                                       new2
+                                                    }
+               )
+  cf$cf <- do.call(cbind,tmp)
+
+  return (invisible(cf))
+
 }
 
 # "close-by-times" averaging replaces the value of the correlation function at t
