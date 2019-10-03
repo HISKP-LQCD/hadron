@@ -4,15 +4,13 @@
 \alias{bootstrap_rw.cf}
 \title{Computes the samples for reweighted correlation function}
 \usage{
-bootstrap_rw.cf(cf, rw, nsamples = 1, boot.R = 400, boot.l = 2,
-  seed = 1234, sim = "geom", endcorr = TRUE)
+bootstrap_rw.cf(cf, rw, boot.R = 400, boot.l = 2, seed = 1234,
+  sim = "geom", endcorr = TRUE)
 }
 \arguments{
 \item{cf}{\code{cf} object.}
 
 \item{rw}{\code{rw} object.}
-
-\item{nsamples}{Integer (Number of stochastic samples)}
 
 \item{boot.R}{Integer}
 
