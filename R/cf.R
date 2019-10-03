@@ -421,14 +421,13 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 #'
 #' @param cf `cf` object.
 #' @param rw `rw` object.
-#' @param nsamples Integer (Number of stochastic samples)
 #' @param boot.R Integer
 #' @param boot.l Integer
 #' @param seed Integer
 #' @param sim string
 #' @param endcorr boolean
 #' @export
-bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
+bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
@@ -437,20 +436,9 @@ bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234,
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
 
-
   stopifnot(rw$conf.index == cf$conf.index)
  
-  stopifnot( nrow(cf$cf) ==nsamples*length(rw$conf.index) )
-
-  ##Average over the samples
-
-  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
-                                       new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(rw$conf.index));
-                                       new2 <- apply(new,2,mean);
-                                       new2
-                                    }
-               )
-  cf$cf <- do.call(cbind,tmp)
+  stopifnot( nrow(cf$cf) == length(rw$conf.index) )
 
   boot.l <- ceiling(boot.l)
   boot.R <- floor(boot.R)
@@ -472,7 +460,7 @@ bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234,
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
 
-  ## now we bootstrap the correlators
+  ## now we bootstrap the correlation function
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
 
@@ -506,8 +494,6 @@ bootstrap_rw.cf <- function(cf, rw, nsamples=1, boot.R=400, boot.l=2, seed=1234,
   ## now we bootstrap the reweighting factor
   rw.tsboot <- boot::tsboot(rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
-
-
 
   cf <- cfrw_boot(cf,
                 boot.R = boot.R,
@@ -600,7 +586,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
 }
 
 
-jackknife_rw.cf <- function(cf, rw, nsamples, boot.l = 1) {
+jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
   stopifnot(inherits(rw, 'rw_meta'))
@@ -610,17 +596,8 @@ jackknife_rw.cf <- function(cf, rw, nsamples, boot.l = 1) {
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
 
-  stopifnot( nrow(cf$cf) == nsamples*length(rw$conf.index) )
+  stopifnot( nrow(cf$cf) == length(rw$conf.index) )
 
-  ##Average over the samples
-
-  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
-                                       new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(rw$conf.index));
-                                       new2 <- apply(new,2,mean);
-                                       new2
-                                    }
-               )
-  cf$cf <- do.call(cbind,tmp)
 
   stopifnot(boot.l >= 1)
   boot.l <- ceiling(boot.l)
@@ -825,29 +802,6 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   cf$cf <- cf$cf[,-ind.sl]
   cf$nrStypes <- cf$nrStypes-1
   return (cf)
-}
-
-## averages correlation functions over different random sources
-avg.samples.cf <- function(cf, nsamples) {
-
-  stopifnot(inherits(cf, 'cf_orig'))
-
-  stopifnot(inherits(cf, 'cf_indexed'))
-
-  stopifnot(length(cf$conf.index)*nsamples == nrow(cf$cf))
-
-  ##Average over the samples
-
-  tmp <- lapply(X=1:ncol(cf$cf),FUN=function(rw_idx){
-                     new<- matrix(cf$cf[,rw_idx],nrow=nsamples,ncol=length(cf$conf.index));
-                                       new2 <- apply(new,2,mean);
-                                       new2
-                                                    }
-               )
-  cf$cf <- do.call(cbind,tmp)
-
-  return (invisible(cf))
-
 }
 
 # "close-by-times" averaging replaces the value of the correlation function at t
