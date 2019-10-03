@@ -751,7 +751,7 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   icf1_temp <- cf1$icf
   if (reverse1 == TRUE){
     apply(cf1_temp,2,rev)
-    if (sum(is.na(icf1_temp))==0){
+    if ( !is.null(icf1_temp)){
       apply(icf1_temp,2,rev)
     }
   }
@@ -759,7 +759,7 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   icf2_temp <- cf2$icf
   if (reverse2 == TRUE){
     apply(cf2_temp,2,rev)
-    if (sum(is.na(icf2_temp))==0){
+    if ( !is.null(icf2_temp)){
       apply(icf2_temp,2,rev)
     }
   }
