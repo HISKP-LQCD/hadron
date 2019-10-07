@@ -37,7 +37,9 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
     if(type == "acosh") effMass[t] <- acosh((Cor[t+1] + Cor[t-1])/2./Cor[t])
     else {
       ## we take differences to remove constant contributions from temporal states
-      if(type == "shifted" || type == "weighted") Ratio <- Cor[t+1]/Cor[t]
+      if(type == "shifted" || type == "weighted") {
+        Ratio <- Cor[t+1]/Cor[t]
+      }
       else Ratio <- (Cor[t]-Cor[t+1]) / (Cor[t-1]-Cor[t])
       w <- 1
       if(type == "weighted") {

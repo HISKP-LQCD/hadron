@@ -1,0 +1,47 @@
+---
+title: "Matrixfit Performance"
+author: "Martin Ueding"
+date: "6 August 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+library(profvis)
+```
+
+Preparation
+
+```{r}
+samplecf_boot <- bootstrap.cf(samplecf, 1500)
+args <- list(samplecf_boot, 5, 10, fit.method = 'lm', model = 'single')
+```
+
+```{r}
+profile_old <- profvis({
+  fit_old <- do.call(old_matrixfit, args)
+})
+```
+
+```{r}
+profile_new <- profvis({
+  fit_new <- do.call(matrixfit, args)
+})
+```
+
+```{r}
+table(fit_old$niter)
+```
+
+```{r}
+table(fit_new$niter)
+```
+
+
+```{r}
+print(profile_old)
+print(profile_new)
+```
+

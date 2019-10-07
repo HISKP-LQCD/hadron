@@ -54,7 +54,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
-#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the real part.
+#' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the imaginay part.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
 #'
 #' @details
@@ -69,14 +70,16 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resampling_method = 'bootstrap') {
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$boot.R <- boot.R
   .cf$boot.l <- boot.l
   .cf$seed <- seed
   .cf$sim <- sim
+
   .cf$cf.tsboot <- cf.tsboot
+  .cf$icf.tsboot <- icf.tsboot
 
   if (resampling_method == 'bootstrap') {
     .cf$error_fn <- sd
@@ -93,6 +96,12 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 
   .cf$cf0 <- cf.tsboot$t0
   .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
+
+  if( !is.null( icf.tsboot ) ){
+    .cf$icf0 <- icf.tsboot$t0
+    .cf$itsboot.se <- apply(.cf$icf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
+  }
+  
   .cf$boot.samples <- TRUE
 
   class(.cf) <- append(class(.cf), 'cf_boot')
@@ -317,13 +326,11 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 #' @family cf constructors
 #'
 #' @export
-cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh, mass1, mass2) {
+cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$weight.factor <- weight.factor
   .cf$weight.cosh <- weight.cosh
-  .cf$mass1 <- mass1
-  .cf$mass2 <- mass2
 
   .cf$weighted <- TRUE
 
@@ -377,14 +384,21 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+                            R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+
+  icf.tsboot <- NULL
+  if( !is.null(cf$icf) ){
+    icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
+                               R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+  }
 
   cf <- cf_boot(cf,
                 boot.R = boot.R,
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
-                cf.tsboot = cf.tsboot)
+                cf.tsboot = cf.tsboot,
+                icf.tsboot = icf.tsboot)
 
   restore_seed(old_seed)
 
@@ -419,6 +433,24 @@ jackknife.cf <- function(cf, boot.l = 1) {
                     R = N,
                     l = boot.l)
 
+  icf.tsboot <- NULL
+  if( !is.null(cf$icf) ){
+    cf$icf0 <- apply(cf$icf, 2, mean)
+
+    t <- array(NA, dim = c(N, ncol(cf$icf)))
+    t0 <- cf$icf0
+    for (i in 1:N) {
+      ## The measurements that we are going to leave out.
+      ii <- c(i:(i+boot.l-1))
+      ## jackknife replications of the mean
+      t[i, ] <- apply(cf$icf[-ii, ], 2L, mean)
+    }
+    icf.tsboot <- list(t = t,
+                       t0 = t0,
+                       R = N,
+                       l = boot.l)
+  }
+
   cf <- invalidate.samples.cf(cf)
   cf <- cf_boot(cf,
                 boot.R = cf.tsboot$R,
@@ -426,6 +458,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 seed = 0,
                 sim = 'geom',
                 cf.tsboot = cf.tsboot,
+                icf.tsboot = icf.tsboot,
                 resampling_method = 'jackknife')
 
   return (invisible(cf))
@@ -513,32 +546,17 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   ind.sl <- ( (cols[2]-1)*timeslices+1 ):( cols[2]*timeslices )
 
   cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
-
   cf$cf <- cf$cf[,-ind.sl]
+
+  if( !is.null(cf$icf) ){
+    cf$icf[,ind.ls] <- 0.5 * ( cf$icf[,ind.ls] + cf$icf[,ind.sl] )
+    cf$icf <- cf$icf[,-ind.sl]
+  }
+
   cf$nrStypes <- cf$nrStypes-1
   return (cf)
 }
 
-# "close-by-times" averaging replaces the value of the correlation function at t
-# with the "hypercubic" average with the values at the neighbouring time-slices
-# with weights 0.25, 0.5 and 0.25
-#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
-# where periodic boundary conditions are assumed in shift.cf
-avg.cbt.cf <- function(cf){
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
-
-  # copy for shifting
-  cf2 <- cf
-  cf <- mul.cf(cf, 0.5)
-
-  # average over shifted correlation functions
-  for( p in c(-1,1) ){
-    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
-  }
-  cf <- invalidate.samples.cf(cf)
-  return(invisible(cf))
-}
 
 avg.sparsify.cf <- function(cf, avg, sparsity){
   stopifnot(inherits(cf, 'cf_meta'))
@@ -596,6 +614,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
+
+  if( !is.null(cf1$icf) ){
+    stopifnot( !is.null(cf2$icf) )
+    cf$icf <- a*cf1$icf + b*cf2$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return(cf)
 }
@@ -620,6 +644,9 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
 #' Arithmetically divide correlators
 #'
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances.
+#' 
 #' @param cf1,cf2 `cf_orig` objects.
 #'
 #' @export
@@ -633,6 +660,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
+
+  if( !is.null(cf1$icf) ){
+    stopifnot(!is.null(cf2$icf))
+    cf$icf <- cf1$icf / cf2$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return (cf)
 }
@@ -648,8 +681,34 @@ mul.cf <- function(cf, a=1.) {
   stopifnot(is.numeric(a))
 
   cf$cf <- a*cf$cf
+
+  if( !is.null(cf$icf) ){
+    cf$icf <- a*cf$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return (cf)
+}
+
+# "close-by-times" averaging replaces the value of the correlation function at t
+# with the "hypercubic" average with the values at the neighbouring time-slices
+# with weights 0.25, 0.5 and 0.25
+#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
+# where periodic boundary conditions are assumed in shift.cf
+avg.cbt.cf <- function(cf){
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  # copy for shifting
+  cf2 <- cf
+  cf <- mul.cf(cf, 0.5)
+
+  # average over shifted correlation functions
+  for( p in c(-1,1) ){
+    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
+  }
+  cf <- invalidate.samples.cf(cf)
+  return(invisible(cf))
 }
 
 extractSingleCor.cf <- function(cf, id=c(1)) {
@@ -665,12 +724,24 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   # TODO: This should be done using constructors.
   cf$cf <- cf$cf[,ii]
 
+  if( !is.null(cf$icf) ){
+    cf$icf <- cf$icf[,ii]
+  }
+
   if (inherits(cf, 'cf_boot')) {
     cf$cf0 <- cf$cf0[ii]
     cf$tsboot.se <- cf$tsboot.se[ii]
     cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
     cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
     cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
+
+    if( !is.null(cf$icf) ){
+      cf$icf0 <- cf$icf0[ii]
+      cf$itsboot.se <- cf$itsboot.se[ii]
+      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[ii]
+      cf$icf.tsboot$t <- cf$icf.tsboot$t[,ii]
+      cf$icf.tsboot$data <- cf$icf.tsboot$data[,ii]
+    }
   }
   cf$nrObs <- 1
   cf$nsStypes <- 1
@@ -827,9 +898,16 @@ invalidate.samples.cf <- function (cf) {
   cf$boot.samples <- NULL
   cf$seed <- NULL
   cf$sim <- NULL
+
   cf$cf.tsboot <- NULL
   cf$tsboot.se <- NULL
   cf$cf0 <- NULL
+
+  if( !is.null(cf$icf) ){
+    cf$icf.tsboot <- NULL
+    cf$itsboot.se <- NULL
+    cf$icf0 <- NULL
+  }
 
   class(cf) <- setdiff(class(cf), c('cf_boot', 'cf_jackknife'))
 
@@ -969,11 +1047,20 @@ summary.cf <- function(object, ...) {
     cat("sim = ", cf$sim, "\n")
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
+
+    if( !is.null(cf$icf) ){
+      out <- cbind(iC=cf$icf0, itsboot.se = cf$itsboot.se)
+    }
   }
 
   if (inherits(cf, 'cf_jackknife')) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)
     out <- cbind(out, jab.se=cf$jack.boot.se)
+
+    if( !is.null(cf$icf) ){
+      out <- cbind(out, ijackknife.se = cf$ijackknife.se)
+      out <- cbind(out, ijab.se = cf$ijack.boot.se)
+    }
   }
 
   if(exists("out")) {

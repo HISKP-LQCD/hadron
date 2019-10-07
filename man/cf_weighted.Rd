@@ -4,7 +4,7 @@
 \alias{cf_weighted}
 \title{Weighted CF mixin constructor}
 \usage{
-cf_weighted(.cf = cf(), weight.factor, weight.cosh, mass1, mass2)
+cf_weighted(.cf = cf(), weight.factor, weight.cosh)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend.}

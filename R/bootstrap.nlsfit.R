@@ -333,7 +333,7 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter) {
+set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos) {
   fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx)
   dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx)
   ## define the wrapper-functions for optimization
@@ -346,10 +346,11 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
           control = control,
           ...))
 
-      list(converged = res$info %in% 1:3,
+      list(converged = res$info %in% success_infos,
            info = res$info,
            par = res$par,
-           chisq = res$rsstrace[length(res$rsstrace)])
+           chisq = res$rsstrace[length(res$rsstrace)],
+           niter = res$niter)
     }
   } else {
     fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
@@ -360,7 +361,8 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
       list(converged = res$convergence == 0,
            info = NA,
            par = res$par,
-           chisq = res$value)
+           chisq = res$value,
+           niter = res$counts[1])
     }
   }
 
@@ -405,6 +407,7 @@ simple.nlsfit <- function(fn,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
+                          success_infos = 1:3,
                           relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -436,7 +439,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
@@ -559,6 +562,10 @@ simple.nlsfit <- function(fn,
 #' methods like jackknife.
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
+#' @param success_infos integer vector. When using `minpack.lm` there is the
+#' `info` in the return value. Values of 1, 2 or 3 are certain success. A value
+#' of 4 could either be a success or a saddle point. If you want to interpret
+#' this as a success as well just pass `1:4` instead of the default `1:3`.
 #' @param relative.weights are the errors on y (and x) to be interpreted as
 #' relative weights instead of absolute ones? If TRUE, the covariance martix
 #' of the fit parameter results is multiplied by chi^2/dof. This is the default
@@ -628,6 +635,7 @@ bootstrap.nlsfit <- function(fn,
                              error = sd,
                              cov_fn = cov,
                              maxiter = 500,
+                             success_infos = 1:3,
                              relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -675,7 +683,7 @@ bootstrap.nlsfit <- function(fn,
   ## add original data as first row
   bsamples <- rbind(Y, bsamples)
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
@@ -695,6 +703,7 @@ bootstrap.nlsfit <- function(fn,
 
   converged <- sapply(boot.list, function (elem) elem$converged)
   info <- sapply(boot.list, function (elem) elem$info)
+
   
   ## The fit on the original data must have converged, otherwise the results
   ## are worthless. We do not check directly after the first fit as the restart
@@ -711,6 +720,8 @@ bootstrap.nlsfit <- function(fn,
   ## We guarantee that the fit on the original data has converged, therefore we can discard this information.
   converged.boot <- converged[2:(boot.R + 1)]
   info.boot <- info[2:(boot.R + 1)]
+
+  niter_valboot <- sapply(boot.list, function (elem) elem$niter)
 
   ## If most of the bootstrap samples have failed to converged, something else
   ## is clearly wrong. We take 50% as the cutoff.
@@ -742,7 +753,8 @@ bootstrap.nlsfit <- function(fn,
               error.function = error,
               info.boot = info.boot,
               relative.weights = relative.weights,
-              tofn=list(...))
+              tofn=list(...),
+              niter = niter_valboot)
 
   if (errormodel == 'xyerrors') {
     res$dx <- dx
