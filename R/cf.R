@@ -189,7 +189,7 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
 #'
 #' @param .cf `cf` object to extend. Named with a leading period just to distinguish it from the member also named `cf`.
 #' @param cf Numeric matrix, original data for all observables and measurements.
-#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
+#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as quite a few functions just ignore the imaginary part and drop it in operations.
 #'
 #' @family cf constructors
 #'
@@ -198,14 +198,8 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$cf <- cf
+  .cf$icf <- icf
 
-  if (is.null(icf)) {
-    .cf$icf <- cf
-    .cf$icf[, ] <- NA
-  }
-  else {
-    .cf$icf <- icf
-  }
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
