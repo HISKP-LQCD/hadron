@@ -398,7 +398,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                 seed = seed,
                 sim = sim,
                 cf.tsboot = cf.tsboot,
-                icf.tsboot = icf.tsboot)
+                icf.tsboot = icf.tsboot,
+                resampling_method = "bootstrap")
 
   restore_seed(old_seed)
 
