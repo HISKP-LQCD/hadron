@@ -405,7 +405,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   return(invisible(cf))
 }
 
-jackknife.cf <- function(cf, boot.l = 1, resample_imag = FALSE) {
+jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
 
   stopifnot(boot.l >= 1)
@@ -434,7 +434,7 @@ jackknife.cf <- function(cf, boot.l = 1, resample_imag = FALSE) {
                     l = boot.l)
 
   icf.tsboot <- NULL
-  if( resample_imag ){
+  if( !is.null(cf$icf) ){
     cf$icf0 <- apply(cf$icf, 2, mean)
 
     t <- array(NA, dim = c(N, ncol(cf$icf)))
