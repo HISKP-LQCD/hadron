@@ -10,5 +10,6 @@
 \item{cf1, cf2}{\code{cf_orig} objects.}
 }
 \description{
-Arithmetically divide correlators
+Note that this is generally only allowed on bootstrap samples and mean values,
+although it makes sense in some exeptional circumstances.
 }
