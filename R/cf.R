@@ -101,66 +101,6 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 }
 
 
-
-#' Bootstrapped reweighted CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
-#' @param boot.R Integer, number of bootstrap samples used.
-#' @param boot.l Integer, block length in the time-series bootstrap process.
-#' @param seed Integer, random number generator seed used in bootstrap.
-#' @param sim Character, `sim` argument of \link[boot]{tsboot}.
-#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
-#' @param rwcf.tsboot List, result from the \link[boot]{tsboot} function.
-#' @param rw.tsboot List, result from the \link[boot]{tsboot} function.
-#' @param resampling_method Character, either 'bootstrap' or 'jackknife'
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `cf0`: Numeric vector, mean value of reweighted original measurements: <W0>/<W>.
-#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
-#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
-#' - `error_fn`: Function, takes a vector of samples and computes the error. In the bootstrap case this is just the `sd` function. Use this function instead of a `sd` in order to make the code compatible with jackknife samples.
-#'
-#' @family cf constructors
-#'
-#' @export
-cfrw_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, rwcf.tsboot, rw.tsboot, resampling_method = 'bootstrap') {
-  stopifnot(inherits(.cf, 'cf'))
-
-  .cf$boot.R <- boot.R
-  .cf$boot.l <- boot.l
-  .cf$seed <- seed
-  .cf$sim <- sim
-  .cf$cf.tsboot <- cf.tsboot
-
-  if (resampling_method == 'bootstrap') {
-    .cf$error_fn <- sd
-    .cf$cov_fn <- cov
-  }
-  else if (resampling_method == 'jackknife') {
-    .cf$error_fn <- function (...) jackknife_error(..., boot.l = boot.l)
-    .cf$cov_fn <- jackknife_cov
-  } else {
-    stop('This resampling method is not implemented')
-  }
-
-  .cf$resampling_method <- resampling_method
-
-  .cf$cf0 <- rwcf.tsboot$t0/rw.tsboot$t0
-  .cf$cf.tsboot$t <- rwcf.tsboot$t/rw.tsboot$t
-  .cf$tsboot.se <- apply(.cf$cf.tsboot$t/rw.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
-  .cf$boot.samples <- TRUE
-
-  class(.cf) <- append(class(.cf), 'cf_boot')
-  class(.cf) <- append(class(.cf), 'cfrw_boot')
-
-  class(.cf) <- setdiff(class(.cf), 'cf_orig')
-
-  return (.cf)
-}
-
 #' Estimates error from jackknife samples
 #'
 #' Currently this uses the mean over the jackknife samples in order to compute
@@ -451,27 +391,6 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
   rw_cf <- cf
   rw_cf$cf <- replicate(ncol(cf$cf), rw$rw)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
-  ## we set the seed for reproducability and correlation
-  old_seed <- swap_seed(seed)
-
-  ## now we bootstrap the correlation function
-  cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
-
-  restore_seed(old_seed)
-
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
 
@@ -482,12 +401,6 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
 
   restore_seed(old_seed)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
 
@@ -495,14 +408,21 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
   rw.tsboot <- boot::tsboot(rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
 
-  cf <- cfrw_boot(cf,
+
+  rwcf.tsboot$t0<- rwcf.tsboot$t0/rw.tsboot$t0
+  rwcf.tsboot$t <- rwcf.tsboot$t/rw.tsboot$t
+
+  cf <- cf_boot(cf,
                 boot.R = boot.R,
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
-                cf.tsboot = cf.tsboot,
-                rwcf.tsboot = rwcf.tsboot,
-                rw.tsboot=rw.tsboot)
+                cf.tsboot = rwcf.tsboot)
+
+  class(cf) <- append(class(cf), 'cfrw_boot')
+
+  class(cf) <- setdiff(class(cf), 'cf_orig')
+
 
   restore_seed(old_seed)
 
@@ -614,10 +534,11 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   N <- n-boot.l+1
 
   
-  tmp <- apply(cf$cf, 2, mean)
+  numerator <- apply(cf$cf*rw_cf$cf, 2, mean)
+  denominator <- apply(rw_cf$cf, 2, mean)
+  t0 <- numerator/denominator
 
   t <- array(NA, dim = c(N, ncol(cf$cf)))
-  t0 <- tmp
   for (i in 1:N) {
     ## The measurements that we are going to leave out.
     ii <- c(i:(i+boot.l-1))
@@ -630,56 +551,25 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   }
 
 
+  cf <- invalidate.samples.cf(cf)
+
   cf.tsboot <- list(t = t,
                     t0 = t0,
                     R = N,
                     l = boot.l)
 
 
-  tmp <- apply(rw_cf$cf*cf$cf, 2, mean)
-
-  t <- array(NA, dim = c(N, ncol(cf$cf)))
-  t0 <- tmp
-  for (i in 1:N) {
-    ## The measurements that we are going to leave out.
-    ii <- c(i:(i+boot.l-1))
-    ## jackknife replications of the mean
-    t[i, ] <- apply(cf$cf[-ii, ]* rw_cf$cf[ ii, ], 2L, mean)
-  }
-
-
-  rwcf.tsboot <- list(t = t,
-                    t0 = t0,
-                    R = N,
-                    l = boot.l)
-
-
-  tmp <- apply(rw_cf$cf*cf$cf, 2, mean)
-
-  t <- array(NA, dim = c(N, ncol(cf$cf)))
-  t0 <- tmp
-  for (i in 1:N) {
-    ## The measurements that we are going to leave out.
-    ii <- c(i:(i+boot.l-1))
-    ## jackknife replications of the mean
-    t[i, ] <- apply( rw_cf$cf[ ii, ], 2L, mean)
-  }
-
-
-  rwcf.tsboot <- list(t = t,
-                    t0 = t0,
-                    R = N,
-                    l = boot.l)
-  cf <- invalidate.samples.cf(cf)
-  cf <- cfrw_boot(cf,
+  cf <- cf_boot(cf,
                 boot.R = cf.tsboot$R,
                 boot.l = cf.tsboot$l,
                 seed = 0,
                 sim = 'geom',
                 cf.tsboot = cf.tsboot,
-                rwcf.tsboot = rwcf.tsboot, 
-                rw.tsboot = rw.tsboot,
                 resampling_method = 'jackknife')
+
+  class(cf) <- append(class(cf), 'cfrw_boot')
+
+  class(cf) <- setdiff(class(cf), 'cf_orig')
 
   return (invisible(cf))
 }
