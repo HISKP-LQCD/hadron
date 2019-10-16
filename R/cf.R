@@ -851,7 +851,7 @@ shift.cf <- function(cf, places) {
                       istart:(istart+places-1) )
       }
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
       }
     }
@@ -878,7 +878,7 @@ invalidate.samples.cf <- function (cf) {
   cf$tsboot.se <- NULL
   cf$cf0 <- NULL
 
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf.tsboot <- NULL
     cf$itsboot.se <- NULL
     cf$icf0 <- NULL
@@ -913,7 +913,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       isub <- c(isub,(ihalf+1):iend)
       cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
                                              sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
                                                 sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
       }
@@ -921,7 +921,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   }
   # remove now unnecessary time slices
   cf$cf <- cf$cf[, -isub]
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf <- cf$icf[, -isub]
   }
   cf$symmetrised <- TRUE
@@ -951,8 +951,8 @@ summary.cf <- function(object, ...) {
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
 
-    if( !is.null(cf$icf) ){
-      out <- cbind(iC=cf$icf0, itsboot.se = cf$itsboot.se)
+    if( has_icf(cf) ){
+      out <- cbind(out, iC=cf$icf0, itsboot.se = cf$itsboot.se)
     }
   }
 
@@ -960,7 +960,7 @@ summary.cf <- function(object, ...) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)
     out <- cbind(out, jab.se=cf$jack.boot.se)
 
-    if( !is.null(cf$icf) ){
+    if( has_icf(cf) ){
       out <- cbind(out, ijackknife.se = cf$ijackknife.se)
       out <- cbind(out, ijab.se = cf$ijack.boot.se)
     }
