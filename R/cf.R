@@ -919,7 +919,7 @@ invalidate.samples.cf <- function (cf) {
 #' cf$Time/2+1 by performing this averaging.
 #' 
 #' @param cf `cf` object
-#' @param sym.vec Integer vector of length cf$nrOb*cf$nrStypes giving the
+#' @param sym.vec Integer vector of length cf$nrOb giving the
 #'                time-reflection symmetry (1 for symmetric, -1 for anti-symmetric)
 #'                of the observable in question.
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
