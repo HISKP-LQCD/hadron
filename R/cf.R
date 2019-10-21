@@ -969,11 +969,10 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 #' cf$Time/2+1 time slices and turns it into one with cf$Time time slices by
 #' reflecting the correlation function along the cf$Time/2 axis.
 #'
-#' @param cf `cf` object. All contained correlators must have originally been
-#'           symmetric under time-reflection.
+#' @param cf `cf` object which has been previously symmetrised
 #' @param sym.vec Integer vector giving the symmetry properties (see \link{symmetrise.cf})
 #'                of the original unsymmetrised correlation function. This should be of
-#'                length cf$nrObs * cf$nrStypes
+#'                length cf$nrObs
 unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -986,10 +985,6 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
     sym.vec <- rep(sym.vec[1],times=cf$nrObs)
   } else if( cf$nrObs != length(sym.vec) ) {
     stop("symmetrise.cf: length of sym.vec must either be 1 or match cf$nrObs!\n")
-  }
-
-  if( any(sym.vec < 0) ){
-    stop("only correlation functions symmetric in time can be unfolded!\n")
   }
 
   cf2 <- cf$cf
@@ -1008,11 +1003,11 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
       cf$cf[, (istart):(ihalf)] <- cf2[, (istart):(ihalf)]
-      cf$cf[, (ihalf+1):(iend)] <- cf2[, rev((istart+1):(ihalf-1))]
+      cf$cf[, (ihalf+1):(iend)] <- sym.vec[oidx+1]*cf2[, rev((istart+1):(ihalf-1))]
 
       if( !is.null(cf$icf) ){
         cf$icf[, (istart):(ihalf)] <- icf2[, (istart):(ihalf)]
-        cf$icf[, (ihalf+1):(iend)] <- icf2[, rev((istart+1):(ihalf-1))]
+        cf$icf[, (ihalf+1):(iend)] <- sym.vec[oidx+1]*icf2[, rev((istart+1):(ihalf-1))]
       }
     }
   }

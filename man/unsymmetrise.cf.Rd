@@ -7,12 +7,11 @@
 unsymmetrise.cf(cf, sym.vec = c(1))
 }
 \arguments{
-\item{cf}{\code{cf} object. All contained correlators must have originally been
-symmetric under time-reflection.}
+\item{cf}{\code{cf} object which has been previously symmetrised}
 
 \item{sym.vec}{Integer vector giving the symmetry properties (see \link{symmetrise.cf})
 of the original unsymmetrised correlation function. This should be of
-length cf$nrObs * cf$nrStypes}
+length cf$nrObs}
 }
 \description{
 After a symmetric correlation function has been averaged across the central
