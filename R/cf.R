@@ -200,7 +200,6 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   .cf$cf <- cf
   .cf$icf <- icf
 
-
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
 }
@@ -270,7 +269,7 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
 #' @family cf constructors
 #'
 #' @export
-cf_smeared <- function (.cf = cf(), scf, iscf, nrSamples, obs) {
+cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$scf <- scf
@@ -347,6 +346,15 @@ is_empty.cf <- function (.cf) {
     is.null(names(.cf))
 }
 
+#' Checks whether the cf object contains an imaginary part
+#'
+#' @param .cf `cf` object
+#'
+#'
+has_icf <- function(.cf) {
+  return( !is.null(.cf$icf) )
+}
+
 gen.block.array <- function(n, R, l, endcorr=TRUE) {
   endpt <- if (endcorr)
              n
@@ -381,7 +389,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                             R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
 
   icf.tsboot <- NULL
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
   }
@@ -429,7 +437,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
                     l = boot.l)
 
   icf.tsboot <- NULL
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf0 <- apply(cf$icf, 2, mean)
 
     t <- array(NA, dim = c(N, ncol(cf$icf)))
@@ -543,7 +551,7 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
   cf$cf <- cf$cf[,-ind.sl]
 
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf[,ind.ls] <- 0.5 * ( cf$icf[,ind.ls] + cf$icf[,ind.sl] )
     cf$icf <- cf$icf[,-ind.sl]
   }
@@ -610,8 +618,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
-  if( !is.null(cf1$icf) ){
-    stopifnot( !is.null(cf2$icf) )
+  if( has_icf(cf1) ){
+    stopifnot( has_icf(cf2) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
@@ -637,10 +645,16 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-#' Arithmetically divide correlators
+#' Divide real and imaginary parts of two cf objects by each other 
+#'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent, such that the real part of one
+#' is the divided by the real part of the other and similarly for the
+#' imaginary parts.
 #'
 #' Note that this is generally only allowed on bootstrap samples and mean values,
-#' although it makes sense in some exeptional circumstances.
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
 #' 
 #' @param cf1,cf2 `cf_orig` objects.
 #'
@@ -656,8 +670,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
 
-  if( !is.null(cf1$icf) ){
-    stopifnot(!is.null(cf2$icf))
+  if( has_icf(cf1) ){
+    stopifnot(has_icf(cf2))
     cf$icf <- cf1$icf / cf2$icf
   }
 
@@ -677,7 +691,7 @@ mul.cf <- function(cf, a=1.) {
 
   cf$cf <- a*cf$cf
 
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf <- a*cf$icf
   }
 
@@ -719,7 +733,7 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   # TODO: This should be done using constructors.
   cf$cf <- cf$cf[,ii]
 
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf <- cf$icf[,ii]
   }
 
@@ -730,7 +744,7 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
     cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
     cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
 
-    if( !is.null(cf$icf) ){
+    if( has_icf(cf) ){
       cf$icf0 <- cf$icf0[ii]
       cf$itsboot.se <- cf$itsboot.se[ii]
       cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[ii]
@@ -871,7 +885,7 @@ shift.cf <- function(cf, places) {
       }
 
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
       }
     }
@@ -898,7 +912,7 @@ invalidate.samples.cf <- function (cf) {
   cf$tsboot.se <- NULL
   cf$cf0 <- NULL
 
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf.tsboot <- NULL
     cf$itsboot.se <- NULL
     cf$icf0 <- NULL
@@ -946,7 +960,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       isub <- c(isub,(ihalf+1):iend)
       cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
                                              sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
                                                 sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
       }
@@ -954,7 +968,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   }
   # remove now unnecessary time slices
   cf$cf <- cf$cf[, -isub]
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf <- cf$icf[, -isub]
   }
   cf$symmetrised <- TRUE
@@ -1038,8 +1052,8 @@ summary.cf <- function(object, ...) {
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
 
-    if( !is.null(cf$icf) ){
-      out <- cbind(iC=cf$icf0, itsboot.se = cf$itsboot.se)
+    if( has_icf(cf) ){
+      out <- cbind(out, iC=cf$icf0, itsboot.se = cf$itsboot.se)
     }
   }
 
@@ -1047,7 +1061,7 @@ summary.cf <- function(object, ...) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)
     out <- cbind(out, jab.se=cf$jack.boot.se)
 
-    if( !is.null(cf$icf) ){
+    if( has_icf(cf) ){
       out <- cbind(out, ijackknife.se = cf$ijackknife.se)
       out <- cbind(out, ijab.se = cf$ijack.boot.se)
     }
