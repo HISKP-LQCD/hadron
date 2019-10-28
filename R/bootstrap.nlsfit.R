@@ -353,7 +353,7 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
            niter = res$niter)
     }
   } else {
-    fitchisqr <- function(y, par) { sum(fitchi(y, par)^2) }
+    fitchisqr <- function(y, par, ...) { sum(fitchi(y, par, ...)^2) }
     dfitchisqr <- set.dfitchisqr(fitchi, dfitchi)
     wrapper <- function(y, par, ...) {
       res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=maxiter), ...)
