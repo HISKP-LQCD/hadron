@@ -2,17 +2,22 @@
 % Please edit documentation in R/cvc_readutils.R
 \name{cvc_to_raw_cf}
 \alias{cvc_to_raw_cf}
-\title{Convert correlation funtion in CVC HDF5 format to 'raw_cf'}
+\title{Convert correlation function read from CVC HDF5 or AFF format to 'raw_cf'}
 \usage{
-cvc_to_raw_cf(cf_dat)
+cvc_to_raw_cf(cf_dat, dims = c(1, 1))
 }
 \arguments{
 \item{cf_dat}{Numeric vector of alternating real and imaginary parts of a
-correlation function.}
+correlation function. Ordering of the input should be complex, internal dimensions,
+time (left to right, fastest to slowest).}
+
+\item{dims}{Integer vector with the sizes of the internal dimensions. For example,
+\code{c(4,4)} for spin correlators.}
 }
 \description{
 Given a numeric vector of alternating real and imaginary parts of a
-correaltion function, creates an object of class 'raw_cf' with
-a single measurement, inferring \code{Time} and internal dimensions
-from the passed numeric vector.
+correlation function, creates an object of class 'raw_cf' with
+a single measurement, inferring \code{Time} from the passed numeric vector
+while the shape of the internal dimensions has to be specified explicitly
+if larger than \code{one by one} (\code{c(1,1)}).
 }

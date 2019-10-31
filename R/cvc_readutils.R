@@ -283,26 +283,42 @@ cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
   return(key)
 }
 
-#' @title Convert correlation funtion in CVC HDF5 format to 'raw_cf'
+#' @title Convert correlation function read from CVC HDF5 or AFF format to 'raw_cf'
 #' @description Given a numeric vector of alternating real and imaginary parts of a
-#'              correaltion function, creates an object of class 'raw_cf' with
-#'              a single measurement, inferring \code{Time} and internal dimensions
-#'              from the passed numeric vector.
+#'              correlation function, creates an object of class 'raw_cf' with
+#'              a single measurement, inferring \code{Time} from the passed numeric vector
+#'              while the shape of the internal dimensions has to be specified explicitly
+#'              if larger than `one by one` (\code{c(1,1)}).
 #' @param cf_dat Numeric vector of alternating real and imaginary parts of a
-#'               correlation function.
-cvc_to_raw_cf <- function(cf_dat)
+#'               correlation function. Ordering of the input should be complex, internal dimensions,
+#'               time (left to right, fastest to slowest).
+#' @param dims Integer vector with the sizes of the internal dimensions. For example,
+#'             \code{c(4,4)} for spin correlators.
+#' @value `raw_cf` object with a \code{data} member which contains the data (as complex numbers)
+#'        in the shape \code{c(1,nts,dims)}, where `nts` is the number of time slices
+#'        inferred from the length of \code{cfdat} and the product of the internal dimensions \code{dims}.
+#'                 
+cvc_to_raw_cf <- function(cf_dat, dims = c(1,1))
 {
+  number_of_interal_dims <- prod(dims)
+
   # idcs for real and imaginary parts
   ridcs <- seq(1,length(cf_dat),2)
   iidcs <- seq(2,length(cf_dat),2)
 
-  # turn it into a complex 4D array of 'internal' size c(1,1)
-  # the dimensions correspond to measurement, time, internal
+  nts <- length(ridcs)/number_of_internal_dims
+
+  # turn it into a complex 4D array of with ordering of
+  # internal dimensions and time in the 'wrong' order
   cf_dat <- array(complex(real = cf_dat[ridcs],
                           imaginary = cf_dat[iidcs]),
-                          dim = c(1,length(ridcs),c(1,1)))
+                          dim = c(1,dims,nts))
+  cf_dims <- dim(cf_dat)
+  # reshape the array, ordering 'measurement' (a single one), 'time',
+  # internal dimensions
+  cf_dat <- aperm(cf_dat, c(1,length(cf_dims),2:(length(cf_dims)-1)))
 
-  cf <- raw_cf_data(cf = raw_cf_meta(Time=length(ridcs), dim=c(1,1)),
+  cf <- raw_cf_data(cf = raw_cf_meta(Time=nts, dim=dims),
                     data = cf_dat)
   return(cf)
 }
