@@ -135,6 +135,15 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
       stop("Time reporting requires the 'tictoc' package!")
     }
   }
+
+  files_not_exist <- lapply(X = files,
+                            FUN = function(x){
+                              !file.exists(x)
+                            })
+  if( any( files_not_exist ) ){
+    cat("The files: ", files[files_not_exist], " do not exist! \n")
+    stop("There were missing files!")
+  }
  
   # we require 'accumulated' and 'legacy_traj' to be vectors below 
   if( length(accumulated) == 1 ){
