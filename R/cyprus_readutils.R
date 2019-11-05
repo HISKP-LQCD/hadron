@@ -136,10 +136,13 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     }
   }
 
-  files_not_exist <- lapply(X = files,
-                            FUN = function(x){
-                              !file.exists(x)
-                            })
+  files_not_exist <- unlist(lapply(X = files,
+                                   FUN = 
+                                     function(x){
+                                       !file.exists(x)
+                                     }
+                                   )
+                           )
   if( any( files_not_exist ) ){
     cat("The files: ", files[files_not_exist], " do not exist! \n")
     stop("There were missing files!")
