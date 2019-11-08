@@ -505,7 +505,12 @@ jackknife.cf <- function(cf, boot.l = 1) {
 
 }
 
-
+#' Computes the jackknife samples for reweighted correlation function
+#'
+#' @param cf `cf` object.
+#' @param rw `rw` object.
+#' @param boot.l Integer
+#' @export
 jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(inherits(rw, 'rw_orig'))
