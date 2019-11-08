@@ -4,8 +4,8 @@
 #' of class `rw`. This class is particularly designed to store reweighting 
 #' factors for each gauge configuration, that can be applied on 
 #' correlation functions emerging in statistical and quantum field theory
-#' simulations. Arithmetic operations are defined for this class in
-#' several ways, as well as for increasing statistics and \link{is.rw}.
+#' simulations. Multiplication operation is defined for this class,
+#' as well as for increasing statistics and \link{is.rw}.
 #'
 #' @details
 #'#'
@@ -85,9 +85,10 @@ is_empty.rw <- function (.rw) {
 
 #' Arithmetically multiplies two reweighting factors 
 #'
-#' @param rw1,rw2 `rw_orig` object.
+#' @param rw1,rw2 `rw_orig` objects to be muplitplied
 #' @param nf1,nf2 Integer. Factors that determines the number of flavours you 
-#'        have for reweighting factor 1 and 2
+#'        have for reweighting factor 1 and 2, the default value is 1, you 
+#'        usually have different reweighting factor for each flavour
 #'
 #' @return
 #' The value is
@@ -123,7 +124,7 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 #' @param rw1,rw2 `rw_orig` objects.
 #'
 #' @export
-'*.cf' <- function (rw1, rw2) {
+'*.rw' <- function (rw1, rw2) {
   multiply.rw(cf1, cf2, nf1 = 1, nf2 = 1)
 }
 
@@ -166,12 +167,18 @@ plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...
 }
 
 #' Combine statistics for reweighting factor 
+#' Use this when combining different replicas
 #'
 #' @param rw1 `rw` object
 #' @param rw2 `rw` object
 #' @param reverse1 boolean object
 #' @param reverse1 boolean object
 #'
+#' @examples 
+#' We have replicum a, b and we want to join them
+#' Note that in this case replicum b has to be reversed
+#'
+#' addStat.rw(rewfactor_replicum_B,rewfactor_replicum_A,TRUE,FALSE)
 #' @export
 addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))
@@ -193,10 +200,6 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
  
   stopifnot(inherits(rw1, 'rw_norm'))
   stopifnot(inherits(rw2, 'rw_norm'))
-
-
-  #stopifnot(identical(rw1$conf.index == rw2$conf.index))
-  #stopifnot(dim(rw1$rw)[2] == dim(rw2$rw)[2])
 
   rw    <- rw1
 

@@ -2,7 +2,8 @@
 % Please edit documentation in R/rw.R
 \name{addStat.rw}
 \alias{addStat.rw}
-\title{Combine statistics for reweighting factor}
+\title{Combine statistics for reweighting factor
+Use this when combining different replicas}
 \usage{
 addStat.rw(rw1, rw2, reverse1 = FALSE, reverse2 = FALSE)
 }
@@ -17,4 +18,11 @@ addStat.rw(rw1, rw2, reverse1 = FALSE, reverse2 = FALSE)
 }
 \description{
 Combine statistics for reweighting factor
+Use this when combining different replicas
+}
+\examples{
+We have replicum a, b and we want to join them
+Note that in this case replicum b has to be reversed
+
+addStat.rw(rewfactor_replicum_B,rewfactor_replicum_A,TRUE,FALSE)
 }

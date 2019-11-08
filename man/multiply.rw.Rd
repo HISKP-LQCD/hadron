@@ -7,10 +7,11 @@
 multiply.rw(rw1, rw2, nf1 = 1, nf2 = 1)
 }
 \arguments{
-\item{rw1, rw2}{\code{rw_orig} object.}
+\item{rw1, rw2}{\code{rw_orig} objects to be muplitplied}
 
 \item{nf1, nf2}{Integer. Factors that determines the number of flavours you
-have for reweighting factor 1 and 2}
+have for reweighting factor 1 and 2, the default value is 1, you
+usually have different reweighting factor for each flavour}
 }
 \value{
 The value is
