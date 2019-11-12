@@ -145,17 +145,20 @@ is.rw <- function (x) {
 #' Plot a reweighting factor function
 #'
 #' @param x `rw` object
-#' @param neg.vec Numeric vector of length `rw$rw0`. This allows switching the
-#' sign for certain gauge configurations such that displaying in
-#' log-scale is sensible.
 #' @param rep See \code{\link{plotwitherror}}.
 #'
 #' @inheritParams plotwitherror
 #'
 #' @export
-plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...) {
+plot.rw <- function(x, rep = FALSE, ...) {
   rw <- x
   stopifnot(inherits(rw, 'rw'))
+  negs <- which(rw$rw < 0)
+  neg.vec <- rep(1,times=length(rw$rw))
+  neg.vec[negs] <- -1
+ 
+  colneg <- rep("black",times=length(rw$rw))
+  colneg[negs] <- "red"
 
   val <- rw$rw/mean(rw$rw)
   err <- rep(x=0,length(rw$rw))
@@ -164,7 +167,7 @@ plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...
                    CF = val,
                    Err = err)
 
-  plotwitherror(x = c(1:length(val)), y = neg.vec * df$CF, dy = df$Err, rep = rep, ...)
+  plotwitherror(x = c(1:length(val)), y = neg.vec * df$CF, dy = df$Err, col=colneg, rep = rep, ...)
 
   return(invisible(df))
 }
