@@ -29,7 +29,7 @@ rw <- function () {
 rw_meta <- function (.rw = rw(), conf.index = NA) {
    stopifnot(inherits(.rw, 'rw'))
 
-   .rw$conf.index = conf.index
+   .rw$conf.index <- conf.index
 
    class(.rw) <- append(class(.rw), 'rw_meta')
    return (.rw)
@@ -57,7 +57,7 @@ rw_orig <- function (.rw = rw(), rw, conf.index, max_value) {
 rw_unit <- function (.rw = rw(), conf.index) {
   stopifnot(inherits(.rw, 'rw'))
 
-  .rw$conf.index=conf.index
+  .rw$conf.index <- conf.index
   .rw$rw <- rep(1.0,length(conf.index))
   .rw$max_value <- 1.0
 
