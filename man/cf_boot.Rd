@@ -2,7 +2,7 @@
 % Please edit documentation in R/cf.R
 \name{cf_boot}
 \alias{cf_boot}
-\title{Bootstrapped CF constructor}
+\title{Bootstrapped CF mixin constructor}
 \usage{
 cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
   icf.tsboot = NULL, resampling_method)
@@ -25,7 +25,7 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }
 \description{
-Bootstrapped CF constructor
+Bootstrapped CF mixin constructor
 }
 \details{
 The following fields will also be made available:

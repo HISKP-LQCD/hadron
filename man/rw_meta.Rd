@@ -4,7 +4,7 @@
 \alias{rw_meta}
 \title{rw metadata mixin constructor}
 \usage{
-rw_meta(.rw = rw(), conf.index = NA)
+rw_meta(.rw = rw(), conf.index)
 }
 \arguments{
 \item{.rw}{\code{rw} object to extend.}

@@ -13,9 +13,7 @@ is_empty.rw(.rw)
 Checks whether the cf object contains no data
 }
 \examples{
-# The empty cf object must be empty:
-is_empty.cf(cf())
+# The empty rw object must be empty:
+is_empty.rw(rw())
 
-# The sample cf must not be empty:
-is_empty.cf(samplecf)
 }

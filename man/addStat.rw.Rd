@@ -2,27 +2,32 @@
 % Please edit documentation in R/rw.R
 \name{addStat.rw}
 \alias{addStat.rw}
-\title{Combine statistics for reweighting factor
-Use this when combining different replicas}
+\title{Combine reweighting factors from different replicas}
 \usage{
 addStat.rw(rw1, rw2, reverse1 = FALSE, reverse2 = FALSE)
 }
 \arguments{
-\item{rw1}{\code{rw} object}
+\item{rw1}{\code{rw} object: reweighting factor for replicum A}
 
-\item{rw2}{\code{rw} object}
+\item{rw2}{\code{cf} object: reweighting factor for replicum B}
 
-\item{reverse1}{boolean object}
+\item{reverse1}{\code{boolean} After the bifurcation point one of
+the replicas (chain of reweighting
+factors in simulation time) has
+to be reversed.}
 
-\item{reverse1}{boolean object}
+\item{reverse2}{\code{boolean}}
 }
 \description{
-Combine statistics for reweighting factor
-Use this when combining different replicas
+Combine reweighting factors from different replicas
 }
 \examples{
-We have replicum a, b and we want to join them
-Note that in this case replicum b has to be reversed
+Suppose we have reweighting factors in replicum A from 0 to 500
+in steps of 4 and in replicum B from 4 to 500 in steps of 4.
+To combined the two replicas we have to use
 
-addStat.rw(rewfactor_replicum_B,rewfactor_replicum_A,TRUE,FALSE)
+addstat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
+which means
+combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
+rw500 from A) 
 }
