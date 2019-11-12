@@ -5,7 +5,7 @@
 \title{Bootstrapped CF constructor}
 \usage{
 cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
-  resampling_method = "bootstrap")
+  icf.tsboot = NULL, resampling_method)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend.}
@@ -18,7 +18,9 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 
 \item{sim}{Character, \code{sim} argument of \link[boot]{tsboot}.}
 
-\item{cf.tsboot}{List, result from the \link[boot]{tsboot} function.}
+\item{cf.tsboot}{List, result from the \link[boot]{tsboot} function for the real part.}
+
+\item{icf.tsboot}{List, result from the \link[boot]{tsboot} function for the imaginay part.}
 
 \item{resampling_method}{Character, either 'bootstrap' or 'jackknife'}
 }

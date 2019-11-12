@@ -382,8 +382,8 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   }
 
   if (any(p2 != 0)) {
-    mass2$t0 <- dispersion_relation(mass2$t0, p1, L, lattice_disp = lat.disp)
-    mass2$t <- dispersion_relation(mass2$t, p1, L, lattice_disp = lat.disp)
+    mass2$t0 <- dispersion_relation(mass2$t0, p2, L, lattice_disp = lat.disp)
+    mass2$t <- dispersion_relation(mass2$t, p2, L, lattice_disp = lat.disp)
   }
 
   if (weight.cosh) {
