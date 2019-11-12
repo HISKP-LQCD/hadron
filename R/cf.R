@@ -48,7 +48,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 }
 
 
-#' Bootstrapped CF constructor 
+#' Bootstrapped CF mixin constructor 
 #'
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
