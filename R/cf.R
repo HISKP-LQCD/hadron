@@ -656,6 +656,25 @@ addConfIndex2cf <- function(cf, conf.index) {
   return(cf)
 }
 
+#' Combine correlation function from different replicas
+#' 
+#' @param cf1 `cf` object: correlation function for replicum A
+#' @param cf2 `cf` object: correlation function for replicum B
+#' @param reverse1 `boolean` After the bifurcation point one of
+#'                           the replicas (chain of correlation 
+#'                           functions in simulation time) has  
+#'                           to be reversed.
+#' @param reverse2 `boolean`
+#'
+#' @examples
+#' Suppose we have correlation functions in replicum A from 0 to 500
+#' in steps of 4 and in replicum B from 4 to 500 in steps of 4.
+#' To combined the two replicas we have to use
+#'
+#' addstat.cf(cf_replicumB, cf_replicumA, TRUE, FALSE)
+#' which means
+#' combined=(cf500 from B, cf496 from B,...,cf004 from B, cf000 from A, ..
+#' cf500 from A) 
 addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
