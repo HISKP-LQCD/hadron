@@ -4,15 +4,10 @@
 \alias{plot.rw}
 \title{Plot a reweighting factor function}
 \usage{
-\method{plot}{rw}(x, neg.vec = rep(1, times = length(rw$rw)),
-  rep = FALSE, ...)
+\method{plot}{rw}(x, rep = FALSE, ...)
 }
 \arguments{
 \item{x}{\code{rw} object}
-
-\item{neg.vec}{Numeric vector of length \code{rw$rw0}. This allows switching the
-sign for certain gauge configurations such that displaying in
-log-scale is sensible.}
 
 \item{rep}{See \code{\link{plotwitherror}}.}
 }
