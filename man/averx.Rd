@@ -5,7 +5,9 @@
   Compute <x> from bare data by fitting to a constant
 }
 \usage{
-averx(data3pt, data2pt, pionfit, boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE, t1, t2, seed=123456, type="solve", force.optim=FALSE)
+averx(data3pt, data2pt, pionfit, boot.R=400, boot.l=2,
+      piont1, piont2, useCov=FALSE, t1, t2, seed=123456,
+      type="solve", force.optim=FALSE)
 }
 \arguments{
   \item{data3pt}{

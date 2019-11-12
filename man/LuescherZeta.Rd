@@ -80,7 +80,8 @@ tol=0.000001, verbose=FALSE)
   Z20 <- Re(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2))
   Z22  <- Im(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2, m = 2))
   Z2_2 <- Im(LuescherZeta(q^2, gamma=gamma, dvec = Pcm, l = 2, m = -2))
-  delta <- atan2(gamma*pi^(3./2.) * q , (Z00 - (1./(q^2*sqrt(5)))*Z20 + ((sqrt(3./10.)/(q^2))*(Z22-Z2_2))))*180./pi
+  delta <- atan2(gamma*pi^(3./2.) * q , (Z00 - (1./(q^2*sqrt(5)))*Z20 +
+        ((sqrt(3./10.)/(q^2))*(Z22-Z2_2))))*180./pi
   cat("delta = ", delta, "to compare with 127.9882\n")
 
 }

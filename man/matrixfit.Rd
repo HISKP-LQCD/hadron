@@ -211,7 +211,9 @@ matrixfit(cf, t1, t2,
 \examples{
 data(samplecf)
 samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
-fitres <- matrixfit(cf=samplecf, t1=16, t2=24, useCov=FALSE, parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), fit.method="lm")
+fitres <- matrixfit(cf=samplecf, t1=16, t2=24, useCov=FALSE,
+                    parlist=array(c(1,1), dim=c(2,1)),
+                    sym.vec=c("cosh"), fit.method="lm")
 summary(fitres)
 plot(fitres)
 }

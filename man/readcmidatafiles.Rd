@@ -9,7 +9,8 @@
 }
 \usage{
 readcmicor(filename,
-           colClasses=c("integer","integer","integer","numeric","numeric","integer"), skip=0)
+           colClasses=c("integer","integer","integer","numeric","numeric","integer"),
+           skip=0)
 
 readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
              colClasses, obs=NULL, obs.index, avg=1, stride=1)

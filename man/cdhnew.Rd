@@ -7,7 +7,8 @@
   re-expanded as series in the quark mass
 }
 \usage{
-cdhnew(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4, ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE, use.cimpl = TRUE)
+cdhnew(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
+       ampiV, afpiV, aF0, a2B0mu, L, printit=FALSE, use.cimpl = TRUE)
 }
 \arguments{
   \item{rev}{\eqn{rev=-1} corrects from \eqn{L} to \eqn{L=\infty}{L =

@@ -6,7 +6,8 @@
   from a text file. 
 }
 \usage{
-readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0,
+           ind.vector=c(2,3), symmetrise=TRUE,
            stride=1, avg=1, Nmin=4, autotruncate=TRUE)
 }
 \arguments{

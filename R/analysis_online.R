@@ -15,6 +15,60 @@ append_pdf_filename <- function(basename, pdf_filenames){
 # cg_col indicates which column in output.data should be used to extract 
 # a representative solver iteration counter
 
+#' analysis_online
+#'
+#' @param L integer. spatial lattice extend
+#' @param T integer. temporal lattice extend
+#' @param t1 integer. initial time of fit range
+#' @param t2 integer. end time of fit range
+#' @param beta numeric. inverse squared gauge coupling
+#' @param kappa numeric. hopping parameter
+#' @param mul numeric. light twisted mass
+#' @param cg_col integer. column of CG iteration counts to use
+#' @param evals ??. ??
+#' @param rundir string. run directory
+#' @param cg.ylim numeric. y-limits for CG iteration counts
+#' @param type string. run type
+#' @param csw numeric. clover coefficient
+#' @param musigma numeric. average 1+1 twisted mass
+#' @param mudelta numeric. splitting 1+1 twisted mass
+#' @param muh numeric. heavy twisted mass
+#' @param addon string. addon to output filenames
+#' @param skip integer. number of initial measurements to skip in analysis
+#' @param rectangle boolean. If true, rectangle plaquettes are analysed
+#' @param plaquette boolean. If true, square plaquettes are analysed
+#' @param dH boolean. If true, delta H is analysed
+#' @param acc boolean. If true, the acceptance rate is analysed
+#' @param trajtime boolean. If true, the time per trajectory is analysed
+#' @param omeas boolean. If true, offline measurements are analysed
+#' @param plotsize numeric. size of plots being generated
+#' @param debug boolean. provide debug information
+#' @param trajlable boolean or string. If not `FALSE`, use as trajectory labels
+#' @param title bolean or string. If not `FALSE`, use as main title of plots
+#' @param pl boolean. If set to `TRUE` plots will be generated
+#' @param method string. method to compute errors, can be "uwerr" or "boot"
+#' @param fit.routine string. minimisation routine for chisq, can be "optim"
+#' @param oldnorm boolean. If `TRUE` use the old tmLQCD normalisation
+#' @param S numeric. `S` parameter of \link{uwerr}
+#' @param stat_skip integer. statistics to skip
+#' @param omeas.samples integer. number of stochastic sample per online measurement
+#' @param omeas.stride integer. use as strides in online measurements
+#' @param omeas.avg integer. ??
+#' @param omeas.start integer. ??
+#' @param omeas.stepsize integer. ??
+#' @param evals.start integer. ??
+#' @param evals.stepsize integer. ??
+#' @param boot.R integer. number of bootstrap samples
+#' @param boot.l integer. bootstrap block size
+#' @param outname_suffix string. suffix for output files
+#' @param verbose boolean. If `TRUE`, function produces verbose output.
+#' #'
+#' @return
+#' a list is returned with all the accumulated results
+#'
+#'
+
+
 analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             cg_col, evals, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",

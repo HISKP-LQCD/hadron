@@ -60,7 +60,8 @@ readbinarydisc(files, T=48, obs=5, endian="little",
 }
 \examples{
 \dontrun{files <- character()}
-\dontrun{for(i in seq(600,1744,8)) files <- c(files, "C2_dis_u_conf", sprintf("\%.04d", i), ".dat", sep=""))}
+\dontrun{for(i in seq(600,1744,8)) }
+\dontrun{  files <- c(files, "C2_dis_u_conf", sprintf("\%.04d", i), ".dat", sep=""))}
 \dontrun{cf <- readbinarydisc(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}
