@@ -26,7 +26,7 @@ rw <- function () {
 #' @family cf constructors
 #'
 #' @export
-rw_meta <- function (.rw = rw(), conf.index = NA) {
+rw_meta <- function (.rw = rw(), conf.index ) {
    stopifnot(inherits(.rw, 'rw'))
 
    .rw$conf.index <- conf.index
