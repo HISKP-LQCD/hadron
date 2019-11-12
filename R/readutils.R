@@ -353,6 +353,13 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
   tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
+  names(tmp)[1] <- "monomialid"
+  names(tmp)[2] <- "stochastic_index"
+  names(tmp)[3] <- "kappa_target"
+  names(tmp)[4] <- "kappa_original"
+  names(tmp)[5] <- "light_quark_mass_target"
+  names(tmp)[6] <- "light_quark_mass_original"
+  names(tmp)[7] <- "reweightingfactor"
 
 # Select the reweighting factor for a particular monomial
 
