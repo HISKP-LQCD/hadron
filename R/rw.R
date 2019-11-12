@@ -169,19 +169,25 @@ plot.rw <- function(x, neg.vec = rep(1, times = length(rw$rw)), rep = FALSE, ...
   return(invisible(df))
 }
 
-#' Combine statistics for reweighting factor 
-#' Use this when combining different replicas
+#' Combine reweighting factors from different replicas
+#' 
+#' @param rw1 `rw` object: reweighting factor for replicum A
+#' @param rw2 `cf` object: reweighting factor for replicum B
+#' @param reverse1 `boolean` After the bifurcation point one of
+#'                           the replicas (chain of reweighting 
+#'                           factors in simulation time) has  
+#'                           to be reversed.
+#' @param reverse2 `boolean`
 #'
-#' @param rw1 `rw` object
-#' @param rw2 `rw` object
-#' @param reverse1 boolean object
-#' @param reverse1 boolean object
+#' @examples
+#' Suppose we have reweighting factors in replicum A from 0 to 500
+#' in steps of 4 and in replicum B from 4 to 500 in steps of 4.
+#' To combined the two replicas we have to use
 #'
-#' @examples 
-#' We have replicum a, b and we want to join them
-#' Note that in this case replicum b has to be reversed
-#'
-#' addStat.rw(rewfactor_replicum_B,rewfactor_replicum_A,TRUE,FALSE)
+#' addstat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
+#' which means
+#' combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
+#' rw500 from A) 
 #' @export
 addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))

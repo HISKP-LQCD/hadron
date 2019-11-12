@@ -675,6 +675,7 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' which means
 #' combined=(cf500 from B, cf496 from B,...,cf004 from B, cf000 from A, ..
 #' cf500 from A) 
+#' @export
 addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
