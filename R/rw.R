@@ -72,11 +72,9 @@ rw_unit <- function (.rw = rw(), conf.index) {
 #' @param .rw `rw` object.
 #'
 #' @examples
-#' # The empty cf object must be empty:
-#' is_empty.cf(cf())
+#' # The empty rw object must be empty:
+#' is_empty.rw(rw())
 #'
-#' # The sample cf must not be empty:
-#' is_empty.cf(samplecf)
 is_empty.rw <- function (.rw) {
   setequal(class(.rw), class(rw())) &&
     is.null(names(.rw))
@@ -86,9 +84,14 @@ is_empty.rw <- function (.rw) {
 #' Arithmetically multiplies two reweighting factors 
 #'
 #' @param rw1,rw2 `rw_orig` objects to be muplitplied
-#' @param nf1,nf2 Integer. Factors that determines the number of flavours you 
-#'        have for reweighting factor 1 and 2, the default value is 1, you 
-#'        usually have different reweighting factor for each flavour
+#' @param nf1,nf2 Integer. Factors that determines the number of flavours we
+#'        have for reweighting factor 1 and 2, the default value is 1, because
+#'        usually we compute the reweighting factors for Q: the product of 
+#'        up and down or strange and charm determinant, there are no additional 
+#'        terms in the sea determinant that have to be reweighted with the same
+#'        rw factor. In case we compute the rw1 factor only for the up quark, we 
+#'        for example, we have to set nf1=2 to obtain the rw factor
+#'        for the light determinant.  
 #'
 #' @return
 #' The value is
