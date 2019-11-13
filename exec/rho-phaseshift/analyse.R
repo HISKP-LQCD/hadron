@@ -47,9 +47,12 @@ seed <- args$seed
 dirs <- args$dirs
 output.path <- paste(args$output.path, "5_fit-data", sep="/")
 
-source(paste(args$path.to.hadron, "/exec/rho-phaseshift/phaseshift.rho.R", sep="/"))
-source(paste(args$path.to.hadron, "/exec/rho-phaseshift/summarise.R", sep="/"))
+path.to.hadron <- getwd()
 
+source(paste(path.to.hadron, "/phaseshift.rho.R", sep="/"))
+source(paste(path.to.hadron, "/summarise.R", sep="/"))
+
+## With R >= 3.2 dir.exists(output.path) can replace showWarnings=FALSE
 dir.create(output.path, showWarnings=FALSE)
 setwd(output.path)
 
@@ -72,14 +75,14 @@ for(dir in dirs){
   ## extracts irrep and frame from directory name
   ## also defines N for th ematrix size
   ## and path
-  source(paste(args$path.to.hadron, "/exec/rho-phaseshift/detect_irrep_frame.R", sep="/"))
+  source(paste(path.to.hadron, "/detect_irrep_frame.R", sep="/"))
 
   ## full momentum is given by p*2*pi/L
   ## n is needed for function phaseshift.rho
   ## while p is needed for weighting and shifting
   n <- 1
   if(momentum == "p1") p <- c(0,0,1)
-  if(momentum == "p2") p <- c(0,1,1)
+  if(momentum == "p2") p <- c(1,1,0)
   if(momentum == "p3") p <- c(1,1,1)
   if(momentum == "p4") {
     p <- c(0,0,2)
@@ -92,8 +95,7 @@ for(dir in dirs){
     model <- "shifted"
     sym.vec<- c("cosh")
   }
-  type="subtracted"
-  if(frame != "cmf") type="weighted"
+  type <- ifelse(frame == "cmf", "subtracted", "weighted")
 
   cat("\nRunning for", ens, momentum, "with irrep", irrep, "size", N, "with momentum", p, "\n")
 
@@ -199,7 +201,7 @@ for(dir in dirs){
   sink()
 
   ## average bootstrapsamples and write result to average.data.log
-  source(paste(args$path.to.hadron, "/exec/rho-phaseshift/average.data.R", sep="/"))
+  source(paste(path.to.hadron, "/average.data.R", sep="/"))
   sink()
 
 }

@@ -486,7 +486,7 @@ matrixfit <- function(cf, t1, t2,
   res <- list(CF=CF, M=M, L=LM, parind=parind, sign.vec=sign.vec, ov.sign.vec=ov.sign.vec, ii=ii, opt.res=opt.res, opt.tsboot=opt.tsboot,
               boot.R=cf$boot.R, boot.l=cf$boot.l, useCov=useCov, CovMatrix=CovMatrix, invCovMatrix=M, seed=cf$seed,
               Qval=Qval, chisqr=rchisqr, dof=dof, mSize=mSize, cf=cf, t1=t1, t2=t2, reference_time=reference_time,
-              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn)
+              parlist=parlist, sym.vec=sym.vec, N=N, model=model, fit.method=fit.method, error_fn=cf$error_fn, niter = c(opt.res$niter, opt.tsboot[nrow(opt.tsboot), ]))
   res$t <- t(opt.tsboot)
   res$t0 <- c(opt.res$par, opt.res$value)
   res$se <- apply(opt.tsboot[c(1:(dim(opt.tsboot)[1]-1)),], MARGIN=1, FUN=cf$error_fn)
@@ -719,7 +719,7 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
   ##opt.res <- optim(opt.res$par, fn = matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
   ##                 t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)
-  return(c(opt.res$par, opt.res$value))
+  return(c(opt.res$par, opt.res$value, opt.res$niter))
 }
 
 

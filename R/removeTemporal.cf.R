@@ -2,27 +2,47 @@
 #'
 #' Performs weighting and shifting in the rest and moving frames.
 #'
-#' @param cf Object of type `cf`, two-to-two particle correlation function which shall be weighted and shifted. It must be a correlation function in the frame \eqn{p_1 + p_2}.
-#' @param single.cf1,single.cf2 Object of type `effectivemassfit` or `matrixfit` which contains the one particle mass in the rest frame.
+#' @param cf Object of type `cf`, two-to-two particle correlation function which
+#'   shall be weighted and shifted. It must be a correlation function in the
+#'   frame \eqn{p_1 + p_2}.
+#' @param single.cf1,single.cf2 Object of type `effectivemassfit` or `matrixfit`
+#'   which contains the one particle mass in the rest frame.
 #'
-#' If `single.cf2` is missing, then the mass given as `single.cf1` is used as well. This is sensibly done when one scatters identical particles. But be careful: Even when `single.cf2` is missing, the `p2` is _not_ automatically copied from `p1`.
+#'   If `single.cf2` is missing, then the mass given as `single.cf1` is used as
+#'   well. This is sensibly done when one scatters identical particles. But be
+#'   careful: Even when `single.cf2` is missing, the `p2` is _not_ automatically
+#'   copied from `p1`.
 #'
-#' In case `single.cf1` is missing, no weighting is performed. Instead it is assumed that the user only wants to have a simple shifting. Then this function just calls `takeTimeDiff.cf`.
-#' @param p1,p2 Integer vector with three elements, containing the momenta that the one particle mass should be boosted to.
+#'   In case `single.cf1` is missing, no weighting is performed. Instead it is
+#'   assumed that the user only wants to have a simple shifting. Then this
+#'   function just calls `takeTimeDiff.cf`.
+#' @param p1,p2 Integer vector with three elements, containing the momenta that
+#'   the one particle mass should be boosted to.
 #' @param L Integer, spatial extent of the lattice.
-#' @param lat.disp Logical, true when the lattice dispersion relation shall be used, otherwise continuum dispersion relation.
-#' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two thermal states also may be expressed as a cosh. If `weight.cosh` is set, they are removed simulalteously.
+#' @param lat.disp Logical, true when the lattice dispersion relation shall be
+#'   used, otherwise continuum dispersion relation.
+#' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two
+#'   thermal states also may be expressed as a cosh. If `weight.cosh` is set,
+#'   they are removed simultaneously.
 #'
 #' @export
-removeTemporal.cf <- function(cf, single.cf1, single.cf2,
-                              p1=c(0,0,0), p2=c(0,0,0), L,
-                              lat.disp=TRUE, weight.cosh=FALSE) {
+old_removeTemporal.cf <- function(cf, 
+                              single.cf1, 
+                              single.cf2,
+                              p1=c(0,0,0), 
+                              p2=c(0,0,0), 
+                              L,
+                              lat.disp=TRUE, 
+                              weight.cosh=FALSE,
+                              deltat = 1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
+  warning('old_removeTemporal.cf is deprecated')
+
   if(missing(single.cf1)) {
     ## take the differences of C(t+1) and C(t)
-    cf <- takeTimeDiff.cf(cf)
+    cf <- takeTimeDiff.cf(cf, deltat)
     return(invisible(cf))
   }
 
@@ -97,7 +117,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   else {
     cosh.factor <- 0.
   }
-  ## multiply with the exponential correction factor
+  ## Multiply with the exponential correction factor
   Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
@@ -107,18 +127,20 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
-  ## take the differences of C(t+1) and C(t)
-  cf <- takeTimeDiff.cf(cf)
+  ## Take the differences C(t) - C(t + deltat)
+  cf <- takeTimeDiff.cf(cf, deltat)
 
-  ## multiply with the exponetial inverse
-  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-1:(Time/2-1))))
+  ## Multiply with the exponential inverse
+  ## The time has to be shifted by deltat because the first deltat timeslices are filled 
+  ## up with NaN by takeTimeDiff()
+  Exptt <- exp(-(mass2$t0-mass1$t0)*c(-deltat:(Time/2-deltat))) + cosh.factor *exp(-(mass2$t0-mass1$t0)*(Time-c(-deltat:(Time/2-deltat))))
   if(!is.null(cf$cf)) {
     cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
     cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp(-(mass2$t[i]-mass1$t[i])*c(-1:(Time/2-1))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-1:(Time/2-1)))) )
+      (exp(-(mass2$t[i]-mass1$t[i])*c(-deltat:(Time/2-deltat))) + cosh.factor *exp(-(mass2$t[i]-mass1$t[i])*(Time-c(-deltat:(Time/2-deltat)))) )
   }
 
   # We perform a clean copy of the data now to make sure that all invariants
@@ -138,10 +160,8 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                     deltat = cf$deltat,
                     forwardshift = cf$forwardshift)
   ret <- cf_weighted(ret,
-                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * 1),
-                     weight.cosh = weight.cosh,
-                     mass1 = mass1,
-                     mass2 = mass2)
+                     weight.factor = 1 / exp((mass2$t0 - mass1$t0) * deltat),
+                     weight.cosh = weight.cosh)
 
   return (invisible(ret))
 }
@@ -231,4 +251,152 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                     forwardshift = forwardshift)
 
   return(invisible(ret))
+}
+
+#' Continuum dispersion relation for CM to lattice frame
+#'
+#' Converts a center of mass (CM) frame energy to the lattice frame using the
+#' continuum dispersion relation.
+#'
+#' @param cm_energy `double`. CM energy in lattice units, \eqn{aE}.
+#' @param total_momentum_d_sq `integer`. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.
+#' @param extent_space `integer`. Spatial extent of the lattice as a dimensionless quantity, \eqn{L/a}.
+#'
+#' @return
+#' `double`. Energy in the lattice frame, \eqn{aW}.
+#'
+#' @export
+#' @family dispersion relations
+dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, lattice_disp = FALSE) {
+  sign <- if (plus) +1 else -1
+
+  if (lattice_disp) {
+    p_sq <- 2 * sum(sin(momentum_d * pi / extent_space)^2)
+    energy_out <- acosh(cosh(energy) + sign * p_sq)
+  } else {
+    p_sq <- (2 * pi / extent_space)^2 * sum(momentum_d^2)
+    energy_out <- sqrt(energy^2 + sign * p_sq)
+  }
+
+  return (energy_out)
+}
+
+extract_mass <- function (object) {
+  UseMethod('extract_mass')
+}
+
+extract_mass.effectivemassfit <- function (object) {
+  list(t0 = object$opt.res$par[1],
+       t = object$massfit.tsboot[,1])
+}
+
+extract_mass.matrixfit <- function (object) {
+  list(t0 = object$opt.res$par[1],
+       t = object$opt.tsboot[1,])
+}
+
+make_weight_factor <- function (energy_difference, time_extent, time_start,
+                                time_end, cosh_factor) {
+  time_slices <- time_start:time_end
+  exp(energy_difference * time_slices) +
+    cosh_factor * exp(energy_difference * (time_extent - time_slices))
+}
+
+weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
+                       cosh_factor, offset = 0) {
+  Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
+                              cf$Time/2 + offset, cosh_factor)
+  if (!is.null(cf$cf)) {
+    cf$cf <- cf$cf * t(array(Exptt, dim = dim(cf$cf)[c(2, 1)]))
+  }
+  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0 * Exptt
+  for (i in c(1:cf$boot.R)) {
+    Exptt <- make_weight_factor(energy_difference_boot[i], cf$Time, offset,
+                                cf$Time/2 + offset, cosh_factor)
+    cf$cf.tsboot$t[i, ] <- cf$cf.tsboot$t[i, ] * Exptt
+  }
+
+  return (cf)
+}
+
+weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
+  cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
+                  cosh_factor, 0)
+  cf <- takeTimeDiff.cf(cf)
+  cf <- weight.cf(cf, -energy_difference_val, -energy_difference_boot,
+                  cosh_factor, -1)
+
+  # We perform a clean copy of the data now to make sure that all invariants
+  # hold and that no new fields have been added that we are not aware of.
+  ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
+                 symmetrised = cf$symmetrised)
+  ret <- cf_orig(ret,
+                 cf = cf$cf)
+  ret <- cf_boot(ret,
+                 boot.R = cf$boot.R,
+                 boot.l = cf$boot.l,
+                 seed = cf$seed,
+                 sim = cf$sim,
+                 cf.tsboot = cf$cf.tsboot,
+                 resampling_method = cf$resampling_method)
+  ret <- cf_shifted(ret,
+                    deltat = cf$deltat,
+                    forwardshift = cf$forwardshift)
+  ret <- cf_weighted(ret,
+                     weight.factor = 1 / (exp(energy_difference_val) * 1),
+                     weight.cosh = cosh_factor == +1)
+
+  return (invisible(ret))
+}
+
+removeTemporal.cf <- function(cf, single.cf1, single.cf2,
+                              p1=c(0,0,0), p2=c(0,0,0), L,
+                              lat.disp=TRUE, weight.cosh=FALSE) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+
+  if(missing(single.cf1)) {
+    ## take the differences of C(t+1) and C(t)
+    cf <- takeTimeDiff.cf(cf)
+    return(invisible(cf))
+  }
+
+  Time <- cf$Time
+  if(missing(L)) {
+    L <- cf$Time/2
+    warning("L was missing, set it to T/2\n")
+  }
+
+  if (missing(single.cf2)) {
+    single.cf2 <- single.cf1
+  }
+
+  if(cf$boot.R != single.cf1$boot.R || single.cf1$boot.R != single.cf2$boot.R ||
+     cf$boot.l != single.cf1$boot.l || single.cf1$boot.l != single.cf2$boot.l) {
+##     cf$seed != single.cf1$seed || single.cf1$seed != single.cf2$seed) {
+    stop("please provide equally bootstrapped cfs to removeTemporal.cf using the same configurations and seed for all and the same boot.R and boot.l!\n")
+  }
+
+  mass1 <- extract_mass(single.cf1)
+  mass2 <- extract_mass(single.cf2)
+
+  ## use momenta p1 and p2 and lattice or continuum dispersion relation to
+  ## shift energies
+  if (any(p1 != 0)) {
+    mass1$t0 <- dispersion_relation(mass1$t0, p1, L, lattice_disp = lat.disp)
+    mass1$t <- dispersion_relation(mass1$t, p1, L, lattice_disp = lat.disp)
+  }
+
+  if (any(p2 != 0)) {
+    mass2$t0 <- dispersion_relation(mass2$t0, p2, L, lattice_disp = lat.disp)
+    mass2$t <- dispersion_relation(mass2$t, p2, L, lattice_disp = lat.disp)
+  }
+
+  if (weight.cosh) {
+    cosh_factor  <- 1.
+  } else {
+    cosh_factor <- 0.
+  }
+
+  weight_shift_reweight.cf(cf, mass2$t0 - mass1$t0, mass2$t - mass1$t, cosh_factor)
 }
