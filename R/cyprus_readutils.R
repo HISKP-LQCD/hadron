@@ -42,6 +42,15 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
                  cid, istoch, loop_type, dir))
 }
 
+cyprus_make_key_baryon <- function( sourceposition, light_quark_mass, mudlight, baryon_type, interpolator ){
+
+  return (sprintf("/%s/baryons_u[+%2.1e]d[-%2.1e]/%s/%s", sourceposition,
+                                                        light_quark_mass,
+                                                        light_quark_mass,
+                                                        baryon_type,
+                                                        interpolator))
+}
+
 
 #' @title read HDF5 loop files in the Cyprus CalcLoops format
 #' @description The CalcLoops code produces HDF5 files which contain
@@ -251,4 +260,163 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
   }
   return(rval)
 }
+#' @export
+cyprus_read_baryon_correlation_udsc <- function(selections, files, Time,mudlight, verbose = FALSE){
+  rhdf5_avail <- requireNamespace("rhdf5")
+  dplyr_avail <- requireNamespace("dplyr")
+  if( !rhdf5_avail | !dplyr_avail ){
+    stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
+  }
+  if( verbose ){
+    tictoc_avail <- requireNamespace("tictoc")
+    if( !tictoc_avail ){
+      stop("Time reporting requires the 'tictoc' package!")
+    }
+  }
 
+  rval <- list()
+ 
+  selected_baryon_types <- names(selections)
+
+  for( ifile in 1:length(files) ){
+    f <- files[ifile]
+    if(verbose) tictoc::tic(sprintf("Reading %s",f))
+    
+
+    # The file names are of the form 
+    #                  gaussian smearing steps 
+    #                                    alpha 
+    #                  ape      smearing steps
+    #                                    alpha
+    # path/twopXXXX_SS_gN50a4p_aN50a0p5.h5
+    # path/MG_loop_FLAVORquark_conf_conf.XXXX_runtype_probD8_part1_stoch_NeV0_NsYYYY_step0001_Q.h5
+    # and we want to recover XXXX
+    tokens <- unlist(strsplit(basename(f), split = "twop", fixed = TRUE))
+    cid_in_filename <- as.integer(strsplit(tokens, split = "_", fixed = TRUE)[[2]][1])
+
+    h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
+
+    group_names <- h5ls(h5f)
+ 
+    source_positions <- filter(group_names,grepl('sx', name))$name
+
+    # how many sources positions are available and does it match out expectation?
+    nsource_positions <- length(source_positions)
+    
+    for (sp in source_positions){
+      rval[[sp]] <- list()
+    
+      avail_baryon_types <- unlist( lapply( selected_baryon_types, function(x){ x %in% group_names$name } ) )
+
+      if( any( !avail_baryon_types ) ){
+        msg <- sprintf("Some selected baryon types could not be found in %s:\n %s",
+                       f,
+                       do.call(paste, as.list( selected_baryon_types[!avail_baryon_types] ) )
+                     )
+        stop(msg)
+      }
+      if( !H5Lexists(h5f, sprintf("/%s/baryons_u[+%2.1e]d[-%2.1e]/mvec",sp,mudlight,mudlight)) ){
+        stop( sprintf("/%s/baryons_u[+%2.1e]d[-%2.1e]/mvec does not exists ",sp,mudlight,mudlight))
+      }
+      # we transpose this to get the momenta as the rows of a matrix
+      momenta_avail <- as.data.frame(t(h5_get_dataset(h5f, sprintf("/%s/baryons_u[+%2.1e]d[-%2.1e]/mvec",sp,mudlight,mudlight)) ))
+      colnames(momenta_avail) <- c("qx","qy","qz")
+      # index the momentum combinations
+      momenta_avail <- cbind(momenta_avail, idx = 1:nrow(momenta_avail))
+
+      for( baryon_type in selected_baryon_types ){
+
+        rval[[sp]][[baryon_type]]<- list()
+        # check if all the momenta that we want are in the file
+        # we do this per loop_type as we could have different selections
+        # for different loop types
+        missing_momenta <- dplyr::anti_join(x = selections[[ baryon_type ]]$momenta,
+                                            y = momenta_avail,
+                                            by = c("qx","qy","qz"))
+        if( nrow(missing_momenta) > 0 ){
+           msg <- sprintf("\nMomenta\n%s\ncould not be found in %s!",
+                      do.call(paste,
+                              list(...=apply(X = missing_momenta,
+                                             MARGIN = 1,
+                                             FUN = function(x){
+                                                 sprintf("(%d,%d,%d)", x[1], x[2], x[3])
+                                               }
+                                           ),
+                                    sep = '\n'
+                                  )
+                              ),
+                      f
+                      )
+           stop(msg)
+        }
+        # select which elements we need to read
+        selected_momenta <- dplyr::inner_join(x = selections[[ baryon_type ]]$momenta,
+                                              y = momenta_avail,
+                                              by = c("qx","qy","qz"))
+         
+        for(interp in selections[[ baryon_type ]]$interp){ 
+          rval[[sp]][[baryon_type]][[interp]] <- list()
+
+          key <- cyprus_make_key_baryon(sourceposition=sp,
+                                        light_quark_mass=mudlight,
+                                        baryon_type = baryon_type,
+                                        interpolator=interp)
+
+          # read the data, which comes in the ordering
+          #   complex, gamma, mom_idx, time
+          # we permute it to
+          #   time, gamma, complex, mom_idx
+          # this is quite expensive, but it makes filling the target
+          # array much easier below
+          # Note that 'gamma' is of length 16
+          data <- h5_get_dataset(h5f, key)
+          # first we select the momenta that we actually want
+          print(selected_momenta)
+          data <- data[,selected_momenta$idx,,drop=FALSE]
+          # and then perform the reshaping on this (possibly) reduced array
+          data <- aperm(data,
+                      perm = c(1,2,3))
+          str(data)
+          dims <- dim(data)
+          str(dims)
+          nts <- dims[3]
+          for( mom_idx in 1:nrow(selected_momenta) ){
+            if( length(rval[[sp]][[ baryon_type ]][[interp]]) < mom_idx ){
+              rval[[sp]][[baryon_type]][[interp]][[sprintf("%d",mom_idx)]] <- array(as.complex(NA), dim=c(length(files),
+                                                                          nts
+                                                                          )
+                                                    )
+            }
+            rval[[sp]][[baryon_type]][[interp]][[sprintf("%d",mom_idx)]][ifile, 1:nts] <-
+              complex(real = data[1,mom_idx,1:nts ],
+                      imaginary = data[2,mom_idx,1:nts])
+          } # mom_idx 
+        } # interpolating operators
+      } # baryon type
+    } # sp
+    H5Fclose(h5f)
+    if(verbose) tictoc::toc()
+  } # ifile
+  #for( baryon_type in selected_baryon_types ){
+  #  # recover measurements from individual stochastic samples
+  #  if( accumulated ){
+  #    for( mom_idx in 1:nrow(selected_momenta) ){
+  #      temp <- rval[[loop_type]][[mom_idx]]
+  #      for( istoch in 2:nstoch ){
+  #        rval[[sp]][[loop_type]][[mom_idx]][,,istoch,,] <- temp[,,istoch,,] - temp[,,(istoch-1),,]
+  #      }
+  #    }
+  #  }
+  #  # finally make `raw_cf` objects
+  #  for( mom_idx in 1:nrow(selected_momenta) ){
+  #    rval[[baryon_type]][[mom_idx]] <-
+  #      raw_cf_data(raw_cf_meta(Time = Time,
+  #                              nrObs = 1,
+  #                              nrStypes = 1,
+  #                              dim = c(length(stoch_avail), 4, 4),
+  #                              nts = nts),
+  #                  data = rval[[loop_type]][[mom_idx]])
+  #  }
+  #}
+  return(rval)
+}
