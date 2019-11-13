@@ -34,6 +34,9 @@ cdhnew(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4
   \item{printit}{if set to TRUE the corrections are printed}
   \item{use.cimpl}{use the four times faster direct c Implementation of
     the correction routine}
+  \item{parm}{
+    m parameters
+  }
 }
 \value{
   a list with the corrected values for mpi and fpi

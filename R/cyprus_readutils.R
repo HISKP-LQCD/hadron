@@ -70,7 +70,7 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 #'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 #'                    the data is post-processed to recover the measurements for the particular
 #'                    samples.
-#' @param legecy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+#' @param legacy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 #'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
 #'                    left empty, this defaults to '0004'. If this was left emtpy when
 #'                    the loop files were generated, set this to \code{TRUE} and the paths

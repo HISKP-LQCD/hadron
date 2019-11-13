@@ -18,14 +18,29 @@ averx(data3pt, data2pt, pionfit, boot.R=400, boot.l=2,
     2pt pseudo-scalar correlator as read in with \code{\link{read.table}} from a file
     produced with the GWC code from routine pssca.
   }
-  \item{ind.vec}{
-    index vector
+  \item{pionfit}{
+    a fit to the 2pt function. If not provided, it will be performed internally.
   }
-  \item{ind.vec2pt}{
-    index vector
+  \item{boot.R}{
+    number of bootstrap samples.
   }
-  \item{skip}{
-    number of measurements to be skipped from the beginning
+  \item{boot.l}{
+    bootstrap block length.
+  }
+  \item{useCov}{
+    whether or not to use a correlated fit.
+  }
+  \item{piont1}{
+    t1 of fitrange to pion 2pt function
+  }
+  \item{piont2}{
+    t2 of fitrange to pion 2pt function
+  }
+  \item{seed}{
+    seed for PRNG.
+  }
+  \item{type}{
+    type for the effective mass formula, see \link{bootstrap.effectivemass}.
   }
   \item{t1}{
     lower bound for the fitrange in time (t1,t2). Counting starts with 0.
@@ -33,29 +48,8 @@ averx(data3pt, data2pt, pionfit, boot.R=400, boot.l=2,
   \item{t2}{
     upper bound for the fitrange in time (t1,t2). Counting starts with 0.
   }
-  \item{S}{
-    passed to \code{uwerr}, see documentation of \code{\link{uwerr}}.
-  }
-  \item{mps}{
-    value of the pseudo-scalar mass. If not given the value determined
-    in averx is used
-  }
-  \item{par}{
-    initial values for the fit of the pseudo-scalar mass. par[1] is the
-    amplitude and par[2] is the mass for the cosh fit.
-  }
-  \item{method}{
-    the type of error analysis to be used. Can be either \dQuote{uwerr},
-    \dQuote{boot}, \dQuote{all} or \dQuote{no}. For \dQuote{no} (or any
-    other string) no error analysis is performed. This might be helpful
-    for a first impression and also to test different initial values for
-    the fitting parameters. The latter is in particular needed for more
-    than one state in the fit.
-  }
-  \item{nrep}{
-    vector (N1, N2, ...) of replica length N1, N2. If missing it is
-    assumed that there is only one ensemble. If there are two or more
-    replica the parameter \code{skip} has no effect.
+  \item{force.optim}{
+    If set to `TRUE`, the usage of \link{optim} will be enforced.
   }
 }
 \value{

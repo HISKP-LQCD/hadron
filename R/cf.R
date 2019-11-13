@@ -109,6 +109,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 #' original data, this likely is similar in terms of bias.
 #'
 #' @param samples Numeric vector.
+#' @param boot.l Block length for bootstrapping.
 #' @param na.rm Logical. Determines whether `NA` values shall be removed, see
 #' Description for details.
 #'
@@ -145,10 +146,18 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   sqrt((N - 1) * (m - 1) / (m * boot.l)) * sd(samples)
 }
 
+#' jackknife_cov
+#'
+#' @description
 #' Computes covariance matrix for jackknife samples.
 #'
+#' @param x a numeric vector, matrix or data frame.
+#' @param y ‘NULL’ (default) or a vector, matrix or data frame with
+#'        compatible dimensions to ‘x’. The default is equivalent to 
+#'        ‘y = x’ (but more efficient).
 #' @param na.rm logical. The rows containing any `NA` will be deleted if this
 #' option is set.
+#' @param ... parameters to be forwarded to \link{cov}.
 #'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
@@ -606,7 +615,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
 #' Arithmetically scale a correlator
 #'
-#' @param cf1 `cf_orig` objects.
+#' @param cf `cf_orig` objects.
 #' @param a Numeric, scaling factor.
 #'
 #' @export
@@ -710,6 +719,7 @@ concat.cf <- function (left, right) {
 #' sign for certain time slices or observables such that displaying in
 #' log-scale is sensible.
 #' @param rep See \code{\link{plotwitherror}}.
+#' @param ... Graphical parameter to be passed on to \link{plotwitherror}
 #'
 #' @inheritParams plotwitherror
 #'

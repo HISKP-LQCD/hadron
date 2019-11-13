@@ -17,6 +17,10 @@ append_pdf_filename <- function(basename, pdf_filenames){
 
 #' analysis_online
 #'
+#' @description
+#' `analysis_online` is a function to analyse the online measurements
+#'   and output files of the tmLQCD software, see references.
+#' 
 #' @param L integer. spatial lattice extend
 #' @param T integer. temporal lattice extend
 #' @param t1 integer. initial time of fit range
@@ -43,7 +47,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' @param omeas boolean. If true, offline measurements are analysed
 #' @param plotsize numeric. size of plots being generated
 #' @param debug boolean. provide debug information
-#' @param trajlable boolean or string. If not `FALSE`, use as trajectory labels
+#' @param trajlabel boolean or string. If not `FALSE`, use as trajectory labels
 #' @param title bolean or string. If not `FALSE`, use as main title of plots
 #' @param pl boolean. If set to `TRUE` plots will be generated
 #' @param method string. method to compute errors, can be "uwerr" or "boot"
@@ -64,11 +68,13 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' @param verbose boolean. If `TRUE`, function produces verbose output.
 #' #'
 #' @return
-#' a list is returned with all the accumulated results
+#' a list is returned with all the accumulated results. Moreover, a
+#'   PDF file with statistics and analytics is created
 #'
-#'
-
-
+#' @references
+#' K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
+#' 
+#' @export
 analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                             cg_col, evals, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",

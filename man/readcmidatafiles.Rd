@@ -54,6 +54,12 @@ readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
     The column in which to match \code{obs} is to be
     given with \code{obs.index}.
   }
+  \item{avg}{
+    Integer. Average over successive number samples
+  }
+  \item{stride}{
+    Integer. Read only subset of files with corresponding stride.
+  }
 }
 \value{
   \code{readcmicor} returns an object of class \code{cmicor}, read from

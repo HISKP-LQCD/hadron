@@ -19,6 +19,7 @@ raw_cf <- function () {
 
 #' @title \code{raw_cf} metadata mixin constructor
 #'
+#' @param cf initial \link{raw_cf} object
 #' @param nrObs Integer, number of different observables assembled in the data field of this container. 
 #' @param Time Integer, full time extent.
 #' @param nts Integer, number of time separations actually stored in the data field.
@@ -377,7 +378,7 @@ is.raw_cf <- function(x){
 }
 
 #' @title check if an obect is of class `raw_cf` and empty otherwise
-#' @param .raw_cf object to be checked
+#' @param x object to be checked
 is_empty.raw_cf <- function(x){
   .raw_cf <- x
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))

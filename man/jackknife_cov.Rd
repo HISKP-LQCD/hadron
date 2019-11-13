@@ -2,13 +2,21 @@
 % Please edit documentation in R/cf.R
 \name{jackknife_cov}
 \alias{jackknife_cov}
-\title{Computes covariance matrix for jackknife samples.}
+\title{jackknife_cov}
 \usage{
 jackknife_cov(x, y = NULL, na.rm = FALSE, ...)
 }
 \arguments{
+\item{x}{a numeric vector, matrix or data frame.}
+
+\item{y}{‘NULL’ (default) or a vector, matrix or data frame with
+compatible dimensions to ‘x’. The default is equivalent to
+‘y = x’ (but more efficient).}
+
 \item{na.rm}{logical. The rows containing any \code{NA} will be deleted if this
 option is set.}
+
+\item{...}{parameters to be forwarded to \link{cov}.}
 }
 \description{
 Computes covariance matrix for jackknife samples.

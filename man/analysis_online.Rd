@@ -68,6 +68,8 @@ analysis_online(L, T, t1, t2, beta, kappa, mul, cg_col, evals, rundir,
 
 \item{debug}{boolean. provide debug information}
 
+\item{trajlabel}{boolean or string. If not \code{FALSE}, use as trajectory labels}
+
 \item{title}{bolean or string. If not \code{FALSE}, use as main title of plots}
 
 \item{pl}{boolean. If set to \code{TRUE} plots will be generated}
@@ -104,12 +106,15 @@ analysis_online(L, T, t1, t2, beta, kappa, mul, cg_col, evals, rundir,
 
 \item{verbose}{boolean. If \code{TRUE}, function produces verbose output.
 #'}
-
-\item{trajlable}{boolean or string. If not \code{FALSE}, use as trajectory labels}
 }
 \value{
-a list is returned with all the accumulated results
+a list is returned with all the accumulated results. Moreover, a
+PDF file with statistics and analytics is created
 }
 \description{
-analysis_online
+\code{analysis_online} is a function to analyse the online measurements
+and output files of the tmLQCD software, see references.
+}
+\references{
+K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
 }

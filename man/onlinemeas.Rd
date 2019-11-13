@@ -26,6 +26,12 @@ onlinemeas(data, t1, t2, stat_range, S=1.5, pl=FALSE, skip=0,
   \item{t2}{
     upper bound for the fitrange in time (t1,t2). Counting starts with 0.
   }
+  \item{mu}{
+    twisted mass parameter.
+  }
+  \item{kappa}{
+    hopping parameter.
+  }
   \item{S}{
     passed to \code{uwerr}, see documentation of \code{\link{uwerr}}.
   }

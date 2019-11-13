@@ -31,6 +31,7 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #' @param t Numeric vector: Time of interest.
 #' @param T Numeric: Time extent of the lattice.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
+#' @param delta1 dummy parameter for compatibility
 #' 
 #' @seealso \code{\link{matrixfit}}
 pcModel <- function(par, t, T, delta1=1, reference_time) {
@@ -495,6 +496,9 @@ matrixfit <- function(cf, t1, t2,
 #' @param plot.raw Boolean: plot the raw data or multiply out the leading exponetial behaviour
 #' @param rep Boolean: whether or not to add to existing plot
 #' @param col String vector: vector of colours for the different correlation functions
+#' @param every Fit only a part of the data points. Indices that are not multiples of \code{every}
+#'    are skipped. If no value is provided, all points are taken into account.
+#' @param ... Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.
 #' 
 #' @seealso \code{\link{matrixfit}}
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
