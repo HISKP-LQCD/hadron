@@ -366,17 +366,17 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   dplyr_avail <- requireNamespace("dplyr")
   stopifnot(dplyr_avail)
   
-  tmp <- dplyr::filter(tmp,V1==monomial_id)
+  tmp <- dplyr::filter(tmp,monomialid==monomial_id)
 
 # Number of reweighted determinants for each gauge configuration
 
-  n_rew_factors <- length(tmp$V7)/(nsamples*length(gauge_conf_list))
+  n_rew_factors <- length(tmp$reweightingfactor)/(nsamples*length(gauge_conf_list))
   stopifnot(n_rew_factors == 1)
   
 
 # Exponentianing and Averaging over the stochastic samples
   
-  tmp2 <- matrix(tmp$V7,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
+  tmp2 <- matrix(tmp$reweightingfactor,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
   tmp3 <- apply(exp(-tmp2),2,mean)
 
 # Normalize the largest reweighting factor to be one and storing this factor
