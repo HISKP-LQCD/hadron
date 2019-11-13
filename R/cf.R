@@ -440,7 +440,13 @@ jackknife.cf <- function(cf, boot.l = 1) {
   return (invisible(cf))
 }
 
-# Gamma method analysis on all time-slices in a 'cf' object
+#' uwerr.cf
+#' @description
+#' Gamma method analysis on all time-slices in a 'cf' object
+#'
+#' @param cf Object of type `cf`
+#' @param absval Boolean. Use absolute values of the data.
+#' 
 uwerr.cf <- function(cf, absval=FALSE){
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -508,9 +514,15 @@ addStat.cf <- function(cf1, cf2) {
   return (invisible(cf))
 }
 
-## averages local-smeared and smeared-local correlators in cf and adjusts
-## nrStypes accordingly
-## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
+#' @title Average local-smeared and smeared-local correlators
+#' @description
+#' averages local-smeared and smeared-local correlators in cf and adjusts
+#' nrStypes accordingly
+#' by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
+#'
+#' @param cf object of type \link{cf}
+#' @param cols columns to be averaged over
+#' 
 avg.ls.cf <- function(cf, cols = c(2, 3)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -528,11 +540,16 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   return (cf)
 }
 
-# "close-by-times" averaging replaces the value of the correlation function at t
-# with the "hypercubic" average with the values at the neighbouring time-slices
-# with weights 0.25, 0.5 and 0.25
-#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
-# where periodic boundary conditions are assumed in shift.cf
+#' @title average close-by-times in a correlation function
+#' @description
+#' "close-by-times" averaging replaces the value of the correlation function at t
+#' with the "hypercubic" average with the values at the neighbouring time-slices
+#' with weights 0.25, 0.5 and 0.25
+#'   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
+#' where periodic boundary conditions are assumed in shift.cf
+#'
+#' @param cf object of type \link{cf}
+#' 
 avg.cbt.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -812,6 +829,17 @@ invalidate.samples.cf <- function (cf) {
   return(invisible(cf))
 }
 
+#' symmetrise.cf
+#'
+#' @description
+#' Symmetrises a correlation function
+#' 
+#' @param cf Object of type `cf`.
+#' @param sym.vec Integer vector. Takes values -+1 for
+#'   (anti)symmmetrisation. If longer than 1, it must be of length
+#'   equal to the number of observalbes in `cf`. Otherwise, the same
+#'   operation is applied to all observables in `cf`, which is the
+#'   default. 
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -851,6 +879,10 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   return(invisible(cf))
 }
 
+#' summary.cf
+#'
+#' @param object Object of type \link{cf}
+#' @param ... Generic parameters to pass on.
 summary.cf <- function(object, ...) {
   cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
@@ -885,6 +917,10 @@ summary.cf <- function(object, ...) {
   }
 }
 
+#' print.cf
+#'
+#' @param x Object of type \link{cf}
+#' @param ... Generic parameters to pass on.
 print.cf <- function (x, ...) {
   summary(x, ...)
 }

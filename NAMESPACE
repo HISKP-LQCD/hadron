@@ -46,7 +46,8 @@ importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
            "uniroot", "var", "weighted.mean", "cor", "rgeom")
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
-importFrom(Rcpp, evalCpp)
+importFrom("grDevices", "dev.new")
+importFrom("Rcpp", "evalCpp")
 
 S3method(`*`, raw_cf)
 S3method(`+`, cf)

@@ -1,7 +1,15 @@
+#' print.ofit
+#'
+#' @param x Object of type `ofit`
+#' @param ... Generic parameters to pass on.
 print.ofit <- function (x, ...) {
   summary(x, ...)
 }
 
+#' summary.ofit
+#'
+#' @param object Object of type `ofit`
+#' @param ... Generic parameters to pass on.
 summary.ofit <- function (object, ...) {
   fit <- object
   kappa <- fit$kappa

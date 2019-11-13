@@ -267,6 +267,10 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   return (invisible(ret))
 }
 
+#' readhlcor
+#'
+#' @param filename String. Filename of the heavy light correlator data file.
+#' 
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))

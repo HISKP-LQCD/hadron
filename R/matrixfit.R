@@ -1,3 +1,12 @@
+#' @title Compute the bootstrap error of the mean
+#'
+#' @description
+#' Compute the bootstrap error of the mean
+#'
+#' @param data Original data to bootstrap
+#' @param R Number of bootstrap replicates.
+#' @param l Block length.
+#' 
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
@@ -624,7 +633,10 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
   }
 }
 
-
+#' summary.matrixfit
+#'
+#' @param object Object of type \link{matrixfit}
+#' @param ... Generic parameters to pass on.
 summary.matrixfit <- function (object, ...) {
   mfit <- object
   if(mfit$model == "pc") {
