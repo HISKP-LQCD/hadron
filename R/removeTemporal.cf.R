@@ -24,6 +24,7 @@
 #' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two
 #'   thermal states also may be expressed as a cosh. If `weight.cosh` is set,
 #'   they are removed simultaneously.
+#' @param deltat Integer. Time shift value.
 #'
 #' @export
 old_removeTemporal.cf <- function(cf, 
@@ -255,12 +256,15 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
 
 #' Continuum dispersion relation for CM to lattice frame
 #'
+#' @description
 #' Converts a center of mass (CM) frame energy to the lattice frame using the
 #' continuum dispersion relation.
 #'
-#' @param cm_energy `double`. CM energy in lattice units, \eqn{aE}.
-#' @param total_momentum_d_sq `integer`. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.
+#' @param energy `double`. CM energy in lattice units, \eqn{aE}.
+#' @param momentum_d `integer`. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.
 #' @param extent_space `integer`. Spatial extent of the lattice as a dimensionless quantity, \eqn{L/a}.
+#' @param plus Boolean. Sign of a^2 artefacts.
+#' @param lattice_disp Boolean. Use the lattice dispersion relation instead of the continuum one
 #'
 #' @return
 #' `double`. Energy in the lattice frame, \eqn{aW}.

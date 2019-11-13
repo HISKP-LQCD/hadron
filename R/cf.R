@@ -314,8 +314,6 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 #' @param .cf `cf` object to extend.
 #' @param weight.factor TODO
 #' @param weight.cosh TODO
-#' @param mass1 TODO
-#' @param mass2 TODO
 #'
 #' @details
 #'
