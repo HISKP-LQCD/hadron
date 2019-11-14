@@ -116,7 +116,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #'    Double indexing is allowed.
 #' @param id Integer.
 #'
-#' @familiy hankel
+#' @family hankel
 bootstrap.hankel <- function(cf, t0, deltat=1, n, N, id=c(1), range=c(0,1), eps=0.001,
                              element.order=c(1,2,3,4), submatrix.size=1) {
   if(t0+2*n+deltat >= N) {
