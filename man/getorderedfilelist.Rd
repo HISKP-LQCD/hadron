@@ -1,12 +1,17 @@
 \name{getorderedfilelist}
 \alias{getorderedfilelist}
+\alias{getorderedconfignumbers}
 \title{Creates an ordered filelist from a basename and a path}
 \description{
-  This function generates an ordered filelist by using a path and a
+  These functions generate an ordered filelist and an order list of
+  config numbers by using a path and a
   basename and '*'.
 }
 \usage{
 getorderedfilelist(path="./", basename="onlinemeas",
+last.digits=4, ending="")
+
+getorderedconfignumbers(path="./", basename="onlinemeas",
 last.digits=4, ending="")
 }
 \arguments{

@@ -1,3 +1,10 @@
+#' g1
+#'
+#' @description
+#' Implementation of the Gasser-Leutwyler function g_1 for
+#' computing finite volume effects.
+#' 
+#' @param x Numeric. x-value
 g1 <- function(x) {
 
   weights <- c(6.,12.,8.,6.,24.,24.,0.,12.,30.,24.,24.,8.,24.,48.,0.,6.,48.,36.,24.,24.)

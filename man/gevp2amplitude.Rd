@@ -61,7 +61,8 @@ gevp2amplitude(gevp, mass, id=1, op.id=1, type="cosh", t1, t2,
 \dontrun{## extract the first principal correlator}
 \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
 \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
-\dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12, t2=23, useCov=TRUE)}
+\dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12,}
+\dontrun{  t2=23, useCov=TRUE)}
 \dontrun{## now determine the amplitude}
 \dontrun{pion.pc1.amplitude <- gevp2amplitude(pion.cor.gevp, pion.pc1.effectivemass)}
 \dontrun{## compute also the pion decay constant}

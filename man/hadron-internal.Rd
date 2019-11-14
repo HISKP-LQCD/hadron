@@ -20,6 +20,10 @@
 \alias{fitmpcac.pion}
 \alias{effectivemass}
 \alias{effmass}
+\alias{effmass2}
+\alias{read_nissa_textcf_kernel}
+\alias{compute.qtildesq}
+\alias{compute.qtildesq.contdisp}
 \title{Internal Hadron Functions}
 \description{
   Internal hadron functions

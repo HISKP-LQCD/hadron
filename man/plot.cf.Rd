@@ -15,6 +15,8 @@ sign for certain time slices or observables such that displaying in
 log-scale is sensible.}
 
 \item{rep}{See \code{\link{plotwitherror}}.}
+
+\item{...}{Graphical parameter to be passed on to \link{plotwitherror}}
 }
 \description{
 Plot a correlation function

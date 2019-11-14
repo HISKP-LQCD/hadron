@@ -9,7 +9,8 @@
 }
 \usage{
 readcmicor(filename,
-           colClasses=c("integer","integer","integer","numeric","numeric","integer"), skip=0)
+           colClasses=c("integer","integer","integer","numeric","numeric","integer"),
+           skip=0)
 
 readcmifiles(files, excludelist=c(""), skip, verbose=FALSE,
              colClasses, obs=NULL, obs.index, avg=1, stride=1)
@@ -52,6 +53,12 @@ readcmiloopfiles(files, excludelist=c(""), skip=0, verbose=FALSE,
   \item{obs.index}{
     The column in which to match \code{obs} is to be
     given with \code{obs.index}.
+  }
+  \item{avg}{
+    Integer. Average over successive number samples
+  }
+  \item{stride}{
+    Integer. Read only subset of files with corresponding stride.
   }
 }
 \value{

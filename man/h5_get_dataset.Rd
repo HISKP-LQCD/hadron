@@ -7,7 +7,7 @@
 h5_get_dataset(h5f, key)
 }
 \arguments{
-\item{h5f}{HDF5 file opened with \code{H5Fopen}}
+\item{h5f}{HDF5 file opened with \code{rhdf5::H5Fopen}}
 
 \item{key}{String, full path to dataset.}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/bootstrap.nlsfit.R
 \name{parametric.nlsfit.cov}
 \alias{parametric.nlsfit.cov}
-\title{NLS fit with parametric bootstrap and covariance}
+\title{parametric.nlsfit.cov}
 \usage{
 parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...,
   bootstrap = TRUE)
@@ -30,6 +30,8 @@ numerical vector.}
 between the various variables in the vector \code{x}.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{bootstrap}{boolean. If \code{TRUE}, bootstrap is used.}
 }
 \description{
 NLS fit with parametric bootstrap and covariance
