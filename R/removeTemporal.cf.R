@@ -330,6 +330,21 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
     cosh_factor * exp(energy_difference * (time_extent - time_slices))
 }
 
+#' Weight a correlation function
+#'
+#' Weights a correlation function with the given energy difference $\Delta E$
+#' such that the function is first multiplied with $\exp(\Delta E t) + c
+#' \exp(\Delta E \cdot (T - t)$.
+#'
+#' @param cf cf_orig and possibly cf_boot object.
+#' @param energy_difference_val numeric. A single energy value $\Delta E$ for
+#'   the weighting.
+#' @param energy_difference_boot numeric vector. Samples for the energy
+#'   difference value.
+#' @param cosh_factor integer, either `+1` or `-1`. Determines the sign $c$ in
+#'   the weight factor.
+#' @param offset integer. Offset for the time $t$, needed for the reweighting
+#'   after a shift.
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
@@ -347,6 +362,12 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
   return (cf)
 }
 
+#' Weight-shift-reweight a correlation function
+#'
+#' The correlation function is weighted with [`weight.cf`], then shifted, and
+#' then weighted again with the inverse weighting factor.
+#'
+#' @inheritParams weight.cf
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
                   cosh_factor, 0)
