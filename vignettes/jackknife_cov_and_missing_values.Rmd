@@ -9,8 +9,8 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-```{r}
-devtools::load_all()
+```{r echo=FALSE}
+library(hadron)
 ```
 
 # Missing column
