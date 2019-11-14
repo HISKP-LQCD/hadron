@@ -520,7 +520,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #'         There are as many rows as there were columns in `cf$cf` and/or `cf$icf`.
 #'         When the call to \link{uwerrprimary} fails for a particular column of `cf$cf`
 #'         or `cf$icf`, the corresponding row of `uwcf` and/or `uwicf` will contain
-#'         `NA`.
+#'         `NA` for all members.
 #' 
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
@@ -660,7 +660,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
       icf.tsboot$tseries <- a*cf1$icf.tsboot$tseries + b*cf2$icf.tsboot$tseries
     }
     # use constructor to also update cf0 / icf0 and tsboot.se / itsboot.se
-    cf <- cf_boot(cf = cf,
+    cf <- cf_boot(cf,
                   boot.R = cf1$boot.R,
                   boot.l = cf1$boot.l,
                   seed = cf1$seed,
@@ -751,7 +751,7 @@ mul.cf <- function(cf, a=1.) {
       cf$icf.tsboot$tseries <- a*cf$icf.tsboot$tseries
     }
     # cf_boot will take care of cf0 / icf0 and tsboot.se / itsboot.se
-    cf <- cf_boot(cf = cf,
+    cf <- cf_boot(cf,
                   boot.R = cf$boot.R,
                   boot.l = cf$boot.l,
                   seed = cf$seed,
@@ -913,7 +913,6 @@ shift.cf <- function(cf, places) {
     return(invisible(cf))
   }
 
-  cf <- invalidate.samples.cf(cf)
   n <- cf$Time
 
   for( oidx in 0:(cf$nrObs-1) ){
@@ -928,11 +927,39 @@ shift.cf <- function(cf, places) {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
       }
+
+      # drop=FALSE to catch edge case of a single measurement
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
       if( has_icf(cf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
       }
-    }
+
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,istart:iend] <- cf$cf.tsboot$t[,ishift,drop=FALSE]
+        cf$cf.tsboot$t0[istart:iend] <- cf$cf.tsboot$t0[ishift]
+        cf$cf.tsboot$tseries[,istart:iend] <- cf$cf.tsboot$tseries[,ishift,drop=FALSE]
+
+        if( has_icf(cf) ){
+          cf$icf.tsboot$t[,istart:iend] <- cf$icf.tsboot$t[,ishift,drop=FALSE]
+          cf$icf.tsboot$t0[istart:iend] <- cf$icf.tsboot$t0[ishift]
+          cf$icf.tsboot$tseries[,istart:iend] <- cf$icf.tsboot$tseries[,ishift,drop=FALSE]
+        }
+      }
+    } # for(sidx)
+  } # for(oidx)
+
+  if( inherits(cf, 'cf_boot') ){
+    # trigger cf0 / icf0, tsboot.se / itsboot.se to
+    # be refreshed
+    cf <- cf_boot(cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
   }
   return(invisible(cf))
 }
@@ -951,6 +978,8 @@ invalidate.samples.cf <- function (cf) {
   cf$boot.samples <- NULL
   cf$seed <- NULL
   cf$sim <- NULL
+  cf$endcorr <- NULL
+  cf$resampling_method <- NULL
 
   cf$cf.tsboot <- NULL
   cf$tsboot.se <- NULL
