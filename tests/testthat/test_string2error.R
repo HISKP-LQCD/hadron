@@ -2,6 +2,7 @@ context('string2error')
 
 test_that('1', {
   expect_equal(string2error('3.10(2)'), c(3.10, 0.02))
+  expect_equal(string2error('+3.10(2)'), c(3.10, 0.02))
   expect_equal(string2error('-3.10(2)'), c(-3.10, 0.02))
   
   expect_equal(string2error('310(2)'), c(310, 2))
