@@ -625,8 +625,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot( has_icf(cf2) )
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot( has_icf(cf1) & has_icf(cf2) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
@@ -677,8 +677,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot(has_icf(cf2))
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot(has_icf(cf1) & has_icf(cf2))
     cf$icf <- cf1$icf / cf2$icf
   }
 
