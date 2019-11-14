@@ -54,6 +54,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
+#' @param endcorr Boolean, `endcorr` argumetn of \link[boot]{tsboot}.
 #' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the real part.
 #' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the imaginay part.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
@@ -70,13 +71,14 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboot = NULL, resampling_method) {
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$boot.R <- boot.R
   .cf$boot.l <- boot.l
   .cf$seed <- seed
   .cf$sim <- sim
+  .cf$endcorr <- endcorr
 
   .cf$cf.tsboot <- cf.tsboot
   .cf$icf.tsboot <- icf.tsboot
@@ -353,6 +355,36 @@ is_empty.cf <- function (.cf) {
     is.null(names(.cf))
 }
 
+#' Checks whether the resampling of two cf objects is compatible
+#' 
+#' @param cf1 `cf` object with `cf_boot`
+#' @param cf2 `cf` object with `cf_boot`
+#'
+#' @return List of named booleans for each of the checked conditions
+#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
+#'         `resampling_method`, `error_fn`, `boot_dim`, `icf` and, optionally
+#'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
+#' @export
+resampling_is_compatible(cf1, cf2){
+  
+  res <- list()
+  res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
+  res$seed <- (cf1$seed == cf2$seed)
+  res$boot.R <- (cf1$boot.R == cf2$boot.R)
+  res$boot.l <- (cf1$boot.l == cf2$boot.l)
+  res$sim <- (cf1$sim == cf2$sim)
+  res$endcorr <- (cf1$endcorr == cf2$endcorr)
+  res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
+  res$error_fn <- (cf1$error_fn == cf2$error_fn)
+  res$boot_dim <- all(dim(cf1$cf.tsboot$t) == dim(cf2$cf.tsboot$t))
+  res$icf <- (has_icf(cf1) == has_icf(cf2))
+  if( has_icf(cf1) & res$icf ){
+    res$iboot_dim <- all(dim(cf1$icf.tsboot$t) == dim(cf2$icf.tsboot$t))
+  }
+
+  return(res)
+}
+
 #' Checks whether the cf object contains an imaginary part
 #'
 #' @param .cf `cf` object
@@ -383,7 +415,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## we set the seed for reproducability and correlation
+  ## we set the seed for reproducibility and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
@@ -391,7 +423,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 
   icf.tsboot <- NULL
   if( has_icf(cf) ){
-    # no need to store the old seed again, but we definitely need to reset the RNG!
+    # no need to store the old seed again, but we definitely need to reset the RNG again!
     swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
@@ -402,6 +434,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
+                endcorr = endcorr,
                 cf.tsboot = cf.tsboot,
                 icf.tsboot = icf.tsboot,
                 resampling_method = "bootstrap")
@@ -474,38 +507,40 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #' @description
 #' Gamma method analysis on all time-slices in a 'cf' object
 #'
-#' @param cf Object of type `cf`
-#' @param absval Boolean. Use absolute values of the data.
+#' @param cf Object of type `cf` containing `cf_orig`
+#'
+#' @return A list with a named element `uwcf` which contains a data frame
+#'         with six columns, `value`, `dvalue`, `ddvalue`, `tauint`, `dtauint`
+#'         corresponding to what is returned by \link{uwerrprimary}. The sixth
+#'         column, `t`, is just an index counting the columns in the original `cf$cf`.
+#'         If `cf` contains an imaginary part, the return value contains another
+#'         list element, `uwicf` of the same structure as `uwcf`.
+#'         There are as many rows as there were columns in `cf$cf` and/or `cf$icf`.
+#'         When the call to \link{uwerrprimary} fails for a particular column of `cf$cf`
+#'         or `cf$icf`, the corresponding row of `uwcf` and/or `uwicf` will contain
+#'         `NA`.
 #' 
-uwerr.cf <- function(cf, absval=FALSE){
+uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
-  uwcf <- as.data.frame(
-      t(
-          apply(X=cf$cf, MARGIN=2L,
-                FUN=function(x){
-                  data <- x
-                  if(absval) data <- abs(x)
-                  uw <- try(uwerrprimary(data=data), silent=TRUE)
-                  if(any( class(uw) == 'try-error' ) ){
-                    c(value=NA,
-                      dvalue=NA,
-                      ddvalue=NA,
-                      tauint=NA,
-                      dtauint=NA)
-                  } else {
-                    c(value=uw$value,
-                      dvalue=uw$dvalue,
-                      ddvalue=uw$ddvalue,
-                      tauint=uw$tauint,
-                      dtauint=uw$dtauint)
-                  }
-                }
-                )
-      )
-  )
-  uwcf <- cbind(t=(1:ncol(cf$cf))-1,uwcf)
-  return(uwcf)
+  uw_wrapper <- function(x){
+    uw_tmp <- try(uwerrprimary(data=x), silent=TRUE)
+    if( any(class(uw) == "try-error") ){
+      c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
+    } else {
+      c(value=$uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
+        tauint=uw_tmp$tau_int, dtauint=uw_tmp$dtauing)
+    }
+  }
+
+  res <- list()
+  res[["uwcf"]] <- cbind(as.data.frame(t(apply(X=cf$cf, MARGIN=2L, FUN=uw_wrapper))),
+                         t=(1:ncol(cf$cf)))
+  if( has_icf(cf) ){
+    res[["uwicf"]] <- cbind(as.data.frame(t(apply(X=cf$icf, MARGIN=2L, FUN=uw_wrapper))),
+                            t=(1:ncol(cf$icf)))
+  }
+  return(res)
 }
 
 addConfIndex2cf <- function(cf, conf.index) {
@@ -606,6 +641,9 @@ avg.cbt.cf <- function(cf){
 #' @param cf1,cf2 `cf_orig` object.
 #' @param a,b Numeric. Factors that multiply the correlation function before
 #' the addition.
+#' 
+#' Since addition is associative, this operates also on the bootstrap samples
+#' and these are thus not invalidated in the process.
 #'
 #' @return
 #' The value is
@@ -627,10 +665,39 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
   if( has_icf(cf1) | has_icf(cf2) ){
     stopifnot( has_icf(cf1) & has_icf(cf2) )
+    stopifnot( all(dim(cf1$icf) == dim(cf2$icf) ) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
-  cf <- invalidate.samples.cf(cf)
+  # now reconstruct the bootstrap samples
+  invalidate.samples.cf(cf)
+
+  if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
+    stopifnot( all(unlist(resampling_is_compatible(cf1, cf2))) )
+
+    cf.tsboot <- cf1$cf.tsboot
+    cf.tsboot$t <- cf1$cf.tsboot$t + cf2$cf.tsboot$t
+    cf.tsboot$t0 <- cf1$cf.tsboot$t0 + cf2$cf.tsboot$t0
+    cf.tsboot$tseries <- cf1$cf.tsboot$tseries + cf2$cf.tsboot$tseries
+
+    icf.tsboot <- NULL
+    if( has_icf(cf1) ){
+      # no further tests required as this was already tested for compatibility twice
+      icf.tsboot <- cf1$icf.tsboot
+      icf.tsboot$t <- a*cf1$icf.tsboot$t + b*cf2$icf.tsboot$t
+      icf.tsboot$t0 <- a*cf1$icf.tsboot$t0 + b*cf2$icf.tsboot$t0
+      icf.tsboot$tseries <- a*cf1$icf.tsboot$tseries + b*cf2$icf.tsboot$tseries
+    }
+    # use constructor to update cf0 / icf0 and tsboot.se / itsboot.se
+    cf <- cf_boot(cf = cf,
+                  boot.R = cf1$boot.R,
+                  boot.l = cf1$boot.l,
+                  seed = cf1$seed,
+                  sim = cf1$sim,
+                  cf.tsboot = cf.tsboot,
+                  icf.tsboot = icf.tsboot,
+                  resampling_method = cf1$resampling_method)
+  }
   return(cf)
 }
 
