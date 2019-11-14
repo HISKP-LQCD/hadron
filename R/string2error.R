@@ -28,5 +28,5 @@ string2error <- function(x) {
   X <- strsplit(x=x, split="\\(|\\)")[[1]]
   N <- nchar(X)
   err <- paste0(gsub("[0-9]", "0", substr(X[1], 1, N[1]-N[2])), X[2])
-  return(as.numeric(c(X[1], err)))
+  return(c(as.numeric(X[1]), abs(as.numeric(err))))
 }
