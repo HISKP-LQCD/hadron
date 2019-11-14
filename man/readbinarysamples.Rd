@@ -5,14 +5,15 @@
 \title{Read binary correlation function by sample}
 \usage{
 readbinarysamples(files, T = 48, nosamples = 2, endian = "little",
-  op = "aver", excludelist = c(""), sym = TRUE, path = "",
-  ftype = double())
+  excludelist = c(""), sym = TRUE, path = "", ftype = double())
 }
 \arguments{
 \item{files}{character vector. Paths to the file to read. As \code{path} is
 prepended to each element, one can also just pass the filenames here.}
 
 \item{T}{numeric. Time extent.}
+
+\item{nosamples}{number of samples}
 
 \item{endian}{character, either \code{little} or \code{big}.}
 

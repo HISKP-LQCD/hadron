@@ -1,10 +1,11 @@
 #' @title get dataset from HDF5 file
-#' @param h5f HDF5 file opened with \code{H5Fopen}
+#' @param h5f HDF5 file opened with \code{rhdf5::H5Fopen}
 #' @param key String, full path to dataset.
 #' @export
 h5_get_dataset <- function(h5f,key)
 {
-  requireNamespace("rhdf5")
+  rhdf5_avail <- requireNamespace("rhdf5")
+  stopifnot( rhdf5_avail )
   exists <- rhdf5::H5Lexists(h5f, key)
   if( exists ){
     h5d <- rhdf5::H5Dopen(h5f, key)
@@ -21,16 +22,16 @@ h5_get_dataset <- function(h5f,key)
 #'              as well as a flat vector. It is thus possible to check
 #'              if a particular set of group names exist in the file
 #'              by parsing the \code{name} member of the output
-#'              of \code{h5ls}. This function does just that. Note that
-#'              it can be extremely slow as it runs \code{rhdf5::h5ls}
-#'              as many times as it is called!
-#' @param h5f HDF5 file openend with \code{H5Fopen}
+#'              of \code{rhdf5::h5ls}. This function does just that.
+#' @param h5f HDF5 file handle openend with \code{rhdf5::H5Fopen}
 #' @param nms_to_find Vector of strings, group names (not full paths) which
 #'                    are to be located in the file.
 #' @return Vector of booleans of the same length as \code{nms_to_find}
 #'         indicating whether the name at the same index position
 #'         was located in the file.
 h5_names_exist <- function(h5f, nms_to_find){
+  rhdf5_avail <- requireNamespace("rhdf5")
+  stopifnot( rhdf5_avail )
   nms <- rhdf5::h5ls(h5f)$name
   unlist( lapply( nms_to_find, function(x){ x %in% nms } ) )
 }

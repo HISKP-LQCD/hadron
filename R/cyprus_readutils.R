@@ -86,7 +86,8 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
 #'                    the data is post-processed to recover the measurements for the particular
 #'                    samples. In case this is specified as a vector, it must be of the same
 #'                    length as \code{files}. Default: TRUE.
-#' @param legecy_traj Boolean or vector of boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+#'                    samples.
+#' @param legacy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 #'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
 #'                    left empty, this defaults to '0004'. If this was left emtpy when
 #'                    the loop files were generated, set this to \code{TRUE} and the paths

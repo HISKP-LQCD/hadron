@@ -33,6 +33,18 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   
 }
 
+#' @title GEVP method based on Hankel matrices. Experimental.
+#' 
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   then.
+#'
+#' @inheritParams bootstrap.hankel
+#' @param debug Boolean. Enable debug output.
+#'
+#' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
                         submatrix.size=1, element.order=c(1,2,3,4), id=c(1),
                         debug=FALSE) {
@@ -78,6 +90,33 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
+#' @title GEVP method based on Hankel matrices. Experimental.
+#' 
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   then. This is the function to call. It will perform a bootstrap
+#'   analysis. 
+#'
+#' @param cf object of type \link{cf}
+#' @param t0     initial time value of the GEVP, must be in between 0 and
+#'    \code{Time/2-2}. Default is 1.
+#' @param deltat Integer. Time shift to be used to build the Hankel matrix
+#' @param n Integer.
+#' @param N Integer.
+#' @param eps Numeric. Cut-off
+#' @param range Numeric vector. Range of eigenvalues to be considered
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrix
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Double indexing is allowed.
+#' @param id Integer.
+#'
+#' @familiy hankel
 bootstrap.hankel <- function(cf, t0, deltat=1, n, N, id=c(1), range=c(0,1), eps=0.001,
                              element.order=c(1,2,3,4), submatrix.size=1) {
   if(t0+2*n+deltat >= N) {

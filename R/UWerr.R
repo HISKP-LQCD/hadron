@@ -362,6 +362,10 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   
 }
 
+#' summary.uwerr
+#'
+#' @param object Object of type \link{uwerr}
+#' @param ... Generic parameters to pass on.
 summary.uwerr <- function (object, ...) {
   uwerr <- object
 

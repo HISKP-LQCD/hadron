@@ -7,9 +7,9 @@
 symmetrise.cf(cf, sym.vec = c(1))
 }
 \arguments{
-\item{cf}{\code{cf} object}
+\item{cf}{Object of type \code{cf}.}
 
-\item{sym.vec}{Integer vector of length cf$nrOb giving the
+\item{sym.vec}{Integer or integer vector of length cf$nrObs giving the
 time-reflection symmetry (1 for symmetric, -1 for anti-symmetric)
 of the observable in question.}
 }

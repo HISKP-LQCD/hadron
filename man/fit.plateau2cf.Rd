@@ -20,16 +20,6 @@ fit.plateau2cf(cf, t1, t2, useCov=FALSE)
   \item{t2}{
     final t-value for the fit.
   }
-  \item{boot.samples}{
-    use bootstrap samples to estimate the variance-covariance matrix
-    instead of the original data
-  }
-  \item{boot.R}{
-    number of bootstrap samples
-  }
-  \item{boot.l}{
-    block length for blocked bootstrap
-  }
   \item{useCov}{
     perform a correlated chisquare fit or not.
   }

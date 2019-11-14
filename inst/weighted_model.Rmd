@@ -1,0 +1,95 @@
+---
+title: "Weighted Models"
+output: pdf_document
+
+vignette: >
+  %\VignetteIndexEntry{Weighted Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+We have the “weighted” model. It is implemented for the effective mass but not yet for the correlator fit. Also we want to extend this to $\delta t \neq 1$. In this document we will derive the exact model in the general case to figure out what the weight factor $w$ has to be exactly.
+
+```{r setup}
+devtools::load_all()
+library(hadron)
+```
+
+# Analytic considerations
+
+Let us assume that we have a perfect signal with energy $E_0 > 0$ amplitude and $A_0$. Additional there is a single thermal state with $E_1 > 0$ and $A_1$. We can therefore write the model as
+$$ C(t) = A_0 \left[ \exp(-E_0 t) + \exp(-E_0 (T - t)) \right] + A_1 \left[ \exp(-E_1 t) + \exp(-E_1 (T - t)) \right] \,. $$
+
+If the thermal pollution was constant ($E_1 = 0$), we could just shift it away. But in this case of a time dependence, we first need to *weight* that away before we do the shift. We multiply the correlation function with the inverse of time dependence of the pollution, so we have
+$$ C_\mathrm{w}(t) = C(t) * \left[ \exp(E_1 t) + \exp(E_1 (T - t)) \right] = A_0 \left[ \exp(-E_0 t) + \exp(-E_0 (T - t)) \right] + A_1 \left[ \exp(-E_1 t) + \exp(-E_1 (T - t)) \right] $$
+
+
+# Synthetic data
+
+First we generate some synthetic data which contains exactly what we want: A one-state correlation function with energy $E_0$ and amplitude $A_0$. Then we add a single thermal state with energy $E_1 < 0$ and amplitude $A_2$. We add just a little bit of gaussian noise to generate measurements from that. The plot shows the central values that we use.
+
+```{r}
+E_0 <- 0.25
+A_0 <- 1.34
+E_1 <- -0.03
+A_1 <- 0.00003
+
+n_meas <- 500
+extent_time <- 96
+
+tt <- 0:(extent_time - 1)
+
+cf0_signal <- A_0 * (exp(- E_0 * tt) + exp(- E_0 * (extent_time - tt)))
+cf0_thermal <- A_1 * (exp(- E_1 * tt) + exp(- E_1 * (extent_time - tt)))
+cf0 <- cf0_signal + cf0_thermal
+cf <- do.call(cbind, lapply(cf0, function (m) rnorm(n_meas, m, 0.05 * m)))
+
+corr <- cf_meta(Time = extent_time)
+corr <- cf_orig(corr, cf = cf)
+
+plot(tt, cf0,
+     main = 'Central generation values',
+     xlab = 'Time',
+     ylab = 'Correlator',
+     log = 'y',
+     type = 'l',
+     ylim = range(cf0, cf0_signal, cf0_thermal))
+lines(tt, cf0_signal, col = 'blue')
+lines(tt, cf0_thermal, col = 'red')
+legend('top', c('Both', 'Signal', 'Thermal'), col = c('black', 'blue', 'red'), pch = 1)
+```
+
+This correlation function has a nice single state and a sizable thermal state in the end.
+
+```{r}
+boot_R <- 1500
+
+corr_sym <- symmetrise.cf(corr)
+corr_boot <- bootstrap.cf(corr_sym, boot.R = boot_R, boot.l = 1, seed = 0)
+
+plot(corr_boot, log = 'y')
+```
+
+We can see that the effective mass undershoots the signal value that we have put in.
+
+```{r}
+effmass <- bootstrap.effectivemass(corr_boot, type = 'solve')
+plot(effmass, ylim = c(0, E_0),
+     main = '“Solve” effective mass', xlab = 'Time', ylab = 'Effective Mass')
+abline(h = E_0, col = 'red')
+```
+
+Now we do a weight-shift-reweight with the masses that we put in. We see that the correlator looks much better afterwards and the effective mass is just what the expect from the sigal.
+
+```{r}
+corr_rt <- weight_shift_reweight.cf(corr_boot, E_1, rep(E_1, boot_R), +1)
+plot(corr_rt, log = 'y')
+
+effmass_rt <- bootstrap.effectivemass(corr_rt, type = 'weighted')
+plot(effmass_rt,
+     xlab = 'Time', ylab = 'Effective mass',
+     main = '“Weighted” effective mass')
+abline(h = E_0, col = 'red')
+```
+
+The removal seemed to have worked out nicely.
