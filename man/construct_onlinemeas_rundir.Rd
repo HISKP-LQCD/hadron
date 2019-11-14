@@ -23,13 +23,15 @@ construct_onlinemeas_rundir(type, beta, L, T, kappa = 0, mul = 0,
 
 \item{csw}{Numeric. Sea quark action clover parameter.}
 
+\item{musigma}{Numeric. Sea 1+1 "heavy" average twisted quark mass.}
+
 \item{mudelta}{Numeric. Sea 1+1 "heavy" splitting twisted quark mass.}
 
 \item{muh}{Numeric. In case of \code{n_f=2+2} run, "heavy" twisted quark mass.}
 
 \item{addon}{String. Arbitratry string which will be suffixed to the constructed run directory.}
 
-\item{musigm}{Numeric. Sea 1+1 "heavy" average twisted quark mass.}
+\item{debug}{Boolean. If \code{TRUE}, the constructed directory name is printed to screen.}
 }
 \value{
 String. Directory name constructed out of the various function parameters. See source code for details.

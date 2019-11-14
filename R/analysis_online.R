@@ -584,10 +584,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 #' @param kappa Numeric. Sea quark action hopping parameter.
 #' @param mul Numeric. Sea light quark twisted mass.
 #' @param csw Numeric. Sea quark action clover parameter.
-#' @param musigm Numeric. Sea 1+1 "heavy" average twisted quark mass.
+#' @param musigma Numeric. Sea 1+1 "heavy" average twisted quark mass.
 #' @param mudelta Numeric. Sea 1+1 "heavy" splitting twisted quark mass.
 #' @param muh Numeric. In case of `n_f=2+2` run, "heavy" twisted quark mass.
 #' @param addon String. Arbitratry string which will be suffixed to the constructed run directory.
+#' @param debug Boolean. If `TRUE`, the constructed directory name is printed to screen.
 #'
 #' @return String. Directory name constructed out of the various function parameters. See source code for details.
 #'
@@ -604,7 +605,7 @@ construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigm
     # silly sprintf prints numbers smaller than 0.001 in scientific notation unless g is used
     # on the other hand, for larger numbers, trailing zeroes are added...
     # so we use %g only in the former case and pass mu as a string otherwise!
-    if(mul >= 1e-5) {
+    if(mul >= 1e-3) {
       rundir <- sprintf("%s-k%s-mul%s",rundir,kappa,mul)
     } else {
       rundir <- sprintf("%s-k%s-mul%g",rundir,kappa,mul)
