@@ -46,5 +46,5 @@ string2error <- function (x) {
     error <- as.numeric(second) * 10^(- nchar(first_parts[2]))
   }
 
-  c(value, error)
+  return(c(value, abs(error)))
 }
