@@ -287,7 +287,8 @@
 \examples{
 library(hadron)
 \dontrun{cmicor <- readcmicor("pion.dat")}
-\dontrun{pionfit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23, no.masses=1, matrix.size=4)}
+\dontrun{pionfit <- pion(cmicor, kappa=0.160856, mu=0.004, t1=10, t2=23,}
+\dontrun{         no.masses=1, matrix.size=4)}
 \dontrun{summary(pionfit)}
 }
 \author{Carsten Urbach, \email{curbach@gmx.de}}

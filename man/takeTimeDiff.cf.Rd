@@ -9,7 +9,13 @@ takeTimeDiff.cf(cf, deltat = 1, forwardshift = FALSE)
 \arguments{
 \item{cf}{Object of type \code{cf}, a particle correlation function which shall be shifted.}
 
-\item{forwardshift}{}
+\item{deltat}{integer. the time shift}
+
+\item{forwardshift}{boolean. If set to \code{TRUE}, the forward finite
+difference is used instead of the backward one}
+}
+\value{
+The shifted correlator as an object of type \code{cf}, see \link{cf}
 }
 \description{
 Performs the calculation of the shifted correlator C_shift(t) = C(t) - C(t +/- deltat).

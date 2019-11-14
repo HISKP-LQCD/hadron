@@ -1,3 +1,12 @@
+#' compute.plotlims
+#'
+#' @description
+#' Computes limits for plots
+#'
+#' @param val Numeric. Value.
+#' @param logscale Boolean.
+#' @param cumul.dval Numeric. Cumulative error.
+#' @param cumul.mdval Numeric. Cumulative error.
 compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   tmp <- val - 0.1*abs(val)
   tmpp <- val + 0.1*abs(val)
@@ -282,6 +291,17 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
   return(invisible(list(xlim=my.xlim, ylim=my.ylim)))
 }
 
+#' plothlinewitherror
+#'
+#' @description
+#' plot a horizontal line with error band
+#'
+#' @param m Numeric. Mean value of the line to plot.
+#' @param dp Numeric. Error up.
+#' @param dm Numeric. Error down.
+#' @param col String. Colour.
+#' @param x0 Numeric. Left value of the range of the horizontal line.
+#' @param x1 Numeric. Right value of the range of the horizontal line.
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
     dm <- dp
@@ -291,26 +311,70 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   arrows(x0=x0, y0=m-dm, x1=x1, y1=m-dm, col=col, length=0, lwd=c(1))
 }
 
+#' plot.massfit
+#'
+#' @description
+#' Generic function to plot an object of type `massfit`
+#'
+#' @param x Object of type `massfit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#' @param xlab String. Label for x-axis
+#' @param ylab String. Lable for y-axis
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
   plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
+#' plot.pionfit
+#'
+#' @description
+#' Generic function to plot an object of type `pionfit`
+#'
+#' @param x Object of type `pionfit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.pionfit <- function(x, ...) {
   plot.cfit(x)
 }
 
+#' plot.rhofit
+#'
+#' @description
+#' Generic function to plot an object of type `rhofit`
+#'
+#' @param x Object of type `rhofit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.rhofit <- function(x, ...) {
   plot.cfit(x)
 }
 
+#' plot.b1fit
+#'
+#' @description
+#' Generic function to plot an object of type `b1fit`
+#'
+#' @param x Object of type `b1fit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.b1fit <- function(x, ...) {
   plot.cfit(x)
 }
 
+#' plot.ofit
+#'
+#' @description
+#' Generic function to plot an object of type `ofit`
+#'
+#' @param x Object of type `ofit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.ofit <- function(x, ...) {
   plot.cfit(x)
 }
 
+#' plot.c1fit
+#'
+#' @description
+#' Generic function to plot an object of type `c1fit`
+#'
+#' @param x Object of type `c1fit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.cfit <- function(x, ...) {
   fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
@@ -375,7 +439,14 @@ plot.cfit <- function(x, ...) {
   }
 }
 
-plot.effmass <- function (x, ll, lf, ff, ...) {
+#' plot.effmass
+#'
+#' @param x Object of class `effmass`
+#' @param ... Graphical parameters to be passed on.
+#' @param ll local-local effective mass object
+#' @param lf local-fuzzed effective mass object
+#' @param ff fuzzed-fuzzed effective mass object
+plot.effmass <- function (x, ..., ll, lf, ff) {
   m <- x
 
   new_window_if_appropriate()
@@ -432,6 +503,13 @@ plot.averx <- function(x, ...) {
          )
 }
 
+#' plot.pionff
+#'
+#' @description
+#' Generic function to plot an object of type `pionff`
+#'
+#' @param x Object of type `pionff`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 plot.pionff <- function (x, ...) {
   ff <- x
   T <- ff$Cf2ptp0$Time

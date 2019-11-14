@@ -11,7 +11,8 @@
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
 
-\item{...}{Additional parameters passed to the \code{plotwitherror} function.}
+\item{...}{Additional parameters passed to the \code{plotwitherror}
+function.}
 
 \item{col.line}{line colour.}
 
@@ -28,6 +29,10 @@
 \item{plot.range}{vector with two elements \code{c(min,max)} defining the
 range in which fitline and errorband are plotted. Default is the range of
 the data.}
+
+\item{error}{Function to compute the standard error in resampling
+schemes. Default is \link{sd} for bootstrap. For other resampling
+schemes this might need to be changed.}
 }
 \description{
 Plot a bootstrap NLS fit

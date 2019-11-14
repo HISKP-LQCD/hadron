@@ -9,6 +9,8 @@ jackknife_error(samples, boot.l = 1, na.rm = FALSE)
 \arguments{
 \item{samples}{Numeric vector.}
 
+\item{boot.l}{Block length for bootstrapping.}
+
 \item{na.rm}{Logical. Determines whether \code{NA} values shall be removed, see
 Description for details.}
 }

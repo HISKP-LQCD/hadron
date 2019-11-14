@@ -8,11 +8,15 @@ dispersion_relation(energy, momentum_d, extent_space, plus = TRUE,
   lattice_disp = FALSE)
 }
 \arguments{
+\item{energy}{\code{double}. CM energy in lattice units, \eqn{aE}.}
+
+\item{momentum_d}{\code{integer}. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.}
+
 \item{extent_space}{\code{integer}. Spatial extent of the lattice as a dimensionless quantity, \eqn{L/a}.}
 
-\item{cm_energy}{\code{double}. CM energy in lattice units, \eqn{aE}.}
+\item{plus}{Boolean. Sign of a^2 artefacts.}
 
-\item{total_momentum_d_sq}{\code{integer}. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.}
+\item{lattice_disp}{Boolean. Use the lattice dispersion relation instead of the continuum one}
 }
 \value{
 \code{double}. Energy in the lattice frame, \eqn{aW}.

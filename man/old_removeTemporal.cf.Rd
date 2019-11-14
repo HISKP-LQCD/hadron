@@ -36,6 +36,8 @@ used, otherwise continuum dispersion relation.}
 \item{weight.cosh}{Logical, If single.cf1 is a pure cosh, the leading two
 thermal states also may be expressed as a cosh. If \code{weight.cosh} is set,
 they are removed simultaneously.}
+
+\item{deltat}{Integer. Time shift value.}
 }
 \description{
 Performs weighting and shifting in the rest and moving frames.
