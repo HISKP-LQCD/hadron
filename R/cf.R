@@ -688,12 +688,13 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
       icf.tsboot$t0 <- a*cf1$icf.tsboot$t0 + b*cf2$icf.tsboot$t0
       icf.tsboot$tseries <- a*cf1$icf.tsboot$tseries + b*cf2$icf.tsboot$tseries
     }
-    # use constructor to update cf0 / icf0 and tsboot.se / itsboot.se
+    # use constructor to also update cf0 / icf0 and tsboot.se / itsboot.se
     cf <- cf_boot(cf = cf,
                   boot.R = cf1$boot.R,
                   boot.l = cf1$boot.l,
                   seed = cf1$seed,
                   sim = cf1$sim,
+                  endcorr = cf1$endcorr,
                   cf.tsboot = cf.tsboot,
                   icf.tsboot = icf.tsboot,
                   resampling_method = cf1$resampling_method)
@@ -719,7 +720,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-#' Divide real and imaginary parts of two cf objects by each other 
+#' Divide two cf objects by each other measurement by measurement
 #'
 #' Note that no complex arithmetic is used, real and imaginary parts are 
 #' treated as seperate and indepenent, such that the real part of one
@@ -768,8 +769,27 @@ mul.cf <- function(cf, a=1.) {
   if( has_icf(cf) ){
     cf$icf <- a*cf$icf
   }
+  if( inherits(cf, 'cf_boot') ){
+    cf$cf.tsboot$t <- a*cf$cf.tsboot$t
+    cf$cf.tsboot$t0 <- a*cf$cf.tsboot$t0
+    cf$cf.tsboot$tseries <- a*cf$cf.tsboot$t
 
-  cf <- invalidate.samples.cf(cf)
+    if( has_icf(cf) ){
+      cf$icf.tsboot$t <- a*cf$icf.tsboot$t
+      cf$icf.tsboot$t0 <- a*cf$icf.tsboot$t0
+      cf$icf.tsboot$tseries <- a*cf$icf.tsboot$tseries
+    }
+    # cf_boot will take care of cf0 / icf0 and tsboot.se / itsboot.se
+    cf <- cf_boot(cf = cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
+  }
   return (cf)
 }
 
