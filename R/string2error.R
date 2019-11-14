@@ -19,14 +19,32 @@
 #' s <- c("0.35667(25)", "0.667(50)")
 #' apply(array(s, dim=c(1, length(s))), 2, string2error)
 #' 
-string2error <- function(x) {
-  if(is.na(x)) {
-    return(c(NA, NA))
+string2error <- function (x) {
+  if (is.na(x)) {
+    return (c(NA, NA))
   }
   stopifnot(is.character(x))
+  
+  # We use a regular expression to match the whole string. This makes sure that
+  # we reject strings that do not match the format.
+  match <- stringr::str_match(x, '^([+-]?[\\d.]+)\\((\\d+)\\)$')
+  stopifnot(all(dim(match) == c(1, 3)))
+  first <- match[[1, 2]]
+  second <- match[[1, 3]]
+  
+  value <- as.numeric(first)
+  
+  # We need to differentiate whether the number actually has a decimal point as
+  # this changes the interpretation of the error.
+  first_parts <- strsplit(first, '.', fixed = TRUE)[[1]]
+  if (length(first_parts) == 1) {
+    # There is no decimal point. Therefore the error is just to be taken as is.
+    error <- as.numeric(second)
+  } else {
+    # There is a decimal point, therefore the error is to be scaled down by that
+    # many digits.
+    error <- as.numeric(second) * 10^(- nchar(first_parts[2]))
+  }
 
-  X <- strsplit(x=x, split="\\(|\\)")[[1]]
-  N <- nchar(X)
-  err <- paste0(gsub("[0-9]", "0", substr(X[1], 1, N[1]-N[2])), X[2])
-  return(c(as.numeric(X[1]), abs(as.numeric(err))))
+  return(c(value, abs(error)))
 }
