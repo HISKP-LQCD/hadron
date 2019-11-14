@@ -706,27 +706,6 @@ mul.cf <- function(cf, a=1.) {
   return (cf)
 }
 
-# "close-by-times" averaging replaces the value of the correlation function at t
-# with the "hypercubic" average with the values at the neighbouring time-slices
-# with weights 0.25, 0.5 and 0.25
-#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
-# where periodic boundary conditions are assumed in shift.cf
-avg.cbt.cf <- function(cf){
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
-
-  # copy for shifting
-  cf2 <- cf
-  cf <- mul.cf(cf, 0.5)
-
-  # average over shifted correlation functions
-  for( p in c(-1,1) ){
-    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
-  }
-  cf <- invalidate.samples.cf(cf)
-  return(invisible(cf))
-}
-
 extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
