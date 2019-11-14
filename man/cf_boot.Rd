@@ -4,7 +4,7 @@
 \alias{cf_boot}
 \title{Bootstrapped CF mixin constructor}
 \usage{
-cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
+cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot,
   icf.tsboot = NULL, resampling_method)
 }
 \arguments{
@@ -17,6 +17,8 @@ cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
 \item{seed}{Integer, random number generator seed used in bootstrap.}
 
 \item{sim}{Character, \code{sim} argument of \link[boot]{tsboot}.}
+
+\item{endcorr}{Boolean, \code{endcorr} argumetn of \link[boot]{tsboot}.}
 
 \item{cf.tsboot}{List, result from the \link[boot]{tsboot} function for the real part.}
 

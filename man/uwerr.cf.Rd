@@ -4,12 +4,22 @@
 \alias{uwerr.cf}
 \title{uwerr.cf}
 \usage{
-uwerr.cf(cf, absval = FALSE)
+uwerr.cf(cf)
 }
 \arguments{
-\item{cf}{Object of type \code{cf}}
-
-\item{absval}{Boolean. Use absolute values of the data.}
+\item{cf}{Object of type \code{cf} containing \code{cf_orig}}
+}
+\value{
+A list with a named element \code{uwcf} which contains a data frame
+with six columns, \code{value}, \code{dvalue}, \code{ddvalue}, \code{tauint}, \code{dtauint}
+corresponding to what is returned by \link{uwerrprimary}. The sixth
+column, \code{t}, is just an index counting the columns in the original \code{cf$cf}.
+If \code{cf} contains an imaginary part, the return value contains another
+list element, \code{uwicf} of the same structure as \code{uwcf}.
+There are as many rows as there were columns in \code{cf$cf} and/or \code{cf$icf}.
+When the call to \link{uwerrprimary} fails for a particular column of \code{cf$cf}
+or \code{cf$icf}, the corresponding row of \code{uwcf} and/or \code{uwicf} will contain
+\code{NA}.
 }
 \description{
 Gamma method analysis on all time-slices in a 'cf' object

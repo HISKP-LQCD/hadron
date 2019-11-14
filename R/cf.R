@@ -365,7 +365,7 @@ is_empty.cf <- function (.cf) {
 #'         `resampling_method`, `error_fn`, `boot_dim`, `icf` and, optionally
 #'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
 #' @export
-resampling_is_compatible(cf1, cf2){
+resampling_is_compatible <- function(cf1, cf2){
   
   res <- list()
   res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
@@ -528,8 +528,8 @@ uwerr.cf <- function(cf){
     if( any(class(uw) == "try-error") ){
       c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
     } else {
-      c(value=$uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
-        tauint=uw_tmp$tau_int, dtauint=uw_tmp$dtauing)
+      c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
+        tauint=uw_tmp$tau_int, dtauint=uw_tmp$dtauint)
     }
   }
 
@@ -577,37 +577,6 @@ addStat.cf <- function(cf1, cf2) {
   cf <- invalidate.samples.cf(cf)
 
   return (invisible(cf))
-}
-
-#' @title Average local-smeared and smeared-local correlators
-#' @description
-#' averages local-smeared and smeared-local correlators in cf and adjusts
-#' nrStypes accordingly
-#' by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
-#'
-#' @param cf object of type \link{cf}
-#' @param cols columns to be averaged over
-#' 
-avg.ls.cf <- function(cf, cols = c(2, 3)) {
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
-  stopifnot(cf$nrStypes >= 2)
-
-  timeslices <- cf$Time/2+1
-
-  ind.ls <- ( (cols[1]-1)*timeslices+1 ):( cols[1]*timeslices )
-  ind.sl <- ( (cols[2]-1)*timeslices+1 ):( cols[2]*timeslices )
-
-  cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
-  cf$cf <- cf$cf[,-ind.sl]
-
-  if( has_icf(cf) ){
-    cf$icf[,ind.ls] <- 0.5 * ( cf$icf[,ind.ls] + cf$icf[,ind.sl] )
-    cf$icf <- cf$icf[,-ind.sl]
-  }
-
-  cf$nrStypes <- cf$nrStypes-1
-  return (cf)
 }
 
 #' @title average close-by-times in a correlation function
