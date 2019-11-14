@@ -362,7 +362,7 @@ is_empty.cf <- function (.cf) {
 #'
 #' @return List of named booleans for each of the checked conditions
 #'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
-#'         `resampling_method`, `error_fn`, `boot_dim`, `icf` and, optionally
+#'         `resampling_method`, `error_fn`, `cov_fn`, `boot_dim`, `icf` and, optionally
 #'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
 resampling_is_compatible <- function(cf1, cf2){
   
@@ -375,6 +375,7 @@ resampling_is_compatible <- function(cf1, cf2){
   res$endcorr <- (cf1$endcorr == cf2$endcorr)
   res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
   res$error_fn <- (cf1$error_fn == cf2$error_fn)
+  res$cov_fn <- (cf1$cov_fn == cf2$cov_fn)
   res$boot_dim <- all(dim(cf1$cf.tsboot$t) == dim(cf2$cf.tsboot$t))
   res$icf <- (has_icf(cf1) == has_icf(cf2))
   if( has_icf(cf1) & res$icf ){
@@ -647,9 +648,9 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
     stopifnot( all(unlist(resampling_is_compatible(cf1, cf2))) )
 
     cf.tsboot <- cf1$cf.tsboot
-    cf.tsboot$t <- cf1$cf.tsboot$t + cf2$cf.tsboot$t
-    cf.tsboot$t0 <- cf1$cf.tsboot$t0 + cf2$cf.tsboot$t0
-    cf.tsboot$tseries <- cf1$cf.tsboot$tseries + cf2$cf.tsboot$tseries
+    cf.tsboot$t <- a*cf1$cf.tsboot$t + b*cf2$cf.tsboot$t
+    cf.tsboot$t0 <- a*cf1$cf.tsboot$t0 + b*cf2$cf.tsboot$t0
+    cf.tsboot$tseries <- a*cf1$cf.tsboot$tseries + b*cf2$cf.tsboot$tseries
 
     icf.tsboot <- NULL
     if( has_icf(cf1) ){
