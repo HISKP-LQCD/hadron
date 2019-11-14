@@ -180,7 +180,7 @@ old_removeTemporal.cf <- function(cf,
 #' @return
 #' The shifted correlator as an object of type `cf`, see \link{cf}
 #'
-#' @eport
+#' @export
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -285,15 +285,39 @@ dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, 
   return (energy_out)
 }
 
+#' generic function to extract a fitted mass
+#'
+#' @description
+#' One of the main analysis tasks in \link{hadron} is the estimation
+#'   of energy levels or masses from correlation functions. The
+#'   corresponding analysis functions return objects, typically lists,
+#'   containing the masses or energy levels. `extract_mass` is a
+#'   generic function to extrac such fitted mass values.
+#' 
+#' @param object Object to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass <- function (object) {
   UseMethod('extract_mass')
 }
 
+#' specialisation of \link{extract_mass} to objects of type
+#' `effectivemassfit`
+#' 
+#' @param object Object of type `effectivemassfit` to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass.effectivemassfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$massfit.tsboot[,1])
 }
 
+#' specialisation of \link{extract_mass} to objects of type
+#' `matrixfit`
+#' 
+#' @param object Object of type `matrixfit` to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass.matrixfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$opt.tsboot[1,])
@@ -353,6 +377,20 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
   return (invisible(ret))
 }
 
+#' Remove Thermal States by Weighting and Shifting
+#'
+#' @param cf Object of type \link{cf}
+#' @param single.cf1 Object of type \link{cf}
+#' @param single.cf2 Object of type \link{cf}
+#' @param p1 Numeric vector. Spatial momentum of first state
+#' @param p2 Numeric vector. Spatial momentum of second state
+#' @param L Integer. Spatial lattice extend.
+#' @param lat.disp Boolean. Use lattice dispersion relation instead of
+#'   continuum one
+#' @param weight.cosh Boolean. Use cosh functional form in the
+#'   weighting procedure
+#'
+#' @return weighted and shifted correlation function as a \link{cf} object.
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {
