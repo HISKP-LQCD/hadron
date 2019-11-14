@@ -563,7 +563,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   print(t(result$obs))
 
   # concatenate the individual files
-  xstaplr::staple_pdf(input_files = pdf_filenames,
+  staplr::staple_pdf(input_files = pdf_filenames,
                      output_filepath = sprintf("analysis_%s.pdf", filelabel))
   # and remove them
   system(command=sprintf("rm -f ??_*_%s.pdf", filelabel))
