@@ -383,12 +383,6 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
@@ -397,6 +391,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 
   icf.tsboot <- NULL
   if( has_icf(cf) ){
+    # no need to store the old seed again, but we definitely need to reset the RNG!
+    swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
   }
@@ -629,8 +625,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot( has_icf(cf2) )
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot( has_icf(cf1) & has_icf(cf2) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
@@ -681,8 +677,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot(has_icf(cf2))
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot(has_icf(cf1) & has_icf(cf2))
     cf$icf <- cf1$icf / cf2$icf
   }
 
