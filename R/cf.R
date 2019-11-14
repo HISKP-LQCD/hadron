@@ -376,12 +376,6 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
@@ -390,6 +384,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 
   icf.tsboot <- NULL
   if( has_icf(cf) ){
+    # no need to store the old seed again, but we definitely need to reset the RNG!
+    swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
   }
