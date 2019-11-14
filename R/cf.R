@@ -364,7 +364,6 @@ is_empty.cf <- function (.cf) {
 #'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
 #'         `resampling_method`, `error_fn`, `boot_dim`, `icf` and, optionally
 #'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
-#' @export
 resampling_is_compatible <- function(cf1, cf2){
   
   res <- list()
