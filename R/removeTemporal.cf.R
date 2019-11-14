@@ -310,6 +310,9 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
   for (i in c(1:cf$boot.R)) {
     Exptt <- make_weight_factor(energy_difference_boot[i], cf$Time, offset,
                                 cf$Time/2 + offset, cosh_factor)
+    if (inverse) {
+      Exptt <- 1 / Exptt
+    }
     cf$cf.tsboot$t[i, ] <- cf$cf.tsboot$t[i, ] * Exptt
   }
 
