@@ -2,7 +2,7 @@
 % Please edit documentation in R/cf.R
 \name{/.cf}
 \alias{/.cf}
-\title{Arithmetically divide correlators}
+\title{Divide real and imaginary parts of two cf objects by each other}
 \usage{
 \method{/}{cf}(cf1, cf2)
 }
@@ -10,6 +10,13 @@
 \item{cf1, cf2}{\code{cf_orig} objects.}
 }
 \description{
+Note that no complex arithmetic is used, real and imaginary parts are
+treated as seperate and indepenent, such that the real part of one
+is the divided by the real part of the other and similarly for the
+imaginary parts.
+}
+\details{
 Note that this is generally only allowed on bootstrap samples and mean values,
-although it makes sense in some exeptional circumstances.
+although it makes sense in some exeptional circumstances. Don't use this
+function unless you're certain that you should!
 }

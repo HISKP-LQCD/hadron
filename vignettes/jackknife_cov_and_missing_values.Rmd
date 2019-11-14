@@ -2,6 +2,11 @@
 title: "Jackknife Covariance and Missing Values"
 author: "Martin Ueding"
 output: pdf_document
+
+vignette: >
+  %\VignetteIndexEntry{Jackknife Covariance and Missing Values}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r}

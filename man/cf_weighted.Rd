@@ -12,10 +12,6 @@ cf_weighted(.cf = cf(), weight.factor, weight.cosh)
 \item{weight.factor}{TODO}
 
 \item{weight.cosh}{TODO}
-
-\item{mass1}{TODO}
-
-\item{mass2}{TODO}
 }
 \description{
 Weighted CF mixin constructor

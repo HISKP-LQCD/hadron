@@ -65,7 +65,9 @@ readcmidisc(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 }
 \examples{
 \dontrun{v4files <- character()}
-\dontrun{for(i in seq(600,1744,8)) v4files <- c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("\%.04d", i), sep=""))}
+\dontrun{for(i in seq(600,1744,8))}
+\dontrun{  v4files <- }
+\dontrun{   c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("\%.04d", i), sep=""))}
 \dontrun{v4data <- readcmidisc(v4files)}
 
 }

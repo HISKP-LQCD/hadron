@@ -1,6 +1,10 @@
 \name{jackknifeafterboot}
 \alias{jackknifeafterboot}
 \alias{jab.cf}
+\alias{jab.cf.derived}
+\alias{jab.effectivemass}
+\alias{jab.effectivemassfit}
+\alias{jab.matrixfit}
 \title{jackknife-after-bootstrap analysis}
 \description{
   jackknife-after-bootstrap (JAB) analysis for errors of errors of correlation
@@ -8,6 +12,14 @@
 }
 \usage{
 jab.cf(cf, m=1)
+
+jab.cf.derived(cf, m=1)
+
+jab.effectivemass(cf, m=1)
+
+jab.effectivemassfit(cf, m=1)
+
+jab.matrixfit(cf, m=1)
 }
 \arguments{
   \item{cf}{

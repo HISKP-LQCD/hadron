@@ -15,6 +15,8 @@ object of type \code{matrixfit}, this should be located at
 
 \item{T}{Numeric: Time extent of the lattice.}
 
+\item{delta1}{dummy parameter for compatibility}
+
 \item{reference_time}{Numeric: GEVP reference time value in physical time convention}
 }
 \description{

@@ -6,7 +6,8 @@
   from a text file. 
 }
 \usage{
-readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0,
+           ind.vector=c(2,3), symmetrise=TRUE,
            stride=1, avg=1, Nmin=4, autotruncate=TRUE)
 }
 \arguments{
@@ -44,7 +45,17 @@ readtextcf(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), 
     the path to the files.
   }
   \item{autotruncate}{
-    
+    Boolean. Whether to autotruncate or not
+  }
+  \item{avg}{
+    Integer. Average over successive number samples
+  }
+  \item{stride}{
+    Integer. Read only subset of files with corresponding stride.
+  }
+  \item{Nmin}{
+    Integer. Minimal number of measurements that must remain after
+    sparsification and averaging. Default equals to 4.
   }
 }
 \value{
