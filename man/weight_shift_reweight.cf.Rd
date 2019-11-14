@@ -10,7 +10,7 @@ weight_shift_reweight.cf(cf, energy_difference_val, energy_difference_boot,
 \arguments{
 \item{cf}{cf_orig and possibly cf_boot object.}
 
-\item{energy_difference_val}{numeric. A single energy value $\Delta E$ for
+\item{energy_difference_val}{numeric. A single energy value \eqn{\Delta E}{Delta E} for
 the weighting.}
 
 \item{energy_difference_boot}{numeric vector. Samples for the energy

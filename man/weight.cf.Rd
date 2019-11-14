@@ -10,7 +10,7 @@ weight.cf(cf, energy_difference_val, energy_difference_boot, cosh_factor,
 \arguments{
 \item{cf}{cf_orig and possibly cf_boot object.}
 
-\item{energy_difference_val}{numeric. A single energy value $\Delta E$ for
+\item{energy_difference_val}{numeric. A single energy value \eqn{\Delta E}{Delta E} for
 the weighting.}
 
 \item{energy_difference_boot}{numeric vector. Samples for the energy
@@ -23,7 +23,7 @@ the weight factor.}
 after a shift.}
 }
 \description{
-Weights a correlation function with the given energy difference $\Delta E$
-such that the function is first multiplied with $\exp(\Delta E t) + c
-\exp(\Delta E \cdot (T - t)$.
+Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
+such that the function is first multiplied with
+\eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
 }

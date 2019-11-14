@@ -332,12 +332,13 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 
 #' Weight a correlation function
 #'
-#' Weights a correlation function with the given energy difference $\Delta E$
-#' such that the function is first multiplied with $\exp(\Delta E t) + c
-#' \exp(\Delta E \cdot (T - t)$.
+#' @description
+#' Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
+#' such that the function is first multiplied with
+#' \eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
 #'
 #' @param cf cf_orig and possibly cf_boot object.
-#' @param energy_difference_val numeric. A single energy value $\Delta E$ for
+#' @param energy_difference_val numeric. A single energy value \eqn{\Delta E}{Delta E} for
 #'   the weighting.
 #' @param energy_difference_boot numeric vector. Samples for the energy
 #'   difference value.
