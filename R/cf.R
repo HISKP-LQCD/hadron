@@ -468,6 +468,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
 
   cf.tsboot <- list(t = t,
                     t0 = t0,
+                    tseries = cf$cf, # data duplication for consistency with `tsboot`
                     R = N,
                     l = boot.l)
 
@@ -485,6 +486,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
     }
     icf.tsboot <- list(t = t,
                        t0 = t0,
+                       tseries = cf$icf, # data duplication for consistency with `tsboot`
                        R = N,
                        l = boot.l)
   }
@@ -494,7 +496,8 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 boot.R = cf.tsboot$R,
                 boot.l = cf.tsboot$l,
                 seed = 0,
-                sim = 'geom',
+                sim = 'fixed',
+                endcorr = FALSE,
                 cf.tsboot = cf.tsboot,
                 icf.tsboot = icf.tsboot,
                 resampling_method = 'jackknife')
