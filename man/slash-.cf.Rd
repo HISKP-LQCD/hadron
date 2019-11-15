@@ -2,7 +2,7 @@
 % Please edit documentation in R/cf.R
 \name{/.cf}
 \alias{/.cf}
-\title{Divide real and imaginary parts of two cf objects by each other}
+\title{Divide two cf objects by each other measurement by measurement}
 \usage{
 \method{/}{cf}(cf1, cf2)
 }

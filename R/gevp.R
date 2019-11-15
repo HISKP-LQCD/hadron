@@ -217,6 +217,7 @@ gevp2cf <- function(gevp, id=1) {
                 boot.l = gevp$boot.l,
                 seed = gevp$seed,
                 sim = gevp$cf$sim,
+                endcorr = gevp$cf$endcorr,
                 cf.tsboot = cf.tsboot,
                 resampling_method = gevp$cf$resampling_method)
 
