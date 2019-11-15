@@ -496,7 +496,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   }
   if( !missing("evals_id") ) {
     plotcounter <- plotcounter+1
-    ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals, filelabel )
+    ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals_id, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals_id )
     pdf_filenames <- append_pdf_filename(basename = ev_filename,
                                          pdf_filenames = pdf_filenames)

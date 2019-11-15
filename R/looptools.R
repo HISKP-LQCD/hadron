@@ -155,7 +155,7 @@ loop_2pt <- function(loop_snk, loop_src,
     random_idcs <- expand.grid( 1:dims[1], 1:dims[1], KEEP.OUT.ATTRS = FALSE)
     colnames(random_idcs) <- c("r1", "r2")
     random_idcs <- dplyr::filter(random_idcs,
-                                 r1 != r2)
+                                 random_idcs$r1 != random_idcs$r2)
   }
 
   for( t_sep in 0:(Time-1) ){
