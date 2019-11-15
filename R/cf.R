@@ -1114,12 +1114,29 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
+      ifwd <- (istart+1):(ihalf-1)
+      ibwd <- rev((ihalf+1):iend)
+      
       isub <- c(isub,(ihalf+1):iend)
-      cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
-                                             sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
+      
+      cf$cf[,ifwd] <- 0.5*( cf$cf[,ifwd] + sym.vec[oidx+1]*cf$cf[,ibwd] )
       if( has_icf(cf) ){
-        cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
-                                                sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
+        cf$icf[,ifwd] <- 0.5*( cf$icf[,ifwd] + sym.vec[oidx+1]*cf$icf[,ibwd] )
+      }
+
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,ifwd] <- 0.5*( cf$cf.tsboot$t[,ifwd] + 
+                                       sym.vec[oidx+1]*cf$cf.tsboot$t[,ibwd] )
+        cf$cf.tsboot$t0[ifwd] <- 0.5*( cf$cf.tsboot$t0[ifwd] + cf$cf.tsboot$t0[ibwd] )
+        cf$cf.tsboot$data[,ifwd] <- 0.5*( cf$cf.tsboot$data[,ifwd] + 
+                                          sym.vec[oidx+1]*cf$cf.tsboot$data[,ibwd] )
+        if(has_icf(cf)){
+          cf$icf.tsboot$t[,ifwd] <- 0.5*( cf$icf.tsboot$t[,ifwd] + 
+                                          sym.vec[oidx+1]*cf$icf.tsboot$t[,ibwd] )
+          cf$icf.tsboot$t0[ifwd] <- 0.5*( cf$icf.tsboot$t0[ifwd] + cf$icf.tsboot$t0[ibwd] )
+          cf$icf.tsboot$data[,ifwd] <- 0.5*( cf$icf.tsboot$data[,ifwd] + 
+                                             sym.vec[oidx+1]*cf$icf.tsboot$data[,ibwd] )
+        }
       }
     }
   }
@@ -1128,6 +1145,18 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   if( has_icf(cf) ){
     cf$icf <- cf$icf[, -isub]
   }
+  
+  if( inherits(cf, 'cf_boot') ){
+    cf$cf.tsboot$t <- cf$cf.tsboot$t[,-isub]
+    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[,-isub]
+    cf$cf.tsboot$data <- cf$cf.tsboot$data[,-isub]
+    if( has_icf(cf) ){
+      cf$icf.tsboot$t <- cf$icf.tsboot$t[,-isub]
+      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[,-isub]
+      cf$icf.tsboot$data <- cf$icf.tsboot$data[,-isub]
+    }
+  }
+
   cf$symmetrised <- TRUE
   return(invisible(invalidate.samples.cf(cf)))
 }
