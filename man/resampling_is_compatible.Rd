@@ -14,9 +14,15 @@ resampling_is_compatible(cf1, cf2)
 \value{
 List of named booleans for each of the checked conditions
 with elements \code{boot}, \code{boot.R}, \code{boot.l}, \code{sim}, \code{endcorr},
-\code{resampling_method}, \code{error_fn}, \code{boot_dim}, \code{icf} and, optionally
+\code{resampling_method}, \code{boot_dim}, \code{icf} and, optionally
 \code{iboot_dim} (if both \code{cf1} and \code{cf2} contain imaginary parts).
 }
 \description{
 Checks whether the resampling of two cf objects is compatible
+}
+\details{
+Checks whether operations such as addition can be performed on the
+resampling samples of \code{cf1} and \code{cf2}. In addition to all
+meta parameters, the dimensions of the resampling sample arrays
+must be identical.
 }

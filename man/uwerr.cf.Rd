@@ -19,7 +19,7 @@ list element, \code{uwicf} of the same structure as \code{uwcf}.
 There are as many rows as there were columns in \code{cf$cf} and/or \code{cf$icf}.
 When the call to \link{uwerrprimary} fails for a particular column of \code{cf$cf}
 or \code{cf$icf}, the corresponding row of \code{uwcf} and/or \code{uwicf} will contain
-\code{NA}.
+\code{NA} for all members.
 }
 \description{
 Gamma method analysis on all time-slices in a 'cf' object

@@ -360,9 +360,14 @@ is_empty.cf <- function (.cf) {
 #' @param cf1 `cf` object with `cf_boot`
 #' @param cf2 `cf` object with `cf_boot`
 #'
+#' @details Checks whether operations such as addition can be performed on the
+#'          resampling samples of `cf1` and `cf2`. In addition to all
+#'          meta parameters, the dimensions of the resampling sample arrays
+#'          must be identical.
+#'
 #' @return List of named booleans for each of the checked conditions
 #'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
-#'         `resampling_method`, `error_fn`, `cov_fn`, `boot_dim`, `icf` and, optionally
+#'         `resampling_method`, `boot_dim`, `icf` and, optionally
 #'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
 resampling_is_compatible <- function(cf1, cf2){
   
@@ -374,8 +379,6 @@ resampling_is_compatible <- function(cf1, cf2){
   res$sim <- (cf1$sim == cf2$sim)
   res$endcorr <- (cf1$endcorr == cf2$endcorr)
   res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
-  res$error_fn <- (cf1$error_fn == cf2$error_fn)
-  res$cov_fn <- (cf1$cov_fn == cf2$cov_fn)
   res$boot_dim <- all(dim(cf1$cf.tsboot$t) == dim(cf2$cf.tsboot$t))
   res$icf <- (has_icf(cf1) == has_icf(cf2))
   if( has_icf(cf1) & res$icf ){
@@ -383,6 +386,40 @@ resampling_is_compatible <- function(cf1, cf2){
   }
 
   return(res)
+}
+
+#' Checks whether the resampling of two cf objects is concatenable
+#' 
+#' @param cf1 `cf` object with `cf_boot`
+#' @param cf2 `cf` object with `cf_boot`
+#'
+#' @details In contrast to \link{resampling_is_compatible}, this function
+#'          checks if the resampling samples are concatenable on the
+#'          horizontal axis. In addition to checking all meta parameters,
+#'          the number of rows in the resampling arrays must be identical
+#'          but the number of columns may differ.
+#' 
+#' @return List of named booleans for each of the checked conditions
+#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
+#'         `resampling_method`, `boot_nrow`, `icf` and, optionally
+#'         `iboot_nrow` (if both `cf1` and `cf2` contain imaginary parts).
+resampling_is_concatenable <- function(cf1, cf2){
+  res <- list()
+  res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
+  res$seed <- (cf1$seed == cf2$seed)
+  res$boot.R <- (cf1$boot.R == cf2$boot.R)
+  res$boot.l <- (cf1$boot.l == cf2$boot.l)
+  res$sim <- (cf1$sim == cf2$sim)
+  res$endcorr <- (cf1$endcorr == cf2$endcorr)
+  res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
+  res$boot_nrow <- nrow(cf1$cf.tsboot$t) == nrow(cf2$cf.tsboot$t)
+  res$icf <- (has_icf(cf1) == has_icf(cf2))
+  if( has_icf(cf1) & res$icf ){
+    res$iboot_nrow <- nrow(cf1$icf.tsboot$t) == nrow(cf2$icf.tsboot$t)
+  }
+
+  return(res)
+
 }
 
 #' Checks whether the cf object contains an imaginary part
@@ -421,12 +458,13 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
 
-  icf.tsboot <- NULL
   if( has_icf(cf) ){
     # no need to store the old seed again, but we definitely need to reset the RNG again!
     swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+  } else {
+    icf.tsboot <- NULL
   }
 
   cf <- cf_boot(cf,
@@ -469,11 +507,10 @@ jackknife.cf <- function(cf, boot.l = 1) {
 
   cf.tsboot <- list(t = t,
                     t0 = t0,
-                    tseries = cf$cf, # data duplication for consistency with `tsboot`
+                    data = cf$cf, # data duplication for consistency with `tsboot`
                     R = N,
                     l = boot.l)
 
-  icf.tsboot <- NULL
   if( has_icf(cf) ){
     cf$icf0 <- apply(cf$icf, 2, mean)
 
@@ -487,9 +524,11 @@ jackknife.cf <- function(cf, boot.l = 1) {
     }
     icf.tsboot <- list(t = t,
                        t0 = t0,
-                       tseries = cf$icf, # data duplication for consistency with `tsboot`
+                       data = cf$icf, # data duplication for consistency with `tsboot`
                        R = N,
                        l = boot.l)
+  } else {
+    icf.tsboot <- NULL
   }
 
   cf <- invalidate.samples.cf(cf)
@@ -528,7 +567,7 @@ uwerr.cf <- function(cf){
 
   uw_wrapper <- function(x){
     uw_tmp <- try(uwerrprimary(data=x), silent=TRUE)
-    if( any(class(uw) == "try-error") ){
+    if( any(class(uw_temp) == "try-error") ){
       c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
     } else {
       c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
@@ -632,6 +671,14 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
 
+  if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
+    res_compat <- resampling_is_compatible(cf1, cf2)
+    if( !all(unlist(res_compat)) ){
+      print(res_compat)
+      stop("Samples were found to be incompatible in add.cf!\n")
+    }
+  }
+
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
@@ -645,20 +692,19 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   invalidate.samples.cf(cf)
 
   if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
-    stopifnot( all(unlist(resampling_is_compatible(cf1, cf2))) )
-
     cf.tsboot <- cf1$cf.tsboot
     cf.tsboot$t <- a*cf1$cf.tsboot$t + b*cf2$cf.tsboot$t
     cf.tsboot$t0 <- a*cf1$cf.tsboot$t0 + b*cf2$cf.tsboot$t0
-    cf.tsboot$tseries <- a*cf1$cf.tsboot$tseries + b*cf2$cf.tsboot$tseries
+    cf.tsboot$data <- a*cf1$cf.tsboot$data + b*cf2$cf.tsboot$data
 
-    icf.tsboot <- NULL
     if( has_icf(cf1) ){
       # no further tests required as this was already tested for compatibility twice
       icf.tsboot <- cf1$icf.tsboot
       icf.tsboot$t <- a*cf1$icf.tsboot$t + b*cf2$icf.tsboot$t
       icf.tsboot$t0 <- a*cf1$icf.tsboot$t0 + b*cf2$icf.tsboot$t0
-      icf.tsboot$tseries <- a*cf1$icf.tsboot$tseries + b*cf2$icf.tsboot$tseries
+      icf.tsboot$data <- a*cf1$icf.tsboot$data + b*cf2$icf.tsboot$data
+    } else {
+      icf.tsboot <- NULL
     }
     # use constructor to also update cf0 / icf0 and tsboot.se / itsboot.se
     cf <- cf_boot(cf,
@@ -744,12 +790,12 @@ mul.cf <- function(cf, a=1.) {
   if( inherits(cf, 'cf_boot') ){
     cf$cf.tsboot$t <- a*cf$cf.tsboot$t
     cf$cf.tsboot$t0 <- a*cf$cf.tsboot$t0
-    cf$cf.tsboot$tseries <- a*cf$cf.tsboot$t
+    cf$cf.tsboot$data <- a*cf$cf.tsboot$data
 
     if( has_icf(cf) ){
       cf$icf.tsboot$t <- a*cf$icf.tsboot$t
       cf$icf.tsboot$t0 <- a*cf$icf.tsboot$t0
-      cf$icf.tsboot$tseries <- a*cf$icf.tsboot$tseries
+      cf$icf.tsboot$data <- a*cf$icf.tsboot$data
     }
     # cf_boot will take care of cf0 / icf0 and tsboot.se / itsboot.se
     cf <- cf_boot(cf,
@@ -826,10 +872,6 @@ concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
 
-  if (inherits(left, 'cf_boot') || inherits(right, 'cf_boot')) {
-    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
-  }
-
   # In case that one of them does not contain data, the other one is the
   # result. This satisfies the neutral element axiom of a monoid.
   if (is_empty.cf(left)) {
@@ -851,6 +893,19 @@ concat.cf <- function (left, right) {
   stopifnot(left$symmetrised == right$symmetrised)
   stopifnot(left$nrStypes == right$nrStypes)
 
+  if( has_icf(left) | has_icf(right) ){
+    stopifnot( has_icf(left) & has_icf(right) )
+    stopifnot( nrow(left$icf) == nrow(right$icf) )
+  }
+  
+  if( inherits(left, 'cf_boot') | inherits(right, 'cf_boot') ){
+    res_compat <- resampling_is_concatenable(left, right)
+    if( !all(unlist(res_compat)) ){
+      print(res_compat)
+      stop("Samples were found to be inconcatenable in concat.cf!\n")
+    }
+  }
+
   rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
                   Time = left$Time,
                   nrStypes = left$nrStypes,
@@ -858,6 +913,35 @@ concat.cf <- function (left, right) {
   rval <- cf_orig(.cf = rval,
                   cf = cbind(left$cf, right$cf),
                   icf = cbind(left$icf, right$icf))
+  
+  # finally deal with the resampling samples
+  if( inherits(left, 'cf_boot') | inherits(right, 'cf_boot') ){
+
+    cf.tsboot <- left$cf.tsboot
+    cf.tsboot$t <- cbind(left$cf.tsboot$t, right$cf.tsboot$t)
+    cf.tsboot$t0 <- c(left$cf.tsboot$t0, right$cf.tsboot$t0)
+    cf.tsboot$data <- cbind(left$cf.tsboot$data, right$cf.tsboot$data)
+
+    # no need to test both as this has been done already
+    if( has_icf(left) ){
+      icf.tsboot <- left$icf.tsboot
+      icf.tsboot$t <- cbind(left$icf.tsboot$t, right$icf.tsboot$t)
+      icf.tsboot$t0 <- c(left$icf.tsboot$t0, right$icf.tsboot$t0)
+      icf.tsboot$data <- cbind(left$icf.tsboot$data, right$icf.tsboot$data)
+    } else {
+      icf.tsboot <- NULL
+    }
+    rval <- cf_boot(.cf = rval,
+                    boot.R = left$boot.R,
+                    boot.l = left$boot.l,
+                    seed = left$seed,
+                    sim = left$sim,
+                    endcorr = left$endcorr,
+                    cf.tsboot = cf.tsboot,
+                    icf.tsboot = icf.tsboot,
+                    resampling_method = left$resampling_method)
+  }
+
   return (invisible(rval))
 }
 
@@ -938,12 +1022,12 @@ shift.cf <- function(cf, places) {
       if( inherits(cf, 'cf_boot') ){
         cf$cf.tsboot$t[,istart:iend] <- cf$cf.tsboot$t[,ishift,drop=FALSE]
         cf$cf.tsboot$t0[istart:iend] <- cf$cf.tsboot$t0[ishift]
-        cf$cf.tsboot$tseries[,istart:iend] <- cf$cf.tsboot$tseries[,ishift,drop=FALSE]
+        cf$cf.tsboot$data[,istart:iend] <- cf$cf.tsboot$data[,ishift,drop=FALSE]
 
         if( has_icf(cf) ){
           cf$icf.tsboot$t[,istart:iend] <- cf$icf.tsboot$t[,ishift,drop=FALSE]
           cf$icf.tsboot$t0[istart:iend] <- cf$icf.tsboot$t0[ishift]
-          cf$icf.tsboot$tseries[,istart:iend] <- cf$icf.tsboot$tseries[,ishift,drop=FALSE]
+          cf$icf.tsboot$data[,istart:iend] <- cf$icf.tsboot$data[,ishift,drop=FALSE]
         }
       }
     } # for(sidx)
