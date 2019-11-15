@@ -1158,7 +1158,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   }
 
   cf$symmetrised <- TRUE
-  return(invisible(invalidate.samples.cf(cf)))
+  return(invisible(cf))
 }
 
 #' Unfold a correlation function which has been symmetrised
@@ -1190,29 +1190,60 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
   cf2 <- cf$cf
   cf$cf <- array(NA, dim=c(nrow(cf$cf), cf$nrObs*cf$nrStypes*cf$Time))
   
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     icf2 <- cf$icf
     cf$icf <- array(NA, dim=c(nrow(cf$icf), cf$nrObs*cf$nrStypes*cf$Time))
   }
 
+  if( inherits(cf, 'cf_boot') ){
+    cf.tsboot <- cf$cf.tsboot
+    cf$cf.tsboot$t <- array(NA, dim=c(nrow(cf.tsboot$t), cf$nrObs*cf$nrStypes*cf$Time))
+    cf$cf.tsboot$t0 <- rep(NA, times=cf$nrObs*cf$nrStypes*cf$Time)
+    cf$cf.tsboot$data <- array(NA, dim=c(nrow(cf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
+
+    if( has_icf(cf) ){
+      icf.tsboot <- cf$icf.tsboot
+      cf$icf.tsboot$t <- array(NA, dim=c(nrow(icf.tsboot$t), cf$nrObs*cf$nrStypes*cf$Time))
+      cf$icf.tsboot$t0 <- rep(NA, times=cf$nrObs*cf$nrStypes*cf$Time)
+      cf$cf.tsboot$data <- array(NA, dim=c(nrow(cf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
+    }
+  }
+
   Thalf <- cf$Time/2
-  isub <- c()
   for( oidx in 0:(cf$nrObs-1) ){
     for( sidx in 0:(cf$nrStypes-1) ){
       istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
-      cf$cf[, (istart):(ihalf)] <- cf2[, (istart):(ihalf)]
-      cf$cf[, (ihalf+1):(iend)] <- sym.vec[oidx+1]*cf2[, rev((istart+1):(ihalf-1))]
+      
+      ifwd <- (istart):(ihalf)
+      ifwd_2 <- (istart+1):(ihalf-1)
+      ibwd <- rev((ihalf+1):(iend))
 
-      if( !is.null(cf$icf) ){
-        cf$icf[, (istart):(ihalf)] <- icf2[, (istart):(ihalf)]
-        cf$icf[, (ihalf+1):(iend)] <- sym.vec[oidx+1]*icf2[, rev((istart+1):(ihalf-1))]
+      cf$cf[,ifwd] <- cf2[,ifwd]
+      cf$cf[,ibwd] <- sym.vec[oidx+1]*cf2[,ifwd_2]
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,ifwd] <- cf.tsboot$t[,ifwd]
+        cf$cf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$t[,ifwd_2]
+        cf$cf.tsboot$data[,ifwd] <- cf.tsboot$data[,ifwd]
+        cf$cf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$data[,ifwd_2]
+      }
+
+      if( has_icf(cf) ){
+        cf$icf[,ifwd] <- icf2[,ifwd]
+        cf$icf[,ibwd] <- sym.vec[oidx+1]*icf2[,ifwd_2]
+        if( inherits(cf, 'cf_boot') ){
+          cf$icf.tsboot$t[,ifwd] <- icf.tsboot$t[,ifwd]
+          cf$icf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$t[,ifwd_2]
+          cf$icf.tsboot$data[,ifwd] <- icf.tsboot$data[,ifwd]
+          cf$icf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$data[,ifwd_2]
+        }
       }
     }
   }
+
   cf$symmetrised <- FALSE
-  return(invisible(invalidate.samples.cf(cf)))
+  return(invisible((cf)))
 }
 
 #' summary.cf
