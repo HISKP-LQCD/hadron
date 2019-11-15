@@ -643,7 +643,6 @@ avg.cbt.cf <- function(cf){
   for( p in c(-1,1) ){
     cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
   }
-  cf <- invalidate.samples.cf(cf)
   return(invisible(cf))
 }
 
