@@ -359,7 +359,7 @@ is_empty.cf <- function (.cf) {
 #'
 #'
 has_icf <- function(.cf) {
-  stopifnot( inherits(cf, 'cf') ) 
+  stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
 }
 
