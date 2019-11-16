@@ -18,7 +18,8 @@ Imports:
     abind,
     boot,
     Rcpp,
-    stringr
+    stringr,
+    R6
 LinkingTo: 
     Rcpp
 Suggests: 
