@@ -17,6 +17,7 @@ Description: Toolkit to extract hadronic quantities from Lattice QCD simulations
 Imports:
     abind,
     boot,
+    R6,
     Rcpp,
     stringr
 LinkingTo: 
