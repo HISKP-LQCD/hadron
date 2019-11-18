@@ -233,9 +233,7 @@ gevp2cf <- function(gevp, id=1) {
   if (inherits(gevp$cf, 'cf_weighted')) {
     cf <- cf_weighted(cf,
                       weight.factor = gevp$cf$weight.factor,
-                      weight.cosh = gevp$cf$weight.cosh,
-                      mass1 = gevp$cf$mass1,
-                      mass2 = gevp$cf$mass2)
+                      weight.cosh = gevp$cf$weight.cosh)
   }
 
   # Add some other stuff
