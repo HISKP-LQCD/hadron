@@ -1,6 +1,8 @@
 ---
 title: "Jackknife Error Normalization"
-output: html_notebook
+author: "Martin Ueding"
+output: pdf_document
+
 vignette: >
   %\VignetteIndexEntry{Jackknife Error Normalization}
   %\VignetteEngine{knitr::rmarkdown}

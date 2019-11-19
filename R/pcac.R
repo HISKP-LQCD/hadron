@@ -22,6 +22,16 @@ pcacsym <- function(data, t, T2, pa=FALSE) {
   return(invisible(mass))
 }
 
+#' pcacfit
+#'
+#' @description
+#' Computes the average PCAC mass
+#' 
+#' @param data 'Effectivemasses` from correlators
+#' @param from initial value of fit range
+#' @param to final value of fit range
+#' @param T2 Time extend
+#' @param pa Boolean. 
 pcacfit <- function(data, from, to, T2, pa=FALSE) {
   mass <- 0.
   for(t in from:to) {

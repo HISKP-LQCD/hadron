@@ -26,6 +26,11 @@
 \item{rep}{Boolean: whether or not to add to existing plot}
 
 \item{col}{String vector: vector of colours for the different correlation functions}
+
+\item{every}{Fit only a part of the data points. Indices that are not multiples of \code{every}
+are skipped. If no value is provided, all points are taken into account.}
+
+\item{...}{Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.}
 }
 \description{
 Plot a matrixfit

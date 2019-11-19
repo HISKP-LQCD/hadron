@@ -233,9 +233,7 @@ gevp2cf <- function(gevp, id=1) {
   if (inherits(gevp$cf, 'cf_weighted')) {
     cf <- cf_weighted(cf,
                       weight.factor = gevp$cf$weight.factor,
-                      weight.cosh = gevp$cf$weight.cosh,
-                      mass1 = gevp$cf$mass1,
-                      mass2 = gevp$cf$mass2)
+                      weight.cosh = gevp$cf$weight.cosh)
   }
 
   # Add some other stuff
@@ -349,6 +347,10 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   return(invisible(res))
 }
 
+#' summary.gevp.amplitude
+#'
+#' @param object Object of type `gevp.amplitude`.
+#' @param ... Generic Parameters to be passed on.
 summary.gevp.amplitude <- function (object, ...) {
   amp <- object
   cat("\n ** Result of a GEVP analysis for the amplitude **\n\n")
@@ -378,6 +380,10 @@ summary.gevp.amplitude <- function (object, ...) {
   }
 }
 
+#' plot.gevp.amplitude
+#'
+#' @param x Object of type `gevp.amplitude`.
+#' @param ... Graphical parameters to be passed on.
 plot.gevp.amplitude <- function (x, ...) {
   amp <- x
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)

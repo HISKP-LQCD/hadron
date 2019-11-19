@@ -7,7 +7,7 @@
 h5_names_exist(h5f, nms_to_find)
 }
 \arguments{
-\item{h5f}{HDF5 file openend with \code{H5Fopen}}
+\item{h5f}{HDF5 file openend with \code{rhdf5::H5Fopen}}
 
 \item{nms_to_find}{Vector of strings, group names (not full paths) which
 are to be located in the file.}
@@ -22,5 +22,5 @@ The group names in an HDF5 file are stored as full paths
 as well as a flat vector. It is thus possible to check
 if a particular set of group names exist in the file
 by parsing the \code{name} member of the output
-of \code{h5ls}. This function does just that.
+of \code{rhdf5::h5ls}. This function does just that.
 }

@@ -131,11 +131,15 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   }
 }
 
+#' parametric.nlsfit.cov
+#' 
+#' @description
 #' NLS fit with parametric bootstrap and covariance
 #'
 #' @inheritParams bootstrap.nlsfit
 #' @inheritParams parametric.bootstrap.cov
-#'
+#' @param bootstrap boolean. If `TRUE`, bootstrap is used.
+#' 
 #' @export
 #' @family NLS fit functions
 parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
@@ -585,6 +589,8 @@ simple.nlsfit <- function(fn,
 #' @param error Function that takes a sample vector and returns the error
 #' estimate. This is a parameter in order to support different resampling
 #' methods like jackknife.
+#' @param cov_fn function. Function to compute the covariance
+#'   (matrix). Default is \link{cov}.  
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
 #' @param success.infos integer vector. When using `minpack.lm` there is the
@@ -881,7 +887,11 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
 #' range in which fitline and errorband are plotted. Default is the range of
 #' the data.
-#' @param ... Additional parameters passed to the `plotwitherror` function.
+#' @param ... Additional parameters passed to the `plotwitherror`
+#'   function.
+#' @param error Function to compute the standard error in resampling
+#'   schemes. Default is \link{sd} for bootstrap. For other resampling
+#'   schemes this might need to be changed.
 #'
 #' @export
 #' @family NLS fit functions

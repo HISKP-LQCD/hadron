@@ -33,13 +33,13 @@ sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 the data is post-processed to recover the measurements for the particular
 samples.}
 
-\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package.}
-
-\item{legecy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+\item{legacy_traj}{Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 corresponds to what is passed via the 'traj' flag to CalcLoops. When
 left empty, this defaults to '0004'. If this was left emtpy when
 the loop files were generated, set this to \code{TRUE} and the paths
 will be constructed with 'conf_0004' as their root group.}
+
+\item{verbose}{Boolean, output I/O time per file. Requires 'tictoc' package.}
 }
 \value{
 Named nested list of the same length as \code{selections} containg the loop data

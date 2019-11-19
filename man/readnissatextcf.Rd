@@ -8,6 +8,12 @@ readnissatextcf(file_basenames_to_read, smear_combs_to_read, Time,
   combs_to_read, nts = Time, sym.vec = c(1), symmetrise = FALSE)
 }
 \arguments{
+\item{file_basenames_to_read}{Character vector of file names without the
+smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
+which will be added in the reading routine accordign to what was
+passed via \code{smear_combs_to_read}. An example would be
+'0001/mes_contr_2pts', not the lack of the smearing suffix.}
+
 \item{smear_combs_to_read}{Character vector containing the smearing cominations that are to be read.
 These will be attached to the \code{file_basenames_to_read} in the reading routine.}
 
@@ -34,12 +40,6 @@ per entry of \code{smear_combs_to_read})}
 
 \item{symmetrise}{Boolean, specifies whether averaging over backward and forward
 correlators should be done after the correlator has been read in.}
-
-\item{file_baseames_to_read}{Character vector of file names without the
-smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
-which will be added in the reading routine accordign to what was
-passed via \code{smear_combs_to_read}. An example would be
-'0001/mes_contr_2pts', not the lack of the smearing suffix.}
 }
 \description{
 reader for Nissa text format correlation functions

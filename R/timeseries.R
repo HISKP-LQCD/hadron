@@ -1,6 +1,26 @@
-# function to plot timeseries data, a corresponding histogram
-# and an error shading for an error analysis via uwerr
-
+#' plot_timeseries
+#' 
+#' @description
+#' function to plot timeseries data, a corresponding histogram
+#' and an error shading for an error analysis via uwerr
+#'
+#' @param dat Timeseries to analyse.
+#' @param ylab Y-axis label.
+#' @param xlab X-axis label.
+#' @param plotsize Width and Height of plot.
+#' @param titletext Text in the plot title.
+#' @param hist.by Numeric. Stepping to compute the histogram breaks.
+#' @param stat_range range of statistics to use.
+#' @param pdf.filename String. PDF filename.
+#' @param name String. Timeseries name.
+#' @param hist.probs Probablities for the histogram
+#' @param errorband_color String. Colour of the error band.
+#' @param type String. Plot type.
+#' @param uwerr.S Numeric. `S` of the \link{uwerr} method to be used.
+#' @param periodogram Boolean. Whether to show a periodogram.
+#' @param debug Boolean. Generate debug output.
+#' @param uw.summary Boolean. Generate an \link{uwerr} summary.
+#' @param ... Generic graphical parameters to be passed on.
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
                             stat_range,
@@ -106,9 +126,21 @@ plot_timeseries <- function(dat,
                       dtauint=uw.data$dtauint, Wopt=uw.data$Wopt, stringsAsFactors=FALSE)))
 }
 
-# function to plot timeseries of eigenvlues, including minimum and maximum eigenvalue bands
-# as found in the monomial_0x.data files produced by tmLQCD
-
+#' plot_eigenvalue_timeseries
+#' 
+#' @description
+#' function to plot timeseries of eigenvlues, including minimum and maximum eigenvalue bands 
+#'  as found in the monomial_0x.data files produced by tmLQCD
+#' 
+#' @param dat Timeseries to analyse.
+#' @param ylab Y-axis label.
+#' @param plotsize Width and Height of plot.
+#' @param filelabel String. Label of the file.
+#' @param titletext Text in the plot title.
+#' @param stat_range range of statistics to use.
+#' @param pdf.filename String. PDF filename.
+#' @param errorband_color String. Colour of the error band.
+#' @param debug Boolean. Generate debug output.
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
                                        ylab, plotsize, filelabel,titletext,

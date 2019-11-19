@@ -1,3 +1,12 @@
+#' @title Compute the bootstrap error of the mean
+#'
+#' @description
+#' Compute the bootstrap error of the mean
+#'
+#' @param data Original data to bootstrap
+#' @param R Number of bootstrap replicates.
+#' @param l Block length.
+#' 
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
@@ -31,6 +40,7 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #' @param t Numeric vector: Time of interest.
 #' @param T Numeric: Time extent of the lattice.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
+#' @param delta1 dummy parameter for compatibility
 #' 
 #' @seealso \code{\link{matrixfit}}
 pcModel <- function(par, t, T, delta1=1, reference_time) {
@@ -495,6 +505,9 @@ matrixfit <- function(cf, t1, t2,
 #' @param plot.raw Boolean: plot the raw data or multiply out the leading exponetial behaviour
 #' @param rep Boolean: whether or not to add to existing plot
 #' @param col String vector: vector of colours for the different correlation functions
+#' @param every Fit only a part of the data points. Indices that are not multiples of \code{every}
+#'    are skipped. If no value is provided, all points are taken into account.
+#' @param ... Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.
 #' 
 #' @seealso \code{\link{matrixfit}}
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
@@ -620,7 +633,10 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
   }
 }
 
-
+#' summary.matrixfit
+#'
+#' @param object Object of type \link{matrixfit}
+#' @param ... Generic parameters to pass on.
 summary.matrixfit <- function (object, ...) {
   mfit <- object
   if(mfit$model == "pc") {
