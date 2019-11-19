@@ -103,7 +103,8 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #'
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
-parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ..., bootstrap=TRUE) {
+parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
+                               ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
@@ -121,12 +122,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ..., bootstr
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy, na.rm)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R, na.rm)
   }
 }
 
@@ -137,7 +138,8 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx, ..., bootstr
 #'
 #' @export
 #' @family NLS fit functions
-parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ..., bootstrap=TRUE) {
+parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
+                                   ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
 
   if (ncol(cov) == length(y)) {
@@ -153,12 +155,12 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ..., bootst
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap.cov(boot.R, values, cov)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., CovMatrix = cov)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., CovMatrix = cov, na.rm)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., CovMatrix = cov, boot.R = boot.R)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., CovMatrix = cov, boot.R = boot.R, na.rm)
   }
 }
 
@@ -176,7 +178,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.
     }
 
     if (missing(CovMatrix)) {
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov.fn = cov.fn), silent = TRUE)
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov.fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
     } else {
@@ -272,7 +274,7 @@ get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
   return(list(dY=dY, dy=dy, dx=dx))
 }
 
-set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx) {
+set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx, na.rm) {
   ## define the chi-vector, the sum of squares of which has to be minimized
   ## the definitions depend on the errormodel and the use of covariance
   ## BUT it always has the same name
@@ -290,15 +292,25 @@ set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx) {
     }
   }
 
-  return(fitchi)
+  if(na.rm){
+    if(useCov){
+      dY.na = apply(is.na(dY), 1, any)
+      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | dY.na, 0, fitchi(y, par, ...)) }
+    }else{
+      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | is.na(dY), 0, fitchi(y, par, ...)) }
+    }
+    return(fitchi.wo.na)
+  }else{
+    return(fitchi)
+  }
 }
 
-set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx) {
+set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx, na.rm) {
   ## define the derivatives of chi and chi^2
   if(missing(gr) || (errormodel == "xyerrors" && missing(dfn))){
     ## in case no derivative is known, the functions are set to NULL
     ## this is the default in the optimization functions anyway
-    dfitchi <- NULL
+    return(NULL)
   }else{
     ## the format of gr has to be nrows=length(par), ncols=length(Y)
     if(errormodel == "yerrors"){
@@ -319,9 +331,19 @@ set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx) {
         dfitchi <- function(par, ...) { -dY * jacobian(par, ...) }
       }
     }
-  }
 
-  return(dfitchi)
+    if(na.rm){
+      if(useCov){
+        dY.na = apply(is.na(dY), 1, any)
+        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | dY.na, 0, dfitchi(y, par, ...)) }
+      }else{
+        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(dY), 0, dfitchi(y, par, ...)) }
+      }
+      return(dfitchi.wo.na)
+    }else{
+      return(dfitchi)
+    }
+  }
 }
 
 set.dfitchisqr <- function (fitchi, dfitchi) {
@@ -333,9 +355,11 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos) {
-  fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx)
-  dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx)
+set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm) {
+  fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx, na.rm)
+  dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx, na.rm)
+  print(fitchi)
+  print(dfitchi)
   ## define the wrapper-functions for optimization
   if (lm.avail) {
     control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter)
@@ -408,7 +432,8 @@ simple.nlsfit <- function(fn,
                           error = sd,
                           maxiter = 500,
                           success.infos = 1:3,
-                          relative.weights = FALSE) {
+                          relative.weights = FALSE,
+                          na.rm = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -439,7 +464,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
@@ -570,6 +595,8 @@ simple.nlsfit <- function(fn,
 #' relative weights instead of absolute ones? If TRUE, the covariance martix
 #' of the fit parameter results is multiplied by chi^2/dof. This is the default
 #' in many fit programs, e.g. gnuplot.
+#' @param na.rm logical. If set to `true`, NAs in `y` and `dy` will be ignored.
+#' If x-errors are taken into account, NAs in `x` and `dx` will be ignored, too.
 #'
 #' @return
 #'  returns a list of class 'bootstrapfit'. It returns all input
@@ -636,7 +663,8 @@ bootstrap.nlsfit <- function(fn,
                              cov.fn = cov,
                              maxiter = 500,
                              success.infos = 1:3,
-                             relative.weights = FALSE) {
+                             relative.weights = FALSE,
+                             na.rm = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -683,7 +711,7 @@ bootstrap.nlsfit <- function(fn,
   ## add original data as first row
   bsamples <- rbind(Y, bsamples)
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
