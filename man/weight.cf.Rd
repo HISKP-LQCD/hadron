@@ -5,7 +5,7 @@
 \title{Weight a correlation function}
 \usage{
 weight.cf(cf, energy_difference_val, energy_difference_boot, cosh_factor,
-  offset = 0)
+  offset = 0, inverse = FALSE)
 }
 \arguments{
 \item{cf}{cf_orig and possibly cf_boot object.}
