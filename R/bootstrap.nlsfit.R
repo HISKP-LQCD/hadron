@@ -162,7 +162,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov, ..., bootst
   }
 }
 
-get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error) {
+get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.fn, error) {
   ## invert covariance matrix, if applicable
   if (useCov) {
     if (!missing(dx) || !missing(dy)) {
@@ -176,7 +176,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     }
 
     if (missing(CovMatrix)) {
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov.fn = cov.fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
     } else {
@@ -333,7 +333,7 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos) {
+set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos) {
   fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx)
   dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx)
   ## define the wrapper-functions for optimization
@@ -346,7 +346,7 @@ set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, 
           control = control,
           ...))
 
-      list(converged = res$info %in% success_infos,
+      list(converged = res$info %in% success.infos,
            info = res$info,
            par = res$par,
            chisq = res$rsstrace[length(res$rsstrace)],
@@ -407,7 +407,7 @@ simple.nlsfit <- function(fn,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
-                          success_infos = 1:3,
+                          success.infos = 1:3,
                           relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -439,7 +439,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
@@ -523,7 +523,7 @@ simple.nlsfit <- function(fn,
 #' @param fn `fn(par, x, ...)`. The (non-linear) function to be fitted to the
 #' data. Its first argument must be the fit parameters named \code{par}. The
 #' second must be \code{x}, the explaining variable. Additional parameters
-#' might be passed to the function. Currently we pass `boot_r` which is `0`
+#' might be passed to the function. Currently we pass `boot.r` which is `0`
 #' for the original data and the ID (1, ...) of the bootstrap sample otherwise.
 #' As more parameters might be added in the future it is recommended that the
 #' fit function accepts `...` as the last parameter to be forward compatible.
@@ -562,7 +562,7 @@ simple.nlsfit <- function(fn,
 #' methods like jackknife.
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
-#' @param success_infos integer vector. When using `minpack.lm` there is the
+#' @param success.infos integer vector. When using `minpack.lm` there is the
 #' `info` in the return value. Values of 1, 2 or 3 are certain success. A value
 #' of 4 could either be a success or a saddle point. If you want to interpret
 #' this as a success as well just pass `1:4` instead of the default `1:3`.
@@ -604,7 +604,7 @@ simple.nlsfit <- function(fn,
 #' dx <- c(0.1, 0.1, 0.1)
 #' boot.R <- 1500
 #'
-#' fn <- function (par, x, boot_r, ...) par[1] + par[2] * x
+#' fn <- function (par, x, boot.r, ...) par[1] + par[2] * x
 #'
 #' ## Before we can use the fit with this data, we need to create bootstrap
 #' ## samples. We do not want to use the correlation matrix here. Note that you
@@ -633,9 +633,9 @@ bootstrap.nlsfit <- function(fn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              error = sd,
-                             cov_fn = cov,
+                             cov.fn = cov,
                              maxiter = 500,
-                             success_infos = 1:3,
+                             success.infos = 1:3,
                              relative.weights = FALSE) {
   stopifnot(!missing(y))
   stopifnot(!missing(x))
@@ -675,7 +675,7 @@ bootstrap.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.fn, error)
   dY <- all.errors$dY
   dy <- all.errors$dy
   dx <- all.errors$dx
@@ -683,10 +683,10 @@ bootstrap.nlsfit <- function(fn,
   ## add original data as first row
   bsamples <- rbind(Y, bsamples)
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success_infos)
+  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos)
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, boot_r = 0, ...)
+  first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
   if (!first.res$converged) {
     stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
@@ -697,7 +697,7 @@ bootstrap.nlsfit <- function(fn,
     my.lapply <- lapply
   }
 
-  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par, boot_r = sample - 1, ...) })
+  boot.list <- my.lapply(crr, function(sample) { wrapper(y=bsamples[sample,], par=first.res$par, boot.r = sample - 1, ...) })
 
   par.boot <- do.call(rbind, lapply(boot.list, function (elem) elem$par))
 
@@ -878,14 +878,14 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 
   ## to include additional parameter to x$fn originally given as ... to
   ## bootstrap.nlsfit requires some pull-ups
-  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot_r = 0), x$tofn))
+  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot.r = 0), x$tofn))
 
   if(!is.null(x$t)) {
     ## error band
     ## define a dummy function to be used in apply
-    prediction_boot_fn <- function (boot_r) {
-      par <- x$t[boot_r, 1:npar, drop = FALSE]
-      do.call(x$fn, c(list(par = par, x = X, boot_r = boot_r), x$tofn))
+    prediction_boot_fn <- function (boot.r) {
+      par <- x$t[boot.r, 1:npar, drop = FALSE]
+      do.call(x$fn, c(list(par = par, x = X, boot.r = boot.r), x$tofn))
     }
     predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
     se <- apply(predictions, 2, error, na.rm = TRUE)
