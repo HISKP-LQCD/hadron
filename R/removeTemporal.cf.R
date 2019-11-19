@@ -346,6 +346,8 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 #'   the weight factor.
 #' @param offset integer. Offset for the time $t$, needed for the reweighting
 #'   after a shift.
+#' @param inverse boolean. If `TRUE` apply inverse weight.
+#' 
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,

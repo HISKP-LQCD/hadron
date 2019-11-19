@@ -21,6 +21,8 @@ the weight factor.}
 
 \item{offset}{integer. Offset for the time $t$, needed for the reweighting
 after a shift.}
+
+\item{inverse}{boolean. If \code{TRUE} apply inverse weight.}
 }
 \description{
 Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
