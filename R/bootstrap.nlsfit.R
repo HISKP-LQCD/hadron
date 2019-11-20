@@ -122,12 +122,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy, na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy, na.rm = na.rm)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R, na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
   }
 }
 
@@ -159,12 +159,12 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap.cov(boot.R, values, cov)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., CovMatrix = cov, na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., CovMatrix = cov, na.rm = na.rm)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., CovMatrix = cov, boot.R = boot.R, na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., CovMatrix = cov, boot.R = boot.R, na.rm = na.rm)
   }
 }
 
