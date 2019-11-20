@@ -45,5 +45,5 @@ using just \code{every}th time slice in the fit.}
 \item{...}{Further parameters.}
 }
 \description{
-perform a factorising fit of a matrix of correlation functions
+Modernised and extended implementation of \link{matrixfit}
 }
