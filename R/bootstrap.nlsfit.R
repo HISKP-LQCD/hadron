@@ -589,7 +589,7 @@ simple.nlsfit <- function(fn,
 #' @param error Function that takes a sample vector and returns the error
 #' estimate. This is a parameter in order to support different resampling
 #' methods like jackknife.
-#' @param cov_fn function. Function to compute the covariance
+#' @param cov.fn function. Function to compute the covariance
 #'   (matrix). Default is \link{cov}.  
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
