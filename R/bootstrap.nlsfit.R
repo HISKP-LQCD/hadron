@@ -312,8 +312,9 @@ set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx) {
         dfitchi <- function(par, ...) { -dY * gr(par=par, x=x, ...) }
       }
     }else{
+      nx <- length(x)
       jacobian <- function(par, ...) {
-        df.dpar <- rbind(gr(par=par[-ipx], x=par[ipx], ...), array(0,dim=c(nx,length(par.guess))))
+        df.dpar <- rbind(gr(par=par[-ipx], x=par[ipx], ...), array(0,dim=c(nx,length(par))))
         df.dx <- rbind(diag(dfn(par=par[-ipx], x=par[ipx], ...)), diag(1,nx))
         return(cbind(df.dpar, df.dx))
       }

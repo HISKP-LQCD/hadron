@@ -150,12 +150,9 @@ loop_2pt <- function(loop_snk, loop_src,
   dims <- loop_snk$dim
 
   if( random_vectors_outer_product ){
-    dplyr_avail <- requireNamespace("dplyr")
-    if( !dplyr_avail ) stop("To use this function with 'random_vectors_outer_product = TRUE', the 'dplyr' package must be available.")
     random_idcs <- expand.grid( 1:dims[1], 1:dims[1], KEEP.OUT.ATTRS = FALSE)
     colnames(random_idcs) <- c("r1", "r2")
-    random_idcs <- dplyr::filter(random_idcs,
-                                 r1 != r2)
+    random_idcs <- random_idcs[ which(random_idcs$r1 != random_idcs$r2), ]
   }
 
   for( t_sep in 0:(Time-1) ){
