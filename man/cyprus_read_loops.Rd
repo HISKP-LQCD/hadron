@@ -4,8 +4,15 @@
 \alias{cyprus_read_loops}
 \title{read HDF5 loop files in the Cyprus CalcLoops format}
 \usage{
-cyprus_read_loops(selections, files, Time, nstoch, accumulated = TRUE,
-  legacy_traj = TRUE, verbose = FALSE)
+cyprus_read_loops(
+  selections,
+  files,
+  Time,
+  nstoch,
+  accumulated = TRUE,
+  legacy_traj = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{selections}{Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'

@@ -4,9 +4,17 @@
 \alias{analysis_gradient_flow}
 \title{analysis_gradient_flow}
 \usage{
-analysis_gradient_flow(path, outputbasename, basename = "gradflow",
-  read.data = TRUE, pl = FALSE, skip = 0, start = 0, scale = 1,
-  dbg = FALSE)
+analysis_gradient_flow(
+  path,
+  outputbasename,
+  basename = "gradflow",
+  read.data = TRUE,
+  pl = FALSE,
+  skip = 0,
+  start = 0,
+  scale = 1,
+  dbg = FALSE
+)
 }
 \arguments{
 \item{path}{string. path to data files}

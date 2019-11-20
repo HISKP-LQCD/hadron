@@ -4,9 +4,18 @@
 \alias{plot.bootstrapfit}
 \title{Plot a bootstrap NLS fit}
 \usage{
-\method{plot}{bootstrapfit}(x, ..., col.line = "black",
-  col.band = "gray", opacity.band = 0.65, lty = c(1), lwd = c(1),
-  supports = 1000, plot.range, error = sd)
+\method{plot}{bootstrapfit}(
+  x,
+  ...,
+  col.line = "black",
+  col.band = "gray",
+  opacity.band = 0.65,
+  lty = c(1),
+  lwd = c(1),
+  supports = 1000,
+  plot.range,
+  error = sd
+)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
@@ -38,13 +47,14 @@ schemes this might need to be changed.}
 Plot a bootstrap NLS fit
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit.cov}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{simple.nlsfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit.cov}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{simple.nlsfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}

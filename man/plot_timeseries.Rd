@@ -4,11 +4,25 @@
 \alias{plot_timeseries}
 \title{plot_timeseries}
 \usage{
-plot_timeseries(dat, ylab, plotsize, titletext, hist.by, stat_range,
-  pdf.filename, name = "", xlab = "$t_\\\\mathrm{MD}$",
-  hist.probs = c(0, 1), errorband_color = rgb(0.6, 0, 0, 0.6),
-  type = "l", uwerr.S = 2, periodogram = FALSE, debug = FALSE,
-  uw.summary = TRUE, ...)
+plot_timeseries(
+  dat,
+  ylab,
+  plotsize,
+  titletext,
+  hist.by,
+  stat_range,
+  pdf.filename,
+  name = "",
+  xlab = "$t_\\\\mathrm{MD}$",
+  hist.probs = c(0, 1),
+  errorband_color = rgb(0.6, 0, 0, 0.6),
+  type = "l",
+  uwerr.S = 2,
+  periodogram = FALSE,
+  debug = FALSE,
+  uw.summary = TRUE,
+  ...
+)
 }
 \arguments{
 \item{dat}{Timeseries to analyse.}
