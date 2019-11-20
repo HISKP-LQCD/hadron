@@ -19,7 +19,7 @@ bootstrap.nlsfit(
   use.minpack.lm = TRUE,
   parallel = FALSE,
   error = sd,
-  cov.fn = cov,
+  cov_fn = cov,
   maxiter = 500,
   success.infos = 1:3,
   relative.weights = FALSE,
@@ -80,7 +80,7 @@ stable.}
 estimate. This is a parameter in order to support different resampling
 methods like jackknife.}
 
-\item{cov.fn}{function. Function to compute the covariance
+\item{cov_fn}{function. Function to compute the covariance
 (matrix). Default is \link{cov}.}
 
 \item{maxiter}{integer. Maximum number of iterations that can be used in the

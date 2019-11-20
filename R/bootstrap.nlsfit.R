@@ -168,7 +168,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
   }
 }
 
-get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.fn, error) {
+get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error) {
   ## invert covariance matrix, if applicable
   if (useCov) {
     if (!missing(dx) || !missing(dy)) {
@@ -182,7 +182,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.
     }
 
     if (missing(CovMatrix)) {
-      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov.fn), silent = TRUE)
+      InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
     } else {
@@ -589,7 +589,7 @@ simple.nlsfit <- function(fn,
 #' @param error Function that takes a sample vector and returns the error
 #' estimate. This is a parameter in order to support different resampling
 #' methods like jackknife.
-#' @param cov.fn function. Function to compute the covariance
+#' @param cov_fn function. Function to compute the covariance
 #'   (matrix). Default is \link{cov}.  
 #' @param maxiter integer. Maximum number of iterations that can be used in the
 #' optimization process.
@@ -666,7 +666,7 @@ bootstrap.nlsfit <- function(fn,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              error = sd,
-                             cov.fn = cov,
+                             cov_fn = cov,
                              maxiter = 500,
                              success.infos = 1:3,
                              relative.weights = FALSE,
@@ -709,7 +709,7 @@ bootstrap.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov.fn, error)
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
   dY <- all.errors$dY
   dy <- all.errors$dy
   dx <- all.errors$dx
