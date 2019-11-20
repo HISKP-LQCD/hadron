@@ -4,8 +4,14 @@
 \alias{loop_spin_project}
 \title{spin projection of quark loop data}
 \usage{
-loop_spin_project(loop, gamma, reim = "both", stochav = FALSE,
-  scale_factor = as.complex(1), herm_conj = FALSE)
+loop_spin_project(
+  loop,
+  gamma,
+  reim = "both",
+  stochav = FALSE,
+  scale_factor = as.complex(1),
+  herm_conj = FALSE
+)
 }
 \arguments{
 \item{loop}{'raw_cf' container with loop data}

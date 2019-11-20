@@ -4,9 +4,20 @@
 \alias{construct_onlinemeas_rundir}
 \title{Construct a run directory string for \link{analysis_online}}
 \usage{
-construct_onlinemeas_rundir(type, beta, L, T, kappa = 0, mul = 0,
-  csw = 0, musigma = 0, mudelta = 0, muh = 0, addon = "",
-  debug = FALSE)
+construct_onlinemeas_rundir(
+  type,
+  beta,
+  L,
+  T,
+  kappa = 0,
+  mul = 0,
+  csw = 0,
+  musigma = 0,
+  mudelta = 0,
+  muh = 0,
+  addon = "",
+  debug = FALSE
+)
 }
 \arguments{
 \item{type}{String. Short identifier for gauge action type. For example, \code{iwa} for Iwasaki gauge action.}

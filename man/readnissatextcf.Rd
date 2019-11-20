@@ -4,8 +4,15 @@
 \alias{readnissatextcf}
 \title{reader for Nissa text format correlation functions}
 \usage{
-readnissatextcf(file_basenames_to_read, smear_combs_to_read, Time,
-  combs_to_read, nts = Time, sym.vec = c(1), symmetrise = FALSE)
+readnissatextcf(
+  file_basenames_to_read,
+  smear_combs_to_read,
+  Time,
+  combs_to_read,
+  nts = Time,
+  sym.vec = c(1),
+  symmetrise = FALSE
+)
 }
 \arguments{
 \item{file_basenames_to_read}{Character vector of file names without the

@@ -15,7 +15,8 @@ Arithmetic operations are defined for this class and utility functions
 such as \code{is.raw_cf} and \code{is_empty.raw_cf}.
 }
 \seealso{
-Other raw_cf constructors: \code{\link{raw_cf_data}},
-  \code{\link{raw_cf_meta}}
+Other raw_cf constructors: 
+\code{\link{raw_cf_data}()},
+\code{\link{raw_cf_meta}()}
 }
 \concept{raw_cf constructors}
