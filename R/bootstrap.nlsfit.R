@@ -363,8 +363,6 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
 set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm) {
   fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx, na.rm)
   dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx, na.rm)
-  print(fitchi)
-  print(dfitchi)
   ## define the wrapper-functions for optimization
   if (lm.avail) {
     control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter)
