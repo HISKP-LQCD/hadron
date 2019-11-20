@@ -41,3 +41,7 @@ matrices. A so-called Hankel matrix is generated from an input
 then. This is the function to call. It will perform a bootstrap
 analysis.
 }
+\seealso{
+Other hankel: \code{\link{gevp.hankel}}
+}
+\concept{hankel}

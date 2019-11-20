@@ -54,7 +54,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
-#' @param cf.tsboot List, result from the \link[boot]{tsboot} function.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the real part.
+#' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the imaginay part.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
 #'
 #' @details
@@ -69,14 +70,16 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resampling_method = 'bootstrap') {
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$boot.R <- boot.R
   .cf$boot.l <- boot.l
   .cf$seed <- seed
   .cf$sim <- sim
+
   .cf$cf.tsboot <- cf.tsboot
+  .cf$icf.tsboot <- icf.tsboot
 
   if (resampling_method == 'bootstrap') {
     .cf$error_fn <- sd
@@ -93,6 +96,12 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, resamplin
 
   .cf$cf0 <- cf.tsboot$t0
   .cf$tsboot.se <- apply(.cf$cf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
+
+  if( !is.null( icf.tsboot ) ){
+    .cf$icf0 <- icf.tsboot$t0
+    .cf$itsboot.se <- apply(.cf$icf.tsboot$t, MARGIN = 2L, FUN = .cf$error_fn)
+  }
+  
   .cf$boot.samples <- TRUE
 
   class(.cf) <- append(class(.cf), 'cf_boot')
@@ -189,7 +198,7 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
 #'
 #' @param .cf `cf` object to extend. Named with a leading period just to distinguish it from the member also named `cf`.
 #' @param cf Numeric matrix, original data for all observables and measurements.
-#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of `NA` will be created with the same dimension as `cf`.
+#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as quite a few functions just ignore the imaginary part and drop it in operations.
 #'
 #' @family cf constructors
 #'
@@ -198,14 +207,7 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$cf <- cf
-
-  if (is.null(icf)) {
-    .cf$icf <- cf
-    .cf$icf[, ] <- NA
-  }
-  else {
-    .cf$icf <- icf
-  }
+  .cf$icf <- icf
 
   class(.cf) <- append(class(.cf), 'cf_orig')
   return (.cf)
@@ -276,7 +278,7 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
 #' @family cf constructors
 #'
 #' @export
-cf_smeared <- function (.cf = cf(), scf, iscf, nrSamples, obs) {
+cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$scf <- scf
@@ -351,6 +353,15 @@ is_empty.cf <- function (.cf) {
     is.null(names(.cf))
 }
 
+#' Checks whether the cf object contains an imaginary part
+#'
+#' @param .cf `cf` object
+#'
+#'
+has_icf <- function(.cf) {
+  return( !is.null(.cf$icf) )
+}
+
 gen.block.array <- function(n, R, l, endcorr=TRUE) {
   endpt <- if (endcorr)
              n
@@ -372,24 +383,28 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
-                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+                            R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+
+  icf.tsboot <- NULL
+  if( has_icf(cf) ){
+    # no need to store the old seed again, but we definitely need to reset the RNG!
+    swap_seed(seed)
+    icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
+                               R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+  }
 
   cf <- cf_boot(cf,
                 boot.R = boot.R,
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
-                cf.tsboot = cf.tsboot)
+                cf.tsboot = cf.tsboot,
+                icf.tsboot = icf.tsboot,
+                resampling_method = "bootstrap")
 
   restore_seed(old_seed)
 
@@ -424,6 +439,24 @@ jackknife.cf <- function(cf, boot.l = 1) {
                     R = N,
                     l = boot.l)
 
+  icf.tsboot <- NULL
+  if( has_icf(cf) ){
+    cf$icf0 <- apply(cf$icf, 2, mean)
+
+    t <- array(NA, dim = c(N, ncol(cf$icf)))
+    t0 <- cf$icf0
+    for (i in 1:N) {
+      ## The measurements that we are going to leave out.
+      ii <- c(i:(i+boot.l-1))
+      ## jackknife replications of the mean
+      t[i, ] <- apply(cf$icf[-ii, ], 2L, mean)
+    }
+    icf.tsboot <- list(t = t,
+                       t0 = t0,
+                       R = N,
+                       l = boot.l)
+  }
+
   cf <- invalidate.samples.cf(cf)
   cf <- cf_boot(cf,
                 boot.R = cf.tsboot$R,
@@ -431,6 +464,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 seed = 0,
                 sim = 'geom',
                 cf.tsboot = cf.tsboot,
+                icf.tsboot = icf.tsboot,
                 resampling_method = 'jackknife')
 
   return (invisible(cf))
@@ -530,8 +564,13 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   ind.sl <- ( (cols[2]-1)*timeslices+1 ):( cols[2]*timeslices )
 
   cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
-
   cf$cf <- cf$cf[,-ind.sl]
+
+  if( has_icf(cf) ){
+    cf$icf[,ind.ls] <- 0.5 * ( cf$icf[,ind.ls] + cf$icf[,ind.sl] )
+    cf$icf <- cf$icf[,-ind.sl]
+  }
+
   cf$nrStypes <- cf$nrStypes-1
   return (cf)
 }
@@ -585,6 +624,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
+
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot( has_icf(cf1) & has_icf(cf2) )
+    cf$icf <- a*cf1$icf + b*cf2$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return(cf)
 }
@@ -607,8 +652,17 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-#' Arithmetically divide correlators
+#' Divide real and imaginary parts of two cf objects by each other 
 #'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent, such that the real part of one
+#' is the divided by the real part of the other and similarly for the
+#' imaginary parts.
+#'
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
+#' 
 #' @param cf1,cf2 `cf_orig` objects.
 #'
 #' @export
@@ -622,6 +676,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
+
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot(has_icf(cf1) & has_icf(cf2))
+    cf$icf <- cf1$icf / cf2$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return (cf)
 }
@@ -637,6 +697,11 @@ mul.cf <- function(cf, a=1.) {
   stopifnot(is.numeric(a))
 
   cf$cf <- a*cf$cf
+
+  if( has_icf(cf) ){
+    cf$icf <- a*cf$icf
+  }
+
   cf <- invalidate.samples.cf(cf)
   return (cf)
 }
@@ -654,12 +719,24 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   # TODO: This should be done using constructors.
   cf$cf <- cf$cf[,ii]
 
+  if( has_icf(cf) ){
+    cf$icf <- cf$icf[,ii]
+  }
+
   if (inherits(cf, 'cf_boot')) {
     cf$cf0 <- cf$cf0[ii]
     cf$tsboot.se <- cf$tsboot.se[ii]
     cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[ii]
     cf$cf.tsboot$t <- cf$cf.tsboot$t[,ii]
     cf$cf.tsboot$data <- cf$cf.tsboot$data[,ii]
+
+    if( has_icf(cf) ){
+      cf$icf0 <- cf$icf0[ii]
+      cf$itsboot.se <- cf$itsboot.se[ii]
+      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[ii]
+      cf$icf.tsboot$t <- cf$icf.tsboot$t[,ii]
+      cf$icf.tsboot$data <- cf$icf.tsboot$data[,ii]
+    }
   }
   cf$nrObs <- 1
   cf$nsStypes <- 1
@@ -794,7 +871,7 @@ shift.cf <- function(cf, places) {
                       istart:(istart+places-1) )
       }
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
       }
     }
@@ -816,9 +893,16 @@ invalidate.samples.cf <- function (cf) {
   cf$boot.samples <- NULL
   cf$seed <- NULL
   cf$sim <- NULL
+
   cf$cf.tsboot <- NULL
   cf$tsboot.se <- NULL
   cf$cf0 <- NULL
+
+  if( has_icf(cf) ){
+    cf$icf.tsboot <- NULL
+    cf$itsboot.se <- NULL
+    cf$icf0 <- NULL
+  }
 
   class(cf) <- setdiff(class(cf), c('cf_boot', 'cf_jackknife'))
 
@@ -860,7 +944,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       isub <- c(isub,(ihalf+1):iend)
       cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
                                              sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
-      if( !is.null(cf$icf) ){
+      if( has_icf(cf) ){
         cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
                                                 sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
       }
@@ -868,7 +952,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   }
   # remove now unnecessary time slices
   cf$cf <- cf$cf[, -isub]
-  if( !is.null(cf$icf) ){
+  if( has_icf(cf) ){
     cf$icf <- cf$icf[, -isub]
   }
   cf$symmetrised <- TRUE
@@ -901,11 +985,20 @@ summary.cf <- function(object, ...) {
     cat("sim = ", cf$sim, "\n")
 
     out <- cbind(out, tsboot.se=cf$tsboot.se)
+
+    if( has_icf(cf) ){
+      out <- cbind(out, iC=cf$icf0, itsboot.se = cf$itsboot.se)
+    }
   }
 
   if (inherits(cf, 'cf_jackknife')) {
     out <- cbind(out, jackknife.se=cf$jackknife.se)
     out <- cbind(out, jab.se=cf$jack.boot.se)
+
+    if( has_icf(cf) ){
+      out <- cbind(out, ijackknife.se = cf$ijackknife.se)
+      out <- cbind(out, ijab.se = cf$ijack.boot.se)
+    }
   }
 
   if(exists("out")) {

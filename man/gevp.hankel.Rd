@@ -43,4 +43,7 @@ matrices. A so-called Hankel matrix is generated from an input
 \link{cf} object and a generalised eigenvalue problem is solved
 then.
 }
+\seealso{
+Other hankel: \code{\link{bootstrap.hankel}}
+}
 \concept{hankel}

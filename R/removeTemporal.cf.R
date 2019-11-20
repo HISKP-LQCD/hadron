@@ -180,7 +180,7 @@ old_removeTemporal.cf <- function(cf,
 #' @return
 #' The shifted correlator as an object of type `cf`, see \link{cf}
 #'
-#' @eport
+#' @export
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -285,15 +285,39 @@ dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, 
   return (energy_out)
 }
 
+#' generic function to extract a fitted mass
+#'
+#' @description
+#' One of the main analysis tasks in \link{hadron} is the estimation
+#'   of energy levels or masses from correlation functions. The
+#'   corresponding analysis functions return objects, typically lists,
+#'   containing the masses or energy levels. `extract_mass` is a
+#'   generic function to extrac such fitted mass values.
+#' 
+#' @param object Object to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass <- function (object) {
   UseMethod('extract_mass')
 }
 
+#' specialisation of \link{extract_mass} to objects of type
+#' `effectivemassfit`
+#' 
+#' @param object Object of type `effectivemassfit` to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass.effectivemassfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$massfit.tsboot[,1])
 }
 
+#' specialisation of \link{extract_mass} to objects of type
+#' `matrixfit`
+#' 
+#' @param object Object of type `matrixfit` to extract the mass from.
+#'
+#' @return Numeric. The mass value.
 extract_mass.matrixfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$opt.tsboot[1,])
@@ -306,6 +330,23 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
     cosh_factor * exp(energy_difference * (time_extent - time_slices))
 }
 
+#' Weight a correlation function
+#'
+#' @description
+#' Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
+#' such that the function is first multiplied with
+#' \eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
+#'
+#' @param cf cf_orig and possibly cf_boot object.
+#' @param energy_difference_val numeric. A single energy value \eqn{\Delta E}{Delta E} for
+#'   the weighting.
+#' @param energy_difference_boot numeric vector. Samples for the energy
+#'   difference value.
+#' @param cosh_factor integer, either `+1` or `-1`. Determines the sign $c$ in
+#'   the weight factor.
+#' @param offset integer. Offset for the time $t$, needed for the reweighting
+#'   after a shift.
+#' @param inverse boolean. If `TRUE` apply inverse weight.
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
@@ -329,6 +370,12 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
   return (cf)
 }
 
+#' Weight-shift-reweight a correlation function
+#'
+#' The correlation function is weighted with [`weight.cf`], then shifted, and
+#' then weighted again with the inverse weighting factor.
+#'
+#' @inheritParams weight.cf
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
                   cosh_factor, 0, FALSE)
@@ -359,6 +406,20 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
   return (invisible(ret))
 }
 
+#' Remove Thermal States by Weighting and Shifting
+#'
+#' @param cf Object of type \link{cf}
+#' @param single.cf1 Object of type \link{cf}
+#' @param single.cf2 Object of type \link{cf}
+#' @param p1 Numeric vector. Spatial momentum of first state
+#' @param p2 Numeric vector. Spatial momentum of second state
+#' @param L Integer. Spatial lattice extend.
+#' @param lat.disp Boolean. Use lattice dispersion relation instead of
+#'   continuum one
+#' @param weight.cosh Boolean. Use cosh functional form in the
+#'   weighting procedure
+#'
+#' @return weighted and shifted correlation function as a \link{cf} object.
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {

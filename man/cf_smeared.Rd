@@ -4,7 +4,7 @@
 \alias{cf_smeared}
 \title{Smeared CF mixin constructor}
 \usage{
-cf_smeared(.cf = cf(), scf, iscf, nrSamples, obs)
+cf_smeared(.cf = cf(), scf, iscf = NULL, nrSamples, obs)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend.}
