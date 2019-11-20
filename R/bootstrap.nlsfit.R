@@ -181,7 +181,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
       }
     }
 
-    if (missing(CovMatrix)) {
+    if (is.null(CovMatrix)) {
       InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       dY <- chol(InvCovMatrix)
@@ -579,7 +579,9 @@ simple.nlsfit <- function(fn,
 #' is given.
 #' @param CovMatrix complete variance-covariance matrix of dimensions
 #' \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
-#' length(y)+length(x))} depending on the errormodel.
+#' length(y)+length(x))} depending on the errormodel. Pass `NULL` if the matrix
+#' has to be calculated from the `bsamples`. If missing, uncorrelated fit will
+#' be used.
 #' @param use.minpack.lm use the \code{minpack.lm} library if available. This
 #' is usually faster than the default \code{optim} but somtimes also less
 #' stable.

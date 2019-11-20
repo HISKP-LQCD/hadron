@@ -4,8 +4,8 @@
 \alias{bootstrap.hankel}
 \title{GEVP method based on Hankel matrices. Experimental.}
 \usage{
-bootstrap.hankel(cf, t0, deltat = 1, n, N, id = c(1), range = c(0,
-  1), eps = 0.001, element.order = c(1, 2, 3, 4), submatrix.size = 1)
+bootstrap.hankel(cf, t0, deltat = 1, n, N, id = c(1), range = c(0, 1),
+  eps = 0.001, element.order = c(1, 2, 3, 4), submatrix.size = 1)
 }
 \arguments{
 \item{cf}{object of type \link{cf}}
@@ -42,6 +42,7 @@ then. This is the function to call. It will perform a bootstrap
 analysis.
 }
 \seealso{
-Other hankel: \code{\link{gevp.hankel}}
+Other hankel: 
+\code{\link{gevp.hankel}()}
 }
 \concept{hankel}

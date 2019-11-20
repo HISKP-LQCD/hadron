@@ -5,9 +5,8 @@
 \title{NLS fit with without bootstrap}
 \usage{
 simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dy, dx, CovMatrix,
-  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd,
-  maxiter = 500, success.infos = 1:3, relative.weights = FALSE,
-  na.rm = FALSE)
+  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd, maxiter = 500,
+  success.infos = 1:3, relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -47,7 +46,9 @@ is given.}
 
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
-length(y)+length(x))} depending on the errormodel.}
+length(y)+length(x))} depending on the errormodel. Pass \code{NULL} if the matrix
+has to be calculated from the \code{bsamples}. If missing, uncorrelated fit will
+be used.}
 
 \item{boot.R}{If larger than 0, \code{boot.R} paramtetric bootstrap samples are
 generated on the fit results after fit and error calculation are finished.
@@ -101,13 +102,14 @@ fit.result <- simple.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
 summary(fit.result)
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit.cov}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit.cov}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{plot.bootstrapfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}

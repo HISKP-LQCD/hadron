@@ -4,8 +4,8 @@
 \alias{parametric.nlsfit.cov}
 \title{parametric.nlsfit.cov}
 \usage{
-parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...,
-  bootstrap = TRUE, na.rm = FALSE)
+parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ..., bootstrap = TRUE,
+  na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -40,13 +40,14 @@ If x-errors are taken into account, NAs in \code{x} and \code{dx} will be ignore
 NLS fit with parametric bootstrap and covariance
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{simple.nlsfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{plot.bootstrapfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{simple.nlsfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}
