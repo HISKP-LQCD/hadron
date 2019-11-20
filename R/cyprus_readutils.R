@@ -120,7 +120,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
     
-    group_names <- h5ls(h5f)$name
+    group_names <- rhdf5::h5ls(h5f)$name
     
     avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
     if( any( !avail_loop_types ) ){
@@ -130,7 +130,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
                      )
       stop(msg)
     }
-    if( !H5Lexists(h5f, "Momenta_list_xyz") ){
+    if( !rhdf5::H5Lexists(h5f, "Momenta_list_xyz") ){
       stop(sprintf("'Momenta_list_xyz' could not be found in %s!", f))
     }
     # we transpose this to get the momenta as the rows of a matrix
@@ -225,7 +225,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
         }
       } # istoch
     } # loop_type
-    H5Fclose(h5f)
+    rhdf5::H5Fclose(h5f)
     if(verbose) tictoc::toc()
   } # ifile
   for( loop_type in selected_loop_types ){

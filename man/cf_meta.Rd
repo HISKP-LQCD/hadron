@@ -4,7 +4,8 @@
 \alias{cf_meta}
 \title{CF metadata mixin constructor}
 \usage{
-cf_meta(.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE)
+cf_meta(.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1,
+  symmetrised = FALSE)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend.}
@@ -21,14 +22,11 @@ cf_meta(.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE)
 CF metadata mixin constructor
 }
 \seealso{
-Other cf constructors: 
-\code{\link{cf_boot}()},
-\code{\link{cf_orig}()},
-\code{\link{cf_principal_correlator}()},
-\code{\link{cf_shifted}()},
-\code{\link{cf_smeared}()},
-\code{\link{cf_subtracted}()},
-\code{\link{cf_weighted}()},
-\code{\link{cf}()}
+Other cf constructors: \code{\link{cf_boot}},
+  \code{\link{cf_orig}},
+  \code{\link{cf_principal_correlator}},
+  \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
+  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
+  \code{\link{cf}}
 }
 \concept{cf constructors}

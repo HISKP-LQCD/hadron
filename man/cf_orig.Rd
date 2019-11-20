@@ -11,20 +11,17 @@ cf_orig(.cf = cf(), cf, icf = NULL)
 
 \item{cf}{Numeric matrix, original data for all observables and measurements.}
 
-\item{icf}{Numeric matrix, imaginary part of original data. Be very careful with this as most functions just ignore the imaginary part and drop it in operations. If it is not passed to this function, a matrix of \code{NA} will be created with the same dimension as \code{cf}.}
+\item{icf}{Numeric matrix, imaginary part of original data. Be very careful with this as quite a few functions just ignore the imaginary part and drop it in operations.}
 }
 \description{
 Original data CF mixin constructor
 }
 \seealso{
-Other cf constructors: 
-\code{\link{cf_boot}()},
-\code{\link{cf_meta}()},
-\code{\link{cf_principal_correlator}()},
-\code{\link{cf_shifted}()},
-\code{\link{cf_smeared}()},
-\code{\link{cf_subtracted}()},
-\code{\link{cf_weighted}()},
-\code{\link{cf}()}
+Other cf constructors: \code{\link{cf_boot}},
+  \code{\link{cf_meta}},
+  \code{\link{cf_principal_correlator}},
+  \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
+  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
+  \code{\link{cf}}
 }
 \concept{cf constructors}

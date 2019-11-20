@@ -4,13 +4,8 @@
 \alias{dispersion_relation}
 \title{Continuum dispersion relation for CM to lattice frame}
 \usage{
-dispersion_relation(
-  energy,
-  momentum_d,
-  extent_space,
-  plus = TRUE,
-  lattice_disp = FALSE
-)
+dispersion_relation(energy, momentum_d, extent_space, plus = TRUE,
+  lattice_disp = FALSE)
 }
 \arguments{
 \item{energy}{\code{double}. CM energy in lattice units, \eqn{aE}.}

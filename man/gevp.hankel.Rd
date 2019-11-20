@@ -4,19 +4,9 @@
 \alias{gevp.hankel}
 \title{GEVP method based on Hankel matrices. Experimental.}
 \usage{
-gevp.hankel(
-  cf,
-  t0 = 1,
-  deltat = 1,
-  n,
-  N,
-  eps = 1e-04,
-  range = c(0, 1),
-  submatrix.size = 1,
-  element.order = c(1, 2, 3, 4),
-  id = c(1),
-  debug = FALSE
-)
+gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0,
+  1), submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
+  debug = FALSE)
 }
 \arguments{
 \item{cf}{object of type \link{cf}}
@@ -52,5 +42,8 @@ Alternative method to determine energy levels from correlation
 matrices. A so-called Hankel matrix is generated from an input
 \link{cf} object and a generalised eigenvalue problem is solved
 then.
+}
+\seealso{
+Other hankel: \code{\link{bootstrap.hankel}}
 }
 \concept{hankel}
