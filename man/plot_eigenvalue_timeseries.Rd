@@ -4,17 +4,9 @@
 \alias{plot_eigenvalue_timeseries}
 \title{plot_eigenvalue_timeseries}
 \usage{
-plot_eigenvalue_timeseries(
-  dat,
-  stat_range,
-  ylab,
-  plotsize,
-  filelabel,
-  titletext,
-  pdf.filename,
-  errorband_color = rgb(0.6, 0, 0, 0.6),
-  debug = FALSE
-)
+plot_eigenvalue_timeseries(dat, stat_range, ylab, plotsize, filelabel,
+  titletext, pdf.filename, errorband_color = rgb(0.6, 0, 0, 0.6),
+  debug = FALSE)
 }
 \arguments{
 \item{dat}{Timeseries to analyse.}

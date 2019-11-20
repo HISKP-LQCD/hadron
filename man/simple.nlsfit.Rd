@@ -4,26 +4,10 @@
 \alias{simple.nlsfit}
 \title{NLS fit with without bootstrap}
 \usage{
-simple.nlsfit(
-  fn,
-  par.guess,
-  y,
-  x,
-  errormodel,
-  ...,
-  dy,
-  dx,
-  CovMatrix,
-  boot.R = 0,
-  gr,
-  dfn,
-  use.minpack.lm = TRUE,
-  error = sd,
-  maxiter = 500,
-  success.infos = 1:3,
-  relative.weights = FALSE,
-  na.rm = FALSE
-)
+simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dy, dx, CovMatrix,
+  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd,
+  maxiter = 500, success.infos = 1:3, relative.weights = FALSE,
+  na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -117,14 +101,13 @@ fit.result <- simple.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
 summary(fit.result)
 }
 \seealso{
-Other NLS fit functions: 
-\code{\link{bootstrap.nlsfit}()},
-\code{\link{parametric.bootstrap.cov}()},
-\code{\link{parametric.bootstrap}()},
-\code{\link{parametric.nlsfit.cov}()},
-\code{\link{parametric.nlsfit}()},
-\code{\link{plot.bootstrapfit}()},
-\code{\link{print.bootstrapfit}()},
-\code{\link{summary.bootstrapfit}()}
+Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
+  \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{parametric.nlsfit}},
+  \code{\link{plot.bootstrapfit}},
+  \code{\link{print.bootstrapfit}},
+  \code{\link{summary.bootstrapfit}}
 }
 \concept{NLS fit functions}

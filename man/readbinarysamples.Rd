@@ -4,16 +4,8 @@
 \alias{readbinarysamples}
 \title{Read binary correlation function by sample}
 \usage{
-readbinarysamples(
-  files,
-  T = 48,
-  nosamples = 2,
-  endian = "little",
-  excludelist = c(""),
-  sym = TRUE,
-  path = "",
-  ftype = double()
-)
+readbinarysamples(files, T = 48, nosamples = 2, endian = "little",
+  excludelist = c(""), sym = TRUE, path = "", ftype = double())
 }
 \arguments{
 \item{files}{character vector. Paths to the file to read. As \code{path} is

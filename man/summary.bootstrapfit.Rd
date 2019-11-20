@@ -4,7 +4,8 @@
 \alias{summary.bootstrapfit}
 \title{Summarize a bootstrap NLS fit}
 \usage{
-\method{summary}{bootstrapfit}(object, ..., digits = 2, print.correlation = TRUE)
+\method{summary}{bootstrapfit}(object, ..., digits = 2,
+  print.correlation = TRUE)
 }
 \arguments{
 \item{object}{object returned by \code{bootstrap.nlsfit}}
@@ -20,14 +21,13 @@ the fit parameters.}
 Summarize a bootstrap NLS fit
 }
 \seealso{
-Other NLS fit functions: 
-\code{\link{bootstrap.nlsfit}()},
-\code{\link{parametric.bootstrap.cov}()},
-\code{\link{parametric.bootstrap}()},
-\code{\link{parametric.nlsfit.cov}()},
-\code{\link{parametric.nlsfit}()},
-\code{\link{plot.bootstrapfit}()},
-\code{\link{print.bootstrapfit}()},
-\code{\link{simple.nlsfit}()}
+Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
+  \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{parametric.nlsfit}},
+  \code{\link{plot.bootstrapfit}},
+  \code{\link{print.bootstrapfit}},
+  \code{\link{simple.nlsfit}}
 }
 \concept{NLS fit functions}

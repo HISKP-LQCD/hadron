@@ -4,15 +4,8 @@
 \alias{disc_3pt}
 \title{disconnected contribution to current insertion three-point function}
 \usage{
-disc_3pt(
-  cf_2pt,
-  loop,
-  src_ts,
-  dt,
-  reim_loop = "both",
-  reim_2pt = "both",
-  vev_subtract = FALSE
-)
+disc_3pt(cf_2pt, loop, src_ts, dt, reim_loop = "both",
+  reim_2pt = "both", vev_subtract = FALSE)
 }
 \arguments{
 \item{cf_2pt}{'raw_cf' container holding two-point part of three-point function

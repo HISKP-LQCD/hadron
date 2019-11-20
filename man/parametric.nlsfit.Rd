@@ -4,18 +4,8 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(
-  fn,
-  par.guess,
-  boot.R,
-  y,
-  dy,
-  x,
-  dx,
-  ...,
-  bootstrap = TRUE,
-  na.rm = FALSE
-)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ...,
+  bootstrap = TRUE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -76,14 +66,13 @@ fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 summary(fit.result)
 }
 \seealso{
-Other NLS fit functions: 
-\code{\link{bootstrap.nlsfit}()},
-\code{\link{parametric.bootstrap.cov}()},
-\code{\link{parametric.bootstrap}()},
-\code{\link{parametric.nlsfit.cov}()},
-\code{\link{plot.bootstrapfit}()},
-\code{\link{print.bootstrapfit}()},
-\code{\link{simple.nlsfit}()},
-\code{\link{summary.bootstrapfit}()}
+Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
+  \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{plot.bootstrapfit}},
+  \code{\link{print.bootstrapfit}},
+  \code{\link{simple.nlsfit}},
+  \code{\link{summary.bootstrapfit}}
 }
 \concept{NLS fit functions}

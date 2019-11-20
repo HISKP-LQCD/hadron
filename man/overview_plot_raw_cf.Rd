@@ -4,17 +4,9 @@
 \alias{overview_plot_raw_cf}
 \title{create convenient overview plots for a \code{raw_cf} object}
 \usage{
-overview_plot_raw_cf(
-  cf,
-  grid,
-  reim = "real",
-  reim_same = FALSE,
-  relerr = FALSE,
-  tauint = FALSE,
-  value_logplot = TRUE,
-  value_factor = c(1),
-  title = ""
-)
+overview_plot_raw_cf(cf, grid, reim = "real", reim_same = FALSE,
+  relerr = FALSE, tauint = FALSE, value_logplot = TRUE,
+  value_factor = c(1), title = "")
 }
 \arguments{
 \item{cf}{'raw_cf' container with data and meta-data}

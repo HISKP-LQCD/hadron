@@ -19,8 +19,7 @@ container more easily.}
 Original data mixin constructor for \code{raw_cf}
 }
 \seealso{
-Other raw_cf constructors: 
-\code{\link{raw_cf_meta}()},
-\code{\link{raw_cf}()}
+Other raw_cf constructors: \code{\link{raw_cf_meta}},
+  \code{\link{raw_cf}}
 }
 \concept{raw_cf constructors}

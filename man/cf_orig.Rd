@@ -17,14 +17,11 @@ cf_orig(.cf = cf(), cf, icf = NULL)
 Original data CF mixin constructor
 }
 \seealso{
-Other cf constructors: 
-\code{\link{cf_boot}()},
-\code{\link{cf_meta}()},
-\code{\link{cf_principal_correlator}()},
-\code{\link{cf_shifted}()},
-\code{\link{cf_smeared}()},
-\code{\link{cf_subtracted}()},
-\code{\link{cf_weighted}()},
-\code{\link{cf}()}
+Other cf constructors: \code{\link{cf_boot}},
+  \code{\link{cf_meta}},
+  \code{\link{cf_principal_correlator}},
+  \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
+  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
+  \code{\link{cf}}
 }
 \concept{cf constructors}
