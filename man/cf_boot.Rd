@@ -4,8 +4,8 @@
 \alias{cf_boot}
 \title{Bootstrapped CF mixin constructor}
 \usage{
-cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot,
-  icf.tsboot = NULL, resampling_method)
+cf_boot(.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboot = NULL,
+  resampling_method)
 }
 \arguments{
 \item{.cf}{\code{cf} object to extend.}
@@ -37,11 +37,14 @@ The following fields will also be made available:
 }
 }
 \seealso{
-Other cf constructors: \code{\link{cf_meta}},
-  \code{\link{cf_orig}},
-  \code{\link{cf_principal_correlator}},
-  \code{\link{cf_shifted}}, \code{\link{cf_smeared}},
-  \code{\link{cf_subtracted}}, \code{\link{cf_weighted}},
-  \code{\link{cf}}
+Other cf constructors: 
+\code{\link{cf_meta}()},
+\code{\link{cf_orig}()},
+\code{\link{cf_principal_correlator}()},
+\code{\link{cf_shifted}()},
+\code{\link{cf_smeared}()},
+\code{\link{cf_subtracted}()},
+\code{\link{cf_weighted}()},
+\code{\link{cf}()}
 }
 \concept{cf constructors}

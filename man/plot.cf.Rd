@@ -4,8 +4,7 @@
 \alias{plot.cf}
 \title{Plot a correlation function}
 \usage{
-\method{plot}{cf}(x, neg.vec = rep(1, times = length(cf$cf0)),
-  rep = FALSE, ...)
+\method{plot}{cf}(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...)
 }
 \arguments{
 \item{x}{\code{cf_boot} object}

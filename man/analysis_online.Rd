@@ -6,13 +6,12 @@
 \usage{
 analysis_online(L, T, t1, t2, beta, kappa, mul, cg_col, evals_id, rundir,
   cg.ylim, type = "", csw = 0, musigma = 0, mudelta = 0, muh = 0,
-  addon = "", skip = 0, rectangle = TRUE, plaquette = TRUE,
-  dH = TRUE, acc = TRUE, trajtime = TRUE, omeas = TRUE,
-  plotsize = 5, debug = FALSE, trajlabel = FALSE, title = FALSE,
-  pl = FALSE, method = "uwerr", fit.routine = "optim",
-  oldnorm = FALSE, S = 1.5, stat_skip = 0, omeas.samples = 1,
-  omeas.stride = 1, omeas.avg = 1, omeas.stepsize = 1,
-  evals.stepsize = 1, boot.R = 1500, boot.l = 2,
+  addon = "", skip = 0, rectangle = TRUE, plaquette = TRUE, dH = TRUE,
+  acc = TRUE, trajtime = TRUE, omeas = TRUE, plotsize = 5,
+  debug = FALSE, trajlabel = FALSE, title = FALSE, pl = FALSE,
+  method = "uwerr", fit.routine = "optim", oldnorm = FALSE, S = 1.5,
+  stat_skip = 0, omeas.samples = 1, omeas.stride = 1, omeas.avg = 1,
+  omeas.stepsize = 1, evals.stepsize = 1, boot.R = 1500, boot.l = 2,
   outname_suffix = "", verbose = FALSE)
 }
 \arguments{
@@ -33,7 +32,7 @@ analysis_online(L, T, t1, t2, beta, kappa, mul, cg_col, evals_id, rundir,
 \item{cg_col}{integer. column of CG iteration counts from \code{output.data} to use}
 
 \item{evals_id}{Integer. Monomial ID of the monomial for which eigenvalues are measured.
-Function will attempt to open \code{monomial-\%02d.data}.}
+Function will attempt to open \verb{monomial-\%02d.data}.}
 
 \item{rundir}{string. run directory. If not specified, run directory will
 be constructed automatically. See \link{construct_onlinemeas_rundir} for
@@ -66,7 +65,7 @@ for example.}
 
 \item{trajtime}{boolean. If true, the time per trajectory is analysed}
 
-\item{omeas}{boolean. If true, online measurements are analysed (\code{onlinemeas.\%06d})}
+\item{omeas}{boolean. If true, online measurements are analysed (\verb{onlinemeas.\%06d})}
 
 \item{plotsize}{numeric. size of plots being generated}
 
@@ -82,7 +81,7 @@ for example.}
 
 \item{fit.routine}{string. minimisation routine for chisq, can be "optim"}
 
-\item{oldnorm}{boolean. If \code{TRUE}, the function assumes that the \code{onlinemeas.\%06d} are
+\item{oldnorm}{boolean. If \code{TRUE}, the function assumes that the \verb{onlinemeas.\%06d} are
 in old tmLQCD normalisation.}
 
 \item{S}{numeric. \code{S} parameter of \link{uwerr}}
@@ -118,7 +117,7 @@ a list is returned with all the accumulated results. Moreover, a
 PDF file with statistics and analytics is created and the results
 are written into .Rdata files. On the one hand, the result of the
 call to the \link{onlinemeas} function is written to
-\code{onlineout.\%s.Rdata}, where \code{\%s} is replaced with a label
+\verb{onlineout.\%s.Rdata}, where \verb{\%s} is replaced with a label
 built from meta information based on the arguments above.
 On the other hand, summary data across many calls of this
 function is silently accumulated in the file
@@ -131,9 +130,9 @@ and output files of the tmLQCD software, see references. The function
 operates on a subdirectory either passed via \code{rundir} or automatically
 constructed from the various function arguments. Depending on which
 parts of the analysis are requested, this subdirectory is expected
-to contain \code{onlinemeas.\%06d} files with online correlator measurements,
+to contain \verb{onlinemeas.\%06d} files with online correlator measurements,
 \code{output.data} containing the plaquette and energy violation, amongst others
-and \code{monomial-\%02d.data} with measurements of the extremal eigenvalues of the
+and \verb{monomial-\%02d.data} with measurements of the extremal eigenvalues of the
 }
 \references{
 K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
