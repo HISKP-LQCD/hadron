@@ -31,7 +31,6 @@ Other cf constructors:
 \code{\link{cf_smeared}()},
 \code{\link{cf_subtracted}()},
 \code{\link{cf_weighted}()},
-\code{\link{cf}()},
-\code{\link{rw_meta}()}
+\code{\link{cf}()}
 }
 \concept{cf constructors}
