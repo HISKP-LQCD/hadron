@@ -568,7 +568,7 @@ uwerr.cf <- function(cf){
 
   uw_wrapper <- function(x){
     uw_tmp <- try(uwerrprimary(data=x), silent=TRUE)
-    if( any(class(uw_temp) == "try-error") ){
+    if( any(class(uw_tmp) == "try-error") ){
       c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
     } else {
       c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
