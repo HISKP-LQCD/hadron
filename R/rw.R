@@ -183,14 +183,15 @@ plot.rw <- function(x, rep = FALSE, ...) {
 #' @param reverse2 `boolean`
 #'
 #' @examples
-#' Suppose we have reweighting factors in replicum A from 0 to 500
-#' in steps of 4 and in replicum B from 4 to 500 in steps of 4.
-#' To combined the two replicas we have to use
+#' # Suppose we have reweighting factors in replicum A from 0 to 500
+#' # in steps of 4 and in replicum B from 4 to 500 in steps of 4.
+#' # To combined the two replicas we have to use
 #'
 #' addstat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
-#' which means
-#' combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
-#' rw500 from A) 
+#'
+#' # which means
+#' # combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
+#' # rw500 from A) 
 #' @export
 addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))
