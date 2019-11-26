@@ -141,6 +141,7 @@ is.rw <- function (x) {
   inherits(x, "rw")
 }
 
+meanval <- function(d, w) {return(mean(d$rw[w]))}
 
 #' Plot a reweighting factor function
 #'
@@ -160,8 +161,13 @@ plot.rw <- function(x, rep = FALSE, ...) {
   colneg <- rep("black",times=length(rw$rw))
   colneg[negs] <- "red"
 
+# Estimating the statistical error on the reweighting factor
+
+  rw_boot <- boot(rw, meanval, R=1500)
+  rw_error <- sd(rw_boot)
+
   val <- rw$rw/mean(rw$rw)
-  err <- rep(x=0,length(rw$rw))
+  err <- rep(x=rw_error,length(rw$rw))
 
   df <- data.frame(t = c(1:length(val)),
                    CF = val,
