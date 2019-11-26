@@ -154,13 +154,13 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     }  
   }
 
-  if(missing(xlim)) {
+  if(missing(xlim) | is.null(xlim) ) {
     my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
-  if(missing(ylim)) {
+  if(missing(ylim) | is.null(ylim) ) {
     my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
   } else {
     my.ylim <- ylim
