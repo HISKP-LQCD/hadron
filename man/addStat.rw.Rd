@@ -26,7 +26,7 @@ Combine reweighting factors from different replicas
 # in steps of 4 and in replicum B from 4 to 500 in steps of 4.
 # To combined the two replicas we have to use
 
-addstat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
+#addStat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
 
 # which means
 # combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
