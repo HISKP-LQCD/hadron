@@ -122,12 +122,14 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
 #' @title Escape special LaTeX characters for use in LaTeX labels
 #'
 #' @param x String or vector of strings.
-#' @value String or vector of strings with all occurences of "#", "$", "%",
+#' @return String or vector of strings with all occurences of "#", "$", "%",
 #'        "&", "~", "_", "^", ">", "<" replaced by escaped
 #'        counterparts which should render fine when used in a tikz plot, for
 #'        example.
 #' @export
-# from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
+#'
+#' @references 
+#' from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
 escapeLatexSpecials <- function(x) {
   x <- gsub("\\", "$\\backslash$", x, fixed = TRUE)
   x <- gsub("#", "\\#", x, fixed=TRUE)

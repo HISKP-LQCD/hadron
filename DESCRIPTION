@@ -37,8 +37,8 @@ License: GPL-3
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
 LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
+RoxygenNote: 7.0.1
 Encoding: UTF-8
 Remotes: bioc::release/rhdf5
 VignetteBuilder: knitr

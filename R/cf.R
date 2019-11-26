@@ -428,6 +428,7 @@ resampling_is_concatenable <- function(cf1, cf2){
 #'
 #'
 has_icf <- function(.cf) {
+  stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
 }
 
