@@ -4,14 +4,14 @@
 \alias{parametric.nlsfit.cov}
 \title{parametric.nlsfit.cov}
 \usage{
-parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ...,
-  bootstrap = TRUE)
+parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ..., bootstrap = TRUE,
+  na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
 data. Its first argument must be the fit parameters named \code{par}. The
 second must be \code{x}, the explaining variable. Additional parameters
-might be passed to the function. Currently we pass \code{boot_r} which is \code{0}
+might be passed to the function. Currently we pass \code{boot.r} which is \code{0}
 for the original data and the ID (1, ...) of the bootstrap sample otherwise.
 As more parameters might be added in the future it is recommended that the
 fit function accepts \code{...} as the last parameter to be forward compatible.}
@@ -32,18 +32,22 @@ between the various variables in the vector \code{x}.}
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 
 \item{bootstrap}{boolean. If \code{TRUE}, bootstrap is used.}
+
+\item{na.rm}{logical. If set to \code{true}, NAs in \code{y} and \code{dy} will be ignored.
+If x-errors are taken into account, NAs in \code{x} and \code{dx} will be ignored, too.}
 }
 \description{
 NLS fit with parametric bootstrap and covariance
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{simple.nlsfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{plot.bootstrapfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{simple.nlsfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}

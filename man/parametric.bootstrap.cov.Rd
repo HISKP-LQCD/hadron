@@ -35,13 +35,14 @@ cov <- matrix(c(0.1, 0, 0.01,
 parametric.bootstrap.cov(5, x, cov)
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit.cov}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{simple.nlsfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit.cov}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{plot.bootstrapfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{simple.nlsfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}

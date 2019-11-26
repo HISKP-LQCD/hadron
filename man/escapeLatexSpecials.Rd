@@ -9,6 +9,15 @@ escapeLatexSpecials(x)
 \arguments{
 \item{x}{String or vector of strings.}
 }
+\value{
+String or vector of strings with all occurences of "#", "$", "\%",
+"&", "~", "_", "^", ">", "<" replaced by escaped
+counterparts which should render fine when used in a tikz plot, for
+example.
+}
 \description{
 Escape special LaTeX characters for use in LaTeX labels
+}
+\references{
+from https://stackoverflow.com/questions/36338629/escaping-special-latex-characters-in-r
 }

@@ -5,14 +5,14 @@
 \title{NLS fit with without bootstrap}
 \usage{
 simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dy, dx, CovMatrix,
-  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd,
-  maxiter = 500, success_infos = 1:3, relative.weights = FALSE)
+  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd, maxiter = 500,
+  success.infos = 1:3, relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
 data. Its first argument must be the fit parameters named \code{par}. The
 second must be \code{x}, the explaining variable. Additional parameters
-might be passed to the function. Currently we pass \code{boot_r} which is \code{0}
+might be passed to the function. Currently we pass \code{boot.r} which is \code{0}
 for the original data and the ID (1, ...) of the bootstrap sample otherwise.
 As more parameters might be added in the future it is recommended that the
 fit function accepts \code{...} as the last parameter to be forward compatible.}
@@ -46,7 +46,9 @@ is given.}
 
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
-length(y)+length(x))} depending on the errormodel.}
+length(y)+length(x))} depending on the errormodel. Pass \code{NULL} if the matrix
+has to be calculated from the \code{bsamples}. If missing, uncorrelated fit will
+be used.}
 
 \item{boot.R}{If larger than 0, \code{boot.R} paramtetric bootstrap samples are
 generated on the fit results after fit and error calculation are finished.
@@ -71,7 +73,7 @@ methods like jackknife.}
 \item{maxiter}{integer. Maximum number of iterations that can be used in the
 optimization process.}
 
-\item{success_infos}{integer vector. When using \code{minpack.lm} there is the
+\item{success.infos}{integer vector. When using \code{minpack.lm} there is the
 \code{info} in the return value. Values of 1, 2 or 3 are certain success. A value
 of 4 could either be a success or a saddle point. If you want to interpret
 this as a success as well just pass \code{1:4} instead of the default \code{1:3}.}
@@ -80,6 +82,9 @@ this as a success as well just pass \code{1:4} instead of the default \code{1:3}
 relative weights instead of absolute ones? If TRUE, the covariance martix
 of the fit parameter results is multiplied by chi^2/dof. This is the default
 in many fit programs, e.g. gnuplot.}
+
+\item{na.rm}{logical. If set to \code{true}, NAs in \code{y} and \code{dy} will be ignored.
+If x-errors are taken into account, NAs in \code{x} and \code{dx} will be ignored, too.}
 }
 \description{
 NLS fit with without bootstrap
@@ -97,13 +102,14 @@ fit.result <- simple.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
 summary(fit.result)
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit.cov}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{plot.bootstrapfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit.cov}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{plot.bootstrapfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}
