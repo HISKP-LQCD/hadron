@@ -23,7 +23,7 @@ rw <- function () {
 #' @param .rw `rw` object to extend.
 #' @param conf.index list of Integers, containing the index of gauge configurations
 #'
-#' @family cf constructors
+#' @family rw constructors
 #'
 #' @export
 rw_meta <- function (.rw = rw(), conf.index ) {
