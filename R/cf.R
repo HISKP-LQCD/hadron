@@ -716,7 +716,6 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   if (reverse1 == TRUE){
     apply(cf1_temp,2,rev)
     if ( has_icf(cf1)){
-      str(cf1$icf)
       apply(icf1_temp,2,rev)
     }
   }
