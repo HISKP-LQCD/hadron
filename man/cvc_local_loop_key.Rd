@@ -19,13 +19,6 @@ cvc_local_loop_key(loop_type, istoch, gamma, p)
 vector in lattice units.}
 
 \item{i_stoch}{Integer, stochastic sample id number.}
-
-\item{loop_type}{String, loop type.}
-
-\item{gamma}{Integer, CVC convention gamma matrix identifier.}
-
-\item{p}{Integer vector of length 3, (x,y,z) components of the momentum
-vector in lattice units.}
 }
 \description{
 Generate HDF5 key for a momentum and spin-projected CVC loop

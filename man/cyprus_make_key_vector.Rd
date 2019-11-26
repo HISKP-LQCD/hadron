@@ -4,8 +4,7 @@
 \alias{cyprus_make_key_vector}
 \title{HDF5 key for Cyprus CalcLoops derivative-type loops}
 \usage{
-cyprus_make_key_vector(istoch, loop_type, dir, cid = 4,
-  accumulated = FALSE)
+cyprus_make_key_vector(istoch, loop_type, dir, cid = 4, accumulated = FALSE)
 }
 \arguments{
 \item{istoch}{Integer, index of the stochastic sample that the key should

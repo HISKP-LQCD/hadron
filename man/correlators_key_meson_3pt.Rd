@@ -29,9 +29,9 @@ displacement is the one applied first.
 \item 'pixXpiyYpizZ' at the source in CVC convention
 }}
 \usage{
-correlators_key_meson_3pt(fwd_flav, bwd_flav, seq_flav, src_ts, dt,
-  snk_gamma, cur_gamma, cur_displ_dim = NA, cur_displ_dir = NA,
-  src_gamma, src_p, snk_p)
+correlators_key_meson_3pt(fwd_flav, bwd_flav, seq_flav, src_ts, dt, snk_gamma,
+  cur_gamma, cur_displ_dim = NA, cur_displ_dir = NA, src_gamma, src_p,
+  snk_p)
 }
 \arguments{
 \item{fwd_flav}{String, "forward" quark flavour identifier.}

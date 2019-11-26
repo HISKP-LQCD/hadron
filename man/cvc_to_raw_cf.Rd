@@ -19,5 +19,5 @@ Given a numeric vector of alternating real and imaginary parts of a
 correlation function, creates an object of class 'raw_cf' with
 a single measurement, inferring \code{Time} from the passed numeric vector
 while the shape of the internal dimensions has to be specified explicitly
-if larger than \code{one by one} (\code{c(1,1)}).
+if larger than \verb{one by one} (\code{c(1,1)}).
 }
