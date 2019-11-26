@@ -178,6 +178,9 @@ loop_2pt <- function(loop_snk,
 
   for( t_sep in 0:(Time-1) ){
     loop_snk_shift <- shift.raw_cf(loop_snk, t_sep)
+    # for testing, we can compute the 2pt function explicitly using i != j
+    # random combinations
+    # of course, this is extremely slow
     if( random_vectors_outer_product ){
       cf_2pt$data[,(t_sep+1),,] <- apply(loop_src$data[,,random_idcs$r1,,,drop=FALSE] * 
                                          loop_snk_shift$data[,,random_idcs$r2,,,drop=FALSE], 

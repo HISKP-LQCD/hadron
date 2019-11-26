@@ -25,7 +25,8 @@ For a scalar correlation, this should be specified as \code{c(1,1)}.}
 \code{raw_cf} metadata mixin constructor
 }
 \seealso{
-Other raw_cf constructors: \code{\link{raw_cf_data}},
-  \code{\link{raw_cf}}
+Other raw_cf constructors: 
+\code{\link{raw_cf_data}()},
+\code{\link{raw_cf}()}
 }
 \concept{raw_cf constructors}

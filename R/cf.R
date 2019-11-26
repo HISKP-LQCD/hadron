@@ -428,6 +428,7 @@ resampling_is_concatenable <- function(cf1, cf2){
 #'
 #'
 has_icf <- function(.cf) {
+  stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
 }
 
@@ -1275,16 +1276,6 @@ summary.cf <- function(object, ...) {
 
     if( has_icf(cf) ){
       out <- cbind(out, iC=cf$icf0, itsboot.se = cf$itsboot.se)
-    }
-  }
-
-  if (inherits(cf, 'cf_jackknife')) {
-    out <- cbind(out, jackknife.se=cf$jackknife.se)
-    out <- cbind(out, jab.se=cf$jack.boot.se)
-
-    if( has_icf(cf) ){
-      out <- cbind(out, ijackknife.se = cf$ijackknife.se)
-      out <- cbind(out, ijab.se = cf$ijack.boot.se)
     }
   }
 

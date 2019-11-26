@@ -1,9 +1,8 @@
-library(R6)
-
-MatrixModel <- R6Class(
+MatrixModel <- R6::R6Class(
   'MatrixModel',
   public = list(
     initialize = function (time_extent, parind, sign_vec, ov_sign_vec) {
+
       self$time_extent <- time_extent
       self$parind <- parind
       self$sign_vec <- sign_vec
@@ -51,7 +50,7 @@ MatrixModel <- R6Class(
   )
 )
 
-SingleModel <- R6Class(
+SingleModel <- R6::R6Class(
   'SingleModel',
   inherit = MatrixModel,
   public = list(
@@ -91,7 +90,7 @@ SingleModel <- R6Class(
   )
 )
 
-ShiftedModel <- R6Class(
+ShiftedModel <- R6::R6Class(
   'ShiftedModel',
   inherit = MatrixModel,
   public = list(
@@ -143,7 +142,7 @@ ShiftedModel <- R6Class(
   )
 )
 
-TwoStateModel <- R6Class(
+TwoStateModel <- R6::R6Class(
   'TwoStateModel',
   inherit = MatrixModel,
   public = list(
@@ -198,7 +197,7 @@ TwoStateModel <- R6Class(
 #'
 #' @description
 #' n particle correlator with thermal pollution term(s)
-NParticleModel <- R6Class(
+NParticleModel <- R6::R6Class(
   'NParticleModel',
   inherit = MatrixModel,
   public = list(
@@ -238,6 +237,31 @@ NParticleModel <- R6Class(
   )
 )
 
+#' perform a factorising fit of a matrix of correlation functions
+#' 
+#' Modernised and extended implementation of \link{matrixfit}
+#' 
+#' @param cf Object of class `cf` with `cf_meta` and `cf_boot`.
+#' @param t1 Integer, start time slice of fit range (inclusive).
+#' @param t2 Integer, end time slie of fit range (inclusive).
+#' @param parlist Numeric vector, list of parameters for the model function.
+#' @param sym.vec Integer, numeric or vectors thereof specifying the
+#'                symmetry properties of the correlation functions
+#'                stored in `cf`. See \link{matrixfit} for details.
+#' @param neg.vec Integer or integer vector of global signs, see \link{matrixfit} for details.
+#' @param useCov Boolean, specifies whether a correlated chi^2 fit should be performed.
+#' @param model String, specifies the type of model to be assumed for the correlator.
+#'              See \link{matrixfit} for details.
+#' @param boot.fit Boolean, specifies if the fit should be bootstrapped.
+#' @param fit.method String, specifies which minimizer should be used. See \link{matrixfit} for
+#'                   details.
+#' @param autoproceed Boolean, if TRUE, specifies that if inversion of the covariance matrix fails,
+#'                    the function should proceed anyway assuming no correlation (diagonal covariance matrix).
+#' @param par.guess Numeric vector, initial values for the paramters, should be of the
+#'                  same length as `parlist`.
+#' @param every Integer, specifies a stride length by which the fit range should be sparsened,
+#'              using just `every`th time slice in the fit.
+#' @param ... Further parameters.
 #' @export
 new_matrixfit <- function(cf,
                           t1, t2,

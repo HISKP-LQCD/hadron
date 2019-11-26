@@ -33,6 +33,7 @@ jab.cf <- function(cf, m = 1) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(cf$cf.tsboot$sim == "fixed")
+  stopifnot(cf$resampling_method == 'bootstrap')
 
   old_seed <- swap_seed(cf$seed)
   ## the resampling block indices
