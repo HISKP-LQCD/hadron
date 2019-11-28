@@ -449,6 +449,11 @@ simple.nlsfit <- function(fn,
                           success.infos = 1:3,
                           relative.weights = FALSE,
                           na.rm = FALSE) {
+  if(!is.null(priors$psamples)) {
+    ncolps <- ncol(as.matrix(priors$psamples))
+  } else {
+    ncolps <- length(priors$psamples)
+  }
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
@@ -699,7 +704,6 @@ bootstrap.nlsfit <- function(fn,
   } else {
     ncolps <- length(priors$psamples)
   }
-  dimps <- dim(priors$psamples)
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
