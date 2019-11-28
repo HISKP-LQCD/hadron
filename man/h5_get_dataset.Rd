@@ -4,12 +4,14 @@
 \alias{h5_get_dataset}
 \title{get dataset from HDF5 file}
 \usage{
-h5_get_dataset(h5f, key)
+h5_get_dataset(h5f, key, check_exists = TRUE)
 }
 \arguments{
 \item{h5f}{HDF5 file opened with \code{rhdf5::H5Fopen}}
 
 \item{key}{String, full path to dataset.}
+
+\item{check_exist}{Boolean, check if key actually exists (keep in mind overhead).}
 }
 \description{
 get dataset from HDF5 file
