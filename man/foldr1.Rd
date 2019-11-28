@@ -7,7 +7,7 @@
 foldr1(f, xs)
 }
 \arguments{
-\item{f}{\code{function}. A binary function that takes two elements of the type
+\item{f}{\verb{function}. A binary function that takes two elements of the type
 contained in \code{xs} and returns another such element.}
 
 \item{xs}{\code{list} or vector. Homogenious list or vector of elements.

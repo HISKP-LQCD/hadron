@@ -15,16 +15,99 @@ append_pdf_filename <- function(basename, pdf_filenames){
 # cg_col indicates which column in output.data should be used to extract 
 # a representative solver iteration counter
 
+#' analysis_online
+#'
+#' @description
+#' `analysis_online` is a function to analyse the online measurements
+#'   and output files of the tmLQCD software, see references. The function
+#'   operates on a subdirectory either passed via `rundir` or automatically
+#'   constructed from the various function arguments. Depending on which
+#'   parts of the analysis are requested, this subdirectory is expected
+#'   to contain `onlinemeas.%06d` files with online correlator measurements,
+#'   `output.data` containing the plaquette and energy violation, amongst others 
+#'   and `monomial-%02d.data` with measurements of the extremal eigenvalues of the
+#    non-degenerate twisted mass Dirac operator.
+#' 
+#' @param L integer. spatial lattice extend
+#' @param T integer. temporal lattice extend
+#' @param t1 integer. initial time of fit range
+#' @param t2 integer. end time of fit range
+#' @param beta numeric. inverse squared gauge coupling
+#' @param kappa numeric. hopping parameter
+#' @param mul numeric. light sea twisted quark mass
+#' @param cg_col integer. column of CG iteration counts from `output.data` to use
+#' @param evals_id Integer. Monomial ID of the monomial for which eigenvalues are measured.
+#'                          Function will attempt to open `monomial-%02d.data`.
+#' @param rundir string. run directory. If not specified, run directory will
+#'                       be constructed automatically. See \link{construct_onlinemeas_rundir} for
+#'                       details.
+#' @param cg.ylim numeric. y-limits for CG iteration counts
+#' @param type string. Type specifier for the gauge action, this might be 'iwa' for Iwasaki,
+#'                     for example.
+#' @param csw numeric. clover coefficient
+#' @param musigma numeric. average 1+1 sea twisted quark mass
+#' @param mudelta numeric. splitting 1+1 sea twisted quark mass
+#' @param muh numeric. "heavy" twisted mass in the case of a `n_f=2+2` run
+#' @param addon string. addon to output filenames
+#' @param skip integer. number of initial measurements to skip in analysis
+#' @param rectangle boolean. If true, rectangle plaquettes are analysed
+#' @param plaquette boolean. If true, square plaquettes are analysed
+#' @param dH boolean. If true, delta H is analysed
+#' @param acc boolean. If true, the acceptance rate is analysed
+#' @param trajtime boolean. If true, the time per trajectory is analysed
+#' @param omeas boolean. If true, online measurements are analysed (`onlinemeas.%06d`)
+#' @param plotsize numeric. size of plots being generated
+#' @param debug boolean. provide debug information
+#' @param trajlabel boolean or string. If not `FALSE`, use as trajectory labels
+#' @param title bolean or string. If not `FALSE`, use as main title of plots
+#' @param pl boolean. If set to `TRUE` plots will be generated
+#' @param method string. method to compute errors, can be "uwerr", "boot" or "all"
+#' @param fit.routine string. minimisation routine for chisq, can be "optim"
+#' @param oldnorm boolean. If `TRUE`, the function assumes that the `onlinemeas.%06d` are
+#'                         in old tmLQCD normalisation.
+#' @param S numeric. `S` parameter of \link{uwerr}
+#' @param stat_skip integer. By passing this parameter, the various timeseries plots
+#'                           will include `stat_skip` measurements,
+#'                           but these will be skipped in the corresponding statistical analysis.
+#'                           This maybe useful, for example, to visualise thermalisation.
+#' @param omeas.samples integer. number of stochastic samples per online measurement
+#' @param omeas.stride integer. stride length in the reading of online measurements
+#' @param omeas.avg integer. Block average over this many subsequent measurements.
+#' @param omeas.stepsize integer. Number of trajectories between online measurements. Autocorrelation
+#'                                times of online measurement data will be scaled by this factor.
+#' @param evals.stepsize integer. Numer of trajectories between (strange-charm Dirac opertoar) eigenvalue measurements.
+#'                                Autocorrelation times of eigenvalues will be scaled by this factor.
+#' @param boot.R integer. number of bootstrap samples to use in bootstrap-based parts of analysis.
+#' @param boot.l integer. bootstrap block size
+#' @param outname_suffix string. suffix for output files
+#' @param verbose boolean. If `TRUE`, function produces verbose output.
+#' #'
+#' @return
+#' a list is returned with all the accumulated results. Moreover, a
+#'   PDF file with statistics and analytics is created and the results
+#'   are written into .Rdata files. On the one hand, the result of the
+#'   call to the \link{onlinemeas} function is written to
+#'   `onlineout.%s.Rdata`, where `%s` is replaced with a label
+#'   built from meta information based on the arguments above.
+#'   On the other hand, summary data across many calls of this
+#'   function is silently accumulated in the file
+#'   `omeas.summary.Rdata` which contains the named list 'resultsum' with
+#'   element names based on `rundir`.
+#'
+#' @references
+#' K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
+#' 
+#' @export
 analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
-                            cg_col, evals, rundir, cg.ylim,
+                            cg_col, evals_id, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",
                             skip=0, rectangle=TRUE,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
                             stat_skip=0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
-                            omeas.start=0, omeas.stepsize=1, 
-                            evals.start=0, evals.stepsize=1,
+                            omeas.stepsize=1, 
+                            evals.stepsize=1,
                             boot.R=1500, boot.l=2,
                             outname_suffix="", verbose=FALSE)
 {
@@ -84,7 +167,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   errorband_color2 <- rgb(0.0,0.0,0.6,0.6)
   
   if(missing(rundir)){
-    rundir <- construct_rundir(type=type,beta=beta,L=L,T=T,kappa=kappa,mul=mul,
+    rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,T=T,kappa=kappa,mul=mul,
                              csw=csw,musigma=musigma,mudelta=mudelta,muh=muh,addon=addon,
                              debug=debug
                             )
@@ -357,7 +440,6 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                     filelabel=filelabel,
                                     titletext=titletext,
                                     errorband_color=errorband_color)
-                                    #ist.by=0.00002))
   }
   if(dH) {
     plotcounter <- plotcounter+1
@@ -376,7 +458,6 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                      titletext=titletext,
                                      errorband_color=errorband_color,
                                      ylim=c(-2,3))
-                                     #ist.by=0.2))
 
     plotcounter <- plotcounter+1
     expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
@@ -395,7 +476,6 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                         errorband_color=errorband_color,
                                         hist.xlim=c(-2,4),
                                         ylim=c(-0,6))
-                                        #ist.by=0.2))
   }
   if( !missing("cg_col") ) {
     plotcounter <- plotcounter+1
@@ -413,12 +493,11 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                           filelabel=filelabel,
                                           titletext=titletext,
                                           errorband_color=errorband_color)
-                                          #ist.by=5))
   }
-  if( !missing("evals") ) {
+  if( !missing("evals_id") ) {
     plotcounter <- plotcounter+1
-    ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals, filelabel )
-    ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals )
+    ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals_id, filelabel )
+    ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals_id )
     pdf_filenames <- append_pdf_filename(basename = ev_filename,
                                          pdf_filenames = pdf_filenames)
     
@@ -496,7 +575,24 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   return(invisible(result))
 }
 
-construct_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
+#' Construct a run directory string for \link{analysis_online}
+#'
+#' @param type String. Short identifier for gauge action type. For example, `iwa` for Iwasaki gauge action.
+#' @param beta Numeric. Inverse gauge coupling.
+#' @param L Integer. Spatial lattice extent.
+#' @param T Integer. Temporal lattice extent.
+#' @param kappa Numeric. Sea quark action hopping parameter.
+#' @param mul Numeric. Sea light quark twisted mass.
+#' @param csw Numeric. Sea quark action clover parameter.
+#' @param musigma Numeric. Sea 1+1 "heavy" average twisted quark mass.
+#' @param mudelta Numeric. Sea 1+1 "heavy" splitting twisted quark mass.
+#' @param muh Numeric. In case of `n_f=2+2` run, "heavy" twisted quark mass.
+#' @param addon String. Arbitratry string which will be suffixed to the constructed run directory.
+#' @param debug Boolean. If `TRUE`, the constructed directory name is printed to screen.
+#'
+#' @return String. Directory name constructed out of the various function parameters. See source code for details.
+#'
+construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
   rundir <- NULL
   rundir <- sprintf("%s_b%s-L%dT%d",type,beta,L,T)
 
@@ -534,5 +630,5 @@ construct_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigma=0,mudelta
     cat("Trying to read from directory:", rundir,"\n")
   }
 
-  rundir
+  return(rundir)
 }

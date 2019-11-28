@@ -17,4 +17,8 @@ as well as for increasing statistics and \link{is.rw}.
 \details{
 #'
 }
+\seealso{
+Other rw constructors: 
+\code{\link{rw_meta}()}
+}
 \concept{rw constructors}

@@ -7,9 +7,9 @@
 mul.cf(cf, a = 1)
 }
 \arguments{
-\item{a}{Numeric, scaling factor.}
+\item{cf}{\code{cf_orig} objects.}
 
-\item{cf1}{\code{cf_orig} objects.}
+\item{a}{Numeric, scaling factor.}
 }
 \description{
 Arithmetically scale a correlator

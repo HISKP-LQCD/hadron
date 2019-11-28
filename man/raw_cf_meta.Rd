@@ -8,6 +8,8 @@ raw_cf_meta(cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1,
   dim = c(1, 1), nts = Time)
 }
 \arguments{
+\item{cf}{initial \link{raw_cf} object}
+
 \item{nrObs}{Integer, number of different observables assembled in the data field of this container.}
 
 \item{Time}{Integer, full time extent.}
@@ -23,7 +25,8 @@ For a scalar correlation, this should be specified as \code{c(1,1)}.}
 \code{raw_cf} metadata mixin constructor
 }
 \seealso{
-Other raw_cf constructors: \code{\link{raw_cf_data}},
-  \code{\link{raw_cf}}
+Other raw_cf constructors: 
+\code{\link{raw_cf_data}()},
+\code{\link{raw_cf}()}
 }
 \concept{raw_cf constructors}

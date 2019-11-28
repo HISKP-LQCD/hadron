@@ -23,7 +23,7 @@ rw <- function () {
 #' @param .rw `rw` object to extend.
 #' @param conf.index list of Integers, containing the index of gauge configurations
 #'
-#' @family cf constructors
+#' @family rw constructors
 #'
 #' @export
 rw_meta <- function (.rw = rw(), conf.index ) {
@@ -141,6 +141,7 @@ is.rw <- function (x) {
   inherits(x, "rw")
 }
 
+meanval <- function(d, w) {return(mean(d$rw[w]))}
 
 #' Plot a reweighting factor function
 #'
@@ -160,8 +161,13 @@ plot.rw <- function(x, rep = FALSE, ...) {
   colneg <- rep("black",times=length(rw$rw))
   colneg[negs] <- "red"
 
+# Estimating the statistical error on the reweighting factor
+
+  rw_boot <- boot(rw, meanval, R=1500)
+  rw_error <- sd(rw_boot)
+
   val <- rw$rw/mean(rw$rw)
-  err <- rep(x=0,length(rw$rw))
+  err <- rep(x=rw_error,length(rw$rw))
 
   df <- data.frame(t = c(1:length(val)),
                    CF = val,
@@ -183,14 +189,15 @@ plot.rw <- function(x, rep = FALSE, ...) {
 #' @param reverse2 `boolean`
 #'
 #' @examples
-#' Suppose we have reweighting factors in replicum A from 0 to 500
-#' in steps of 4 and in replicum B from 4 to 500 in steps of 4.
-#' To combined the two replicas we have to use
+#' # Suppose we have reweighting factors in replicum A from 0 to 500
+#' # in steps of 4 and in replicum B from 4 to 500 in steps of 4.
+#' # To combined the two replicas we have to use
 #'
-#' addstat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
-#' which means
-#' combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
-#' rw500 from A) 
+#' #addStat.rw(rw_replicumB, rw_replicumA, TRUE, FALSE)
+#'
+#' # which means
+#' # combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
+#' # rw500 from A) 
 #' @export
 addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))

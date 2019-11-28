@@ -120,6 +120,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboo
 #' original data, this likely is similar in terms of bias.
 #'
 #' @param samples Numeric vector.
+#' @param boot.l Block length for bootstrapping.
 #' @param na.rm Logical. Determines whether `NA` values shall be removed, see
 #' Description for details.
 #'
@@ -156,10 +157,18 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   sqrt((N - 1) * (m - 1) / (m * boot.l)) * sd(samples)
 }
 
+#' jackknife_cov
+#'
+#' @description
 #' Computes covariance matrix for jackknife samples.
-
+#'
+#' @param x a numeric vector, matrix or data frame.
+#' @param y ‘NULL’ (default) or a vector, matrix or data frame with
+#'        compatible dimensions to ‘x’. The default is equivalent to 
+#'        ‘y = x’ (but more efficient).
 #' @param na.rm logical. The rows containing any `NA` will be deleted if this
 #' option is set.
+#' @param ... parameters to be forwarded to \link{cov}.
 #'
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
@@ -309,8 +318,6 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 #' @param .cf `cf` object to extend.
 #' @param weight.factor TODO
 #' @param weight.cosh TODO
-#' @param mass1 TODO
-#' @param mass2 TODO
 #'
 #' @details
 #'
@@ -354,6 +361,7 @@ is_empty.cf <- function (.cf) {
 #'
 #'
 has_icf <- function(.cf) {
+  stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
 }
 
@@ -450,12 +458,6 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## save random number generator state
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-    temp <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  else
-    temp <- NULL
-
   ## we set the seed for reproducability and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
@@ -464,6 +466,8 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 
   icf.tsboot <- NULL
   if( has_icf(cf) ){
+    # no need to store the old seed again, but we definitely need to reset the RNG!
+    swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
   }
@@ -617,6 +621,13 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   return (invisible(cf))
 }
 # Gamma method analysis on all time-slices in a 'cf' object
+#' uwerr.cf
+#' @description
+#' Gamma method analysis on all time-slices in a 'cf' object
+#'
+#' @param cf Object of type `cf`
+#' @param absval Boolean. Use absolute values of the data.
+#' 
 uwerr.cf <- function(cf, absval=FALSE){
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -705,7 +716,6 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   if (reverse1 == TRUE){
     apply(cf1_temp,2,rev)
     if ( has_icf(cf1)){
-      str(cf1$icf)
       apply(icf1_temp,2,rev)
     }
   }
@@ -738,9 +748,15 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   return (invisible(cf))
 }
 
-## averages local-smeared and smeared-local correlators in cf and adjusts
-## nrStypes accordingly
-## by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
+#' @title Average local-smeared and smeared-local correlators
+#' @description
+#' averages local-smeared and smeared-local correlators in cf and adjusts
+#' nrStypes accordingly
+#' by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
+#'
+#' @param cf object of type \link{cf}
+#' @param cols columns to be averaged over
+#' 
 avg.ls.cf <- function(cf, cols = c(2, 3)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -763,6 +779,31 @@ avg.ls.cf <- function(cf, cols = c(2, 3)) {
   return (cf)
 }
 
+#' @title average close-by-times in a correlation function
+#' @description
+#' "close-by-times" averaging replaces the value of the correlation function at t
+#' with the "hypercubic" average with the values at the neighbouring time-slices
+#' with weights 0.25, 0.5 and 0.25
+#'   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
+#' where periodic boundary conditions are assumed in shift.cf
+#'
+#' @param cf object of type \link{cf}
+#' 
+avg.cbt.cf <- function(cf){
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  # copy for shifting
+  cf2 <- cf
+  cf <- mul.cf(cf, 0.5)
+
+  # average over shifted correlation functions
+  for( p in c(-1,1) ){
+    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
+  }
+  cf <- invalidate.samples.cf(cf)
+  return(invisible(cf))
+}
 
 #' Arithmetically adds two correlation functions
 #'
@@ -788,8 +829,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot( has_icf(cf2) )
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot( has_icf(cf1) & has_icf(cf2) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
@@ -840,8 +881,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   cf <- cf1
   cf$cf <- cf1$cf / cf2$cf
 
-  if( has_icf(cf1) ){
-    stopifnot(has_icf(cf2))
+  if( has_icf(cf1) | has_icf(cf2) ){
+    stopifnot(has_icf(cf1) & has_icf(cf2))
     cf$icf <- cf1$icf / cf2$icf
   }
 
@@ -851,7 +892,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 
 #' Arithmetically scale a correlator
 #'
-#' @param cf1 `cf_orig` objects.
+#' @param cf `cf_orig` objects.
 #' @param a Numeric, scaling factor.
 #'
 #' @export
@@ -867,27 +908,6 @@ mul.cf <- function(cf, a=1.) {
 
   cf <- invalidate.samples.cf(cf)
   return (cf)
-}
-
-# "close-by-times" averaging replaces the value of the correlation function at t
-# with the "hypercubic" average with the values at the neighbouring time-slices
-# with weights 0.25, 0.5 and 0.25
-#   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
-# where periodic boundary conditions are assumed in shift.cf
-avg.cbt.cf <- function(cf){
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
-
-  # copy for shifting
-  cf2 <- cf
-  cf <- mul.cf(cf, 0.5)
-
-  # average over shifted correlation functions
-  for( p in c(-1,1) ){
-    cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
-  }
-  cf <- invalidate.samples.cf(cf)
-  return(invisible(cf))
 }
 
 extractSingleCor.cf <- function(cf, id=c(1)) {
@@ -993,6 +1013,7 @@ concat.cf <- function (left, right) {
 #' sign for certain time slices or observables such that displaying in
 #' log-scale is sensible.
 #' @param rep See \code{\link{plotwitherror}}.
+#' @param ... Graphical parameter to be passed on to \link{plotwitherror}
 #'
 #' @inheritParams plotwitherror
 #'
@@ -1092,6 +1113,17 @@ invalidate.samples.cf <- function (cf) {
   return(invisible(cf))
 }
 
+#' symmetrise.cf
+#'
+#' @description
+#' Symmetrises a correlation function
+#' 
+#' @param cf Object of type `cf`.
+#' @param sym.vec Integer vector. Takes values -+1 for
+#'   (anti)symmmetrisation. If longer than 1, it must be of length
+#'   equal to the number of observalbes in `cf`. Otherwise, the same
+#'   operation is applied to all observables in `cf`, which is the
+#'   default. 
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1131,6 +1163,10 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   return(invisible(cf))
 }
 
+#' summary.cf
+#'
+#' @param object Object of type \link{cf}
+#' @param ... Generic parameters to pass on.
 summary.cf <- function(object, ...) {
   cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1174,6 +1210,10 @@ summary.cf <- function(object, ...) {
   }
 }
 
+#' print.cf
+#'
+#' @param x Object of type \link{cf}
+#' @param ... Generic parameters to pass on.
 print.cf <- function (x, ...) {
   summary(x, ...)
 }

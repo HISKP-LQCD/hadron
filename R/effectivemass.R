@@ -279,6 +279,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   return(invisible(cf))
 }
 
+#' summary.effectivemass
+#'
+#' @param object Object of type \link{effectivemass}
+#' @param ... Generic parameters to pass on.
 summary.effectivemass <- function (object, ...) {
   effMass <- object
   cat("\n ** effective mass values **\n\n")
@@ -291,7 +295,12 @@ summary.effectivemass <- function (object, ...) {
   print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
 }
 
-summary.effectivemassfit <- function(object, verbose = FALSE, ...) {
+#' summary.effectivemassfit
+#'
+#' @param object Object of type \link{cf}
+#' @param ... Generic parameters to pass on.
+#' @param verbose More verbose output.
+summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
   effMass <- object
   cat("\n ** Result of effective mass analysis **\n\n")
   cat("no. measurements\t=\t", effMass$N, "\n")
@@ -319,12 +328,24 @@ summary.effectivemassfit <- function(object, verbose = FALSE, ...) {
 
 }
 
-print.effectivemassfit <- function (x, verbose = FALSE, ...) {
+#' print.effectivemassfit
+#'
+#' @param x Object of class `effectivemass`
+#' @param ... Additional parameters to be passed on.
+#' @param verbose Boolean. More verbose output.
+print.effectivemassfit <- function (x, ..., verbose = FALSE) {
   effMass <- x
   summary(effMass, verbose = verbose, ...)
 }
 
-plot.effectivemass <- function (x, ref.value, col, col.fitline, ...) {
+#' plot.effectivemass
+#'
+#' @param x Object of class `effectivemass`
+#' @param ... Graphical parameters to be passed on to \link{plotwitherror}
+#' @param ref.value Numeric. A reference value to be plotted as a horizontal line
+#' @param col String. Colour of the data points.
+#' @param col.fitline String. Colour of the fitted line.
+plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
   effMass <- x
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))

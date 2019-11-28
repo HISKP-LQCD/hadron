@@ -15,10 +15,16 @@
     generic parameters, not used here.
   }
   \item{main}{
-    main title of the plot
+    main title of the plots.
   }
   \item{plot.hist}{
     whether or not to generate a histogram
+  }
+  \item{index}{
+    index of the observable to plot.
+  }
+  \item{Lambda}{
+    Cutoff to be used in the error computation for the ACF.
   }
 }
 \value{

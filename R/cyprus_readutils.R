@@ -79,7 +79,7 @@ cyprus_make_key_baryon <- function( sourceposition, light_quark_mass, mudlight, 
 #'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
 #'                    the data is post-processed to recover the measurements for the particular
 #'                    samples.
-#' @param legecy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
+#' @param legacy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
 #'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
 #'                    left empty, this defaults to '0004'. If this was left emtpy when
 #'                    the loop files were generated, set this to \code{TRUE} and the paths
@@ -129,7 +129,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
     
-    group_names <- h5ls(h5f)$name
+    group_names <- rhdf5::h5ls(h5f)$name
     
     avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
     if( any( !avail_loop_types ) ){
@@ -139,7 +139,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
                      )
       stop(msg)
     }
-    if( !H5Lexists(h5f, "Momenta_list_xyz") ){
+    if( !rhdf5::H5Lexists(h5f, "Momenta_list_xyz") ){
       stop(sprintf("'Momenta_list_xyz' could not be found in %s!", f))
     }
     # we transpose this to get the momenta as the rows of a matrix
@@ -234,7 +234,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
         }
       } # istoch
     } # loop_type
-    H5Fclose(h5f)
+    rhdf5::H5Fclose(h5f)
     if(verbose) tictoc::toc()
   } # ifile
   for( loop_type in selected_loop_types ){

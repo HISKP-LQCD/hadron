@@ -4,8 +4,7 @@
 \alias{plot.cf}
 \title{Plot a correlation function}
 \usage{
-\method{plot}{cf}(x, neg.vec = rep(1, times = length(cf$cf0)),
-  rep = FALSE, ...)
+\method{plot}{cf}(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...)
 }
 \arguments{
 \item{x}{\code{cf_boot} object}
@@ -15,6 +14,8 @@ sign for certain time slices or observables such that displaying in
 log-scale is sensible.}
 
 \item{rep}{See \code{\link{plotwitherror}}.}
+
+\item{...}{Graphical parameter to be passed on to \link{plotwitherror}}
 }
 \description{
 Plot a correlation function

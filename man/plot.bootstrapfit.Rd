@@ -4,14 +4,15 @@
 \alias{plot.bootstrapfit}
 \title{Plot a bootstrap NLS fit}
 \usage{
-\method{plot}{bootstrapfit}(x, ..., col.line = "black",
-  col.band = "gray", opacity.band = 0.65, lty = c(1), lwd = c(1),
-  supports = 1000, plot.range, error = sd)
+\method{plot}{bootstrapfit}(x, ..., col.line = "black", col.band = "gray",
+  opacity.band = 0.65, lty = c(1), lwd = c(1), supports = 1000,
+  plot.range, error = sd)
 }
 \arguments{
 \item{x}{object returned by \code{bootstrap.nlsfit}}
 
-\item{...}{Additional parameters passed to the \code{plotwitherror} function.}
+\item{...}{Additional parameters passed to the \code{plotwitherror}
+function.}
 
 \item{col.line}{line colour.}
 
@@ -28,18 +29,23 @@
 \item{plot.range}{vector with two elements \code{c(min,max)} defining the
 range in which fitline and errorband are plotted. Default is the range of
 the data.}
+
+\item{error}{Function to compute the standard error in resampling
+schemes. Default is \link{sd} for bootstrap. For other resampling
+schemes this might need to be changed.}
 }
 \description{
 Plot a bootstrap NLS fit
 }
 \seealso{
-Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
-  \code{\link{parametric.bootstrap.cov}},
-  \code{\link{parametric.bootstrap}},
-  \code{\link{parametric.nlsfit.cov}},
-  \code{\link{parametric.nlsfit}},
-  \code{\link{print.bootstrapfit}},
-  \code{\link{simple.nlsfit}},
-  \code{\link{summary.bootstrapfit}}
+Other NLS fit functions: 
+\code{\link{bootstrap.nlsfit}()},
+\code{\link{parametric.bootstrap.cov}()},
+\code{\link{parametric.bootstrap}()},
+\code{\link{parametric.nlsfit.cov}()},
+\code{\link{parametric.nlsfit}()},
+\code{\link{print.bootstrapfit}()},
+\code{\link{simple.nlsfit}()},
+\code{\link{summary.bootstrapfit}()}
 }
 \concept{NLS fit functions}

@@ -7,7 +7,7 @@
 is_empty.raw_cf(x)
 }
 \arguments{
-\item{.raw_cf}{object to be checked}
+\item{x}{object to be checked}
 }
 \description{
 check if an obect is of class \code{raw_cf} and empty otherwise

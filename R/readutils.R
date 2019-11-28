@@ -267,6 +267,10 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   return (invisible(ret))
 }
 
+#' readhlcor
+#'
+#' @param filename String. Filename of the heavy light correlator data file.
+#' 
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
@@ -388,7 +392,7 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
 
 }
 #' @title reader for Nissa text format correlation functions
-#' @param file_baseames_to_read Character vector of file names without the
+#' @param file_basenames_to_read Character vector of file names without the
 #'                              smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
 #'                              which will be added in the reading routine accordign to what was 
 #'                              passed via `smear_combs_to_read`. An example would be
@@ -558,8 +562,11 @@ readbinarycf <- function(files,
 #' @param sym logical. Whether the read data shall be symmetrized in the end.
 #' @param ftype numeric type. As the data is read in binary this type has to
 #' match exactly the one in the file.
+#' @param nosamples number of samples
+#' 
+#' @export
 readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
-                              op="aver", excludelist=c(""), sym=TRUE, path="", ftype=double() ){
+                              excludelist=c(""), sym=TRUE, path="", ftype=double() ){
 
   if(missing(files)) {
     stop("files must be given! Aborting...\n")

@@ -102,10 +102,10 @@ int gen_points_array(int **_degnrtDOF,
 /*
 void Array_Alloc(int * arrayPoints, int npmode, int dimmax, int innerdim)
 {
-        printf("The volume of the array is %d.\n", npmode*dimmax*innerdim);
+        Rprintf("The volume of the array is %d.\n", npmode*dimmax*innerdim);
         if((arrayPoints = (int *)malloc(npmode*dimmax*innerdim*sizeof(int))) == NULL)
                 {
-                        printf("Error: void Array_alloc(...\n");
+                        Rprintf("Error: void Array_alloc(...\n");
                         exit(-1);
                 }
 }
