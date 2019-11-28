@@ -294,9 +294,9 @@ cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'               time (left to right, fastest to slowest).
 #' @param dims Integer vector with the sizes of the internal dimensions. For example,
 #'             \code{c(4,4)} for spin correlators.
-#' @value `raw_cf` object with a \code{data} member which contains the data (as complex numbers)
-#'        in the shape \code{c(1,nts,dims)}, where `nts` is the number of time slices
-#'        inferred from the length of \code{cfdat} and the product of the internal dimensions \code{dims}.
+#' @return `raw_cf` object with a \code{data} member which contains the data (as complex numbers)
+#'         in the shape \code{c(1,nts,dims)}, where `nts` is the number of time slices
+#'         inferred from the length of \code{cfdat} and the product of the internal dimensions \code{dims}.
 #'                 
 cvc_to_raw_cf <- function(cf_dat, dims = c(1,1))
 {

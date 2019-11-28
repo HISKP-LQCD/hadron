@@ -14,6 +14,11 @@ time (left to right, fastest to slowest).}
 \item{dims}{Integer vector with the sizes of the internal dimensions. For example,
 \code{c(4,4)} for spin correlators.}
 }
+\value{
+\code{raw_cf} object with a \code{data} member which contains the data (as complex numbers)
+in the shape \code{c(1,nts,dims)}, where \code{nts} is the number of time slices
+inferred from the length of \code{cfdat} and the product of the internal dimensions \code{dims}.
+}
 \description{
 Given a numeric vector of alternating real and imaginary parts of a
 correlation function, creates an object of class 'raw_cf' with
