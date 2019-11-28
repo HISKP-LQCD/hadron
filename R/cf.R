@@ -572,7 +572,7 @@ uwerr.cf <- function(cf){
       c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
     } else {
       c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
-        tauint=uw_tmp$tau_int, dtauint=uw_tmp$dtauint)
+        tauint=uw_tmp$tauint, dtauint=uw_tmp$dtauint)
     }
   }
 
