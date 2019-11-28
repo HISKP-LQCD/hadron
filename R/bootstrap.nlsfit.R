@@ -435,6 +435,7 @@ simple.nlsfit <- function(fn,
                           y,
                           x,
                           errormodel,
+                          priors = list(param = c(), p = c(), psamples = c()),
                           ...,
                           dy,
                           dx,
@@ -452,6 +453,15 @@ simple.nlsfit <- function(fn,
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
+  if(!is.null(priors$param)){
+    stopifnot(is.vector(priors$param))
+  }
+  stopifnot( length(priors$param) == length(priors$p) &&
+               length(priors$param) == ncolps &&
+               length(priors$p) == ncolps )
+  if( !is.null(c(priors$param, priors$p, priors$psamples)) ){
+    stop("Priors are not implemented in simple.nlsfit yet.")
+  }
 
   useCov <- !missing(CovMatrix)
 
@@ -478,7 +488,7 @@ simple.nlsfit <- function(fn,
   dy <- all.errors$dy
   dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors)
 
   ## now the actual fit is performed
   first.res <- wrapper(Y, par.Guess, ...)
