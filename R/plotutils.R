@@ -86,7 +86,7 @@ errorpos <- function(dx,errsum.method="linear") {
   rval
 }
 
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
+plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
   if(!missing(mdy) && missing(dy)){
     stop("plotwitherror: if 'mdy' is provided, 'dy' must be too (it can be 0)")
   }
@@ -154,13 +154,13 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     }  
   }
 
-  if(missing(xlim) | is.null(xlim) ) {
+  if( is.null(xlim) ){
     my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
-  if(missing(ylim) | is.null(ylim) ) {
+  if( is.null(ylim) ){
     my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
   } else {
     my.ylim <- ylim
