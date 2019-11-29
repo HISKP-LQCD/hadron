@@ -309,8 +309,7 @@ set.fitchi <- function (fn, errormodel, useCov, W, x, ipx, na.rm, priors) {
   }
 }
 
-set.dfitchi <- function (gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors) {
-  priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
+set.dfitchi <- function (gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors, priors.avail) {
   ## define the derivatives of chi and chi^2
   if(missing(gr) || (errormodel == "xyerrors" && missing(dfn))){
     ## in case no derivative is known, the functions are set to NULL
@@ -371,9 +370,9 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors) {
+set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail) {
   fitchi <- set.fitchi(fn, errormodel, useCov, W, x, ipx, na.rm, priors)
-  dfitchi <- set.dfitchi(gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors)
+  dfitchi <- set.dfitchi(gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors, priors.avail)
   ## define the wrapper-functions for optimization
   if (lm.avail) {
     control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter)
@@ -488,21 +487,44 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
+  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## by adding p, param and psamples, respectively.
+  priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
+  if(priors.avail) {
+    Yp <- c(Y, priors$p)
+    yp <- c(y, priors$p)
+    bsamples <- cbind(bsamples, priors$psamples)
+  }
+  
   all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
+  if(!priors.avail) {
+    dy <- all.errors$dy
+    dx <- all.errors$dx
+  } else {
+    dy <- head(all.errors$dy, -length(priors$p))
+    dydp <- all.errors$dy
+    dx <- all.errors$dx
+  }
   W <- all.errors$W
-  dy <- all.errors$dy
-  dx <- all.errors$dx
 
-  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, ...)
+  if(!priors.avail){
+    first.res <- wrapper(Y, par.Guess, ...)
+  } else{
+    first.res <- wrapper(Yp, par.Guess, ...)
+  }
   if (!first.res$converged) {
     stop(sprintf('The fit has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
 
   chisq <- first.res$chisq
-  dof = length(y) - length(par.guess)
+  if(!priors.avail) {
+    dof = length(y) - length(par.guess)
+  } else {
+    dof = length(yp) - length(par.guess)
+  }
 
   if (missing(gr) || (errormodel == "xyerrors" && missing(dfn))) {
     if (!requireNamespace("numDeriv")) {
@@ -541,8 +563,14 @@ simple.nlsfit <- function(fn,
       cov <- cov * chisq/dof
   }
   errors <- sqrt(diag(cov))
+  
+  if(!priors.avail) {
+    dydp = NA
+  } else {
+    dydp=dydp
+  }
 
-  res <- list(y=y, dy=dy, x=x, nx=nx,
+  res <- list(y=y, dy=dy, dydp=dydp, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               errormodel=errormodel,
               t0=first.res$par,
@@ -718,7 +746,7 @@ bootstrap.nlsfit <- function(fn,
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
-
+  
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
   } else {
@@ -760,12 +788,17 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- cbind(bsamples, priors$psamples)
   }
   
-  
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+  if(!priors.avail) {
+    dy <- all.errors$dy
+    dx <- all.errors$dx
+  } else {
+    dy <- head(all.errors$dy, -length(priors$p))
+    dydp <- all.errors$dy
+    dx <- all.errors$dx
+  }
   W <- all.errors$W
-  dy <- all.errors$dy
-  dx <- all.errors$dx
-
+  
   ## add original data as first row
   if(!priors.avail){
     bsamples <- rbind(Y, bsamples)
@@ -773,7 +806,7 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- rbind(Yp, bsamples)
   }
   
-  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
   
   ## now the actual fit is performed
   if(!priors.avail){
@@ -835,12 +868,13 @@ bootstrap.nlsfit <- function(fn,
       errors <- errors * sqrt(chisq/dof)
   }
   
-  if( !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples))) ){
-    lp <- length(priors$p)
-    dy <- head(dy,-lp)
+  if(!priors.avail) {
+    dydp = NA
+  } else {
+    dydp=dydp
   }
-
-  res <- list(y=y, dy=dy, x=x, nx=nx,
+  
+  res <- list(y=y, dy=dy, dydp=dydp, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, , drop=FALSE],
               errormodel=errormodel,
