@@ -769,9 +769,6 @@ bootstrap.nlsfit <- function(fn,
     Y <- c(y, x)
     par.Guess <- c(par.guess, x)
     errormodel <- "xyerrors"
-    if( !is.null(c(priors$param, priors$p, priors$psamples)) ){
-      stop("Priors are not implemented in the errormodel xyerrors yet.")
-    }
   } else {
     stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
