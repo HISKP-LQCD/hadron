@@ -325,14 +325,15 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 #' @return 
 #'         raw_cf object containing all the correlation functions.
 #'         Find it useful temporary for using the gevp
+
 #' @export
 cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
-  stringr_avail <- requireNamespace("stringr")
-  if( !rhdf5_avail | !dplyr_avail | strigr_avail){
-    stop("The 'dplyr', 'stringr'  and 'rhdf5' packages are required to use this function!\n")
-  }
+#  stringr_avail <- requireNamespace("stringr")
+ # if( !rhdf5_avail | !dplyr_avail | stringr_avail){
+ ##   stop("The 'dplyr', 'stringr'  and 'rhdf5' packages are required to use this function!\n")
+ # }
   if( verbose ){
     tictoc_avail <- requireNamespace("tictoc")
     if( !tictoc_avail ){
@@ -346,17 +347,12 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
     f <- files[ifile]
     if(verbose) tictoc::tic(sprintf("Reading %s",f))    
 
-    # Extracting the type of the correlation function we want possibility twop , threep, we extract all other information from the hd5f file
-    # for now we have only real support for the twop case
-    type_of_correlation_function <- as.vector(selections[[baryon_type]]$type)[1]
-
-
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
     #First we extract the configuration id-s
     temporary1 <- rhdf5::h5ls(h5f)
-    filtering_patter <- sprintf("%s/....", type_of_correlation_function)
-    temporary2 <- unique(temporary1$group %>% str_extract(pattern=filtering_pattern))
-    gauge_conf_list <- temporary2[!is.na(temporary2)] 
+
+    # Extracting the type of the correlation function we want possibility twop , threep, we extract all other information from the hd5f file
+    # for now we have only real support for the twop case
 
 
     #checking whether the wanted baryon type is available in the file
@@ -369,7 +365,18 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
         stop(msg)
     }
 
-    interpolator_list_length <- length(selections[[ baryon_type ]]$interp)
+    type_of_correlation_function <- as.vector(selections[[avail_baryon_types[1]]]$type)[1]
+
+
+    filtering_pattern <- sprintf("%s/....", type_of_correlation_function)
+    temporary2 <- unique(temporary1$group %>% str_extract(pattern=filtering_pattern))
+    gauge_conf_list <- temporary2[!is.na(temporary2)] 
+
+
+
+    interpolator_list_length <- length(selections[[avail_baryon_types[1]]]$interp)
+    print("lsasa")
+    print(interpolator_list_length)
 
     # In case we symmetrize the correlator we do not store separately
     # the plus and minus projection, and we store the timeslices only
@@ -426,7 +433,7 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
             #rval[which(sp==source_position_list),1:Time] <- complex(real=data[1,1:Time], imaginary=data[2,1:Time])
 
             #Reading the negative
-            intern_pm <- sprintf("Pm_%s", interp)
+            interp_pm <- sprintf("Pm_%s", interp)
             key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], configstring, sp, baryon_type, interp_pm )
 
             # read the data, which comes in the ordering
@@ -434,12 +441,12 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
             data_pm <- h5_get_dataset(h5f, key)
              
             if (symmetrize == TRUE){
-
               reversed <- data_pm[,ncol(data_pm):1]
               for (line in 2:(Time/2+1)){
-                data_pp[,line] <- data_pp[,line]-data_pm[,line-1]
+                data_pp[,line] <- data_pp[,line]-reversed[,line-1]
               }
-              rval[which(sp==source_position_list),1:(Time/2+1)] <- complex(real=data[1,1:(Time/2+1)], imaginary=data[2,1:(Time/2+1)])
+              rval[which(sp==source_position_list),1:(Time/2+1)] <- complex(real=data_pp[1,1:(Time/2+1)], imaginary=data_pp[2,1:(Time/2+1)])
+             
 
             }
             else{
@@ -506,13 +513,16 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
     if(verbose) tictoc::toc()
   } # ifile
 
+   return(final_val)
 
   # finally make `raw_cf` objects
-  rval <- raw_cf_data(
+   rval <- raw_cf_data(
             raw_cf_meta(Time = Time,
                         nrObs = 1,
-                        nrStypes= 1),
+                        nrStypes= 1,
+                        dim=c(length(gauge_conf_list),(Time/2+1)*interpolator_list_length*length(selected_baryon_types))),
                         data=final_val
                         )
-  return(rval)
+  rval$symmetrised <- TRUE
+  return(invisible(rval))
 }
