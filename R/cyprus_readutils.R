@@ -329,8 +329,9 @@ cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRU
 cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
-  if( !rhdf5_avail | !dplyr_avail ){
-    stop("The 'dplyr' and 'rhdf5' packages are required to use this function!\n")
+  stringr_avail <- requireNamespace("stringr")
+  if( !rhdf5_avail | !dplyr_avail | strigr_avail){
+    stop("The 'dplyr', 'stringr'  and 'rhdf5' packages are required to use this function!\n")
   }
   if( verbose ){
     tictoc_avail <- requireNamespace("tictoc")
