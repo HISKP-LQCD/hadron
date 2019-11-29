@@ -755,10 +755,11 @@ bootstrap.nlsfit <- function(fn,
   ## by adding p, param and psamples, respectively.
   priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
   if(priors.avail) {
-    Y <- c(Y, priors$p)
-    y <- c(y, priors$p)
+    Yp <- c(Y, priors$p)
+    yp <- c(y, priors$p)
     bsamples <- cbind(bsamples, priors$psamples)
   }
+  
   
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
   W <- all.errors$W
@@ -766,12 +767,20 @@ bootstrap.nlsfit <- function(fn,
   dx <- all.errors$dx
 
   ## add original data as first row
-  bsamples <- rbind(Y, bsamples)
-
+  if(!priors.avail){
+    bsamples <- rbind(Y, bsamples)
+  } else {
+    bsamples <- rbind(Yp, bsamples)
+  }
+  
   wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors)
-
+  
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
+  if(!priors.avail){
+    first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
+  } else{
+    first.res <- wrapper(Yp, par.Guess, boot.r = 0, ...)
+  }
   if (!first.res$converged) {
     stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
@@ -815,7 +824,11 @@ bootstrap.nlsfit <- function(fn,
   par.boot[!converged, ] <- NA
 
   chisq <- boot.list[[1]]$chisq
-  dof = length(y) - length(par.guess)
+  if(!priors.avail) {
+    dof = length(y) - length(par.guess)
+  } else {
+    dof = length(yp) - length(par.guess)
+  }
 
   errors <- apply(par.boot[rr, , drop=FALSE], 2, error, na.rm = TRUE)
   if(relative.weights){
@@ -824,7 +837,6 @@ bootstrap.nlsfit <- function(fn,
   
   if( !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples))) ){
     lp <- length(priors$p)
-    y <- head(y,-lp)
     dy <- head(dy,-lp)
   }
 
