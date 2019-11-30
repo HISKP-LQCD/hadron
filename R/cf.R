@@ -1147,11 +1147,11 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   
   if( inherits(cf, 'cf_boot') ){
     cf$cf.tsboot$t <- cf$cf.tsboot$t[,-isub]
-    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[,-isub]
+    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[-isub]
     cf$cf.tsboot$data <- cf$cf.tsboot$data[,-isub]
     if( has_icf(cf) ){
       cf$icf.tsboot$t <- cf$icf.tsboot$t[,-isub]
-      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[,-isub]
+      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[-isub]
       cf$icf.tsboot$data <- cf$icf.tsboot$data[,-isub]
     }
   }
