@@ -1216,14 +1216,15 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
       icf.tsboot <- cf$icf.tsboot
       cf$icf.tsboot$t <- array(NA, dim=c(nrow(icf.tsboot$t), cf$nrObs*cf$nrStypes*cf$Time))
       cf$icf.tsboot$t0 <- rep(NA, times=cf$nrObs*cf$nrStypes*cf$Time)
-      cf$cf.tsboot$data <- array(NA, dim=c(nrow(cf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
+      cf$icf.tsboot$data <- array(NA, dim=c(nrow(icf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
     }
   }
 
   Thalf <- cf$Time/2
+  Thalfp1 <- Thalf+1
   for( oidx in 0:(cf$nrObs-1) ){
     for( sidx in 0:(cf$nrStypes-1) ){
-      istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
+      istart <- oidx*cf$nrStypes*Thalfp1 + sidx*Thalfp1 + 1
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
       
