@@ -1126,13 +1126,15 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       if( inherits(cf, 'cf_boot') ){
         cf$cf.tsboot$t[,ifwd] <- 0.5*( cf$cf.tsboot$t[,ifwd] + 
                                        sym.vec[oidx+1]*cf$cf.tsboot$t[,ibwd] )
-        cf$cf.tsboot$t0[ifwd] <- 0.5*( cf$cf.tsboot$t0[ifwd] + cf$cf.tsboot$t0[ibwd] )
+        cf$cf.tsboot$t0[ifwd] <- 0.5*( cf$cf.tsboot$t0[ifwd] + 
+                                       sym.vec[oidx+1]*cf$cf.tsboot$t0[ibwd] )
         cf$cf.tsboot$data[,ifwd] <- 0.5*( cf$cf.tsboot$data[,ifwd] + 
                                           sym.vec[oidx+1]*cf$cf.tsboot$data[,ibwd] )
         if(has_icf(cf)){
           cf$icf.tsboot$t[,ifwd] <- 0.5*( cf$icf.tsboot$t[,ifwd] + 
                                           sym.vec[oidx+1]*cf$icf.tsboot$t[,ibwd] )
-          cf$icf.tsboot$t0[ifwd] <- 0.5*( cf$icf.tsboot$t0[ifwd] + cf$icf.tsboot$t0[ibwd] )
+          cf$icf.tsboot$t0[ifwd] <- 0.5*( cf$icf.tsboot$t0[ifwd] +
+                                          sym.vec[oidx+1]*cf$icf.tsboot$t0[ibwd] )
           cf$icf.tsboot$data[,ifwd] <- 0.5*( cf$icf.tsboot$data[,ifwd] + 
                                              sym.vec[oidx+1]*cf$icf.tsboot$data[,ibwd] )
         }
