@@ -1236,6 +1236,8 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
       if( inherits(cf, 'cf_boot') ){
         cf$cf.tsboot$t[,ifwd] <- cf.tsboot$t[,ifwd]
         cf$cf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$t[,ifwd_2]
+        cf$cf.tsboot$t0[ifwd] <- cf.tsboot$t0[ifwd]
+        cf$cf.tsboot$t0[ibwd] <- sym.vec[oidx+1]*cf.tsboot$t0[ifwd_2]
         cf$cf.tsboot$data[,ifwd] <- cf.tsboot$data[,ifwd]
         cf$cf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$data[,ifwd_2]
       }
@@ -1246,6 +1248,8 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
         if( inherits(cf, 'cf_boot') ){
           cf$icf.tsboot$t[,ifwd] <- icf.tsboot$t[,ifwd]
           cf$icf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$t[,ifwd_2]
+          cf$icf.tsboot$t0[ifwd] <- icf.tsboot$t0[ifwd]
+          cf$icf.tsboot$t0[ibwd] <- sym.vec[oidx+1]*icf.tsboot$t0[ifwd_2]
           cf$icf.tsboot$data[,ifwd] <- icf.tsboot$data[,ifwd]
           cf$icf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$data[,ifwd_2]
         }
@@ -1254,6 +1258,20 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
   }
 
   cf$symmetrised <- FALSE
+
+  if( inherits(cf, 'cf_boot') ){
+    # update central value and error
+    cf <- cf_boot(.cf = cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
+  }
+
   return(invisible((cf)))
 }
 
