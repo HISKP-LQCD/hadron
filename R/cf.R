@@ -1156,6 +1156,16 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[-isub]
       cf$icf.tsboot$data <- cf$icf.tsboot$data[,-isub]
     }
+    # update central value and error
+    cf <- cf_boot(.cf = cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
   }
 
   cf$symmetrised <- TRUE
