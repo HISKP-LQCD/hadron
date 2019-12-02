@@ -513,16 +513,13 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
     if(verbose) tictoc::toc()
   } # ifile
 
-   return(final_val)
+  return(final_val)
 
-  # finally make `raw_cf` objects
-   rval <- raw_cf_data(
-            raw_cf_meta(Time = Time,
-                        nrObs = 1,
-                        nrStypes= 1,
-                        dim=c(length(gauge_conf_list),(Time/2+1)*interpolator_list_length*length(selected_baryon_types))),
-                        data=final_val
-                        )
-  rval$symmetrised <- TRUE
-  return(invisible(rval))
+  # finally make cf objects
+  cf <- cf_meta(nrObs=1,Time=Time,nrStypes=1)
+  cf <- cf_orig(cf, cf=Re(final_val),icf=Im(final_val))
+  if (symmetrize == TRUE){ 
+    cf$symmetrised <- TRUE
+  }
+  return(invisible(cf))
 }
