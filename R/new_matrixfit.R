@@ -148,29 +148,41 @@ WeightedModel <- R6::R6Class(
   public = list(
     initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t, weight_factor) {
       super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
-      self$reference_time <- reference_time
+      self$delta_t <- delta_t
+      self$weight_factor <- weight_factor
     },
     prediction = function (par, x, ...) {
       # Just defined the variables such that the changes to the Mathematica
       # generated expression are minimal.
+      Power <- `^`
       a0 <- par[2]
+      deltat <- self$delta_t
       e0 <- par[1]
       sign <- self$sign_vec
       t <- x
       time <- self$time_extent
+      w <- self$weight_factor
 
-      self$ov_sign_vec * (a0*(-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*pow(w,2*t)) - sign*(exp(2*e0*time) + pow(E,e0*(2*t + time))*sign)*pow(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)))) / (exp(e0*(t + 2*time))*pow(w,deltat)*(pow(w,2*t) + sign*pow(w,time)))
+      # Following is the Mathematica code which has been edited slightly to be
+      # R syntax.
+      pred <- self$ov_sign_vec * (a0*(-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*t)) - sign*(exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)))) / (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time)))
+
+      stopifnot(length(pred) == length(x))
+      return (pred)
     },
     prediction_jacobian = function (par, x, ...) {
+      Power <- `^`
       a0 <- par[2]
+      deltat <- self$delta_t
       e0 <- par[1]
       sign <- self$sign_vec
       t <- x
       time <- self$time_extent
+      w <- self$weight_factor
 
-      d1 <- self$ov_sign_vec * (a0*(exp(e0*(deltat + 2*time))*(deltat - t)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)) - exp(e0*(-deltat + 2*t + time))*sign*(deltat - t + time)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)) + exp(2*e0*time)*t*(pow(w,2*t) + sign*pow(w,2*deltat + time)) - exp(e0*(2*t + time))*sign*(t - time)*(pow(w,2*t) + sign*pow(w,2*deltat + time))))/ (exp(e0*(t + 2*time))*pow(w,deltat)*(pow(w,2*t) + sign*pow(w,time)))
+      d1 <- self$ov_sign_vec * (a0*(exp(e0*(deltat + 2*time))*(deltat - t)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)) - exp(e0*(-deltat + 2*t + time))*sign*(deltat - t + time)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)) + exp(2*e0*time)*t*(Power(w,2*t) + sign*Power(w,2*deltat + time)) - exp(e0*(2*t + time))*sign*(t - time)*(Power(w,2*t) + sign*Power(w,2*deltat + time))))/ (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time)))
 
-      d2 <- (-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*pow(w,2*t)) - sign*(exp(2*e0*time) + exp(e0*(2*t + time))*sign)*pow(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)))/ (exp(e0*(t + 2*time))*pow(w,deltat)*(pow(w,2*t) + sign*pow(w,time))) 
+      d2 <- (-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*t)) - sign*(exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)))/ (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time))) 
 
       cbind(d1, d2)
     },
@@ -445,7 +457,7 @@ new_matrixfit <- function(cf,
     model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
   } else if (model == 'weighted') {
     stopifnot(inherits(cf, 'cf_weighted'))
-    model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat, cf$weight_factor)
+    model_object <- WeightedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat, cf$weight.factor)
   } else if (model == 'pc') {
     stopifnot(cf$nrObs == 1)
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
