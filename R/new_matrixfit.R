@@ -142,6 +142,39 @@ ShiftedModel <- R6::R6Class(
   )
 )
 
+WeightedModel <- R6::R6Class(
+  'TwoStateModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t, weight_factor) {
+      super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
+      self$reference_time <- reference_time
+    },
+    prediction = function (par, x, ...) {
+      # Just defined the variables such that the changes to the Mathematica
+      # generated expression are minimal.
+      a0 <- par[2]
+      e0 <- par[1]
+      sign <- self$sign_vec
+      t <- x
+      time <- self$time_extent
+
+      self$ov_sign_vec * (a0*(-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*pow(w,2*t)) - sign*(exp(2*e0*time) + pow(E,e0*(2*t + time))*sign)*pow(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)))) / (exp(e0*(t + 2*time))*pow(w,deltat)*(pow(w,2*t) + sign*pow(w,time)))
+    },
+    prediction_jacobian = function (par, x, ...) {
+      a0 <- par[2]
+      e0 <- par[1]
+      sign <- self$sign_vec
+      t <- x
+      time <- self$time_extent
+
+      d1 <- self$ov_sign_vec * (a0*(exp(e0*(deltat + 2*time))*(deltat - t)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)) - exp(e0*(-deltat + 2*t + time))*sign*(deltat - t + time)*pow(w,deltat)* (pow(w,2*t) + sign*pow(w,time)) + exp(2*e0*time)*t*(pow(w,2*t) + sign*pow(w,2*deltat + time)) - exp(e0*(2*t + time))*sign*(t - time)*(pow(w,2*t) + sign*pow(w,2*deltat + time))))/ (exp(e0*(t + 2*time))*pow(w,deltat)*(pow(w,2*t) + sign*pow(w,time)))
+    },
+    delta_t = NA,
+    weight_factor = NA
+  )
+)
+
 TwoStateModel <- R6::R6Class(
   'TwoStateModel',
   inherit = MatrixModel,
@@ -406,6 +439,9 @@ new_matrixfit <- function(cf,
   } else if (model == 'shifted') {
     stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
+  } else if (model == 'weighted') {
+    stopifnot(inherits(cf, 'cf_weighted'))
+    model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat, cf$weight_factor)
   } else if (model == 'pc') {
     stopifnot(cf$nrObs == 1)
     model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
