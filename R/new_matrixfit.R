@@ -143,7 +143,7 @@ ShiftedModel <- R6::R6Class(
 )
 
 WeightedModel <- R6::R6Class(
-  'TwoStateModel',
+  'WeightedModel',
   inherit = MatrixModel,
   public = list(
     initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t, weight_factor) {
