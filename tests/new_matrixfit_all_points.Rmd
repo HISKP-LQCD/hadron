@@ -1,0 +1,26 @@
+---
+title: "R Notebook"
+output: pdf_document
+---
+
+```{r setup}
+devtools::load_all()
+```
+
+# `matrixfit` and `new_matrixfit`
+
+We want the same plot output with both plot mechanism.
+
+```{r}
+corr <- bootstrap.cf(samplecf)
+```
+
+```{r}
+old_fit <- matrixfit(corr, 10, 20)
+plot(old_fit, do.qqplot = FALSE)
+```
+
+```{r}
+new_fit <- new_matrixfit(corr, 10, 20)
+plot(new_fit, log = 'y')
+```

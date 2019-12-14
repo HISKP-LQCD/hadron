@@ -719,6 +719,7 @@ bootstrap.nlsfit <- function(fn,
                              CovMatrix,
                              gr,
                              dfn,
+                             mask,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              error = sd,
@@ -746,6 +747,43 @@ bootstrap.nlsfit <- function(fn,
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
+  
+  # Apply the mask. The user might have specified a mask that is used to
+  # restrict the selection of the points that are to be used in the fit. In
+  # order to make this additional feature a minimal change to the following code
+  # we will *change* the input parameters here and store them with new names.
+  # Then at the very end we switch them back.
+  if (!missing(mask)) {
+    full <- list()
+    
+    if (!missing(dx)) {
+      full$dx <- dx
+      dx <- dx[mask]
+    } else if (ncol(bsamples) > length(y)) {
+      full$dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
+    }
+    
+    if (!missing(dy)) {
+      full$dy <- dy
+      dy <- dy[mask]
+    } else {
+      full$dy <- apply(bsamples[, 1:length(y)], 2, error)
+    }
+    
+    full$x <- x
+    x <- x[mask]
+    
+    full$y <- y
+    y <- y[mask]
+    
+    full$bsamples <- bsamples
+    bsamples <- bsamples[, mask]
+    
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
+  }
   
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
@@ -893,6 +931,17 @@ bootstrap.nlsfit <- function(fn,
   if (errormodel == 'xyerrors') {
     res$dx <- dx
   }
+  
+  # The user might have supplied a mask, therefore we need to restore all the
+  # information and un-apply the mask.
+  if (!missing(mask)) {
+    for (name in names(full)) {
+      if (name %in% names(res)) {
+        res[[name]] <- full[[name]]
+      }
+    }
+    res$mask <- mask
+  }
 
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
@@ -996,8 +1045,12 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @export
 #' @family NLS fit functions
 plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+  # The plot object might not have a mask, we want to have one in either case.
+  if (is.null(x$mask)) {
+    x$mask <- rep(TRUE, length(x$x))
+  }
   if(missing(plot.range)){
-    rx <- range(x$x)
+    rx <- range(x$x[x$mask])
   }else{
     rx <- plot.range
   }
