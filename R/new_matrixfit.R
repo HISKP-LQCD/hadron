@@ -430,7 +430,7 @@ new_matrixfit <- function(cf,
                cov_fn = cf$cov_fn)
   
   if (useCov) {
-    args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t[, ii])
+    args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t)
   }
   
   res <- do.call(bootstrap.nlsfit, args)
