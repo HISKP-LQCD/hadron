@@ -55,6 +55,8 @@ return the gradient of \code{fn}. It must return an array with
 derivative of \code{fn} by \code{x} and only relevant if x-errors are
 provided.}
 
+\item{mask}{logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to \code{x}, \code{y}, \code{dx}, \code{dy}, \code{bsamples} and \code{CovMatrix} as applicable.}
+
 \item{use.minpack.lm}{use the \code{minpack.lm} library if available. This
 is usually faster than the default \code{optim} but somtimes also less
 stable.}
@@ -107,8 +109,8 @@ depending on the error model with \code{npar} as in \code{t0}. }
 \item{nx}{the number of x-values.}
 \item{tofn}{
 the original \code{...} list of parameters to be passed on to the
-fit function
-}
+fit function}
+\item{mask}{original \code{mask} value}
 }
 \description{
 Performs and bootstraps a non-linear least-squares fit to data with y and x

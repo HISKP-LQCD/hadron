@@ -636,6 +636,7 @@ simple.nlsfit <- function(fn,
 #' length(y)+length(x))} depending on the errormodel. Pass `NULL` if the matrix
 #' has to be calculated from the `bsamples`. If missing, uncorrelated fit will
 #' be used.
+#' @param mask logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to `x`, `y`, `dx`, `dy`, `bsamples` and `CovMatrix` as applicable.
 #' @param use.minpack.lm use the \code{minpack.lm} library if available. This
 #' is usually faster than the default \code{optim} but somtimes also less
 #' stable.
@@ -681,8 +682,8 @@ simple.nlsfit <- function(fn,
 #'  \item{nx}{the number of x-values.}
 #'  \item{tofn}{
 #'    the original \code{...} list of parameters to be passed on to the
-#'    fit function
-#'  }
+#'    fit function}
+#'  \item{mask}{original `mask` value}
 #'
 #' @examples
 #' ## Declare some data.
