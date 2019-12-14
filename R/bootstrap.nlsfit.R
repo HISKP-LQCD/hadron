@@ -184,15 +184,15 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     if (is.null(CovMatrix)) {
       InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
-      dY <- chol(InvCovMatrix)
+      W <- chol(InvCovMatrix)
     } else {
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
-      dY <- t(InvCovMatrix)
+      W <- t(InvCovMatrix)
     }
 
-    dydx <- 1.0 / diag(dY)
+    dydx <- 1.0 / diag(W)
 
     if (errormodel == 'yerrors') {
       dy <- dydx
@@ -205,7 +205,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     ## The user did not specify the errors, therefore we simply compute them.
     if (missing(dx) && missing(dy)) {
       dydx <- apply(bsamples, 2, error)
-      dY <- 1.0 / dydx
+      W <- 1.0 / dydx
 
       if (errormodel == 'yerrors') {
         dy <- dydx
@@ -218,9 +218,9 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     ## consistent.
     else {
       if (errormodel == 'yerrors' && ncol(bsamples) == length(dy)) {
-        dY <- 1.0 / dy
+        W <- 1.0 / dy
       } else if (errormodel == 'xyerrors' && ncol(bsamples) == length(dy) + length(dx)) {
-        dY <- 1.0 / c(dy, dx)
+        W <- 1.0 / c(dy, dx)
       } else {
         stop('You have explicitly passed `dy` and/or `dx`, but their combined length does not match the number of columns of the bootstrap samples.')
       }
@@ -230,7 +230,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
   if (errormodel == 'yerrors') {
     dx <- NULL
   }
-  return(list(dY=dY, dy=dy, dx=dx))
+  return(list(W=W, dy=dy, dx=dx))
 }
 
 get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
@@ -252,10 +252,10 @@ get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
-      dY <- t(InvCovMatrix)
+      W <- t(InvCovMatrix)
     }
 
-    dydx <- 1.0 / diag(dY)
+    dydx <- 1.0 / diag(W)
 
     if (errormodel == 'yerrors') {
       dy <- dydx
@@ -266,42 +266,42 @@ get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
   }
   else {
     if (errormodel == 'yerrors') {
-      dY <- 1.0 / dy
+      W <- 1.0 / dy
     } else {
-      dY <- 1.0 / c(dy, dx)
+      W <- 1.0 / c(dy, dx)
     }
   }
 
   if (errormodel == 'yerrors') {
     dx <- NULL
   }
-  return(list(dY=dY, dy=dy, dx=dx))
+  return(list(W=W, dy=dy, dx=dx))
 }
 
-set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx, na.rm) {
+set.fitchi <- function (fn, errormodel, useCov, W, x, ipx, na.rm, priors) {
   ## define the chi-vector, the sum of squares of which has to be minimized
   ## the definitions depend on the errormodel and the use of covariance
   ## BUT it always has the same name
   if(errormodel == "yerrors"){
     if(useCov){
-      fitchi <- function(y, par, ...) { dY %*% (y - fn(par=par, x=x, ...)) }
+      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par, x=x, ...), par[priors$param])) }
     }else{
-      fitchi <- function(y, par, ...) { dY * (y - fn(par=par, x=x, ...)) }
+      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par, x=x, ...), par[priors$param])) }
     }
   }else{
     if(useCov){
-      fitchi <- function(y, par, ...) { dY %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
     }else{
-      fitchi <- function(y, par, ...) { dY * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
     }
   }
 
   if(na.rm){
     if(useCov){
-      dY.na = apply(is.na(dY), 1, any)
-      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | dY.na, 0, fitchi(y, par, ...)) }
+      W.na = apply(is.na(W), 1, any)
+      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | W.na, 0, fitchi(y, par, ...)) }
     }else{
-      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | is.na(dY), 0, fitchi(y, par, ...)) }
+      fitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | is.na(W), 0, fitchi(y, par, ...)) }
     }
     return(fitchi.wo.na)
   }else{
@@ -309,7 +309,7 @@ set.fitchi <- function (fn, errormodel, useCov, dY, x, ipx, na.rm) {
   }
 }
 
-set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx, na.rm) {
+set.dfitchi <- function (gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors, priors.avail) {
   ## define the derivatives of chi and chi^2
   if(missing(gr) || (errormodel == "xyerrors" && missing(dfn))){
     ## in case no derivative is known, the functions are set to NULL
@@ -318,10 +318,20 @@ set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx, na.rm) {
   }else{
     ## the format of gr has to be nrows=length(par), ncols=length(Y)
     if(errormodel == "yerrors"){
+      grpriors <- c()
+      if(priors.avail) {
+        npriors <- length(priors$param)
+        npar <- length(par.guess)
+        for (i in 1:npriors) {
+          aux <- rep(0, npar)
+          aux[priors$param[i]] <- 1
+          grpriors <- rbind(grpriors, aux)
+        }
+      }
       if(useCov){
-        dfitchi <- function(par, ...) { -dY %*% gr(par=par, x=x, ...) }
+        dfitchi <- function(par, ...) { -W %*% rbind(gr(par=par, x=x, ...), grpriors) }
       }else{
-        dfitchi <- function(par, ...) { -dY * gr(par=par, x=x, ...) }
+        dfitchi <- function(par, ...) { -W * rbind(gr(par=par, x=x, ...), grpriors) }
       }
     }else{
       nx <- length(x)
@@ -331,18 +341,18 @@ set.dfitchi <- function (gr, dfn, errormodel, useCov, dY, x, ipx, na.rm) {
         return(cbind(df.dpar, df.dx))
       }
       if(useCov){
-        dfitchi <- function(par, ...) { -dY %*% jacobian(par, ...) }
+        dfitchi <- function(par, ...) { -W %*% jacobian(par, ...) }
       }else{
-        dfitchi <- function(par, ...) { -dY * jacobian(par, ...) }
+        dfitchi <- function(par, ...) { -W * jacobian(par, ...) }
       }
     }
 
     if(na.rm){
       if(useCov){
-        dY.na = apply(is.na(dY), 1, any)
-        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | dY.na, 0, dfitchi(y, par, ...)) }
+        W.na = apply(is.na(W), 1, any)
+        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(y) | W.na, 0, dfitchi(y, par, ...)) }
       }else{
-        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(dY), 0, dfitchi(y, par, ...)) }
+        dfitchi.wo.na <- function(y, par, ...) { ifelse(is.na(W), 0, dfitchi(y, par, ...)) }
       }
       return(dfitchi.wo.na)
     }else{
@@ -360,9 +370,9 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm) {
-  fitchi <- set.fitchi(fn, errormodel, useCov, dY, x, ipx, na.rm)
-  dfitchi <- set.dfitchi(gr, dfn, errormodel, useCov, dY, x, ipx, na.rm)
+set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail) {
+  fitchi <- set.fitchi(fn, errormodel, useCov, W, x, ipx, na.rm, priors)
+  dfitchi <- set.dfitchi(gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors, priors.avail)
   ## define the wrapper-functions for optimization
   if (lm.avail) {
     control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxfev=maxiter*10, maxiter=maxiter)
@@ -424,6 +434,7 @@ simple.nlsfit <- function(fn,
                           y,
                           x,
                           errormodel,
+                          priors = list(param = c(), p = c(), psamples = c()),
                           ...,
                           dy,
                           dx,
@@ -437,10 +448,24 @@ simple.nlsfit <- function(fn,
                           success.infos = 1:3,
                           relative.weights = FALSE,
                           na.rm = FALSE) {
+  if(!is.null(priors$psamples)) {
+    ncolps <- ncol(as.matrix(priors$psamples))
+  } else {
+    ncolps <- length(priors$psamples)
+  }
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
+  if(!is.null(priors$param)){
+    stopifnot(is.vector(priors$param))
+  }
+  stopifnot( length(priors$param) == length(priors$p) &&
+               length(priors$param) == ncolps &&
+               length(priors$p) == ncolps )
+  if( !is.null(c(priors$param, priors$p, priors$psamples)) ){
+    stop("Priors are not implemented in simple.nlsfit yet.")
+  }
 
   useCov <- !missing(CovMatrix)
 
@@ -462,21 +487,44 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
+  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## by adding p, param and psamples, respectively.
+  priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
+  if(priors.avail) {
+    Yp <- c(Y, priors$p)
+    yp <- c(y, priors$p)
+    bsamples <- cbind(bsamples, priors$psamples)
+  }
+  
   all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
-  dY <- all.errors$dY
-  dy <- all.errors$dy
-  dx <- all.errors$dx
+  if(!priors.avail) {
+    dy <- all.errors$dy
+    dx <- all.errors$dx
+  } else {
+    dy <- head(all.errors$dy, -length(priors$p))
+    dydp <- all.errors$dy
+    dx <- all.errors$dx
+  }
+  W <- all.errors$W
 
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
 
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, ...)
+  if(!priors.avail){
+    first.res <- wrapper(Y, par.Guess, ...)
+  } else{
+    first.res <- wrapper(Yp, par.Guess, ...)
+  }
   if (!first.res$converged) {
     stop(sprintf('The fit has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
 
   chisq <- first.res$chisq
-  dof = length(y) - length(par.guess)
+  if(!priors.avail) {
+    dof = length(y) - length(par.guess)
+  } else {
+    dof = length(yp) - length(par.guess)
+  }
 
   if (missing(gr) || (errormodel == "xyerrors" && missing(dfn))) {
     if (!requireNamespace("numDeriv")) {
@@ -505,9 +553,9 @@ simple.nlsfit <- function(fn,
 
   ## Normalise the errors
   if(useCov) {
-    jac <- dY %*% jac
+    jac <- W %*% jac
   }else{
-    jac <- diag(dY) %*% jac
+    jac <- diag(W) %*% jac
   }
 
   cov <- solve(t(jac) %*% jac)
@@ -515,15 +563,21 @@ simple.nlsfit <- function(fn,
       cov <- cov * chisq/dof
   }
   errors <- sqrt(diag(cov))
+  
+  if(!priors.avail) {
+    dydp = NA
+  } else {
+    dydp=dydp
+  }
 
-  res <- list(y=y, dy=dy, x=x, nx=nx,
+  res <- list(y=y, dy=dy, dydp=dydp, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               errormodel=errormodel,
               t0=first.res$par,
               se=errors,
               cov=cov,
               useCov=useCov,
-              invCovMatrix=dY,
+              invCovMatrix=W,
               Qval = 1 - pchisq(chisq, dof),
               chisqr = chisq,
               dof = dof,
@@ -658,6 +712,7 @@ bootstrap.nlsfit <- function(fn,
                              y,
                              x,
                              bsamples,
+                             priors = list(param = c(), p = c(), psamples = c()),
                              ...,
                              dy,
                              dx,
@@ -672,15 +727,26 @@ bootstrap.nlsfit <- function(fn,
                              success.infos = 1:3,
                              relative.weights = FALSE,
                              na.rm = FALSE) {
+  if(!is.null(priors$psamples)) {
+    ncolps <- ncol(as.matrix(priors$psamples))
+  } else {
+    ncolps <- length(priors$psamples)
+  }
   stopifnot(!missing(y))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
   stopifnot(!missing(bsamples))
+  if(!is.null(priors$param)){
+    stopifnot(is.vector(priors$param))
+  }
+  stopifnot( length(priors$param) == length(priors$p) &&
+               length(priors$param) == ncolps &&
+               length(priors$p) == ncolps )
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
-
+  
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
   } else {
@@ -694,7 +760,7 @@ bootstrap.nlsfit <- function(fn,
   crr <- c(1:(boot.R+1))
   rr <- c(2:(boot.R+1))
 
-  ## cast y and dy to Y and dY, respectively
+  ## cast y and dy to Y and W, respectively
   if (ncol(bsamples) == length(y)) {
     Y <- y
     par.Guess <- par.guess
@@ -710,18 +776,41 @@ bootstrap.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
+  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## by adding p, param and psamples, respectively.
+  priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
+  if(priors.avail) {
+    Yp <- c(Y, priors$p)
+    yp <- c(y, priors$p)
+    bsamples <- cbind(bsamples, priors$psamples)
+  }
+  
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
-  dY <- all.errors$dY
-  dy <- all.errors$dy
-  dx <- all.errors$dx
-
+  if(!priors.avail) {
+    dy <- all.errors$dy
+    dx <- all.errors$dx
+  } else {
+    dy <- head(all.errors$dy, -length(priors$p))
+    dydp <- all.errors$dy
+    dx <- all.errors$dx
+  }
+  W <- all.errors$W
+  
   ## add original data as first row
-  bsamples <- rbind(Y, bsamples)
-
-  wrapper <- set.wrapper(fn, gr, dfn, errormodel, useCov, dY, x, ipx, lm.avail, maxiter, success.infos, na.rm)
-
+  if(!priors.avail){
+    bsamples <- rbind(Y, bsamples)
+  } else {
+    bsamples <- rbind(Yp, bsamples)
+  }
+  
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
+  
   ## now the actual fit is performed
-  first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
+  if(!priors.avail){
+    first.res <- wrapper(Y, par.Guess, boot.r = 0, ...)
+  } else{
+    first.res <- wrapper(Yp, par.Guess, boot.r = 0, ...)
+  }
   if (!first.res$converged) {
     stop(sprintf('The first fit to the original data has failed. The `info` from the algorithm is `%d`', first.res$info))
   }
@@ -765,14 +854,24 @@ bootstrap.nlsfit <- function(fn,
   par.boot[!converged, ] <- NA
 
   chisq <- boot.list[[1]]$chisq
-  dof = length(y) - length(par.guess)
+  if(!priors.avail) {
+    dof = length(y) - length(par.guess)
+  } else {
+    dof = length(yp) - length(par.guess)
+  }
 
   errors <- apply(par.boot[rr, , drop=FALSE], 2, error, na.rm = TRUE)
   if(relative.weights){
       errors <- errors * sqrt(chisq/dof)
   }
-
-  res <- list(y=y, dy=dy, x=x, nx=nx,
+  
+  if(!priors.avail) {
+    dydp = NA
+  } else {
+    dydp=dydp
+  }
+  
+  res <- list(y=y, dy=dy, dydp=dydp, x=x, nx=nx,
               fn=fn, par.guess=par.guess, boot.R=boot.R,
               bsamples=bsamples[rr, , drop=FALSE],
               errormodel=errormodel,
@@ -781,7 +880,7 @@ bootstrap.nlsfit <- function(fn,
               t=par.boot[rr, , drop=FALSE],
               se=errors,
               useCov=useCov,
-              invCovMatrix=dY,
+              invCovMatrix=W,
               Qval = 1 - pchisq(chisq, dof),
               chisqr = chisq,
               dof = dof,
