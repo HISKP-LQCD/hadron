@@ -293,11 +293,6 @@ new_matrixfit <- function(cf,
   Thalfp1 <- cf$Time/2 + 1
   t <- c(0:(cf$Time/2))
   
-  deltat <- 1
-  if(model == "shifted" && any(names(cf) == "deltat")) {
-    deltat <- cf$deltat
-  }
-  
   ## This is the number of correlators in cf
   if (!is.null(dim(cf$cf)))
     mSize <- dim(cf$cf)[2] / Thalfp1
