@@ -1,15 +1,38 @@
+# signvec decides on cosh or sinh
+make_sign_vec <- function (sym_vec, len_t, m_size) {
+  sign_vec <- rep(1, times = len_t)
+
+  for (i in 1:m_size) {
+    if (sym_vec[i] == "sinh")
+      sign_vec[((i-1)*len_t+1):(i*len_t)] <- -1
+    else if (sym_vec[i] == "exp")
+      sign_vec[((i-1)*len_t+1):(i*len_t)] <- 0
+  }
+
+  return (sign_vec)
+}
+
+# ov.sign.vec indicates the overall sign
+make_ov_sign_vec <- function (neg_vec, len_t, m_size) {
+  ov_sign_vec <- rep(1, times = len_t)
+  
+  for (i in 1:m_size) {
+    if (neg_vec[i] == -1)
+      ov_sign_vec[((i-1)*len_t+1):(i*len_t)] <- -1
+  }
+
+  return (ov_sign_vec)
+}
+
 MatrixModel <- R6::R6Class(
   'MatrixModel',
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec) {
-
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
       self$time_extent <- time_extent
-      self$parind <- parind
-      self$sign_vec <- sign_vec
-      self$ov_sign_vec <- ov_sign_vec
-
-      stopifnot(!is.na(self$sign_vec))
-      stopifnot(!is.na(self$ov_sign_vec))
+      self$parlist <- parlist 
+      self$sym_vec <- sym_vec
+      self$neg_vec <- neg_vec
+      self$m_size <- m_size
     },
     prediction = function (par, x, ...) {
       stop('MatrixModel$prediction is an abstract function.')
@@ -17,20 +40,22 @@ MatrixModel <- R6::R6Class(
     prediction_jacobian = function (par, x, ...) {
       stop('MatrixModel$prediction_jacobian is an abstract function.')
     },
-    initial_guess = function (corr, parlist, t1, t2) {
+    initial_guess = function (corr, t1, t2) {
       t1p1 <- t1 + 1
       t2p1 <- t2 + 1
       Thalfp1 <- (self$time_extent / 2) + 1
+      len_t <- length(t1:t2)
+      parind <- make_parind(parlist = self$parlist, length_time = len_t, summands = 1)
       
-      par <- numeric(max(self$parind))
-      j <- which(parlist[1, ] == 1 & parlist[2, ] == 1)
+      par <- numeric(max(parind))
+      j <- which(self$parlist[1, ] == 1 & self$parlist[2, ] == 1)
       par[1] <- invcosh(corr[t1p1 + (j-1) * Thalfp1] / corr[t1p1 + (j-1) * Thalfp1 + 1], t = t1p1, self$time_extent)
       ## catch failure of invcosh
       if(is.na(par[1]) || is.nan(par[1]))
         par[1] <- 0.2
       ## the amplitudes we estimate from diagonal elements
       for (i in 2:length(par)) {
-        j <- which(parlist[1, ] == (i-1) & parlist[2, ] == (i-1))
+        j <- which(self$parlist[1, ] == (i-1) & self$parlist[2, ] == (i-1))
         if (length(j) == 0) {
           ##if(full.matrix) warning("one diagonal element does not appear in parlist\n")
           j <- i-1
@@ -44,9 +69,10 @@ MatrixModel <- R6::R6Class(
       par
     },
     time_extent = NA,
-    parind = NA,
-    sign_vec = NA,
-    ov_sign_vec = NA
+    parlist = NA,
+    sym_vec = NA,
+    neg_vec = NA,
+    m_size = NA
   )
 )
 
@@ -55,27 +81,35 @@ SingleModel <- R6::R6Class(
   inherit = MatrixModel,
   public = list(
     prediction = function (par, x, ...) {
-      self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (exp(-par[1] * x) + self$sign_vec * exp(-par[1] * (self$time_extent - x)))
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+        (exp(-par[1] * x) + sign_vec * exp(-par[1] * (self$time_extent - x)))
     },
     prediction_jacobian = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * 0.5 * par[self$parind[, 1]] * par[self$parind[, 2]] *
+      zp <- ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
         (-x * exp(-par[1] * x) -
-           (self$time_extent-x) * self$sign_vec * exp(-par[1] * (self$time_extent-x)))
+           (self$time_extent-x) * sign_vec * exp(-par[1] * (self$time_extent-x)))
       res <- zp
       
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
         zp1 <- rep(0, length(zp))
-        j <- which(self$parind[, 1] == i)
-        zp1[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 2]] *
-          (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
+        j <- which(parind[, 1] == i)
+        zp1[j] <- ov_sign_vec * 0.5 * par[parind[j, 2]] *
+          (exp(-par[1] * x[j]) + sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         zp2 <- rep(0, length(zp))
-        j <- which(self$parind[, 2] == i)
-        zp2[j] <- self$ov_sign_vec * 0.5 * par[self$parind[j, 1]] *
-          (exp(-par[1] * x[j]) + self$sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
+        j <- which(parind[, 2] == i)
+        zp2[j] <- ov_sign_vec * 0.5 * par[parind[j, 1]] *
+          (exp(-par[1] * x[j]) + sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
         
         res <- cbind(res, zp1 + zp2)
       }
@@ -94,23 +128,31 @@ ShiftedModel <- R6::R6Class(
   'ShiftedModel',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, delta_t) {
-      super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
       self$delta_t <- delta_t
     },
     prediction = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
       xx <- x - self$delta_t/2
-      self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (exp(-par[1] * xx) - self$sign_vec * exp(-par[1] * (self$time_extent - xx)))
+      ov_sign_vec * par[parind[, 1]] * par[parind[, 2]] *
+        (exp(-par[1] * xx) - sign_vec * exp(-par[1] * (self$time_extent - xx)))
     },
     prediction_jacobian = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
       xx <- x - self$delta_t/2
       
       res <- matrix(0.0, nrow = length(x), ncol = length(par))
       
       ## Derivative with respect to the mass, `par[1]`.
-      zp <- self$ov_sign_vec * par[self$parind[, 1]] * par[self$parind[, 2]] *
-        (-xx * exp(-par[1] * xx) + (self$time_extent - xx) * self$sign_vec *
+      zp <- ov_sign_vec * par[parind[, 1]] * par[parind[, 2]] *
+        (-xx * exp(-par[1] * xx) + (self$time_extent - xx) * sign_vec *
            exp(-par[1] * (self$time_extent - xx)))
       stopifnot(length(zp) == nrow(res))
       
@@ -119,15 +161,15 @@ ShiftedModel <- R6::R6Class(
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
           zp1 <- rep(0, length(zp))##
-          j <- which(self$parind[, 1] == i)
-          zp1[j] <- self$ov_sign_vec * par[self$parind[j, 2]] *
-            (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+          j <- which(parind[, 1] == i)
+          zp1[j] <- ov_sign_vec * par[parind[j, 2]] *
+            (exp(-par[1] * xx[j]) - sign_vec[j] *
             exp(-par[1] * (self$time_extent - xx[j])))
         
           zp2 <- rep(0, length(zp))##
-          j <- which(self$parind[, 2] == i)
-          zp2[j] <- self$ov_sign_vec * par[self$parind[j, 1]] *
-            (exp(-par[1] * xx[j]) - self$sign_vec[j] *
+          j <- which(parind[, 2] == i)
+          zp2[j] <- ov_sign_vec * par[parind[j, 1]] *
+            (exp(-par[1] * xx[j]) - sign_vec[j] *
             exp(-par[1] * (self$time_extent - xx[j])))
           
           stopifnot(length(zp1) == nrow(res))
@@ -146,8 +188,8 @@ TwoStateModel <- R6::R6Class(
   'TwoStateModel',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec, reference_time) {
-      super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size, reference_time) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
       self$reference_time <- reference_time
     },
     prediction = function (par, x, ...) {
@@ -201,9 +243,9 @@ NParticleModel <- R6::R6Class(
   'NParticleModel',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parind, sign_vec, ov_sign_vec) {
-      super$initialize(time_extent, parind, sign_vec, ov_sign_vec)
-      self$sm <- SingleModel$new(time_extent, parind, sign_vec, ov_sign_vec)
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+      self$sm <- SingleModel$new(time_extent, parlist, sym_vec, neg_vec, m_size)
      },
     prediction = function (par, x, ...) {
       n <- length(par) / 2
@@ -346,45 +388,24 @@ new_matrixfit <- function(cf,
     ii <- ii[ii %% every == 0]
   }
   
-  ## parind is the index vector for the matrix elements
-  len_t <- length(t1:t2)
-  parind <- make_parind(parlist = parlist, length_time = len_t, summands = 1)
-  ## signvec decides on cosh or sinh
-  sign.vec <- rep(1, times = len_t)
-  ## ov.sign.vec indicates the overall sign
-  ov.sign.vec <- rep(1, times = len_t)
-  
-  for (i in 1:mSize) {
-    #parind[((i-1)*len_t+1):(i*len_t), ] <- t(array(parlist[, i] + 1, dim = c(2, len_t)))
-    
-    if (sym.vec[i] == "sinh")
-      sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
-    else if (sym.vec[i] == "exp")
-      sign.vec[((i-1)*len_t+1):(i*len_t)] <- 0
-
-    if (neg.vec[i] == -1)
-      ov.sign.vec[((i-1)*len_t+1):(i*len_t)] <- -1
-  }
-
-  ## perform the bootstrap non-linear least-squares fit (NLS fit):
-  
   if (model == 'single') {
-    model_object <- SingleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
+    model_object <- SingleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   } else if (model == 'shifted') {
     stopifnot(inherits(cf, 'cf_shifted'))
-    model_object <- ShiftedModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$deltat)
+    model_object <- ShiftedModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$deltat)
   } else if (model == 'pc') {
     stopifnot(cf$nrObs == 1)
-    model_object <- TwoStateModel$new(cf$Time, parind, sign.vec, ov.sign.vec, cf$gevp_reference_time)
+    model_object <- TwoStateModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$gevp_reference_time)
   } else if (model == 'n_particles') {
     stopifnot(cf$nrObs == 1)
-    model_object <- NParticleModel$new(cf$Time, parind, sign.vec, ov.sign.vec)
+    model_object <- NParticleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   }
   
   if (missing(par.guess)) {
-    par.guess <- model_object$initial_guess(CF$Cor, parlist, t1, t2)
+    par.guess <- model_object$initial_guess(CF$Cor, t1, t2)
   }
 
+  ## perform the bootstrap non-linear least-squares fit (NLS fit):
   args <- list(fn = model_object$prediction,
                gr = model_object$prediction_jacobian,
                par.guess = par.guess,
