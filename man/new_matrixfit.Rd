@@ -4,9 +4,10 @@
 \alias{new_matrixfit}
 \title{perform a factorising fit of a matrix of correlation functions}
 \usage{
-new_matrixfit(cf, t1, t2, parlist, sym.vec, neg.vec, useCov = FALSE,
-  model = "single", boot.fit = TRUE, fit.method = "optim",
-  autoproceed = FALSE, par.guess, every, ...)
+new_matrixfit(cf, t1, t2, parlist, sym.vec = rep(1, cf$nrObs),
+  neg.vec = rep("cosh", cf$nrObs), useCov = FALSE, model = "single",
+  boot.fit = TRUE, fit.method = "optim", autoproceed = FALSE, par.guess,
+  every, ...)
 }
 \arguments{
 \item{cf}{Object of class \code{cf} with \code{cf_meta} and \code{cf_boot}.}

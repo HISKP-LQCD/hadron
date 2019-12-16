@@ -266,8 +266,8 @@ NParticleModel <- R6::R6Class(
 new_matrixfit <- function(cf,
                           t1, t2,
                           parlist,
-                          sym.vec,
-                          neg.vec,
+                          sym.vec = rep(1, cf$nrObs),
+                          neg.vec = rep('cosh', cf$nrObs),
                           useCov = FALSE,
                           model = "single",
                           boot.fit = TRUE,
@@ -310,34 +310,6 @@ new_matrixfit <- function(cf,
   
   if (missing(parlist)) {
     parlist <- make_parlist(mSize)
-  }
-  
-  if (missing(sym.vec)) {
-    if (mSize == 1) {
-      sym.vec <- c("cosh")
-      warning("missing sym.vec, using default for single correlator!")
-    }
-    else if(mSize == 4) {
-      sym.vec <- c("cosh", "cosh", "cosh", "cosh")
-      warning("missing sym.vec, using default for four correlators!")
-    }
-    else {
-      stop("sym.vec is missing and no default is available for this cf size!")
-    }
-  }
-  
-  if (missing(neg.vec)) {
-    if (mSize == 1) {
-      neg.vec <- c(1)
-      warning("missing neg.vec, using default (correlator positive)!")
-    }
-    else if (mSize == 4) {
-      neg.vec <- c(1, 1, 1, 1)
-      warning("missing neg.vec, using default (all correlators positive)!")
-    }
-    else {
-      stop("neg.vec is missing and no default is available for this cf size!")
-    }
   }
   
   ## some sanity checks
