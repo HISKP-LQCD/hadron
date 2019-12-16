@@ -182,6 +182,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     }
 
     if (is.null(CovMatrix)) {
+      CovMatrix <- cov_fn(bsamples)
       InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       W <- chol(InvCovMatrix)
@@ -192,7 +193,7 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
       W <- t(InvCovMatrix)
     }
 
-    dydx <- 1.0 / diag(W)
+    dydx <- sqrt(diag(CovMatrix))
 
     if (errormodel == 'yerrors') {
       dy <- dydx
