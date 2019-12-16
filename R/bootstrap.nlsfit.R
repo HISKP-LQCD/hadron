@@ -1098,3 +1098,43 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 }
+
+residual_plot <- function (x, ...) {
+  UseMethod("residual_plot", x)
+}
+
+residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+  if (is.logical(x$mask)) {
+    x$mask <- which(x$mask)
+  }
+  
+  # We let the model give us the prediction values at the given data.
+  npar <- length(x$par.guess)
+  prediction_val <- do.call(x$fn, c(list(par = x$t0[1:npar], x = x$x, boot.r = 0), x$tofn))
+  
+  # The same is done for the bootstrap samples
+  prediction_boot_fn <- function (boot.r) {
+    par <- x$t[boot.r, 1:npar]
+    do.call(x$fn, c(list(par = par, x = x$x, boot.r = boot.r), x$tofn))
+  }
+  prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+  
+  residual_val <- operation(x$y, prediction_val)
+  residual_boot <- operation(x$bsamples[, 1:length(x$y)], prediction_boot)
+  str(residual_boot)
+  residual_err <- apply(residual_boot, 2, error_fn)
+  
+  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40')
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[-x$mask]
+  }
+  do.call(plotwitherror, plot_args)
+  
+  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[x$mask]
+  }
+  do.call(plotwitherror, plot_args)
+  
+  abline(h = 1, col = 'gray70')
+}
