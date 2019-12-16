@@ -19,7 +19,11 @@ We want the same plot output with both plot mechanism.
 ```{r}
 old_fit <- matrixfit(corr, 10, 20)
 plot(old_fit, do.qqplot = FALSE)
-plot(old_fit, plot.raw = FALSE, do.qqplot = FALSE, ylim = c(0.99, 1.01))
+plot(old_fit,
+     plot.raw = FALSE,
+     do.qqplot = FALSE, 
+     ylim = c(0.99, 1.01),
+     main = 'Old Residual Plot')
 ```
 
 # `new_matrixfit`
@@ -27,7 +31,9 @@ plot(old_fit, plot.raw = FALSE, do.qqplot = FALSE, ylim = c(0.99, 1.01))
 ```{r}
 new_fit <- new_matrixfit(corr, 10, 20)
 plot(new_fit, log = 'y', supports = 431)
-residual_plot(new_fit, ylim = c(0.99, 1.01))
+residual_plot(new_fit,
+              ylim = c(0.99, 1.01),
+              main = 'New Residual Plot')
 ```
 
 ```{r}
