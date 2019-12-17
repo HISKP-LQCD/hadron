@@ -184,6 +184,63 @@ ShiftedModel <- R6::R6Class(
   )
 )
 
+WeightedModel <- R6::R6Class(
+  'WeightedModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size, delta_t, weight_factor) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+      self$delta_t <- delta_t
+      self$weight_factor <- weight_factor
+    },
+    prediction = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+      
+      # Just defined the variables such that the changes to the Mathematica
+      # generated expression are minimal.
+      Power <- `^`
+      a0 <- par[2]
+      deltat <- self$delta_t
+      e0 <- par[1]
+      sign <- sign_vec
+      t <- x
+      time <- self$time_extent
+      w <- self$weight_factor
+      
+      # Following is the Mathematica code which has been edited slightly to be
+      # R syntax.
+      pred <- ov_sign_vec * (a0*(-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*t)) - sign*(exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)))) / (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time)))
+
+      stopifnot(length(pred) == length(x))
+      return (pred)
+    },
+    prediction_jacobian = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+      
+      Power <- `^`
+      a0 <- par[2]
+      deltat <- self$delta_t
+      e0 <- par[1]
+      sign <- sign_vec
+      t <- x
+      time <- self$time_extent
+      w <- self$weight_factor
+
+      d1 <- ov_sign_vec * (a0*(exp(e0*(deltat + 2*time))*(deltat - t)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)) - exp(e0*(-deltat + 2*t + time))*sign*(deltat - t + time)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)) + exp(2*e0*time)*t*(Power(w,2*t) + sign*Power(w,2*deltat + time)) - exp(e0*(2*t + time))*sign*(t - time)*(Power(w,2*t) + sign*Power(w,2*deltat + time))))/ (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time)))
+
+      d2 <- ov_sign_vec * (-((exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*t)) - sign*(exp(2*e0*time) + exp(e0*(2*t + time))*sign)*Power(w,2*deltat + time) + (exp(e0*(deltat + 2*time)) + exp(e0*(-deltat + 2*t + time))*sign)*Power(w,deltat)* (Power(w,2*t) + sign*Power(w,time)))/ (exp(e0*(t + 2*time))*Power(w,deltat)*(Power(w,2*t) + sign*Power(w,time))) 
+
+      cbind(d1, d2)
+    },
+    delta_t = NA,
+    weight_factor = NA
+  )
+)
+
 TwoStateModel <- R6::R6Class(
   'TwoStateModel',
   inherit = MatrixModel,
@@ -393,6 +450,9 @@ new_matrixfit <- function(cf,
   } else if (model == 'shifted') {
     stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$deltat)
+  } else if (model == 'weighted') {
+    stopifnot(inherits(cf, 'cf_weighted'))
+    model_object <- WeightedModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$deltat, cf$weight.factor)
   } else if (model == 'pc') {
     stopifnot(cf$nrObs == 1)
     model_object <- TwoStateModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$gevp_reference_time)
