@@ -104,18 +104,13 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
 parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
-                               lower, upper,
+                               lower = rep(x = -Inf, times = length(par.guess)),
+                               upper = rep(x = +Inf, times = length(par.guess)),
                                ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
-  if( missing(lower) ){
-    lower <- rep(x = -Inf, times = length(par.guess))
-  }
   stopifnot(length(lower) == length(par.guess))
-  if( missing(upper) ){
-    upper <- rep(x = +Inf, times = length(par.guess))
-  }
   stopifnot(length(upper) == length(par.guess))
 
   if (missing(dx)) {
@@ -152,16 +147,11 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
 #' @export
 #' @family NLS fit functions
 parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
-                                   lower, upper,
+                                   lower = rep(x = -Inf, times = length(par.guess)),
+                                   upper = rep(x = +Inf, times = length(par.guess)),
                                    ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
-  if( missing(lower) ){
-    lower <- rep(x = -Inf, times = length(par.guess))
-  }
   stopifnot(length(lower) == length(par.guess))
-  if( missing(upper) ){
-    upper <- rep(x = +Inf, times = length(par.guess))
-  } 
   stopifnot(length(upper) == length(par.guess))
 
   if (ncol(cov) == length(y)) {
@@ -468,8 +458,8 @@ simple.nlsfit <- function(fn,
                           errormodel,
                           priors = list(param = c(), p = c(), psamples = c()),
                           ...,
-                          lower,
-                          upper,
+                          lower = rep(x = -Inf, times = length(par.guess)),
+                          upper = rep(x = +Inf, times = length(par.guess)),
                           dy,
                           dx,
                           CovMatrix,
@@ -500,13 +490,7 @@ simple.nlsfit <- function(fn,
   if( !is.null(c(priors$param, priors$p, priors$psamples)) ){
     stop("Priors are not implemented in simple.nlsfit yet.")
   }
-  if( missing(lower) ){
-    lower <- rep(x = -Inf, times = length(par.guess))
-  }
   stopifnot(length(lower) == length(par.guess))
-  if( missing(upper) ){
-    upper <- rep(x = +Inf, times = length(par.guess))
-  }
   stopifnot(length(upper) == length(par.guess))
 
   useCov <- !missing(CovMatrix)
@@ -770,8 +754,8 @@ bootstrap.nlsfit <- function(fn,
                              bsamples,
                              priors = list(param = c(), p = c(), psamples = c()),
                              ...,
-                             lower,
-                             upper,
+                             lower = rep(x = -Inf, times = length(par.guess)),
+                             upper = rep(x = +Inf, times = length(par.guess)),
                              dy,
                              dx,
                              CovMatrix,
@@ -802,14 +786,7 @@ bootstrap.nlsfit <- function(fn,
   stopifnot( length(priors$param) == length(priors$p) &&
                length(priors$param) == ncolps &&
                length(priors$p) == ncolps )
-  
-  if( missing(lower) ){
-    lower <- rep(x = -Inf, times = length(par.guess))
-  }
   stopifnot(length(lower) == length(par.guess))
-  if( missing(upper) ){
-    upper <- rep(x = +Inf, times = length(par.guess))
-  }
   stopifnot(length(upper) == length(par.guess))
 
   boot.R <- nrow(bsamples)

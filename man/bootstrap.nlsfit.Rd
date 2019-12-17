@@ -5,10 +5,11 @@
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, priors = list(param = c(), p =
-  c(), psamples = c()), ..., lower, upper, dy, dx, CovMatrix, gr, dfn, mask,
-  use.minpack.lm = TRUE, parallel = FALSE, error = sd, cov_fn = cov,
-  maxiter = 500, success.infos = 1:3, relative.weights = FALSE,
-  na.rm = FALSE)
+  c(), psamples = c()), ..., lower = rep(x = -Inf, times = length(par.guess)),
+  upper = rep(x = +Inf, times = length(par.guess)), dy, dx, CovMatrix, gr,
+  dfn, mask, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
+  cov_fn = cov, maxiter = 500, success.infos = 1:3,
+  relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the

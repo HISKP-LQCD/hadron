@@ -5,8 +5,9 @@
 \title{NLS fit with without bootstrap}
 \usage{
 simple.nlsfit(fn, par.guess, y, x, errormodel, priors = list(param = c(), p =
-  c(), psamples = c()), ..., lower, upper, dy, dx, CovMatrix, boot.R = 0, gr,
-  dfn, use.minpack.lm = TRUE, error = sd, maxiter = 500,
+  c(), psamples = c()), ..., lower = rep(x = -Inf, times = length(par.guess)),
+  upper = rep(x = +Inf, times = length(par.guess)), dy, dx, CovMatrix,
+  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd, maxiter = 500,
   success.infos = 1:3, relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
