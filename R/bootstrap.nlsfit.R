@@ -182,11 +182,16 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     }
 
     if (is.null(CovMatrix)) {
+      # no (custom) covariance matrix was passed
+      # we want to (potentially) rely on the SV decomposition with replacement of small
+      # eigenvalues implemented in `invertCovMatrix`
       CovMatrix <- cov_fn(bsamples)
       InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       W <- chol(InvCovMatrix)
     } else {
+      # a (potentially hand-crafted) covariance matrix was passeed
+      # we asumme that it's cleanly invertible at this stage and simply use `solve`
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
