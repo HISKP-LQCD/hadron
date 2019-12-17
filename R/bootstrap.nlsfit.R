@@ -640,8 +640,13 @@ simple.nlsfit <- function(fn,
 #' @param CovMatrix complete variance-covariance matrix of dimensions
 #' \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 #' length(y)+length(x))} depending on the errormodel. Pass `NULL` if the matrix
-#' has to be calculated from the `bsamples`. If missing, uncorrelated fit will
-#' be used.
+#' has to be calculated from the `bsamples`. In that case, if the number of
+#' boostrap samples is small compared to the number of variables, singular value
+#' decomposition with small eigenvalue replacement will be used (see \link{invertCovMatrix})
+#' to attempt a clean inversion.
+#' In case a variance-covariance matrix is passed, the inversion will simply be attempted
+#' using \code{solve} on the Cholesky decomposition.
+#' Finally, if `CovMatrix` is missing, an uncorrelated fit will be performed.
 #' @param mask logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to `x`, `y`, `dx`, `dy`, `bsamples` and `CovMatrix` as applicable.
 #' @param use.minpack.lm use the \code{minpack.lm} library if available. This
 #' is usually faster than the default \code{optim} but somtimes also less

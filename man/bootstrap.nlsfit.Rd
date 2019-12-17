@@ -44,8 +44,13 @@ is given.}
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 length(y)+length(x))} depending on the errormodel. Pass \code{NULL} if the matrix
-has to be calculated from the \code{bsamples}. If missing, uncorrelated fit will
-be used.}
+has to be calculated from the \code{bsamples}. In that case, if the number of
+boostrap samples is small compared to the number of variables, singular value
+decomposition with small eigenvalue replacement will be used (see \link{invertCovMatrix})
+to attempt a clean inversion.
+In case a variance-covariance matrix is passed, the inversion will simply be attempted
+using \code{solve} on the Cholesky decomposition.
+Finally, if \code{CovMatrix} is missing, an uncorrelated fit will be performed.}
 
 \item{gr}{\code{gr(par, x, ...)}. \code{gr=d(fn) / d(par)} is a function to
 return the gradient of \code{fn}. It must return an array with
