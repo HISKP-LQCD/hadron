@@ -1121,14 +1121,22 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) 
   
   residual_val <- operation(x$y, prediction_val)
   residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
-  str(residual_boot)
   residual_err <- apply(residual_boot, 2, error_fn)
+  
+  band_val <- operation(prediction_val, prediction_val)
+  band_boot <- t(operation(t(prediction_boot), prediction_val))
+  band_err <- apply(band_boot, 2, error_fn)
   
   plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40')
   if(x$errormodel == "xyerrors") {
     plot_args$dx <- x$dx[-x$mask]
   }
   do.call(plotwitherror, plot_args)
+  
+  polygon(x = c(x$x, rev(x$x)),
+          y = c(band_val - band_err, rev(band_val + band_err)),
+          border = NA,
+          col = rgb(0, 0, 0, alpha = 0.08))
   
   plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
   if(x$errormodel == "xyerrors") {
