@@ -4,8 +4,9 @@
 \alias{parametric.nlsfit.cov}
 \title{parametric.nlsfit.cov}
 \usage{
-parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, lower, upper, ...,
-  bootstrap = TRUE, na.rm = FALSE)
+parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, lower = rep(x = -Inf,
+  times = length(par.guess)), upper = rep(x = +Inf, times =
+  length(par.guess)), ..., bootstrap = TRUE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
