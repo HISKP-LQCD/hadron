@@ -418,7 +418,6 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
                        control=list(maxit=maxiter), ...)
         } else {
           res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), 
-                       lower = lower, upper = upper,
                        control=list(maxit=maxiter), ...)
         }
       
