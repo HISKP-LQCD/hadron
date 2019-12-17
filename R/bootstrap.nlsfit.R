@@ -670,10 +670,10 @@ simple.nlsfit <- function(fn,
 #' \code{length(y) + length(x)}.
 #' @param ... Additional parameters passed to `fn`, `gr` and `dfn`.
 #' @param lower Numeric vector of length \code{length(par.guess)}
-#' of minimum contstraints on the fit parameters. If missing, \code{-Inf}
+#' of lower bounds on the fit parameters. If missing, \code{-Inf}
 #' will be set for all.
 #' @param upper Numeric vector of length \code{length(par.guess)}
-#' of maximum constraints on the fit parameters. If missing, \cdoe{+Inf}
+#' of upper bounds on the fit parameters. If missing, \cdoe{+Inf}
 #' will be set for all.
 #' @param dy,dx Numeric vector. Errors of the dependent and independent
 #' variable, respectively. These do not need to be specified as they can be
