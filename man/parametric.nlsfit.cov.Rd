@@ -30,11 +30,11 @@ numerical vector.}
 between the various variables in the vector \code{x}.}
 
 \item{lower}{Numeric vector of length \code{length(par.guess)}
-of minimum contstraints on the fit parameters. If missing, \code{-Inf}
+of lower bounds on the fit parameters. If missing, \code{-Inf}
 will be set for all.}
 
 \item{upper}{Numeric vector of length \code{length(par.guess)}
-of maximum constraints on the fit parameters. If missing, \cdoe{+Inf}
+of upper bounds on the fit parameters. If missing, \cdoe{+Inf}
 will be set for all.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
