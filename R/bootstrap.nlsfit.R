@@ -1120,7 +1120,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) 
   prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
   
   residual_val <- operation(x$y, prediction_val)
-  residual_boot <- operation(x$bsamples[, 1:length(x$y)], prediction_boot)
+  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
   str(residual_boot)
   residual_err <- apply(residual_boot, 2, error_fn)
   
