@@ -1,5 +1,5 @@
 # signvec decides on cosh or sinh
-make_sign_vec <- function (sym_vec, len_t, m_size) {
+make_sign_vec <- function (sym_vec, len_t, m_size = 1) {
   sign_vec <- rep(1, times = len_t)
 
   for (i in 1:m_size) {
@@ -13,7 +13,7 @@ make_sign_vec <- function (sym_vec, len_t, m_size) {
 }
 
 # ov.sign.vec indicates the overall sign
-make_ov_sign_vec <- function (neg_vec, len_t, m_size) {
+make_ov_sign_vec <- function (neg_vec, len_t, m_size = 1) {
   ov_sign_vec <- rep(1, times = len_t)
   
   for (i in 1:m_size) {
@@ -128,7 +128,7 @@ ShiftedModel <- R6::R6Class(
   'ShiftedModel',
   inherit = MatrixModel,
   public = list(
-    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size, delta_t) {
       super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
       self$delta_t <- delta_t
     },
