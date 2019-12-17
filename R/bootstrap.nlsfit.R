@@ -104,10 +104,19 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
 parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
+                               lower, upper,
                                ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
+  if( missing(lower) ){
+    lower <- rep(x = -Inf, times = length(par.guess))
+  }
+  stopifnot(length(lower) == length(par.guess))
+  if( missing(upper) ){
+    upper <- rep(x = +Inf, times = length(par.guess))
+  }
+  stopifnot(length(upper) == length(par.guess))
 
   if (missing(dx)) {
     values <- y
@@ -122,12 +131,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy, na.rm = na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., lower = lower, upper = upper, dx = dx, dy = dy, na.rm = na.rm)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., lower = lower, upper = upper, dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
   }
 }
 
@@ -143,8 +152,17 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
 #' @export
 #' @family NLS fit functions
 parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
+                                   lower, upper,
                                    ..., bootstrap=TRUE, na.rm = FALSE) {
   stopifnot(length(x) == length(y))
+  if( missing(lower) ){
+    lower <- rep(x = -Inf, times = length(par.guess))
+  }
+  stopifnot(length(lower) == length(par.guess))
+  if( missing(upper) ){
+    upper <- rep(x = +Inf, times = length(par.guess))
+  } 
+  stopifnot(length(upper) == length(par.guess))
 
   if (ncol(cov) == length(y)) {
     values <- y
@@ -376,7 +394,7 @@ set.dfitchisqr <- function (fitchi, dfitchi) {
   return(dfitchisqr)
 }
 
-set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail) {
+set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper) {
   fitchi <- set.fitchi(fn, errormodel, useCov, W, x, ipx, na.rm, priors)
   dfitchi <- set.dfitchi(gr, dfn, par.guess, errormodel, useCov, W, x, ipx, na.rm, priors, priors.avail)
   ## define the wrapper-functions for optimization
@@ -387,6 +405,7 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
         res <- minpack.lm::nls.lm(
           par=par, fn=fitchi, y=y, jac=dfitchi,
           control = control,
+          lower = lower, upper = upper,
           ...))
 
       list(converged = res$info %in% success.infos,
@@ -398,9 +417,16 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
   } else {
     fitchisqr <- function(y, par, ...) { sum(fitchi(y, par, ...)^2) }
     dfitchisqr <- set.dfitchisqr(fitchi, dfitchi)
-    wrapper <- function(y, par, ...) {
-      res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), control=list(maxit=maxiter), ...)
-
+      wrapper <- function(y, par, ...) {
+        if( any(upper != +Inf) | any(lower != -Inf) ){
+          res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("L-BFGS-B"), 
+                       lower = lower, upper = upper,
+                       control=list(maxit=maxiter), ...)
+        } else {
+          res <- optim(par=par, fn=fitchisqr, gr=dfitchisqr, y=y, method=c("BFGS"), 
+                       control=list(maxit=maxiter), ...)
+        }
+      
       list(converged = res$convergence == 0,
            info = NA,
            par = res$par,
@@ -442,6 +468,8 @@ simple.nlsfit <- function(fn,
                           errormodel,
                           priors = list(param = c(), p = c(), psamples = c()),
                           ...,
+                          lower,
+                          upper,
                           dy,
                           dx,
                           CovMatrix,
@@ -472,6 +500,14 @@ simple.nlsfit <- function(fn,
   if( !is.null(c(priors$param, priors$p, priors$psamples)) ){
     stop("Priors are not implemented in simple.nlsfit yet.")
   }
+  if( missing(lower) ){
+    lower <- rep(x = -Inf, times = length(par.guess))
+  }
+  stopifnot(length(lower) == length(par.guess))
+  if( missing(upper) ){
+    upper <- rep(x = +Inf, times = length(par.guess))
+  }
+  stopifnot(length(upper) == length(par.guess))
 
   useCov <- !missing(CovMatrix)
 
@@ -513,7 +549,7 @@ simple.nlsfit <- function(fn,
   }
   W <- all.errors$W
 
-  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper)
 
   ## now the actual fit is performed
   if(!priors.avail){
@@ -589,7 +625,9 @@ simple.nlsfit <- function(fn,
               dof = dof,
               error.function = error,
               relative.weights = relative.weights,
-              tofn=list(...))
+              tofn=list(...),
+              lower=lower,
+              upper=upper)
 
   if (errormodel == 'xyerrors') {
     res$dx <- dx
@@ -631,6 +669,12 @@ simple.nlsfit <- function(fn,
 #' equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 #' \code{length(y) + length(x)}.
 #' @param ... Additional parameters passed to `fn`, `gr` and `dfn`.
+#' @param lower Numeric vector of length \code{length(par.guess)}
+#' of minimum contstraints on the fit parameters. If missing, \code{-Inf}
+#' will be set for all.
+#' @param upper Numeric vector of length \code{length(par.guess)}
+#' of maximum constraints on the fit parameters. If missing, \cdoe{+Inf}
+#' will be set for all.
 #' @param dy,dx Numeric vector. Errors of the dependent and independent
 #' variable, respectively. These do not need to be specified as they can be
 #' computed from the bootstrap samples. In the case of parametric bootstrap it
@@ -726,6 +770,8 @@ bootstrap.nlsfit <- function(fn,
                              bsamples,
                              priors = list(param = c(), p = c(), psamples = c()),
                              ...,
+                             lower,
+                             upper,
                              dy,
                              dx,
                              CovMatrix,
@@ -756,6 +802,15 @@ bootstrap.nlsfit <- function(fn,
   stopifnot( length(priors$param) == length(priors$p) &&
                length(priors$param) == ncolps &&
                length(priors$p) == ncolps )
+  
+  if( missing(lower) ){
+    lower <- rep(x = -Inf, times = length(par.guess))
+  }
+  stopifnot(length(lower) == length(par.guess))
+  if( missing(upper) ){
+    upper <- rep(x = +Inf, times = length(par.guess))
+  }
+  stopifnot(length(upper) == length(par.guess))
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
@@ -853,7 +908,7 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- rbind(Yp, bsamples)
   }
   
-  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail)
+  wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper)
   
   ## now the actual fit is performed
   if(!priors.avail){
@@ -938,7 +993,9 @@ bootstrap.nlsfit <- function(fn,
               info.boot = info.boot,
               relative.weights = relative.weights,
               tofn=list(...),
-              niter = niter_valboot)
+              niter = niter_valboot,
+              lower=lower,
+              upper=upper)
 
   if (errormodel == 'xyerrors') {
     res$dx <- dx
@@ -1005,6 +1062,14 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
     }
     cat("\n   correlation matrix of the fit parameters\n\n")
     print(data.frame(correlation))
+  }
+  if( any(object$upper != +Inf) ){
+    cat("Constraints on maximal parameter values:\n")
+    print(object$upper)
+  }
+  if( any(object$lower != -Inf) ){
+    cat("Constraints on minimal parameter values:\n")
+    print(object$lower)
   }
   if(!is.null(object$t) && object$errormodel != "yerrors") {
     cat("\n estimates for x-values with errors, bootstrap bias and 68% confidence interval\n\n")
@@ -1131,11 +1196,41 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) 
   prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
   
   residual_val <- operation(x$y, prediction_val)
-  # Double transpose needed for correct broadcasting direction.
+  # We want to subtract or divide (depending on the given `operation`) the
+  # samples of the data and the central value of the prediction. R is a matrix
+  # based programming langauge and therefore one can apply such an operation
+  # directly to matrices and vectors, but one has to be very careful about it.
+  # Dividing two equal length vectors or equal shape matrices is fine because
+  # the operation is done element-by-element. In the case that the shape of the
+  # two operands is not exactly the same, R does some internal broadcasting.
+  # This is a common patter in all matrix based languages (like MATLAB) or
+  # matrix libraries (like NumPy for Python). These broadcasting rules are
+  # non-trivial and one needs to know how they work. The left operand is are the
+  # bootstrap samples where we have $R$ observations of $T$ time slices. Well,
+  # since it is symmetrized it is rather $T/2+1$, but we will not concern
+  # ourselves with that for this here. The shape of the first object is $R
+  # \times T$ then. The central value of the prediction is just of length $T$.
+  # When we do `bsamples - prediction_val` we would _hope_ that it does the
+  # right thing and match up along the $T$-direction, so we would want to
+  # interpret `prediction_val` as a row vector. However, it is interpreted as a
+  # column vector for these types of operations. A sane person might object now
+  # and say that `bsamples` has $R$ rows whereas `prediction_val` has $T$ rows.
+  # Broadcasting would not work in a sane matrix environment. But R was
+  # desighned to be helpful and turns out to be an annoying dipshit. In case $R$
+  # is cleanly divisible by $T$ it will just repeat the `prediction_val` column
+  # vector until it has length $R$. If you happen to do a test case with $T =
+  # 25$ and $R = 400$ you will get a result, it will just be not what you
+  # actually want. Since `prediction_val` is interpreted as a column vector we
+  # need to transpose `bsamples` with the transpose function `t()`. Then it has
+  # dimension $T \times R$. Subtracting or dividing by `prediction_val` will
+  # then broadcast it into the correct direction. The end result will have
+  # dimension $T \times R$, so we need to apply the transposition operation
+  # again in order to get the result that we want.
   residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
   residual_err <- apply(residual_boot, 2, error_fn)
   
   band_val <- operation(prediction_val, prediction_val)
+  # And here it is the same …
   band_boot <- t(operation(t(prediction_boot), prediction_val))
   band_err <- apply(band_boot, 2, error_fn)
   
