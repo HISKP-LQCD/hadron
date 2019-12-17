@@ -4,8 +4,8 @@
 \alias{parametric.nlsfit.cov}
 \title{parametric.nlsfit.cov}
 \usage{
-parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, ..., bootstrap = TRUE,
-  na.rm = FALSE)
+parametric.nlsfit.cov(fn, par.guess, boot.R, y, x, cov, lower, upper, ...,
+  bootstrap = TRUE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -28,6 +28,14 @@ numerical vector.}
 
 \item{cov}{numeric matrix, square, length of \code{x} or missing. Covariance
 between the various variables in the vector \code{x}.}
+
+\item{lower}{Numeric vector of length \code{length(par.guess)}
+of minimum contstraints on the fit parameters. If missing, \code{-Inf}
+will be set for all.}
+
+\item{upper}{Numeric vector of length \code{length(par.guess)}
+of maximum constraints on the fit parameters. If missing, \cdoe{+Inf}
+will be set for all.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 

@@ -4,8 +4,8 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ..., bootstrap = TRUE,
-  na.rm = FALSE)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, lower, upper, ...,
+  bootstrap = TRUE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -39,6 +39,14 @@ computed from the bootstrap samples. In the case of parametric bootstrap it
 might would lead to a loss of information if they were computed from the
 pseudo-bootstrap samples. They must not be specified if a covariance matrix
 is given.}
+
+\item{lower}{Numeric vector of length \code{length(par.guess)}
+of minimum contstraints on the fit parameters. If missing, \code{-Inf}
+will be set for all.}
+
+\item{upper}{Numeric vector of length \code{length(par.guess)}
+of maximum constraints on the fit parameters. If missing, \cdoe{+Inf}
+will be set for all.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 
