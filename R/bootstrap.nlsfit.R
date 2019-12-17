@@ -182,11 +182,16 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
     }
 
     if (is.null(CovMatrix)) {
+      # no (custom) covariance matrix was passed
+      # we want to (potentially) rely on the SV decomposition with replacement of small
+      # eigenvalues implemented in `invertCovMatrix`
       CovMatrix <- cov_fn(bsamples)
       InvCovMatrix <- try(invertCovMatrix(bsamples, boot.l = 1, boot.samples = TRUE, cov_fn = cov_fn), silent = TRUE)
       inversion.worked(InvCovMatrix)
       W <- chol(InvCovMatrix)
     } else {
+      # a (potentially hand-crafted) covariance matrix was passeed
+      # we asumme that it's cleanly invertible at this stage and simply use `solve`
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
@@ -635,8 +640,14 @@ simple.nlsfit <- function(fn,
 #' @param CovMatrix complete variance-covariance matrix of dimensions
 #' \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 #' length(y)+length(x))} depending on the errormodel. Pass `NULL` if the matrix
-#' has to be calculated from the `bsamples`. If missing, uncorrelated fit will
-#' be used.
+#' has to be calculated from the `bsamples`. In that case, if the number of
+#' boostrap samples is small compared to the number of variables, singular value
+#' decomposition with small eigenvalue replacement will be used (see \link{invertCovMatrix})
+#' to attempt a clean inversion.
+#' In case a variance-covariance matrix is passed, the inversion will simply be attempted
+#' using \code{solve} on the Cholesky decomposition.
+#' Finally, if `CovMatrix` is missing, an uncorrelated fit will be performed.
+#' @param mask logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to `x`, `y`, `dx`, `dy`, `bsamples` and `CovMatrix` as applicable.
 #' @param use.minpack.lm use the \code{minpack.lm} library if available. This
 #' is usually faster than the default \code{optim} but somtimes also less
 #' stable.
@@ -682,8 +693,8 @@ simple.nlsfit <- function(fn,
 #'  \item{nx}{the number of x-values.}
 #'  \item{tofn}{
 #'    the original \code{...} list of parameters to be passed on to the
-#'    fit function
-#'  }
+#'    fit function}
+#'  \item{mask}{original `mask` value}
 #'
 #' @examples
 #' ## Declare some data.
@@ -720,6 +731,7 @@ bootstrap.nlsfit <- function(fn,
                              CovMatrix,
                              gr,
                              dfn,
+                             mask,
                              use.minpack.lm = TRUE,
                              parallel = FALSE,
                              error = sd,
@@ -747,6 +759,43 @@ bootstrap.nlsfit <- function(fn,
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
+  
+  # Apply the mask. The user might have specified a mask that is used to
+  # restrict the selection of the points that are to be used in the fit. In
+  # order to make this additional feature a minimal change to the following code
+  # we will *change* the input parameters here and store them with new names.
+  # Then at the very end we switch them back.
+  if (!missing(mask)) {
+    full <- list()
+    
+    if (!missing(dx)) {
+      full$dx <- dx
+      dx <- dx[mask]
+    } else if (ncol(bsamples) > length(y)) {
+      full$dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
+    }
+    
+    if (!missing(dy)) {
+      full$dy <- dy
+      dy <- dy[mask]
+    } else {
+      full$dy <- apply(bsamples[, 1:length(y)], 2, error)
+    }
+    
+    full$x <- x
+    x <- x[mask]
+    
+    full$y <- y
+    y <- y[mask]
+    
+    full$bsamples <- bsamples
+    bsamples <- bsamples[, mask]
+    
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
+  }
   
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
@@ -894,6 +943,17 @@ bootstrap.nlsfit <- function(fn,
   if (errormodel == 'xyerrors') {
     res$dx <- dx
   }
+  
+  # The user might have supplied a mask, therefore we need to restore all the
+  # information and un-apply the mask.
+  if (!missing(mask)) {
+    for (name in names(full)) {
+      if (name %in% names(res)) {
+        res[[name]] <- full[[name]]
+      }
+    }
+    res$mask <- mask
+  }
 
   attr(res, "class") <- c("bootstrapfit", "list")
   return(invisible(res))
@@ -997,8 +1057,12 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @export
 #' @family NLS fit functions
 plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+  # The plot object might not have a mask, we want to have one in either case.
+  if (is.null(x$mask)) {
+    x$mask <- rep(TRUE, length(x$x))
+  }
   if(missing(plot.range)){
-    rx <- range(x$x)
+    rx <- range(x$x[x$mask])
   }else{
     rx <- plot.range
   }
@@ -1044,4 +1108,54 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 
   ## plot the fitted curve on top
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
+}
+
+residual_plot <- function (x, ...) {
+  UseMethod("residual_plot", x)
+}
+
+residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+  if (is.logical(x$mask)) {
+    x$mask <- which(x$mask)
+  }
+  
+  # We let the model give us the prediction values at the given data.
+  npar <- length(x$par.guess)
+  prediction_val <- do.call(x$fn, c(list(par = x$t0[1:npar], x = x$x, boot.r = 0), x$tofn))
+  
+  # The same is done for the bootstrap samples
+  prediction_boot_fn <- function (boot.r) {
+    par <- x$t[boot.r, 1:npar]
+    do.call(x$fn, c(list(par = par, x = x$x, boot.r = boot.r), x$tofn))
+  }
+  prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
+  
+  residual_val <- operation(x$y, prediction_val)
+  # Double transpose needed for correct broadcasting direction.
+  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
+  residual_err <- apply(residual_boot, 2, error_fn)
+  
+  band_val <- operation(prediction_val, prediction_val)
+  band_boot <- t(operation(t(prediction_boot), prediction_val))
+  band_err <- apply(band_boot, 2, error_fn)
+  
+  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40')
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[-x$mask]
+  }
+  do.call(plotwitherror, plot_args)
+  
+  polygon(x = c(x$x, rev(x$x)),
+          y = c(band_val - band_err, rev(band_val + band_err)),
+          border = NA,
+          col = rgb(0, 0, 0, alpha = 0.08))
+  lines(x = x$x,
+        y = band_val,
+        col = 'gray70')
+  
+  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[x$mask]
+  }
+  do.call(plotwitherror, plot_args)
 }
