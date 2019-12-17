@@ -2,17 +2,24 @@ context('new_matrixfit')
 
 test_that('SingleModelJacobian', {
   time_extent <- 10
-  parind <- cbind(rep(2, time_extent), rep(3, time_extent))
+  m_size <- 1
+  parlist <- make_parlist(m_size)
   par <- c(0.4, 2.3, 3.4)
   x <- 1:time_extent
-  sign_vec <- rep(1, time_extent)
-  ov_sign_vec <- rep(1, time_extent)
+  sym_vec <- 'cosh'
+  neg_vec <- c(1)
   
   L <- diag(rep(1, time_extent))
   
-  new_model <- SingleModel$new(time_extent, parind, sign_vec, ov_sign_vec)
+  new_model <- SingleModel$new(time_extent, parlist, sym_vec, neg_vec, m_size)
   
-  old_jac <- - matrix(dmatrixChi(par, x, 0, L, time_extent, parind, sign_vec, ov_sign_vec), ncol = length(par))
+  old_jac_vec <- dmatrixChi(
+    par, x, 0, L, time_extent,
+    parind = make_parind(parlist, time_extent),
+    sign.vec = make_sign_vec(sym_vec, time_extent),
+    ov.sign.vec = make_ov_sign_vec(neg_vec, time_extent))
+  str(old_jac_vec)
+  old_jac <- - matrix(old_jac_vec, ncol = length(par))
   new_jac <- new_model$prediction_jacobian(par, x)
   
   expect_equal(sum(is.na(old_jac)), 0)
@@ -40,22 +47,32 @@ test_that('SingleModel', {
 
 test_that('ShiftedModelPrediction', {
   time_extent <- 10
-  parind <- cbind(rep(2, time_extent), rep(2, time_extent))
   delta_t <- 1
+  m_size <- 1
+  parlist <- make_parlist(m_size)
   par <- c(0.4, 2.3)
   x <- 1:time_extent
-  sign_vec <- rep(1, time_extent)
-  ov_sign_vec <- rep(1, time_extent)
+  sym_vec <- 'cosh'
+  neg_vec <- c(1)
   
   L <- diag(rep(1, time_extent))
   
-  new_model <- ShiftedModel$new(time_extent, parind, sign_vec, ov_sign_vec, delta_t)
+  new_model <- ShiftedModel$new(time_extent, parlist, sym_vec, neg_vec, m_size, delta_t)
   
-  old_pred <- - c(matrixChi.shifted(par, x, rep(0, time_extent), L, time_extent, parind, sign_vec, ov_sign_vec, delta_t))
+  old_pred <- - c(matrixChi.shifted(par, x, 0, L, time_extent,
+                                    parind = make_parind(parlist, time_extent),
+                                    sign.vec = make_sign_vec(sym_vec, time_extent),
+                                    ov.sign.vec = make_ov_sign_vec(neg_vec, time_extent),
+                                    deltat = delta_t))
   new_pred <- new_model$prediction(par, x)
   expect_equal(new_pred, old_pred)
   
-  old_jac <- - matrix(dmatrixChi.shifted(par, x, rep(0, time_extent), L, time_extent, parind, sign_vec, ov_sign_vec, delta_t), ncol = length(par))
+  old_jac <- - matrix(dmatrixChi.shifted(par, x, 0, L, time_extent, 
+                                         parind = make_parind(parlist, time_extent),
+                                         sign.vec = make_sign_vec(sym_vec, time_extent),
+                                         ov.sign.vec = make_ov_sign_vec(neg_vec, time_extent),
+                                         deltat = delta_t),
+                      ncol = length(par))
   new_jac <- new_model$prediction_jacobian(par, x)
   expect_equal(old_jac, new_jac)
 })
