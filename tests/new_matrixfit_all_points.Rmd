@@ -33,7 +33,11 @@ new_fit <- new_matrixfit(corr, 10, 20)
 plot(new_fit, log = 'y', supports = 431)
 residual_plot(new_fit,
               ylim = c(0.99, 1.01),
-              main = 'New Residual Plot')
+              main = 'New Residual Plot (division)')
+residual_plot(new_fit,
+              ylim = c(-1, 1),
+              main = 'New Residual Plot (subtraction)',
+              operation = `-`)
 ```
 
 ```{r}

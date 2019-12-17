@@ -1137,12 +1137,13 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) 
           y = c(band_val - band_err, rev(band_val + band_err)),
           border = NA,
           col = rgb(0, 0, 0, alpha = 0.08))
+  lines(x = x$x,
+        y = band_val,
+        col = 'gray70')
   
   plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
   if(x$errormodel == "xyerrors") {
     plot_args$dx <- x$dx[x$mask]
   }
   do.call(plotwitherror, plot_args)
-  
-  abline(h = 1, col = 'gray70')
 }
