@@ -822,6 +822,7 @@ bootstrap.nlsfit <- function(fn,
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
     bsamples <- cbind(bsamples, priors$psamples)
+    CovMatrix <- cov_fn(bsamples)
   }
   
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
