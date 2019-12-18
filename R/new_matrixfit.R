@@ -394,6 +394,8 @@ new_matrixfit <- function(cf,
   }
   
   stopifnot(cf$symmetrised == TRUE)
+  stopifnot(length(higher_states$val) == ncol(higher_states$boot))
+  stopifnot(nrow(higher_states$boot) %in% c(0, cf$boot.R))
   
   t1p1 <- t1 + 1
   t2p1 <- t2 + 1
@@ -489,6 +491,19 @@ new_matrixfit <- function(cf,
   
   if (useCov) {
     args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t)
+  }
+  
+  if (length(higher_states$val) > 0) {
+    args$priors <- list(
+      param = seq(3, by = 2, length.out = length(higher_states$val)),
+      p = higher_states$val,
+      psamples = higher_states$boot)
+    
+    for (val in higher_states$val) {
+      par.guess <- c(par.guess, val, 1.0)
+    }
+    
+    args$par.guess <- par.guess
   }
   
   res <- do.call(bootstrap.nlsfit, args)

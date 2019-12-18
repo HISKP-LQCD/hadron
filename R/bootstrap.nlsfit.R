@@ -742,9 +742,9 @@ bootstrap.nlsfit <- function(fn,
   if(!is.null(priors$param)){
     stopifnot(is.vector(priors$param))
   }
-  stopifnot( length(priors$param) == length(priors$p) &&
-               length(priors$param) == ncolps &&
-               length(priors$p) == ncolps )
+  stopifnot(length(priors$param) == length(priors$p) &&
+              length(priors$param) == ncolps &&
+              length(priors$p) == ncolps )
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
