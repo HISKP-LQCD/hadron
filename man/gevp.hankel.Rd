@@ -4,8 +4,8 @@
 \alias{gevp.hankel}
 \title{GEVP method based on Hankel matrices. Experimental.}
 \usage{
-gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
-  submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
+gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0,
+  1), submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
   debug = FALSE)
 }
 \arguments{
@@ -16,7 +16,7 @@ gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
 
 \item{deltat}{Integer. Time shift to be used to build the Hankel matrix}
 
-\item{n}{Integer.}
+\item{n}{Integer. Size of the submatrix Hankel matrices to generate}
 
 \item{N}{Integer.}
 
@@ -25,7 +25,7 @@ gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
 \item{range}{Numeric vector. Range of eigenvalues to be considered}
 
 \item{submatrix.size}{Integer. Submatrix size to be used in build
-of Hankel matrix}
+of Hankel matrices}
 
 \item{element.order}{Integer vector. specifies how to fit the \code{n} linearly ordered single
 correlators into the correlator
@@ -44,7 +44,8 @@ matrices. A so-called Hankel matrix is generated from an input
 then.
 }
 \seealso{
-Other hankel: 
-\code{\link{bootstrap.hankel}()}
+Other hankel: \code{\link{bootstrap.hankel}},
+  \code{\link{hankel2cf}},
+  \code{\link{hankel2effectivemass}}
 }
 \concept{hankel}
