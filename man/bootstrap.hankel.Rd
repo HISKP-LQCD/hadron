@@ -17,20 +17,11 @@ bootstrap.hankel(cf, t0, n = 2, N, id = c(1), range = c(0, 1),
 
 \item{N}{Integer.}
 
-\item{id}{Integer.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider.}
 
 \item{range}{Numeric vector. Range of eigenvalues to be considered}
 
 \item{eps}{Numeric. Cut-off}
-
-\item{submatrix.size}{Integer. Submatrix size to be used in build
-of Hankel matrices}
-
-\item{element.order}{Integer vector. specifies how to fit the \code{n} linearly ordered single
-correlators into the correlator
-matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
-\code{matrix(cf[element.order], nrow=2)}.
-Double indexing is allowed.}
 }
 \description{
 Alternative method to determine energy levels from correlation
@@ -38,6 +29,19 @@ matrices. A so-called Hankel matrix is generated from an input
 \link{cf} object and a generalised eigenvalue problem is solved
 then. This is the function to call. It will perform a bootstrap
 analysis.
+}
+\examples{
+
+data(correlatormatrix)
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
+hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
+plot(hpc1, log="y")
+heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
+
 }
 \seealso{
 Other hankel: \code{\link{gevp.hankel}},

@@ -44,6 +44,13 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' @inheritParams bootstrap.hankel
 #' @param debug Boolean. Enable debug output.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Double indexing is allowed.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
@@ -108,15 +115,20 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param N Integer.
 #' @param eps Numeric. Cut-off
 #' @param range Numeric vector. Range of eigenvalues to be considered
-#' @param submatrix.size Integer. Submatrix size to be used in build
-#'   of Hankel matrices
-#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
-#'    correlators into the correlator
-#'    matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
-#'    \code{matrix(cf[element.order], nrow=2)}.
-#'    Double indexing is allowed.
-#' @param id Integer.
+#' @param id Integer. Vector of indices of eigenvalues to consider.
 #'
+#' @examples
+#'
+#' data(correlatormatrix)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
+#' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
+#' plot(hpc1, log="y")
+#' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
+#' 
 #' @family hankel
 bootstrap.hankel <- function(cf, t0, n=2, N, id=c(1), range=c(0,1), eps=0.001) {
 
