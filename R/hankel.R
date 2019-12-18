@@ -190,7 +190,7 @@ hankel2cf <- function(hankel, id=1) {
   return(invisible(cf))
 }
 
-#' @title hankel2cf
+#' @title hankel2effectivemass
 #'
 #' @param hankel object of type \link{hankel}
 #' @param id Integer. ID of the principal correlator to extract
