@@ -495,7 +495,7 @@ new_matrixfit <- function(cf,
   
   if (length(higher_states$val) > 0) {
     args$priors <- list(
-      param = seq(2, by = 2, length.out = length(higher_states$val)),
+      param = seq(3, by = 2, length.out = length(higher_states$val)),
       p = higher_states$val,
       psamples = higher_states$boot)
     
