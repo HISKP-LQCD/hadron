@@ -874,6 +874,13 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- rbind(Yp, bsamples)
   }
   
+  if (length(upper) < length(par.Guess)) {
+    upper <- c(upper, rep(+Inf, times = length(par.Guess) - length(upper)))
+  }
+  if (length(lower) < length(par.Guess)) {
+    lower <- c(lower, rep(-Inf, times = length(par.Guess) - length(lower)))
+  }
+  
   wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper)
   
   ## now the actual fit is performed
