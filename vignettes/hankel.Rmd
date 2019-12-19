@@ -1,8 +1,12 @@
 ---
 title: "Hankel method for energy level extraction"
 author: "Carsten Urbach"
-output: pdf_document
+output:
+  pdf_document:
+    citation_package: biblatex
 
+bibliography: hankel.bib
+link_citation: yes
 vignette: >
   %\VignetteIndexEntry{Jackknife Error Normalization}
   %\VignetteEngine{knitr::rmarkdown}
@@ -54,7 +58,8 @@ to the exponentials as follows
 \begin{equation}
 \lambda_i(t_0, \delta t)\ =\ \exp(-E_i \delta t)\,.
 \end{equation}
-This method is known as the method of Prony \cite{} in the literature.
+This method is known as the method of Prony \cite{prony:1795} in the
+literature, see also \cite{Lin:2007iq}. For an improved method see \cite{gardner:1959}.
 
 This method is implemented in hadron as follows: we first load the
 sample correlator matrix, solve the $4\times 4$ GEVP and determine the first
@@ -111,3 +116,21 @@ plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18))
 plot(heffectivemass1, rep=TRUE, pch=22, col="blue")
 legend("topright", legend=c("pc1", "hankel1"), bty="n", pch=c(21,22), col=c("red", "blue"))
 ```
+
+The result depends strongly on the choice of $t_0$, of course.
+
+```{r, echo=FALSE}
+plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18))
+plot(heffectivemass1, pch=22, col="blue", rep=TRUE)
+pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
+heffectivemass1 <- hadron:::hankel2effectivemass(hankel=pc1.hankel, id=1)
+plot(heffectivemass1, pch=23, col="darkgreen", rep="TRUE")
+pc1.hankel <- bootstrap.hankel(cf=pc1, t0=3, n=2)
+heffectivemass1 <- hadron:::hankel2effectivemass(hankel=pc1.hankel, id=1)
+plot(heffectivemass1, pch=24, col="black", rep="TRUE")
+legend("topright", legend=c("pc1", "t0=2", "t0=1", "t0=3"), bty="n", pch=c(21:24),
+       col=c("red", "blue", "darkgreen", "black"))
+```
+
+One observes increasing statistical errors, but also earlier plateaus
+with increasing $t_0$-values. 
