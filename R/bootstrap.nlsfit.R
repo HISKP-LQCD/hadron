@@ -477,29 +477,29 @@ simple.nlsfit <- function(fn,
 
   useCov <- !missing(CovMatrix)
 
+  if (use.minpack.lm) {
+    lm.avail <- requireNamespace('minpack.lm')
+  } else {
+    lm.avail <- FALSE
+  }
+
+  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
+
   ## Apply the mask as in bootstrap.nlsfit.
   if (!missing(mask)) {
-    full <- list(x=x, y=y, dy=dy)
+    full <- list(x=x, y=y,
+                 dx=all.errors$dx, dy=all.errors$dy)
 
     x <- x[mask]
     y <- y[mask]
-    dy <- dy[mask]
 
-    if (!missing(dx)) {
-      full$dx <- dx
-      dx <- dx[mask]
-    }
+    all.errors$dx <- all.errors$dx[mask]
+    all.errors$dy <- all.errors$dy[mask]
 
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
       CovMatrix <- CovMatrix[mask, mask]
     }
-  }
-
-  if (use.minpack.lm) {
-    lm.avail <- requireNamespace('minpack.lm')
-  } else {
-    lm.avail <- FALSE
   }
 
   ## cast y and dy to Y and dY, respectively
@@ -523,7 +523,6 @@ simple.nlsfit <- function(fn,
     bsamples <- cbind(bsamples, priors$psamples)
   }
   
-  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
@@ -792,38 +791,6 @@ bootstrap.nlsfit <- function(fn,
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
   
-  # Apply the mask. The user might have specified a mask that is used to
-  # restrict the selection of the points that are to be used in the fit. In
-  # order to make this additional feature a minimal change to the following code
-  # we will *change* the input parameters here and store them with new names.
-  # Then at the very end we switch them back.
-  if (!missing(mask)) {
-    full <- list(x=x, y=y, bsamples=bsamples)
-
-    x <- x[mask]
-    y <- y[mask]
-    bsamples <- bsamples[, mask]
-    
-    if (!missing(dx)) {
-      full$dx <- dx
-      dx <- dx[mask]
-    } else if (ncol(bsamples) > length(y)) {
-      full$dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
-    }
-    
-    if (!missing(dy)) {
-      full$dy <- dy
-      dy <- dy[mask]
-    } else {
-      full$dy <- apply(bsamples[, 1:length(y)], 2, error)
-    }
-    
-    if (!missing(CovMatrix)) {
-      full$CovMatrix <- CovMatrix
-      CovMatrix <- CovMatrix[mask, mask]
-    }
-  }
-  
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
   } else {
@@ -832,6 +799,30 @@ bootstrap.nlsfit <- function(fn,
 
   if (parallel) {
     parallel <- requireNamespace('parallel')
+  }
+
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+
+  # Apply the mask. The user might have specified a mask that is used to
+  # restrict the selection of the points that are to be used in the fit. In
+  # order to make this additional feature a minimal change to the following code
+  # we will *change* the input parameters here and store them with new names.
+  # Then at the very end we switch them back.
+  if (!missing(mask)) {
+    full <- list(x=x, y=y, bsamples=bsamples,
+                 dx=all.errors$dx, dy=all.errors$dy)
+
+    x <- x[mask]
+    y <- y[mask]
+    bsamples <- bsamples[, mask]
+
+    all.errors$dx <- all.errors$dx[mask]
+    all.errors$dy <- all.errors$dy[mask]
+    
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
   }
 
   crr <- c(1:(boot.R+1))
@@ -862,7 +853,6 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- cbind(bsamples, priors$psamples)
   }
   
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
