@@ -5,7 +5,7 @@
 \title{NLS fit with without bootstrap}
 \usage{
 simple.nlsfit(fn, par.guess, y, x, errormodel, priors = list(param = c(), p =
-  c(), psamples = c()), ..., dy, dx, CovMatrix, boot.R = 0, gr, dfn,
+  c(), psamples = c()), ..., dy, dx, CovMatrix, boot.R = 0, gr, dfn, mask,
   use.minpack.lm = TRUE, error = sd, maxiter = 500, success.infos = 1:3,
   relative.weights = FALSE, na.rm = FALSE)
 }
@@ -67,6 +67,8 @@ return the gradient of \code{fn}. It must return an array with
 \item{dfn}{\code{dfn(par, x, ...)}. \code{dfn=d(fn) / dx} is the canonical
 derivative of \code{fn} by \code{x} and only relevant if x-errors are
 provided.}
+
+\item{mask}{logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to \code{x}, \code{y}, \code{dx}, \code{dy}, \code{bsamples} and \code{CovMatrix} as applicable.}
 
 \item{use.minpack.lm}{use the \code{minpack.lm} library if available. This
 is usually faster than the default \code{optim} but somtimes also less

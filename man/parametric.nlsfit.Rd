@@ -4,8 +4,7 @@
 \alias{parametric.nlsfit}
 \title{NLS fit with parametric bootstrap}
 \usage{
-parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ..., bootstrap = TRUE,
-  na.rm = FALSE)
+parametric.nlsfit(fn, par.guess, boot.R, y, dy, x, dx, ..., bootstrap = TRUE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -45,9 +44,6 @@ is given.}
 \item{bootstrap}{Shall the error calculation be performed using boostrap?
 If not, the errors are estimated with help of the jacobian (either provided
 in \code{gr} or calculated using the \code{numDeriv}-package).}
-
-\item{na.rm}{logical. If set to \code{true}, NAs in \code{y} and \code{dy} will be ignored.
-If x-errors are taken into account, NAs in \code{x} and \code{dx} will be ignored, too.}
 }
 \description{
 NLS fit with parametric bootstrap

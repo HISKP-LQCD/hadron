@@ -104,7 +104,7 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #' fit.result <- parametric.nlsfit(fn, c(1, 1), boot.R, value, dvalue, x, dx)
 #' summary(fit.result)
 parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
-                               ..., bootstrap=TRUE, na.rm = FALSE) {
+                               ..., bootstrap=TRUE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
@@ -122,12 +122,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy, na.rm = na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., dx = dx, dy = dy)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., dx = dx, dy = dy, boot.R = boot.R)
   }
 }
 
@@ -448,6 +448,7 @@ simple.nlsfit <- function(fn,
                           boot.R = 0,
                           gr,
                           dfn,
+                          mask,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
@@ -460,6 +461,7 @@ simple.nlsfit <- function(fn,
     ncolps <- length(priors$psamples)
   }
   stopifnot(!missing(y))
+  stopifnot(!missing(dy))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
@@ -474,6 +476,25 @@ simple.nlsfit <- function(fn,
   }
 
   useCov <- !missing(CovMatrix)
+
+  ## Apply the mask as in bootstrap.nlsfit.
+  if (!missing(mask)) {
+    full <- list(x=x, y=y, dy=dy)
+
+    x <- x[mask]
+    y <- y[mask]
+    dy <- dy[mask]
+
+    if (!missing(dx)) {
+      full$dx <- dx
+      dx <- dx[mask]
+    }
+
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
+  }
 
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
@@ -597,6 +618,17 @@ simple.nlsfit <- function(fn,
 
   if(boot.R > 0){
     res$t <- parametric.bootstrap.cov(boot.R, first.res$par, cov)
+  }
+
+  # The user might have supplied a mask, therefore we need to restore all the
+  # information and un-apply the mask.
+  if (!missing(mask)) {
+    for (name in names(full)) {
+      if (name %in% names(res)) {
+        res[[name]] <- full[[name]]
+      }
+    }
+    res$mask <- mask
   }
 
   attr(res, "class") <- c("bootstrapfit", "list")
@@ -766,7 +798,11 @@ bootstrap.nlsfit <- function(fn,
   # we will *change* the input parameters here and store them with new names.
   # Then at the very end we switch them back.
   if (!missing(mask)) {
-    full <- list()
+    full <- list(x=x, y=y, bsamples=bsamples)
+
+    x <- x[mask]
+    y <- y[mask]
+    bsamples <- bsamples[, mask]
     
     if (!missing(dx)) {
       full$dx <- dx
@@ -781,15 +817,6 @@ bootstrap.nlsfit <- function(fn,
     } else {
       full$dy <- apply(bsamples[, 1:length(y)], 2, error)
     }
-    
-    full$x <- x
-    x <- x[mask]
-    
-    full$y <- y
-    y <- y[mask]
-    
-    full$bsamples <- bsamples
-    bsamples <- bsamples[, mask]
     
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
