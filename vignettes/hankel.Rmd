@@ -1,0 +1,113 @@
+---
+title: "Hankel method for energy level extraction"
+author: "Carsten Urbach"
+output: pdf_document
+
+vignette: >
+  %\VignetteIndexEntry{Jackknife Error Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Hankel Matrix for a Correlation Function
+
+A $n\times n$ Hankel matrix $H$ corresponding to a vector
+$x=(a_0, a_1, a_2, \ldots, a_{2n-2})$ is given by
+\begin{equation}
+H[x, n] =
+\begin{pmatrix}
+a_0 & a_1 & a_2 & \ldots & a_{n-1} \\
+a_1 & a_2 & a_3 & \ldots & a_{n} \\
+a_2 &     &     &        & \vdots \\
+\vdots &  &     &        & \vdots \\
+a_{n-1} & \ldots &   &   & a_{2n-2} \\
+\end{pmatrix}
+\end{equation}
+Lets for simplicity consider now a single correlation function $C(t)$
+for $t = 0, \ldots, T/2$ with $T$ the temporal extent of the
+lattice. Define a time shift $\delta t > 0$, an initial time
+$t_0\geq 0$ and chose $n < (T/2 - t_0 -\delta t)/2$. Now define two
+vectors 
+\begin{equation}
+\begin{split}
+x_1 &= (C(t_0), C(t_0+1), \ldots, C(T/2))\\
+x_2 &= (C(t_0+\delta t), C(t_0+\delta t+1), \ldots, C(T/2))\\
+\end{split}
+\end{equation}
+and the following two $n\times n$ Hankel matrices
+\begin{equation}
+H_1 = H[x_1, n]\,,\qquad H_2 = H[x_2, n]\,.
+\end{equation}
+With these we can define the following generalised eigenvalue problem
+(GEVP)
+\begin{equation}
+H_2\, v\ =\ H_1\, \lambda(t_0, \delta t)\, v
+\end{equation}
+with eigenvectors $v$ and eigenvalues $\lambda(t_0, \delta t)$.
+
+If the correlator $C(t)$ is given by a sum of exponentials, i.e.
+\[
+C(t)\ =\ \sum_{i=1}^n a_i \exp(-E_i t)\,,
+\]
+one can see that the eigenvalues $\lambda(t_0, \delta t)$ correspond
+to the exponentials as follows
+\begin{equation}
+\lambda_i(t_0, \delta t)\ =\ \exp(-E_i \delta t)\,.
+\end{equation}
+This method is known as the method of Prony \cite{} in the literature.
+
+This method is implemented in hadron as follows: we first load the
+sample correlator matrix, solve the $4\times 4$ GEVP and determine the first
+principal correlator:
+
+```{r}
+data(correlatormatrix)
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=4, element.order=c(1,2,3,4))
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+```
+
+Note that the data is for the pion.
+Next, we use the first principal correlator as input to the hankel
+method. For this, we call
+
+```{r}
+pc1.hankel <- bootstrap.hankel(cf=pc1, t0=2, n=2)
+```
+
+Thus, $n=2$ and $t_0=2$ in this case. Next, we extract the lowest
+eigenvalue by converting into a \texttt{cf} object
+
+```{r}
+hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
+```
+
+which looks as follows
+
+```{r}
+plot(hpc1, log="y", ylab="lambda(delta t)", xlab="delta t + t0")
+```
+
+which could, for instance be analysed using the \texttt{matrixfit}
+hadron function. However, we can also cast the eigenvalues directly
+into effective masses, since the eigenvalues are generalisations of
+those.
+
+```{r}
+heffectivemass1 <- hadron:::hankel2effectivemass(hankel=pc1.hankel, id=1)
+```
+
+For comparison, we also compute the effective masses of the original
+principal correlator
+
+```{r}
+pc1.effectivemass <- bootstrap.effectivemass(cf=pc1)
+```
+
+and compare in a plot
+
+```{r}
+plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18))
+plot(heffectivemass1, rep=TRUE, pch=22, col="blue")
+legend("topright", legend=c("pc1", "hankel1"), bty="n", pch=c(21,22), col=c("red", "blue"))
+```
