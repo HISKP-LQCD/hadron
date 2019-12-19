@@ -488,13 +488,14 @@ simple.nlsfit <- function(fn,
   ## Apply the mask as in bootstrap.nlsfit.
   if (!missing(mask)) {
     full <- list(x=x, y=y,
-                 dx=all.errors$dx, dy=all.errors$dy)
+                 dx=all.errors$dx, dy=all.errors$dy, W=all.errors$W)
 
     x <- x[mask]
     y <- y[mask]
 
     all.errors$dx <- all.errors$dx[mask]
     all.errors$dy <- all.errors$dy[mask]
+    all.errors$W <- all.errors$W[mask]
 
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
@@ -810,7 +811,7 @@ bootstrap.nlsfit <- function(fn,
   # Then at the very end we switch them back.
   if (!missing(mask)) {
     full <- list(x=x, y=y, bsamples=bsamples,
-                 dx=all.errors$dx, dy=all.errors$dy)
+                 dx=all.errors$dx, dy=all.errors$dy, W=all.errors$W)
 
     x <- x[mask]
     y <- y[mask]
@@ -818,6 +819,7 @@ bootstrap.nlsfit <- function(fn,
 
     all.errors$dx <- all.errors$dx[mask]
     all.errors$dy <- all.errors$dy[mask]
+    all.errors$W <- all.errors$W[mask]
     
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
