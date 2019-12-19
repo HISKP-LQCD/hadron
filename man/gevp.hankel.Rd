@@ -33,7 +33,7 @@ matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
 
-\item{id}{Integer.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider.}
 
 \item{debug}{Boolean. Enable debug output.}
 }
