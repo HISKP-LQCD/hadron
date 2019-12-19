@@ -5,10 +5,11 @@
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, priors = list(param = c(), p =
-  c(), psamples = c()), ..., dy, dx, CovMatrix, gr, dfn, mask,
-  use.minpack.lm = TRUE, parallel = FALSE, error = sd, cov_fn = cov,
-  maxiter = 500, success.infos = 1:3, relative.weights = FALSE,
-  na.rm = FALSE)
+  c(), psamples = c()), ..., lower = rep(x = -Inf, times = length(par.guess)),
+  upper = rep(x = +Inf, times = length(par.guess)), dy, dx, CovMatrix, gr,
+  dfn, mask, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
+  cov_fn = cov, maxiter = 500, success.infos = 1:3,
+  relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -33,6 +34,14 @@ equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 \code{length(y) + length(x)}.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
+
+\item{lower}{Numeric vector of length \code{length(par.guess)}
+of lower bounds on the fit parameters. If missing, \code{-Inf}
+will be set for all.}
+
+\item{upper}{Numeric vector of length \code{length(par.guess)}
+of upper bounds on the fit parameters. If missing, \code{+Inf}
+will be set for all.}
 
 \item{dy, dx}{Numeric vector. Errors of the dependent and independent
 variable, respectively. These do not need to be specified as they can be
