@@ -841,6 +841,15 @@ bootstrap.nlsfit <- function(fn,
     parallel <- requireNamespace('parallel')
   }
 
+  ## determine the errormodel
+  if (ncol(bsamples) == length(y)) {
+    errormodel <- "yerrors"
+  } else if (ncol(bsamples) == length(y) + length(x)) {
+    errormodel <- "xyerrors"
+  } else {
+    stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
+  }
+
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
 
   # Apply the mask. The user might have specified a mask that is used to
@@ -869,18 +878,14 @@ bootstrap.nlsfit <- function(fn,
   crr <- c(1:(boot.R+1))
   rr <- c(2:(boot.R+1))
 
-  ## cast y and dy to Y and W, respectively
-  if (ncol(bsamples) == length(y)) {
+  if(errormodel == "yerrors"){
     Y <- y
     par.Guess <- par.guess
-    errormodel <- "yerrors"
-  } else if (ncol(bsamples) == length(y) + length(x)) {
+  }else{
     Y <- c(y, x)
     par.Guess <- c(par.guess, x)
-    errormodel <- "xyerrors"
-  } else {
-    stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
+
 
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
