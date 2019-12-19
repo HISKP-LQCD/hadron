@@ -504,6 +504,10 @@ new_matrixfit <- function(cf,
     }
     
     args$par.guess <- par.guess
+    
+    # We know that neither amplitude nor masses can become negative. We
+    # therefore enforce these as a lower bound.
+    args$lower <- rep(0, times = length(par.guess))
   }
   
   res <- do.call(bootstrap.nlsfit, args)
