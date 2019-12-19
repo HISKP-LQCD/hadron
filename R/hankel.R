@@ -212,6 +212,8 @@ hankel2cf <- function(hankel, id=1) {
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
+  stopifnot(id < 1 || id > hankel$n)
+  stopifnot(type %in% c("log", "acosh"))
   
   tmax <- hankel$cf$Time/2
   if(!hankel$cf$symmetrised){
@@ -221,9 +223,15 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   nrObs <- 1
 
   deltat <- c(1:(tmax+1))-hankel$t0
-  effMass <- -log(hankel$res.hankel[,id])/deltat
-  effMass.tsboot <- -log(hankel$hankel.tsboot[,, id])/t(array(deltat, dim=rev(dim(hankel$hankel.tsboot[,, id]))))
-  deffMass=apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
+  if(type == "log") {
+    effMass <- -log(hankel$res.hankel[,id])/deltat
+    effMass.tsboot <- -log(hankel$hankel.tsboot[,, id])/t(array(deltat, dim=rev(dim(hankel$hankel.tsboot[,, id]))))
+  }
+  if(type == "acosh") {
+    effMass <- -acosh(hankel$res.hankel[,id])/deltat
+    effMass.tsboot <- -acosh(hankel$hankel.tsboot[,, id])/t(array(deltat, dim=rev(dim(hankel$hankel.tsboot[,, id]))))
+  }
+  deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
 
   ret <- list(t.idx=c(1:(tmax)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
