@@ -378,10 +378,10 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 #' @inheritParams weight.cf
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
-                  cosh_factor, 0, FALSE)
+                  cosh_factor, 0, TRUE)
   cf <- takeTimeDiff.cf(cf)
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
-                  cosh_factor, -1, TRUE)
+                  cosh_factor, -1, FALSE)
 
   # We perform a clean copy of the data now to make sure that all invariants
   # hold and that no new fields have been added that we are not aware of.

@@ -384,7 +384,7 @@ new_matrixfit <- function(cf,
                           autoproceed = FALSE,
                           par.guess,
                           every,
-                          higher_states = list(val = numeric(0), boot = matrix(nrow = 0, ncol = 0)),
+                          higher_states = list(val = numeric(0), boot = matrix(nrow = 0, ncol = 0), ampl = numeric(0)),
                           ...) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -499,8 +499,8 @@ new_matrixfit <- function(cf,
       p = higher_states$val,
       psamples = higher_states$boot)
     
-    for (val in higher_states$val) {
-      par.guess <- c(par.guess, val, 1.0)
+    for (i in 1:length(higher_states$val)) {
+      par.guess <- c(par.guess, higher_states$val[i], higher_states$ampl[i])
     }
     
     args$par.guess <- par.guess
