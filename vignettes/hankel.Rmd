@@ -112,7 +112,8 @@ pc1.effectivemass <- bootstrap.effectivemass(cf=pc1)
 and compare in a plot
 
 ```{r}
-plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18))
+plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18),
+     xlab="t", ylab="M(t)")
 plot(heffectivemass1, rep=TRUE, pch=22, col="blue")
 legend("topright", legend=c("pc1", "hankel1"), bty="n", pch=c(21,22), col=c("red", "blue"))
 ```
@@ -120,7 +121,8 @@ legend("topright", legend=c("pc1", "hankel1"), bty="n", pch=c(21,22), col=c("red
 The result depends strongly on the choice of $t_0$, of course.
 
 ```{r, echo=FALSE}
-plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18))
+plot(pc1.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18),
+     xlab="t", ylab="M(t)")
 plot(heffectivemass1, pch=22, col="blue", rep=TRUE)
 pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
 heffectivemass1 <- hadron:::hankel2effectivemass(hankel=pc1.hankel, id=1)
@@ -133,4 +135,19 @@ legend("topright", legend=c("pc1", "t0=2", "t0=1", "t0=3"), bty="n", pch=c(21:24
 ```
 
 One observes increasing statistical errors, but also earlier plateaus
-with increasing $t_0$-values. 
+with increasing $t_0$-values. We can aso apply this method to the
+original correlation functions directly without using the GEVP before
+
+```{r}
+ppcor <- extractSingleCor.cf(cf=correlatormatrix, id=1)
+ppcor.effectivemass <- bootstrap.effectivemass(cf=ppcor)
+ppcor.hankel <- bootstrap.hankel(cf=ppcor, t0=3, n=2)
+heffectivemass1 <- hadron:::hankel2effectivemass(hankel=ppcor.hankel, id=1)
+plot(ppcor.effectivemass, pch=21, col="red", ylim=c(0,1.1), xlim=c(0,18),
+     xlab="t", ylab="M(t)")
+plot(heffectivemass1, pch=22, col="blue", ylim=c(0,1.1), rep=TRUE)
+legend("topright", legend=c("ppcor", "hankel1"), bty="n", pch=c(21,22), col=c("red", "blue"))
+```
+
+which works not as well as the method applied to the principal
+correlator. 
