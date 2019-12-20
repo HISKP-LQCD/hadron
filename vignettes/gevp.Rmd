@@ -1,0 +1,19 @@
+---
+title: "GEVP energy level extraction"
+author: "Carsten Urbach"
+output:
+  pdf_document:
+    citation_package: biblatex
+
+bibliography: gevp.bib
+link_citation: yes
+vignette: >
+  %\VignetteIndexEntry{GEVP energy level extraction}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(hadron)
+```
+
