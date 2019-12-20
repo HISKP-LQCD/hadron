@@ -125,8 +125,8 @@ old_removeTemporal.cf <- function(cf,
   }
   cf$cf.tsboot$t0 <- cf$cf.tsboot$t0/Exptt
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
-      (exp((mass2$t[i]-mass1$t[i])/c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]/
+      (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
   ## Take the differences C(t) - C(t + deltat)
   cf <- takeTimeDiff.cf(cf, deltat)
