@@ -17,7 +17,9 @@ hankel2effectivemass(hankel, id = c(1), type = "log")
 hankel2effectivemass
 }
 \seealso{
-Other hankel: \code{\link{bootstrap.hankel}},
-  \code{\link{gevp.hankel}}, \code{\link{hankel2cf}}
+Other hankel: 
+\code{\link{bootstrap.hankel}()},
+\code{\link{gevp.hankel}()},
+\code{\link{hankel2cf}()}
 }
 \concept{hankel}

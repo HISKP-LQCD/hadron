@@ -15,8 +15,9 @@ hankel2cf(hankel, id = 1)
 hankel2cf
 }
 \seealso{
-Other hankel: \code{\link{bootstrap.hankel}},
-  \code{\link{gevp.hankel}},
-  \code{\link{hankel2effectivemass}}
+Other hankel: 
+\code{\link{bootstrap.hankel}()},
+\code{\link{gevp.hankel}()},
+\code{\link{hankel2effectivemass}()}
 }
 \concept{hankel}
