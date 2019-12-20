@@ -8,10 +8,14 @@ output:
 bibliography: hankel.bib
 link_citation: yes
 vignette: >
-  %\VignetteIndexEntry{Jackknife Error Normalization}
+  %\VignetteIndexEntry{Hankel method for energy level extraction}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
+
+```{r echo=FALSE}
+library(hadron)
+```
 
 # Hankel Matrix for a Correlation Function
 
