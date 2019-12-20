@@ -4,7 +4,8 @@
 \alias{bootstrap.hankel}
 \title{GEVP method based on Hankel matrices. Experimental.}
 \usage{
-bootstrap.hankel(cf, t0, n = 2, N, id = c(1), range = c(0, 1), eps = 0.001)
+bootstrap.hankel(cf, t0, n = 2, N = cf$Time/2 + 1, id = c(1),
+  range = c(0, 1), eps = 0.001)
 }
 \arguments{
 \item{cf}{object of type \link{cf}}
