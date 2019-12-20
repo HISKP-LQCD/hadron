@@ -175,7 +175,7 @@ bootstrap.hankel <- function(cf, t0, n=2, N, id=c(1), range=c(0,1), eps=0.001) {
 #' @family hankel
 hankel2cf <- function(hankel, id=1) {
   stopifnot(inherits(hankel, "hankel"))
-  stopifnot(!(id > hankel$n || id < 1))
+  stopifnot((id <= hankel$n && id >= 1))
   
   ## Base `cf` properties.
   cf <- cf_meta(nrObs = 1,
@@ -212,7 +212,7 @@ hankel2cf <- function(hankel, id=1) {
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
-  stopifnot(id < 1 || id > hankel$n)
+  stopifnot((id <= hankel$n && id >= 1))
   stopifnot(type %in% c("log", "acosh"))
   
   tmax <- hankel$cf$Time/2
