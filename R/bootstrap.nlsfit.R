@@ -503,25 +503,27 @@ simple.nlsfit <- function(fn,
     lm.avail <- FALSE
   }
 
-  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
-
   ## Apply the mask as in bootstrap.nlsfit.
   if (!missing(mask)) {
+    if(errormodel != "xyerrors") {
+      dx <- NA
+    }
+
     full <- list(x=x, y=y,
-                 dx=all.errors$dx, dy=all.errors$dy, W=all.errors$W)
+                 dx=dx, dy=dy)
 
     x <- x[mask]
     y <- y[mask]
-
-    all.errors$dx <- all.errors$dx[mask]
-    all.errors$dy <- all.errors$dy[mask]
-    all.errors$W <- all.errors$W[mask]
+    if(errormodel == "xyerrors") dx <- dx[mask]
+    dy <- dy[mask]
 
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
       CovMatrix <- CovMatrix[mask, mask]
     }
   }
+
+  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
 
   ## cast y and dy to Y and dY, respectively
   if (errormodel == 'yerrors') {
@@ -850,30 +852,41 @@ bootstrap.nlsfit <- function(fn,
     stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
 
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
-
   # Apply the mask. The user might have specified a mask that is used to
   # restrict the selection of the points that are to be used in the fit. In
   # order to make this additional feature a minimal change to the following code
   # we will *change* the input parameters here and store them with new names.
   # Then at the very end we switch them back.
   if (!missing(mask)) {
-    full <- list(x=x, y=y, bsamples=bsamples,
-                 dx=all.errors$dx, dy=all.errors$dy, W=all.errors$W)
+    if(errormodel == "xyerrors") {
+      if(missing(dx)) {
+        dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
+      }
+    }else{
+      dx <- NA
+    }
+
+    if(missing(dy)) {
+      dy <- apply(bsamples[, 1:length(y)], 2, error)
+    }
+
+    full <- list(x=x, y=y,
+                 dx=dx, dy=dy,
+                 bsamples=bsamples)
 
     x <- x[mask]
     y <- y[mask]
+    if(errormodel == "xyerrors") dx <- dx[mask]
+    dy <- dy[mask]
     bsamples <- bsamples[, mask]
-
-    all.errors$dx <- all.errors$dx[mask]
-    all.errors$dy <- all.errors$dy[mask]
-    all.errors$W <- all.errors$W[mask]
     
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
       CovMatrix <- CovMatrix[mask, mask]
     }
   }
+
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
 
   crr <- c(1:(boot.R+1))
   rr <- c(2:(boot.R+1))
