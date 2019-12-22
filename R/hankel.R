@@ -130,9 +130,11 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
 #' @family hankel
-bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
+bootstrap.hankel <- function(cf, t0, n=2, N, id=c(1), range=c(0,1), eps=0.001) {
+
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
+  if(missing(N)) N <- cf$Time/2+1 
 
   boot.R <- cf$boot.R
   ##if(t0+2*n+deltat >= N) {
@@ -173,7 +175,7 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
 #' @family hankel
 hankel2cf <- function(hankel, id=1) {
   stopifnot(inherits(hankel, "hankel"))
-  stopifnot(!(id > hankel$n || id < 1))
+  stopifnot((id <= hankel$n && id >= 1))
   
   ## Base `cf` properties.
   cf <- cf_meta(nrObs = 1,
@@ -210,7 +212,7 @@ hankel2cf <- function(hankel, id=1) {
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
-  stopifnot(id < 1 || id > hankel$n)
+  stopifnot((id <= hankel$n && id >= 1))
   stopifnot(type %in% c("log", "acosh"))
   
   tmax <- hankel$cf$Time/2
