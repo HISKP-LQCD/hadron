@@ -14,6 +14,93 @@ vignette: >
 ---
 
 ```{r echo=FALSE}
+library(knitr)
 library(hadron)
+```
+
+# Data Type \texttt{cf} for Correlation Functions
+
+\texttt{hadron} provides a data type or better class for correlation
+functions and correlation matrices, which is called \texttt{cf}. There
+is a whole list of input
+routines available to import data from HDF5, text or binary formats
+into the \texttt{cf} container. The most important ones are compiled
+in the following table:
+
+```{r, echo=FALSE}
+knitr::kable(data.frame(c("readtextcf", "readbinarycf", "readbinarysamples", "more?"),
+                        c("text", "binary, HDF5", "binary", "...")),
+             col.names=c("Hadron Function", "Correlator Format"))
+```
+
+For even more flexibility there is the \texttt{raw\_cf} container, for
+which we refer to the documentation. 
+
+In oder to solve the generalised eigenvalue problem (GEVP) one has to
+read several correlation functions into one \texttt{cf} correlator
+matrix. For this purpose the combine operation \texttt{c} is defined
+for the class \texttt{cf}. Thus, for instance the following code
+snipped can be used:
+
+```{r, eval=FALSE}
+Time <- 48
+correlatormatrix <- cf()
+for(i in c(1:4)) {
+  tmp <- readbinarycf(files=paste0("corr", i, ".dat"), T=Time)
+  correlatormatrix <- c(correlatormatrix, tmp)
+}
+rm(tmp)
+```
+
+This code snippet reads a correlator matrix with four correlation
+functions from four files. The read functions can also directly read
+from a list of files. File lists ca be created conveniently using the
+following routines 
+
+```{r, eval=FALSE}
+getorderedfilelist <- function(path="./", basename="onlinemeas",
+                               last.digits=4, ending="")
+getconfignumbers <- function(ofiles, basename="onlinemeas",
+                             last.digits=4, ending="")
+getorderedconfigindices <- function(path="./", basename="onlinemeas",
+                                    last.digits=4, ending="")
+```
+
+for which we refer to the documentation. 
+
+# Error Analysis
+
+Once the bare data is available as a \texttt{cf}, one has to decide
+for an error analysis strategy. This can be either the bootstrap or
+the jackknife. To demonstrate this we first load the sample
+correlation matrix provided by hadron
+
+```{r}
+data(correlatormatrix)
+```
+
+which corresponds to a $2\times 2$ local-fuzzed correlator matrix with
+quantum numbers of the pion.
+First the resampling needs to be performed, for instance for the
+(blocked) bootstrap
+
+```{r, cache=TRUE}
+boot.R <- 1500
+boot.l <- 1
+seed <- 1433567
+correlatormatrix <- bootstrap.cf(cf=correlatormatrix,
+                                 boot.R=boot.R,
+                                 boot.l=boot.l,
+                                 seed=seed)
+```
+
+Analogously, \texttt{jackknife.cf} initiates the jackknife
+resampling. \texttt{boot.R} is the number of bootstrap replicates,
+\texttt{boot.l} the block lentgh. Now, it is also possible to plot the
+data with errors 
+
+```{r}
+plot(correlatormatrix, log="y",
+     xlab=c("t/a"), ylab="C(t)")
 ```
 
