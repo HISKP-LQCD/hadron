@@ -130,11 +130,10 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
 #' @family hankel
-bootstrap.hankel <- function(cf, t0, n=2, N, id=c(1), range=c(0,1), eps=0.001) {
+bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
 
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-  if(missing(N)) N <- cf$Time/2+1 
 
   boot.R <- cf$boot.R
   ##if(t0+2*n+deltat >= N) {
