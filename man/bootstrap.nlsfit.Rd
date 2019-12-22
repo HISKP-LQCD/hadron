@@ -5,10 +5,11 @@
 \title{Bootstrap a non-linear least-squares fit}
 \usage{
 bootstrap.nlsfit(fn, par.guess, y, x, bsamples, priors = list(param = c(), p =
-  c(), psamples = c()), ..., dy, dx, CovMatrix, gr, dfn,
-  use.minpack.lm = TRUE, parallel = FALSE, error = sd, cov_fn = cov,
-  maxiter = 500, success.infos = 1:3, relative.weights = FALSE,
-  na.rm = FALSE)
+  c(), psamples = c()), ..., lower = rep(x = -Inf, times = length(par.guess)),
+  upper = rep(x = +Inf, times = length(par.guess)), dy, dx, CovMatrix, gr,
+  dfn, mask, use.minpack.lm = TRUE, parallel = FALSE, error = sd,
+  cov_fn = cov, maxiter = 500, success.infos = 1:3,
+  relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -34,6 +35,14 @@ equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 
+\item{lower}{Numeric vector of length \code{length(par.guess)}
+of lower bounds on the fit parameters. If missing, \code{-Inf}
+will be set for all.}
+
+\item{upper}{Numeric vector of length \code{length(par.guess)}
+of upper bounds on the fit parameters. If missing, \code{+Inf}
+will be set for all.}
+
 \item{dy, dx}{Numeric vector. Errors of the dependent and independent
 variable, respectively. These do not need to be specified as they can be
 computed from the bootstrap samples. In the case of parametric bootstrap it
@@ -44,8 +53,13 @@ is given.}
 \item{CovMatrix}{complete variance-covariance matrix of dimensions
 \code{c(length(y), length(y))} or \code{c(length(y)+length(x),
 length(y)+length(x))} depending on the errormodel. Pass \code{NULL} if the matrix
-has to be calculated from the \code{bsamples}. If missing, uncorrelated fit will
-be used.}
+has to be calculated from the \code{bsamples}. In that case, if the number of
+boostrap samples is small compared to the number of variables, singular value
+decomposition with small eigenvalue replacement will be used (see \link{invertCovMatrix})
+to attempt a clean inversion.
+In case a variance-covariance matrix is passed, the inversion will simply be attempted
+using \code{solve} on the Cholesky decomposition.
+Finally, if \code{CovMatrix} is missing, an uncorrelated fit will be performed.}
 
 \item{gr}{\code{gr(par, x, ...)}. \code{gr=d(fn) / d(par)} is a function to
 return the gradient of \code{fn}. It must return an array with
@@ -54,6 +68,8 @@ return the gradient of \code{fn}. It must return an array with
 \item{dfn}{\code{dfn(par, x, ...)}. \code{dfn=d(fn) / dx} is the canonical
 derivative of \code{fn} by \code{x} and only relevant if x-errors are
 provided.}
+
+\item{mask}{logical or integer index vector. The mask is applied to select the observations from the data that are to be used in the fit. It is applied to \code{x}, \code{y}, \code{dx}, \code{dy}, \code{bsamples} and \code{CovMatrix} as applicable.}
 
 \item{use.minpack.lm}{use the \code{minpack.lm} library if available. This
 is usually faster than the default \code{optim} but somtimes also less
@@ -107,8 +123,8 @@ depending on the error model with \code{npar} as in \code{t0}. }
 \item{nx}{the number of x-values.}
 \item{tofn}{
 the original \code{...} list of parameters to be passed on to the
-fit function
-}
+fit function}
+\item{mask}{original \code{mask} value}
 }
 \description{
 Performs and bootstraps a non-linear least-squares fit to data with y and x
