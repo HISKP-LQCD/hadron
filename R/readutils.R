@@ -371,6 +371,9 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   stopifnot(dplyr_avail)
   
   tmp <- dplyr::filter(tmp,monomialid==monomial_id)
+  if (nrow(tmp) == 0){
+    stop("read.rw, there is no monomial.id in reweighting data file, aborting...\n")
+  }
 
 # Number of reweighted determinants for each gauge configuration
 
@@ -382,13 +385,14 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   
   tmp2 <- matrix(tmp$reweightingfactor,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
   tmp3 <- apply(exp(-tmp2),2,mean)
+  tmp4 <- sqrt(apply(exp(-2*tmp2),2,mean)-tmp3^2)/sqrt(nsamples-1)/max(tmp3)
 
 # Normalize the largest reweighting factor to be one and storing this factor
 # this is neccessary due to the large value of the reweighting factor 
 # after exponentiating
   tmp4 <- tmp3/max(tmp3)
   
-  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3))
+  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3), stochastic_error=tmp4)
 
 }
 #' @title reader for Nissa text format correlation functions
