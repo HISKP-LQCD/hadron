@@ -368,8 +368,10 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
 # Select the reweighting factor for a particular monomial
 
   dplyr_avail <- requireNamespace("dplyr")
-  stopifnot(dplyr_avail)
-  
+  if( !dplyr_avail ){
+    stop("read.rw, The 'dplyr' package is required to use this function!\n")
+  }
+ 
   tmp <- dplyr::filter(tmp,monomialid==monomial_id)
   if (nrow(tmp) == 0){
     stop("read.rw, there is no monomial.id in reweighting data file, aborting...\n")
