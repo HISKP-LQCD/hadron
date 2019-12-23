@@ -37,7 +37,7 @@ of lower bounds on the fit parameters. If missing, \code{-Inf}
 will be set for all.}
 
 \item{upper}{Numeric vector of length \code{length(par.guess)}
-of upper bounds on the fit parameters. If missing, \cdoe{+Inf}
+of upper bounds on the fit parameters. If missing, \code{+Inf}
 will be set for all.}
 
 \item{dy}{Numeric vector. Errors of the dependent and independent

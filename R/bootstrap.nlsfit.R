@@ -532,6 +532,13 @@ simple.nlsfit <- function(fn,
     dx <- all.errors$dx
   }
   W <- all.errors$W
+  
+  if (length(upper) < length(par.Guess)) {
+    upper <- c(upper, rep(+Inf, times = length(par.Guess) - length(upper)))
+  }
+  if (length(lower) < length(par.Guess)) {
+    lower <- c(lower, rep(-Inf, times = length(par.Guess) - length(lower)))
+  }
 
   wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper)
 
@@ -657,7 +664,7 @@ simple.nlsfit <- function(fn,
 #' of lower bounds on the fit parameters. If missing, \code{-Inf}
 #' will be set for all.
 #' @param upper Numeric vector of length \code{length(par.guess)}
-#' of upper bounds on the fit parameters. If missing, \cdoe{+Inf}
+#' of upper bounds on the fit parameters. If missing, \code{+Inf}
 #' will be set for all.
 #' @param dy,dx Numeric vector. Errors of the dependent and independent
 #' variable, respectively. These do not need to be specified as they can be
@@ -885,6 +892,13 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- rbind(Yp, bsamples)
   }
   
+  if (length(upper) < length(par.Guess)) {
+    upper <- c(upper, rep(+Inf, times = length(par.Guess) - length(upper)))
+  }
+  if (length(lower) < length(par.Guess)) {
+    lower <- c(lower, rep(-Inf, times = length(par.Guess) - length(lower)))
+  }
+  
   wrapper <- set.wrapper(fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, lm.avail, maxiter, success.infos, na.rm, priors, priors.avail, lower, upper)
   
   ## now the actual fit is performed
@@ -1041,11 +1055,11 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
     print(data.frame(correlation))
   }
   if( any(object$upper != +Inf) ){
-    cat("Constraints on maximal parameter values:\n")
+    cat("Upper bounds on parameter values:\n")
     print(object$upper)
   }
   if( any(object$lower != -Inf) ){
-    cat("Constraints on minimal parameter values:\n")
+    cat("Lower bounds on parameter values:\n")
     print(object$lower)
   }
   if(!is.null(object$t) && object$errormodel != "yerrors") {
