@@ -714,17 +714,17 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
   cf1_temp<- cf1$cf
   icf1_temp <- cf1$icf
   if (reverse1 == TRUE){
-    apply(cf1_temp,2,rev)
+    cf1_temp <- apply(cf1_temp,2,rev)
     if ( has_icf(cf1)){
-      apply(icf1_temp,2,rev)
+     icf1_temp <- apply(icf1_temp,2,rev)
     }
   }
   cf2_temp <- cf2$cf
   icf2_temp <- cf2$icf
   if (reverse2 == TRUE){
-    apply(cf2_temp,2,rev)
+    cf2_temp <- apply(cf2_temp,2,rev)
     if ( has_icf(cf2)){
-      apply(icf2_temp,2,rev)
+      icf2_temp <- apply(icf2_temp,2,rev)
     }
   }
   if (inherits(cf1, 'cf_indexed')){

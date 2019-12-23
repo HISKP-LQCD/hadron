@@ -356,7 +356,7 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
 {
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
-  tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
+  tmp <- read.table(file=file_names_to_read)
   names(tmp)[1] <- "monomialid"
   names(tmp)[2] <- "stochastic_index"
   names(tmp)[3] <- "kappa_target"
