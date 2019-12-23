@@ -36,13 +36,23 @@ rw_meta <- function (.rw = rw(), conf.index ) {
 }
 
 
+#' rw metadata mixin constructor
+#'
+#' @param .rw `rw` object to extend.
+#' @param conf.index list of Integers, containing the index of gauge configurations
+#' @param max_value value used to be for normalization
+#' @param stochastic_error error coming from the stochastic samples for each gauge conf
+#' @family rw constructors
+#'
 #' @export
-rw_orig <- function (.rw = rw(), rw, conf.index, max_value) {
+rw_orig <- function (.rw = rw(), rw, conf.index, max_value, stochastic_error) {
   stopifnot(inherits(.rw, 'rw'))
 
   .rw$rw <- rw
   .rw$max_value <- max_value
   .rw$conf.index <- conf.index
+  .rw$stochastic_error <- stochastic_error
+
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   class(.rw) <- append(class(.rw), 'rw_meta')
@@ -60,6 +70,8 @@ rw_unit <- function (.rw = rw(), conf.index) {
   .rw$conf.index <- conf.index
   .rw$rw <- rep(1.0,length(conf.index))
   .rw$max_value <- 1.0
+  #unit rw factor does not have error from the stochastic samples
+  .rw$stochastic_error <- rep(0.0, length(conf.index))
 
   class(.rw) <- append(class(.rw), 'rw_orig')
   class(.rw) <- append(class(.rw), 'rw_meta')
@@ -116,6 +128,11 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
   rw$max_value <- NA
   rw$conf.index <- rw1$conf.index 
 
+  #the stochastic error of the product of reweighting factors
+  #this is approximately rw1*d(rw2)+rw2*d(rw1)
+  rw$stochastic_error <- abs(nf1*rw1$rw*rw2$stochastic_error) + 
+                         abs(nf2*rw2$rw*rw1$stochastic_error) 
+
   class(rw) <- append(class(rw), 'rw_orig')
   class(rw) <- append(class(rw), 'rw_meta')
   
@@ -163,11 +180,9 @@ plot.rw <- function(x, rep = FALSE, ...) {
 
 # Estimating the statistical error on the reweighting factor
 
-  rw_boot <- boot(rw, meanval, R=1500)
-  rw_error <- sd(rw_boot)
 
   val <- rw$rw/mean(rw$rw)
-  err <- rep(x=rw_error,length(rw$rw))
+  err <- rw$stochastic_error
 
   df <- data.frame(t = c(1:length(val)),
                    CF = val,
@@ -225,25 +240,41 @@ addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
   if (reverse1 == TRUE){
     rw_1   <- rev(rw1$rw)
     conf_1 <- rev(rw1$conf.index)
+    stochastic_error_1 <- rev(rw1$stochastic_error)
   }
   else{
     rw_1   <- rw1$rw
     conf_1 <- rw1$conf.index 
+    stochastic_error_1 <- rw1$stochastic_error
   }
   if (reverse2 == TRUE){
     rw_2   <- rev(rw2$rw)
     conf_2 <- rev(rw2$conf.index)
+    stochastic_error_2 <- rev(rw2$stochastic_error)
   }
   else{
     rw_2   <- rw2$rw
     conf_2 <- rw2$conf.index 
+    stochastic_error_2 <- rw2$stochastic_error
   }
+
+  #Restore the proper normalization
   rw_1 <- rw_1*rw1$max_value
   rw_2 <- rw_2*rw2$max_value
   
+  stochastic_error_1 <- stochastic_error_1*max_value
+  stochastic_error_2 <- stochastic_error_2*max_value
+
   rw$rw <- c(rw_1, rw_2)
+  rw$stochastic_error <- c(stochastic_error_1, stochastic_error_2)
+
+  #New normalization
   max_value <- max(rw$rw)
+
+  #Apply the new normalization
   rw$rw <- rw$rw/max_value
+  rw$stochastic_error <- rw$stochastic_error/max_value
+
   rw$conf.index <- c(conf_1, conf_2) 
   rw$max_value  <- max_value 
 
