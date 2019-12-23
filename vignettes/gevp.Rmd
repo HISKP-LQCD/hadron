@@ -4,7 +4,8 @@ author: "Carsten Urbach"
 output:
   pdf_document:
     citation_package: biblatex
-
+    toc: yes
+    
 bibliography: gevp.bib
 link_citation: yes
 vignette: >
@@ -68,7 +69,7 @@ getorderedconfigindices <- function(path="./", basename="onlinemeas",
 
 for which we refer to the documentation. 
 
-# Error Analysis
+# Resampling Strategies
 
 Once the bare data is available as a \texttt{cf}, one has to decide
 for an error analysis strategy. This can be either the bootstrap or
@@ -99,8 +100,89 @@ resampling. \texttt{boot.R} is the number of bootstrap replicates,
 \texttt{boot.l} the block lentgh. Now, it is also possible to plot the
 data with errors 
 
-```{r}
+```{r, warning=FALSE}
 plot(correlatormatrix, log="y",
      xlab=c("t/a"), ylab="C(t)")
+```
+
+# Solving the GEVP
+
+Let us denote the correlator matrix by $C(t)$. Now we are going to
+solve the generalised eigenvalue problem
+\[
+C(t)\, v_i(t, t_0)\ =\ \lambda_i(t, t_0)\, C(t_0)\, v_i(t, t_0)
+\]
+with some reference time value $t_0$. One can show that the so-called
+principal correlators $\lambda(t, t_0)$ follow for large $t$-values
+the following behaviour
+\[
+\lambda_i(t, t_0)\ \propto\ e^{-E_i(t-t_0)} + e^{-E_i(T-t+t_0)}\,.
+\]
+Here, $T$ is the time extend and we focus on a symmetric correlation
+matrix in time. However, analogously one can show this with a minus
+sign for anti-symmetric correlation matrices in time. Of course, we
+also have $\lambda(t_0, t_0) = 1$. We re-write the generalised
+eigenvalue problem by defining
+\[
+w_i\ =\ \sqrt{C(t_0)} v_i
+\]
+and solve the simple eigenvalue problem
+\[
+\sqrt{C(t_0)}^{-1}\,C(t)\,\sqrt{C(t_0)}^{-1}\, w_i\ =\ A\, w_i\ =\ \lambda_i(t, t_0)\, w_i
+\]
+instead.
+
+In \texttt{hadron} this task is performed as follows on the bootstrap
+correlator matrix in the most simple case
+
+```{r, cache=TRUE}
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0,
+                                        element.order=c(1,2,3,4),
+                                        sort.type="values")
+```
+
+Next, the principal correlators $\lambda_i$ are obtained as follows,
+where in this case we have $i=1,2$
+
+```{r, warning=FALSE}
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+pc2 <- gevp2cf(gevp=correlatormatrix.gevp, id=2)
+plot(pc1, col="red", pch=21, log="y", xlab="t", ylab="C(t)")
+plot(pc2, rep=TRUE, col="blue", pch=22)
+```
+
+These principal correlators can be analysed as every object of type
+\texttt{cf}, see below. 
+
+## Additional Options
+
+\texttt{bootstrap.gevp} has some additional options which are worth
+mentioning.
+
+1. During the bootstrap procedure for the GEVP, eigenvalues have to be
+   sorted for every $t$-value. This can be either done by
+   \texttt{values}, \texttt{vectors} or \texttt{det} passed via the
+   parameter \texttt{sort.type}. When \texttt{vectors} is chosen,
+   scalar products of eigenvectors are computed
+   \[
+   v(t', t_0) \cdot v(t, t_0)
+   \]
+   and the overlap maximised. When \texttt{sort.t0} is set to
+   \texttt{TRUE}, the comparison time is chosen constant as
+   $t'=t_0+1$. Otherwise, $t'=t-1$ is set in dependence of $t$. 
+
+2. With parameter \texttt{element.order} the correlation functions in
+   the input correlator matrix are specified for use in the GEVP. This
+   can be a sub-set of all the correlation functions in the
+   matrix. Double usage is allowed as well.
+   
+
+# Extracting Energies
+
+```{r}
+pc1.effectivemass <- fit.effectivemass(cf=bootstrap.effectivemass(cf=pc1),
+                                       t1=5, t2=20)
+plot(pc1.effectivemass, col="red", pch=21, ylim=c(0,1))
 ```
 
