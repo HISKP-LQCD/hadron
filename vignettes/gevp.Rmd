@@ -180,9 +180,79 @@ mentioning.
 
 # Extracting Energies
 
+## Matrixfit
+
+First, a fit directly to the (principal) correlator can be
+performed. The corresponding functionality is provided in
+\texttt{hadron} by the function \texttt{matrixfit} and, more modern,
+\texttt{new\_matrixfit}. Let us discuss here the former in its
+application to
+
+```{r, warning=FALSE}
+pc1.matrixfit <- matrixfit(cf=pc1, t1=6, t2=21, useCov=TRUE,
+                           parlist=array(c(1,1), dim=c(2,1)),
+                           sym.vec=c("cosh"), fit.method="lm")
+plot(pc1.matrixfit, do.qqplot=FALSE,
+     xlab="t", ylab="C(t)")
+```
+
+An extended overview is provided by the overloaded \texttt{summary}
+function
+
+```{r}
+summary(pc1.matrixfit)
+```
+
+This yields an energy level with error of
+$E =`r tex.catwitherror(x=pc1.matrixfit$t0[1], dx=pc1.matrixfit$se[1], digits=2, with.dollar=FALSE)`$.
+
+As we know that $\lambda(t_0, t_0)=1$, we can fit more than a single
+exponential to the principal correlator. For this \texttt{matrixfit}
+knows the model \texttt{pc}. The corresponding fit model reads
+\[
+f(t; E, \Delta E, A)\ =\ \exp(-E(t-t_0))(A + (1-A)\exp(-\Delta E(t-t_0))
+\]
+involving three fit parameters. Of course, the fit must be started at
+earlier time slices in order to be sensitive to excited states.
+
+```{r, warning=FALSE}
+pc1.matrixfit <- matrixfit(cf=pc1, t1=3, t2=20, useCov=TRUE,
+                           parlist=array(c(1,1), dim=c(2,1)),
+                           sym.vec=c("cosh"), fit.method="lm",
+                           model="pc")
+plot(pc1.matrixfit, do.qqplot=FALSE,
+     xlab="t", ylab="C(t)")
+```
+
+A useful crosscheck is to not plot the raw correlator, but the
+correlator with the leading exponential divided out
+
+```{r, warning=FALSE}
+plot(pc1.matrixfit, do.qqplot=FALSE,
+     xlab="t", ylab="C(t)", plot.raw=FALSE)
+abline(h=1, lty=2)
+```
+
+In such a plot all the data points should fluctuate around one. 
+This matrixfit gives as a result
+$E =`r tex.catwitherror(x=pc1.matrixfit$t0[1], dx=pc1.matrixfit$se[1], digits=2, with.dollar=FALSE)`$.
+
+
+## Effective Masses
+
+Similaryly, effective masses
+\[
+M_\mathrm{eff}\ =\ -\log\frac{C(t)}{C(t+1)}
+\]
+can be computed and bootstrapped as follows
+
 ```{r}
 pc1.effectivemass <- fit.effectivemass(cf=bootstrap.effectivemass(cf=pc1),
                                        t1=5, t2=20)
-plot(pc1.effectivemass, col="red", pch=21, ylim=c(0,1))
+plot(pc1.effectivemass, col="red", pch=21, ylim=c(0,1),
+     xlab="t", ylab="Meff")
 ```
+
+From the fit to the effective masses we obtain in this case
+$E =`r tex.catwitherror(x=pc1.effectivemass$effmassfit$t0[1], dx=pc1.effectivemass$effmassfit$se[1], digits=2, with.dollar=FALSE)`$.
 
