@@ -121,6 +121,9 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
   stopifnot(inherits(rw1, 'rw_meta'))
   stopifnot(inherits(rw2, 'rw_meta'))
  
+  #We can multiply reweighting factors, only if 
+  #we have the same set of gauge configuration 
+  #for both rw factors
   stopifnot(identical( rw1$conf.index, rw2$conf.index ))
 
   rw <- rw()
