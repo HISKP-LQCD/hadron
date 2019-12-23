@@ -15,13 +15,15 @@ bootstrap.hankel(cf, t0, n = 2, N = cf$Time/2 + 1, id = c(1),
 
 \item{n}{Integer. Size of the submatrix Hankel matrices to generate}
 
-\item{N}{Integer.}
+\item{N}{Integer. Maximal time index in correlation function to be used in
+Hankel matrix}
 
 \item{id}{Integer. Vector of indices of eigenvalues to consider.}
 
-\item{range}{Numeric vector. Range of eigenvalues to be considered}
+\item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
-\item{eps}{Numeric. Cut-off}
+\item{eps}{Numeric. Cut-off: if the imaginary part of the generalised
+eigenvalues is larger than eps, the eigenvalue is discarded.}
 }
 \description{
 Alternative method to determine energy levels from correlation
@@ -44,9 +46,8 @@ heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 
 }
 \seealso{
-Other hankel: 
-\code{\link{gevp.hankel}()},
-\code{\link{hankel2cf}()},
-\code{\link{hankel2effectivemass}()}
+Other hankel: \code{\link{gevp.hankel}},
+  \code{\link{hankel2cf}},
+  \code{\link{hankel2effectivemass}}
 }
 \concept{hankel}

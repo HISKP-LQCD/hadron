@@ -112,9 +112,11 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param t0     initial time value of the GEVP, must be in between 0 and
 #'    \code{Time/2-2}. Default is 1.
 #' @param n Integer. Size of the submatrix Hankel matrices to generate
-#' @param N Integer.
-#' @param eps Numeric. Cut-off
-#' @param range Numeric vector. Range of eigenvalues to be considered
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
+#' eigenvalues is larger than eps, the eigenvalue is discarded.
+#' @param range Numeric vector. Value-range of eigenvalues to be considered
 #' @param id Integer. Vector of indices of eigenvalues to consider.
 #'
 #' @examples

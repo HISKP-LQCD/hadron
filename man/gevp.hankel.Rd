@@ -4,8 +4,8 @@
 \alias{gevp.hankel}
 \title{GEVP method based on Hankel matrices. Experimental.}
 \usage{
-gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
-  submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
+gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0,
+  1), submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
   debug = FALSE)
 }
 \arguments{
@@ -18,11 +18,13 @@ gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
 
 \item{n}{Integer. Size of the submatrix Hankel matrices to generate}
 
-\item{N}{Integer.}
+\item{N}{Integer. Maximal time index in correlation function to be used in
+Hankel matrix}
 
-\item{eps}{Numeric. Cut-off}
+\item{eps}{Numeric. Cut-off: if the imaginary part of the generalised
+eigenvalues is larger than eps, the eigenvalue is discarded.}
 
-\item{range}{Numeric vector. Range of eigenvalues to be considered}
+\item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
 \item{submatrix.size}{Integer. Submatrix size to be used in build
 of Hankel matrices}
@@ -44,9 +46,8 @@ matrices. A so-called Hankel matrix is generated from an input
 then.
 }
 \seealso{
-Other hankel: 
-\code{\link{bootstrap.hankel}()},
-\code{\link{hankel2cf}()},
-\code{\link{hankel2effectivemass}()}
+Other hankel: \code{\link{bootstrap.hankel}},
+  \code{\link{hankel2cf}},
+  \code{\link{hankel2effectivemass}}
 }
 \concept{hankel}
