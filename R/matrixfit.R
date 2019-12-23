@@ -627,9 +627,9 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
   }
   if(do.qqplot){
     new_window_if_appropriate()
-    s <- seq(0,1,1./length(mfit$t[,1]))
+    s <- seq(0,1,1./nrow(mfit$t))
     x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
-    qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
+    qqplot(x=x, y=mfit$t[, ncol(mfit$t)-1], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
   }
 }
 
