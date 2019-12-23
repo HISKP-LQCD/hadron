@@ -16,6 +16,7 @@ rw metadata mixin constructor
 }
 \seealso{
 Other rw constructors: 
+\code{\link{rw_orig}()},
 \code{\link{rw}()}
 }
 \concept{rw constructors}
