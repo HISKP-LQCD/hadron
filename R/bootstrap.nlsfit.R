@@ -537,13 +537,12 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## If a list 'priors' is specified, modify the parameters y and func
   ## by adding p, param and psamples, respectively.
   priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
   if(priors.avail) {
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
-    bsamples <- cbind(bsamples, priors$psamples)
   }
   
   if(!priors.avail) {
@@ -886,8 +885,6 @@ bootstrap.nlsfit <- function(fn,
     }
   }
 
-  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
-
   crr <- c(1:(boot.R+1))
   rr <- c(2:(boot.R+1))
 
@@ -912,6 +909,8 @@ bootstrap.nlsfit <- function(fn,
     bsamples <- cbind(bsamples, priors$psamples)
   }
   
+  all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
