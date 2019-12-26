@@ -14,15 +14,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   cM2 <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
 
   qr.cM1 <- qr(cM1)
-  ##M <- try(qr.coef(qr.cM1, cM2), TRUE)
   M <- qr.coef(qr.cM1, cM2)
-  if(inherits(M, "try-error")) {
-    ##cM1.svd <- svd(cM1)
-    ##D <- diag(1./cM1.svd$d)
-    ##M <- cM1.svd$v %*% D %*% t(cM1.svd$u)
-    
-    return(rep(NA, times=length(id)))
-  }
 
   M.eigen <- eigen(M, symmetric=FALSE, only.values=TRUE)
 
@@ -80,10 +72,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   ## M = cM1^-1 * cM2
   M <- try(qr.coef(qr.cM1, cM2), TRUE)
   if(inherits(M, "try-error")) {
-    ##cM1.svd <- svd(cM1)
-    ##D <- diag(1./cM1.svd$d)
-    ##M <- cM1.svd$v %*% D %*% t(cM1.svd$u)
-    
     return(c(NA))
   }
   M[abs(M) < 1.e-12] <- 0
@@ -138,9 +126,6 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
   stopifnot(inherits(cf, 'cf_boot'))
 
   boot.R <- cf$boot.R
-  ##if(t0+2*n+deltat >= N) {
-  ##  stop("t0+2*n+1+deltat must be smaller than N\n")
-  ## }
   evs <- array(NA, dim=c(N, length(id)))
   evs.tsboot <- array(NA, dim=c(boot.R, N, length(id)))
   
