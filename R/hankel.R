@@ -63,10 +63,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
       cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
     }
   }
-  ## symmetrise matrices
-  cM1 <- 0.5*(cM1 + t(cM1))
-  cM2 <- 0.5*(cM2 + t(cM2))
-
   qr.cM1 <- qr(cM1)
 
   ## M = cM1^-1 * cM2
