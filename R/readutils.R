@@ -347,7 +347,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 
   return (invisible(ret))
 }
-#' @title reading reweighting factors for a list of gauge configuration 
+#' @title reading reweighting factors from a list of gauge configurations
 #'        and random samples from ASCII files
 #' @param file_names_to_read list of filenames for the reweighting factors
 #' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
@@ -387,14 +387,18 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   
   tmp2 <- matrix(tmp$reweightingfactor,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
   tmp3 <- apply(exp(-tmp2),2,mean)
-  tmp4 <- sqrt(apply(exp(-2*tmp2),2,mean)-tmp3^2)/sqrt(nsamples-1)/max(tmp3)
+
+# Determine the standard error for each gauge configuration over the 
+# stochastic samples
+
+  tmp5 <- sqrt(apply(exp(-2*tmp2),2,mean)-tmp3^2)/sqrt(nsamples-1)/max(tmp3)
 
 # Normalize the largest reweighting factor to be one and storing this factor
 # this is neccessary due to the large value of the reweighting factor 
 # after exponentiating
   tmp4 <- tmp3/max(tmp3)
   
-  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3), stochastic_error=tmp4)
+  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3), stochastic_error=tmp5)
 
 }
 #' @title reader for Nissa text format correlation functions
