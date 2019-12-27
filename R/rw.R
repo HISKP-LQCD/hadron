@@ -4,8 +4,9 @@
 #' of class `rw`. This class is particularly designed to store reweighting 
 #' factors for each gauge configuration, that can be applied on 
 #' correlation functions emerging in statistical and quantum field theory
-#' simulations. Multiplication operation is defined for this class,
-#' as well as for increasing statistics and \link{is.rw}.
+#' simulations. Note that the reweighting factors acts on bare cf objects
+#' and not on bootstrapped correlation function. Multiplication operation 
+#' is defined for this class, as well as increasing statistics and \link{is.rw}.
 #'
 #' @details
 #'#'
@@ -161,7 +162,6 @@ is.rw <- function (x) {
   inherits(x, "rw")
 }
 
-meanval <- function(d, w) {return(mean(d$rw[w]))}
 
 #' Plot a reweighting factor function
 #'
@@ -180,9 +180,6 @@ plot.rw <- function(x, rep = FALSE, ...) {
  
   colneg <- rep("black",times=length(rw$rw))
   colneg[negs] <- "red"
-
-# Estimating the statistical error on the reweighting factor
-
 
   val <- rw$rw/mean(rw$rw)
   err <- rw$stochastic_error
