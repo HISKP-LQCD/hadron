@@ -377,6 +377,9 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 }
 
 #' Computes the samples for reweighted correlation function
+#' Note that the reweighting procedure can be applied only once 
+#' a given correlation function, after applying we invalidate
+#' cf_orig
 #'
 #' @param cf `cf` object.
 #' @param rw `rw` object.
@@ -395,8 +398,10 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
 
-  stopifnot(rw$conf.index == cf$conf.index)
- 
+  if (all(cf$conf.index != rw$conf.index)){
+    stop("bootstrap_rw.cf: Gauge conf used for cf and rw do not match, please check them")
+  }
+
   stopifnot( nrow(cf$cf) == length(rw$conf.index) )
 
   boot.l <- ceiling(boot.l)
@@ -436,7 +441,8 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
-                cf.tsboot = rwcf.tsboot)
+                cf.tsboot = rwcf.tsboot,
+                resampling_method= "bootstrap")
 
   class(cf) <- append(class(cf), 'cfrw_boot')
 
@@ -559,7 +565,9 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
   stopifnot(inherits(rw, 'rw_meta'))
   stopifnot(inherits(cf, 'cf_indexed'))
 
-  stopifnot(rw1$conf.index == rw2$conf.index)
+  if (all(cf$conf.index != rw$conf.index)){
+    stop("jackknife_rw.cf: Gauge conf used for cf and rw do not match, please check them")
+  }
 
   ##We should also check that the cf object and the rw object contains the same gauge configurations
 
