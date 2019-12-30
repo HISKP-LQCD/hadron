@@ -2,7 +2,10 @@
 % Please edit documentation in R/cf.R
 \name{bootstrap_rw.cf}
 \alias{bootstrap_rw.cf}
-\title{Computes the samples for reweighted correlation function}
+\title{Computes the samples for reweighted correlation function
+Note that the reweighting procedure can be applied only once
+a given correlation function, after applying we invalidate
+cf_orig}
 \usage{
 bootstrap_rw.cf(cf, rw, boot.R = 400, boot.l = 2, seed = 1234,
   sim = "geom", endcorr = TRUE)
@@ -24,4 +27,7 @@ bootstrap_rw.cf(cf, rw, boot.R = 400, boot.l = 2, seed = 1234,
 }
 \description{
 Computes the samples for reweighted correlation function
+Note that the reweighting procedure can be applied only once
+a given correlation function, after applying we invalidate
+cf_orig
 }

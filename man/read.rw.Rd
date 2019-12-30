@@ -2,7 +2,7 @@
 % Please edit documentation in R/readutils.R
 \name{read.rw}
 \alias{read.rw}
-\title{reading reweighting factors for a list of gauge configuration
+\title{reading reweighting factors from a list of gauge configurations
 and random samples from ASCII files}
 \usage{
 read.rw(file_names_to_read, gauge_conf_list, nsamples, monomial_id)
@@ -15,6 +15,6 @@ read.rw(file_names_to_read, gauge_conf_list, nsamples, monomial_id)
 \item{nsamples}{number of stochastic samples used for computing the reweighting factors}
 }
 \description{
-reading reweighting factors for a list of gauge configuration
+reading reweighting factors from a list of gauge configurations
 and random samples from ASCII files
 }

@@ -11,8 +11,9 @@ This function \code{rw()} creates containers for reweighting factors
 of class \code{rw}. This class is particularly designed to store reweighting
 factors for each gauge configuration, that can be applied on
 correlation functions emerging in statistical and quantum field theory
-simulations. Multiplication operation is defined for this class,
-as well as for increasing statistics and \link{is.rw}.
+simulations. Note that the reweighting factors acts on bare cf objects
+and not on bootstrapped correlation function. Multiplication operation
+is defined for this class, as well as increasing statistics and \link{is.rw}.
 }
 \details{
 #'
