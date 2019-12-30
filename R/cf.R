@@ -380,6 +380,8 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 #' Note that the reweighting procedure can be applied only once 
 #' a given correlation function, after applying we invalidate
 #' cf_orig
+#' Note constant rw-s correspond to unit transformation 
+#' independently of their absolute values.
 #'
 #' @param cf `cf` object.
 #' @param rw `rw` object.
@@ -554,6 +556,11 @@ jackknife.cf <- function(cf, boot.l = 1) {
 }
 
 #' Computes the jackknife samples for reweighted correlation function
+#' Note that the reweighting procedure can be applied only once 
+#' a given correlation function, after applying we invalidate
+#' cf_orig
+#' Note constant rw-s correspond to unit transformation 
+#' independently of their absolute values.
 #'
 #' @param cf `cf` object.
 #' @param rw `rw` object.
