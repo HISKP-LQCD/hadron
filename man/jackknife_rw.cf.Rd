@@ -2,7 +2,12 @@
 % Please edit documentation in R/cf.R
 \name{jackknife_rw.cf}
 \alias{jackknife_rw.cf}
-\title{Computes the jackknife samples for reweighted correlation function}
+\title{Computes the jackknife samples for reweighted correlation function
+Note that the reweighting procedure can be applied only once
+a given correlation function, after applying we invalidate
+cf_orig
+Note constant rw-s correspond to unit transformation
+independently of their absolute values.}
 \usage{
 jackknife_rw.cf(cf, rw, boot.l = 1)
 }
@@ -15,4 +20,9 @@ jackknife_rw.cf(cf, rw, boot.l = 1)
 }
 \description{
 Computes the jackknife samples for reweighted correlation function
+Note that the reweighting procedure can be applied only once
+a given correlation function, after applying we invalidate
+cf_orig
+Note constant rw-s correspond to unit transformation
+independently of their absolute values.
 }

@@ -5,7 +5,9 @@
 \title{Computes the samples for reweighted correlation function
 Note that the reweighting procedure can be applied only once
 a given correlation function, after applying we invalidate
-cf_orig}
+cf_orig
+Note constant rw-s correspond to unit transformation
+independently of their absolute values.}
 \usage{
 bootstrap_rw.cf(cf, rw, boot.R = 400, boot.l = 2, seed = 1234,
   sim = "geom", endcorr = TRUE)
@@ -30,4 +32,6 @@ Computes the samples for reweighted correlation function
 Note that the reweighting procedure can be applied only once
 a given correlation function, after applying we invalidate
 cf_orig
+Note constant rw-s correspond to unit transformation
+independently of their absolute values.
 }
