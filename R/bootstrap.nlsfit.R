@@ -614,6 +614,7 @@ simple.nlsfit <- function(fn,
   }
 
   cov <- solve(t(jac) %*% jac)
+  cov <- 0.5*(cov + t(cov))
   if(relative.weights){
       cov <- cov * chisq/dof
   }
