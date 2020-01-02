@@ -50,9 +50,9 @@ H_1 = H[x_1, n]\,,\qquad H_2 = H[x_2, n]\,.
 With these we can define the following generalised eigenvalue problem
 (GEVP)
 \begin{equation}
-H_2\, v\ =\ H_1\, \lambda(t_0, \delta t)\, v
+H_2\, v(t_0, \delta t)\ =\ H_1\, \lambda(t_0, \delta t)\, v(t_0, \delta t)
 \end{equation}
-with eigenvectors $v$ and eigenvalues $\lambda(t_0, \delta t)$.
+with eigenvectors $v(t_0, \delta t)$ and eigenvalues $\lambda(t_0, \delta t)$.
 
 If the correlator $C(t)$ is given by a sum of exponentials, i.e.
 \[
