@@ -25,7 +25,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   
 }
 
-#' @title GEVP method based on Hankel matrices. Experimental.
+#' @title GEVP method based on Hankel matrices.
 #' 
 #' @description
 #' Alternative method to determine energy levels from correlation
@@ -37,10 +37,10 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' @param debug Boolean. Enable debug output.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
 #' @param submatrix.size Integer. Submatrix size to be used in build
-#'   of Hankel matrices
+#'   of Hankel matrices. Submatrix.size > 1 is experimental.
 #' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
 #'    correlators into the correlator
-#'    matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 #'    \code{matrix(cf[element.order], nrow=2)}.
 #'    Double indexing is allowed.
 #' 
@@ -83,7 +83,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
-#' @title GEVP method based on Hankel matrices. Experimental.
+#' @title GEVP method based on Hankel matrices. 
 #' 
 #' @description
 #' Alternative method to determine energy levels from correlation

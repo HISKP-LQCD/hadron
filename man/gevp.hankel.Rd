@@ -2,7 +2,7 @@
 % Please edit documentation in R/hankel.R
 \name{gevp.hankel}
 \alias{gevp.hankel}
-\title{GEVP method based on Hankel matrices. Experimental.}
+\title{GEVP method based on Hankel matrices.}
 \usage{
 gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
   submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
@@ -27,11 +27,11 @@ eigenvalues is larger than eps, the eigenvalue is discarded.}
 \item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
 \item{submatrix.size}{Integer. Submatrix size to be used in build
-of Hankel matrices}
+of Hankel matrices. Submatrix.size > 1 is experimental.}
 
 \item{element.order}{Integer vector. specifies how to fit the \code{n} linearly ordered single
 correlators into the correlator
-matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
 
