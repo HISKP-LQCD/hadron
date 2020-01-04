@@ -5,6 +5,10 @@ date: \today
 output:
   pdf_document:
     fig_crop: false
+vignette: >
+  %\VignetteIndexEntry{Multi-Particle Fit Test}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
