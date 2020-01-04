@@ -18,8 +18,7 @@ r_packages:
   - rmarkdown
 
 apt_packages:
-  - libgsl-dev 
-  - biber 
+  - libgsl-dev  
 
 sudo: required
 dist: trusty
