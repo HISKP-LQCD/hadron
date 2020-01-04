@@ -2,10 +2,10 @@
 % Please edit documentation in R/hankel.R
 \name{bootstrap.hankel}
 \alias{bootstrap.hankel}
-\title{GEVP method based on Hankel matrices. Experimental.}
+\title{GEVP method based on Hankel matrices.}
 \usage{
-bootstrap.hankel(cf, t0, deltat = 1, n, N, id = c(1), range = c(0, 1),
-  eps = 0.001, element.order = c(1, 2, 3, 4), submatrix.size = 1)
+bootstrap.hankel(cf, t0, n = 2, N = cf$Time/2 + 1, id = c(1),
+  range = c(0, 1), eps = 0.001)
 }
 \arguments{
 \item{cf}{object of type \link{cf}}
@@ -13,26 +13,17 @@ bootstrap.hankel(cf, t0, deltat = 1, n, N, id = c(1), range = c(0, 1),
 \item{t0}{initial time value of the GEVP, must be in between 0 and
 \code{Time/2-2}. Default is 1.}
 
-\item{deltat}{Integer. Time shift to be used to build the Hankel matrix}
+\item{n}{Integer. Size of the submatrix Hankel matrices to generate}
 
-\item{n}{Integer.}
+\item{N}{Integer. Maximal time index in correlation function to be used in
+Hankel matrix}
 
-\item{N}{Integer.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider.}
 
-\item{id}{Integer.}
+\item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
-\item{range}{Numeric vector. Range of eigenvalues to be considered}
-
-\item{eps}{Numeric. Cut-off}
-
-\item{element.order}{Integer vector. specifies how to fit the \code{n} linearly ordered single
-correlators into the correlator
-matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
-\code{matrix(cf[element.order], nrow=2)}.
-Double indexing is allowed.}
-
-\item{submatrix.size}{Integer. Submatrix size to be used in build
-of Hankel matrix}
+\item{eps}{Numeric. Cut-off: if the imaginary part of the generalised
+eigenvalues is larger than eps, the eigenvalue is discarded.}
 }
 \description{
 Alternative method to determine energy levels from correlation
@@ -41,8 +32,23 @@ matrices. A so-called Hankel matrix is generated from an input
 then. This is the function to call. It will perform a bootstrap
 analysis.
 }
+\examples{
+
+data(correlatormatrix)
+correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+t0 <- 4
+correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
+hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
+plot(hpc1, log="y")
+heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
+
+}
 \seealso{
 Other hankel: 
-\code{\link{gevp.hankel}()}
+\code{\link{gevp.hankel}()},
+\code{\link{hankel2cf}()},
+\code{\link{hankel2effectivemass}()}
 }
 \concept{hankel}
