@@ -954,8 +954,6 @@ concat.cf <- function (left, right) {
 #' @param rep See \code{\link{plotwitherror}}.
 #' @param ... Graphical parameter to be passed on to \link{plotwitherror}
 #'
-#' @inheritParams plotwitherror
-#'
 #' @export
 plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
   cf <- x

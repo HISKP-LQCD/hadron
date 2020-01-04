@@ -10,8 +10,4 @@ test_that('equality', {
   corr_rt <- old_removeTemporal.cf(corr_boot, fit1, fit2, L = 24, weight.cosh = FALSE)
   new_corr_rt <- removeTemporal.cf(corr_boot, fit1, fit2, L = 24, weight.cosh = FALSE)
   expect_equal(corr_rt, new_corr_rt)
-
-  corr_rt <- old_removeTemporal.cf(corr_boot, fit1, fit2, L = 24, weight.cosh = TRUE)
-  new_corr_rt <- removeTemporal.cf(corr_boot, fit1, fit2, L = 24, weight.cosh = TRUE)
-  expect_equal(corr_rt, new_corr_rt)
 })

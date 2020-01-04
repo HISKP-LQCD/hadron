@@ -2,7 +2,7 @@
 % Please edit documentation in R/hankel.R
 \name{gevp.hankel}
 \alias{gevp.hankel}
-\title{GEVP method based on Hankel matrices. Experimental.}
+\title{GEVP method based on Hankel matrices.}
 \usage{
 gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
   submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
@@ -16,24 +16,26 @@ gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
 
 \item{deltat}{Integer. Time shift to be used to build the Hankel matrix}
 
-\item{n}{Integer.}
+\item{n}{Integer. Size of the submatrix Hankel matrices to generate}
 
-\item{N}{Integer.}
+\item{N}{Integer. Maximal time index in correlation function to be used in
+Hankel matrix}
 
-\item{eps}{Numeric. Cut-off}
+\item{eps}{Numeric. Cut-off: if the imaginary part of the generalised
+eigenvalues is larger than eps, the eigenvalue is discarded.}
 
-\item{range}{Numeric vector. Range of eigenvalues to be considered}
+\item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
 \item{submatrix.size}{Integer. Submatrix size to be used in build
-of Hankel matrix}
+of Hankel matrices. Submatrix.size > 1 is experimental.}
 
 \item{element.order}{Integer vector. specifies how to fit the \code{n} linearly ordered single
 correlators into the correlator
-matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
 
-\item{id}{Integer.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider.}
 
 \item{debug}{Boolean. Enable debug output.}
 }
@@ -45,6 +47,8 @@ then.
 }
 \seealso{
 Other hankel: 
-\code{\link{bootstrap.hankel}()}
+\code{\link{bootstrap.hankel}()},
+\code{\link{hankel2cf}()},
+\code{\link{hankel2effectivemass}()}
 }
 \concept{hankel}
