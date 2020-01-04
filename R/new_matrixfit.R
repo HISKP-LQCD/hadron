@@ -337,30 +337,40 @@ NParticleModel <- R6::R6Class(
 )
 
 #' perform a factorising fit of a matrix of correlation functions
-#' 
+#'
 #' Modernised and extended implementation of \link{matrixfit}
-#' 
+#'
 #' @param cf Object of class `cf` with `cf_meta` and `cf_boot`.
 #' @param t1 Integer, start time slice of fit range (inclusive).
 #' @param t2 Integer, end time slie of fit range (inclusive).
 #' @param parlist Numeric vector, list of parameters for the model function.
-#' @param sym.vec Integer, numeric or vectors thereof specifying the
-#'                symmetry properties of the correlation functions
-#'                stored in `cf`. See \link{matrixfit} for details.
-#' @param neg.vec Integer or integer vector of global signs, see \link{matrixfit} for details.
-#' @param useCov Boolean, specifies whether a correlated chi^2 fit should be performed.
-#' @param model String, specifies the type of model to be assumed for the correlator.
-#'              See \link{matrixfit} for details.
+#' @param sym.vec Integer, numeric or vectors thereof specifying the symmetry
+#'   properties of the correlation functions stored in `cf`. See
+#'   \link{matrixfit} for details.
+#' @param neg.vec Integer or integer vector of global signs, see
+#'   \link{matrixfit} for details.
+#' @param useCov Boolean, specifies whether a correlated chi^2 fit should be
+#'   performed.
+#' @param model String, specifies the type of model to be assumed for the
+#'   correlator. See \link{matrixfit} for details.
 #' @param boot.fit Boolean, specifies if the fit should be bootstrapped.
-#' @param fit.method String, specifies which minimizer should be used. See \link{matrixfit} for
-#'                   details.
-#' @param autoproceed Boolean, if TRUE, specifies that if inversion of the covariance matrix fails,
-#'                    the function should proceed anyway assuming no correlation (diagonal covariance matrix).
-#' @param par.guess Numeric vector, initial values for the paramters, should be of the
-#'                  same length as `parlist`.
-#' @param every Integer, specifies a stride length by which the fit range should be sparsened,
-#'              using just `every`th time slice in the fit.
+#' @param fit.method String, specifies which minimizer should be used. See
+#'   \link{matrixfit} for details.
+#' @param autoproceed Boolean, if TRUE, specifies that if inversion of the
+#'   covariance matrix fails, the function should proceed anyway assuming no
+#'   correlation (diagonal covariance matrix).
+#' @param par.guess Numeric vector, initial values for the paramters, should be
+#'   of the same length as `parlist`.
+#' @param every Integer, specifies a stride length by which the fit range should
+#'   be sparsened, using just `every`th time slice in the fit.
+#' @param higher_states List with elements `val` and `boot`. The member `val`
+#'   must have the central energy values for all the states that are to be
+#'   fitted. The `boot` member will be a matrix that has the various states as
+#'   columns and the corresponding bootstrap samples as rows. The length of
+#'   `val` must be the column number of `boot`. The row number of `boot` must be
+#'   the number of samples.
 #' @param ... Further parameters.
+#'
 #' @export
 new_matrixfit <- function(cf,
                           t1, t2,
@@ -374,8 +384,8 @@ new_matrixfit <- function(cf,
                           autoproceed = FALSE,
                           par.guess,
                           every,
-                          ...
-                          ) {
+                          higher_states = list(val = numeric(0), boot = matrix(nrow = 0, ncol = 0), ampl = numeric(0)),
+                          ...) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   
@@ -384,6 +394,8 @@ new_matrixfit <- function(cf,
   }
   
   stopifnot(cf$symmetrised == TRUE)
+  stopifnot(length(higher_states$val) == ncol(higher_states$boot))
+  stopifnot(nrow(higher_states$boot) %in% c(0, cf$boot.R))
   
   t1p1 <- t1 + 1
   t2p1 <- t2 + 1
@@ -479,6 +491,23 @@ new_matrixfit <- function(cf,
   
   if (useCov) {
     args$CovMatrix <- cf$cov_fn(cf$cf.tsboot$t)
+  }
+  
+  if (length(higher_states$val) > 0) {
+    args$priors <- list(
+      param = seq(3, by = 2, length.out = length(higher_states$val)),
+      p = higher_states$val,
+      psamples = higher_states$boot)
+    
+    for (i in 1:length(higher_states$val)) {
+      par.guess <- c(par.guess, higher_states$val[i], higher_states$ampl[i])
+    }
+    
+    args$par.guess <- par.guess
+    
+    # We know that neither amplitude nor masses can become negative. We
+    # therefore enforce these as a lower bound.
+    args$lower <- rep(0, times = length(par.guess))
   }
   
   res <- do.call(bootstrap.nlsfit, args)

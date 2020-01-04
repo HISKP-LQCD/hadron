@@ -1,0 +1,152 @@
+---
+title: "Multi-Particle Fit Test"
+author: "Martin Ueding"
+date: \today
+output:
+  pdf_document:
+    fig_crop: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+```
+
+First we need to create some artificial data in order to get a feeling whether this function actually works. We will take two states and add some noise.
+
+```{r}
+time_extent <- 96
+e0_val <- 0.12
+e1_val <- 0.0
+rel_amplitude <- 0.4
+boot_R <- 300
+n_meas <- 100
+```
+
+Next we generate bootstrap samples for the energies and amplitudes that enter here.
+
+```{r}
+a0_val <- 1.0
+a1_val <- rel_amplitude
+a0_err <- 0.001
+a1_err <- 0.001
+a0_orig <- rnorm(n_meas, a0_val, a0_err)
+a1_orig <- rnorm(n_meas, a1_val, a1_err)
+
+e0_err <- 0.001
+e1_err <- 0.001
+e0_orig <- rnorm(n_meas, e0_val, e0_err)
+e1_orig <- rnorm(n_meas, e1_val, e1_err)
+```
+
+The signal is just the sum of two cosh-terms.
+
+```{r}
+t <- 0:(time_extent - 1)
+
+signal_val <- a0_val * (exp(-e0_val * t) + exp(-e0_val * (time_extent - t))) +
+  a1_val * (exp(-e1_val * t) + exp(-e1_val * (time_extent - t)))
+
+signal_orig <- do.call(cbind, lapply(t, function (t) a0_orig * (exp(-e0_orig * t) + exp(-e0_orig * (time_extent - t))) +
+  a1_orig * (exp(-e1_orig * t) + exp(-e1_orig * (time_extent - t)))))
+
+signal_orig <- signal_orig + matrix(rnorm(length(signal_orig), c(signal_orig), 0.1), ncol = ncol(signal_orig))
+
+signal_err <- apply(signal_orig, 2, sd)
+```
+
+We take a look at our artificial data.
+
+```{r}
+plotwitherror(t, signal_val, signal_err,
+     log = 'y',
+     main = 'Artificial pure signal')
+```
+
+All we have are the fake measurements, so we construct a `cf` object from them and bootstrap that.
+
+```{r}
+corr <- cf_orig(cf_meta(Time = time_extent), cf = signal_orig)
+corr_boot <- bootstrap.cf(symmetrise.cf(corr), boot.R = boot_R)
+```
+
+Now it looks like a correlator with very tiny errors.
+
+```{r}
+plot(corr_boot,
+     log = 'y',
+     main = 'Symmetrized correlator with noise')
+```
+
+In the effective mass we can see that we are hopelessly far away from the actual mass that I want to get out.
+
+```{r}
+effmass_solve <- bootstrap.effectivemass(corr_boot, type = 'solve')
+plot(effmass_solve, ylim = range(effmass_solve$t0, e0_val, na.rm = TRUE))
+abline(h = e0_val)
+```
+
+Shifting the correlator gives us a sensible effective mass because it removes the constant term.
+
+```{r}
+corr_shifted <- takeTimeDiff.cf(corr_boot)
+effmass_shifted <- bootstrap.effectivemass(corr_shifted, type = 'shifted')
+plot(effmass_shifted)
+abline(h = e0_val)
+```
+
+# Fits
+
+We first try the “single” model, that will of course fail miserably.
+
+```{r}
+fit_single <- new_matrixfit(
+  corr_boot,
+  t1 = 1,
+  t2 = 47,
+  useCov = TRUE,
+  model = 'single',
+  fit.method = 'lm')
+
+plot(fit_single,
+     log = 'y',
+     main = 'Fit with “single” model')
+residual_plot(fit_single)
+```
+
+The “shifted” model will of course work.
+
+```{r}
+fit_shifted <- new_matrixfit(
+  corr_shifted,
+  t1 = 1,
+  t2 = 47,
+  model = 'shifted',
+  useCov = TRUE,
+  fit.method = 'lm')
+
+plot(fit_shifted,
+     log = 'y',
+     main = 'Fit with “shifted” model')
+residual_plot(fit_shifted)
+```
+
+And with the “n_particle” model we can also get the result. It is not entirely correct because I must not use the original data for $E_1$ but rather the bootstrapped one. But I do not want to bootstrap that vector since I lack a function to do it nicely for me. So I just generate it uncorrelated.
+
+```{r}
+fit_n_particle <- new_matrixfit(
+  corr_boot,
+  t1 = 1,
+  t2 = 47,
+  model = 'n_particles',
+  fit.method = 'lm',
+  useCov = TRUE,
+  higher_states = list(val = c(e1_val),
+                       boot = matrix(rnorm(boot_R, e1_val, e1_err / sqrt(n_meas)), ncol = 1)))
+
+plot(fit_n_particle,
+     log = 'y',
+     main = 'Fit with “n_particle” model')
+residual_plot(fit_n_particle)
+```
