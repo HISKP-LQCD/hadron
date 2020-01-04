@@ -1,5 +1,5 @@
 Package: hadron
-Version: 2.7.0
+Version: 3.3.2
 Date: 2019-01-10
 Title: package to extract hadronic quantities
 Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
