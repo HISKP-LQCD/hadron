@@ -174,6 +174,7 @@ hankel2cf <- function(hankel, id=1) {
                 boot.l = hankel$boot.l,
                 seed = hankel$seed,
                 sim = hankel$cf$sim,
+                endcorr = TRUE,
                 cf.tsboot = cf.tsboot,
                 resampling_method = hankel$cf$resampling_method)
   
