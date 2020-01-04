@@ -10,7 +10,10 @@ add.cf(cf1, cf2, a = 1, b = 1)
 \item{cf1, cf2}{\code{cf_orig} object.}
 
 \item{a, b}{Numeric. Factors that multiply the correlation function before
-the addition.}
+the addition.
+
+Since addition is associative, this operates also on the bootstrap samples
+and these are thus not invalidated in the process.}
 }
 \value{
 The value is

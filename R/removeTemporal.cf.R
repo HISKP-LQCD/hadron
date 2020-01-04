@@ -155,6 +155,7 @@ old_removeTemporal.cf <- function(cf,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
+                 endcorr = cf$endcorr,
                  cf.tsboot = cf$cf.tsboot,
                  resampling_method = cf$resampling_method)
   ret <- cf_shifted(ret,
@@ -244,6 +245,7 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                    boot.l = cf$boot.l,
                    seed = cf$seed,
                    sim = cf$sim,
+                   endcorr = cf$endcorr,
                    cf.tsboot = cf$cf.tsboot,
                    resampling_method = cf$resampling_method)
   }
@@ -394,6 +396,7 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
+                 endcorr = cf$endcorr,
                  cf.tsboot = cf$cf.tsboot,
                  resampling_method = cf$resampling_method)
   ret <- cf_shifted(ret,
