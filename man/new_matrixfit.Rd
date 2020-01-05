@@ -7,7 +7,8 @@
 new_matrixfit(cf, t1, t2, parlist, sym.vec = rep(1, cf$nrObs),
   neg.vec = rep("cosh", cf$nrObs), useCov = FALSE, model = "single",
   boot.fit = TRUE, fit.method = "optim", autoproceed = FALSE, par.guess,
-  every, ...)
+  every, higher_states = list(val = numeric(0), boot = matrix(nrow = 0, ncol =
+  0), ampl = numeric(0)), ...)
 }
 \arguments{
 \item{cf}{Object of class \code{cf} with \code{cf_meta} and \code{cf_boot}.}
@@ -18,30 +19,40 @@ new_matrixfit(cf, t1, t2, parlist, sym.vec = rep(1, cf$nrObs),
 
 \item{parlist}{Numeric vector, list of parameters for the model function.}
 
-\item{sym.vec}{Integer, numeric or vectors thereof specifying the
-symmetry properties of the correlation functions
-stored in \code{cf}. See \link{matrixfit} for details.}
+\item{sym.vec}{Integer, numeric or vectors thereof specifying the symmetry
+properties of the correlation functions stored in \code{cf}. See
+\link{matrixfit} for details.}
 
-\item{neg.vec}{Integer or integer vector of global signs, see \link{matrixfit} for details.}
+\item{neg.vec}{Integer or integer vector of global signs, see
+\link{matrixfit} for details.}
 
-\item{useCov}{Boolean, specifies whether a correlated chi^2 fit should be performed.}
+\item{useCov}{Boolean, specifies whether a correlated chi^2 fit should be
+performed.}
 
-\item{model}{String, specifies the type of model to be assumed for the correlator.
-See \link{matrixfit} for details.}
+\item{model}{String, specifies the type of model to be assumed for the
+correlator. See \link{matrixfit} for details.}
 
 \item{boot.fit}{Boolean, specifies if the fit should be bootstrapped.}
 
-\item{fit.method}{String, specifies which minimizer should be used. See \link{matrixfit} for
-details.}
+\item{fit.method}{String, specifies which minimizer should be used. See
+\link{matrixfit} for details.}
 
-\item{autoproceed}{Boolean, if TRUE, specifies that if inversion of the covariance matrix fails,
-the function should proceed anyway assuming no correlation (diagonal covariance matrix).}
+\item{autoproceed}{Boolean, if TRUE, specifies that if inversion of the
+covariance matrix fails, the function should proceed anyway assuming no
+correlation (diagonal covariance matrix).}
 
-\item{par.guess}{Numeric vector, initial values for the paramters, should be of the
-same length as \code{parlist}.}
+\item{par.guess}{Numeric vector, initial values for the paramters, should be
+of the same length as \code{parlist}.}
 
-\item{every}{Integer, specifies a stride length by which the fit range should be sparsened,
-using just \code{every}th time slice in the fit.}
+\item{every}{Integer, specifies a stride length by which the fit range should
+be sparsened, using just \code{every}th time slice in the fit.}
+
+\item{higher_states}{List with elements \code{val} and \code{boot}. The member \code{val}
+must have the central energy values for all the states that are to be
+fitted. The \code{boot} member will be a matrix that has the various states as
+columns and the corresponding bootstrap samples as rows. The length of
+\code{val} must be the column number of \code{boot}. The row number of \code{boot} must be
+the number of samples.}
 
 \item{...}{Further parameters.}
 }

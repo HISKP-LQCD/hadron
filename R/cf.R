@@ -54,6 +54,7 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
 #' @param sim Character, `sim` argument of \link[boot]{tsboot}.
+#' @param endcorr Boolean, `endcorr` argumetn of \link[boot]{tsboot}.
 #' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the real part.
 #' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the imaginay part.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
@@ -70,13 +71,14 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #' @family cf constructors
 #'
 #' @export
-cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, cf.tsboot, icf.tsboot = NULL, resampling_method) {
+cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
 
   .cf$boot.R <- boot.R
   .cf$boot.l <- boot.l
   .cf$seed <- seed
   .cf$sim <- sim
+  .cf$endcorr <- endcorr
 
   .cf$cf.tsboot <- cf.tsboot
   .cf$icf.tsboot <- icf.tsboot
@@ -353,6 +355,73 @@ is_empty.cf <- function (.cf) {
     is.null(names(.cf))
 }
 
+#' Checks whether the resampling of two cf objects is compatible
+#' 
+#' @param cf1 `cf` object with `cf_boot`
+#' @param cf2 `cf` object with `cf_boot`
+#'
+#' @details Checks whether operations such as addition can be performed on the
+#'          resampling samples of `cf1` and `cf2`. In addition to all
+#'          meta parameters, the dimensions of the resampling sample arrays
+#'          must be identical.
+#'
+#' @return List of named booleans for each of the checked conditions
+#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
+#'         `resampling_method`, `boot_dim`, `icf` and, optionally
+#'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
+resampling_is_compatible <- function(cf1, cf2){
+  
+  res <- list()
+  res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
+  res$seed <- (cf1$seed == cf2$seed)
+  res$boot.R <- (cf1$boot.R == cf2$boot.R)
+  res$boot.l <- (cf1$boot.l == cf2$boot.l)
+  res$sim <- (cf1$sim == cf2$sim)
+  res$endcorr <- (cf1$endcorr == cf2$endcorr)
+  res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
+  res$boot_dim <- all(dim(cf1$cf.tsboot$t) == dim(cf2$cf.tsboot$t))
+  res$icf <- (has_icf(cf1) == has_icf(cf2))
+  if( has_icf(cf1) & res$icf ){
+    res$iboot_dim <- all(dim(cf1$icf.tsboot$t) == dim(cf2$icf.tsboot$t))
+  }
+
+  return(res)
+}
+
+#' Checks whether the resampling of two cf objects is concatenable
+#' 
+#' @param cf1 `cf` object with `cf_boot`
+#' @param cf2 `cf` object with `cf_boot`
+#'
+#' @details In contrast to \link{resampling_is_compatible}, this function
+#'          checks if the resampling samples are concatenable on the
+#'          horizontal axis. In addition to checking all meta parameters,
+#'          the number of rows in the resampling arrays must be identical
+#'          but the number of columns may differ.
+#' 
+#' @return List of named booleans for each of the checked conditions
+#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
+#'         `resampling_method`, `boot_nrow`, `icf` and, optionally
+#'         `iboot_nrow` (if both `cf1` and `cf2` contain imaginary parts).
+resampling_is_concatenable <- function(cf1, cf2){
+  res <- list()
+  res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
+  res$seed <- (cf1$seed == cf2$seed)
+  res$boot.R <- (cf1$boot.R == cf2$boot.R)
+  res$boot.l <- (cf1$boot.l == cf2$boot.l)
+  res$sim <- (cf1$sim == cf2$sim)
+  res$endcorr <- (cf1$endcorr == cf2$endcorr)
+  res$resampling_method <- (cf1$resampling_method == cf2$resampling_method)
+  res$boot_nrow <- nrow(cf1$cf.tsboot$t) == nrow(cf2$cf.tsboot$t)
+  res$icf <- (has_icf(cf1) == has_icf(cf2))
+  if( has_icf(cf1) & res$icf ){
+    res$iboot_nrow <- nrow(cf1$icf.tsboot$t) == nrow(cf2$icf.tsboot$t)
+  }
+
+  return(res)
+
+}
+
 #' Checks whether the cf object contains an imaginary part
 #'
 #' @param .cf `cf` object
@@ -384,18 +453,19 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   stopifnot(boot.l <= nrow(cf$cf))
   stopifnot(boot.R >= 1)
 
-  ## we set the seed for reproducability and correlation
+  ## we set the seed for reproducibility and correlation
   old_seed <- swap_seed(seed)
   ## now we bootstrap the correlators
   cf.tsboot <- boot::tsboot(cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
                             R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
 
-  icf.tsboot <- NULL
   if( has_icf(cf) ){
-    # no need to store the old seed again, but we definitely need to reset the RNG!
+    # no need to store the old seed again, but we definitely need to reset the RNG again!
     swap_seed(seed)
     icf.tsboot <- boot::tsboot(cf$icf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean)) },
                                R = boot.R, l = boot.l, sim = sim, endcorr = endcorr)
+  } else {
+    icf.tsboot <- NULL
   }
 
   cf <- cf_boot(cf,
@@ -403,6 +473,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
+                endcorr = endcorr,
                 cf.tsboot = cf.tsboot,
                 icf.tsboot = icf.tsboot,
                 resampling_method = "bootstrap")
@@ -437,10 +508,10 @@ jackknife.cf <- function(cf, boot.l = 1) {
 
   cf.tsboot <- list(t = t,
                     t0 = t0,
+                    data = cf$cf, # data duplication for consistency with `tsboot`
                     R = N,
                     l = boot.l)
 
-  icf.tsboot <- NULL
   if( has_icf(cf) ){
     cf$icf0 <- apply(cf$icf, 2, mean)
 
@@ -454,8 +525,11 @@ jackknife.cf <- function(cf, boot.l = 1) {
     }
     icf.tsboot <- list(t = t,
                        t0 = t0,
+                       data = cf$icf, # data duplication for consistency with `tsboot`
                        R = N,
                        l = boot.l)
+  } else {
+    icf.tsboot <- NULL
   }
 
   cf <- invalidate.samples.cf(cf)
@@ -463,7 +537,8 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 boot.R = cf.tsboot$R,
                 boot.l = cf.tsboot$l,
                 seed = 0,
-                sim = 'geom',
+                sim = 'fixed',
+                endcorr = FALSE,
                 cf.tsboot = cf.tsboot,
                 icf.tsboot = icf.tsboot,
                 resampling_method = 'jackknife')
@@ -475,38 +550,42 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #' @description
 #' Gamma method analysis on all time-slices in a 'cf' object
 #'
-#' @param cf Object of type `cf`
-#' @param absval Boolean. Use absolute values of the data.
+#' @param cf Object of type `cf` containing `cf_orig`
+#'
+#' @return A list with a named element `uwcf` which contains a data frame
+#'         with six columns, `value`, `dvalue`, `ddvalue`, `tauint`, `dtauint`
+#'         corresponding to what is returned by \link{uwerrprimary}. The sixth
+#'         column, `t`, is just an index counting the columns in the original `cf$cf`.
+#'         If `cf` contains an imaginary part, the return value contains another
+#'         list element, `uwicf` of the same structure as `uwcf`.
+#'         There are as many rows as there were columns in `cf$cf` and/or `cf$icf`.
+#'         When the call to \link{uwerrprimary} fails for a particular column of `cf$cf`
+#'         or `cf$icf`, the corresponding row of `uwcf` and/or `uwicf` will contain
+#'         `NA` for all members.
 #' 
-uwerr.cf <- function(cf, absval=FALSE){
+#' @examples
+#' uwerr.cf(samplecf)
+uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
-  uwcf <- as.data.frame(
-      t(
-          apply(X=cf$cf, MARGIN=2L,
-                FUN=function(x){
-                  data <- x
-                  if(absval) data <- abs(x)
-                  uw <- try(uwerrprimary(data=data), silent=TRUE)
-                  if(any( class(uw) == 'try-error' ) ){
-                    c(value=NA,
-                      dvalue=NA,
-                      ddvalue=NA,
-                      tauint=NA,
-                      dtauint=NA)
-                  } else {
-                    c(value=uw$value,
-                      dvalue=uw$dvalue,
-                      ddvalue=uw$ddvalue,
-                      tauint=uw$tauint,
-                      dtauint=uw$dtauint)
-                  }
-                }
-                )
-      )
-  )
-  uwcf <- cbind(t=(1:ncol(cf$cf))-1,uwcf)
-  return(uwcf)
+  uw_wrapper <- function(x){
+    uw_tmp <- try(uwerrprimary(data=x), silent=TRUE)
+    if( any(class(uw_tmp) == "try-error") ){
+      c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
+    } else {
+      c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
+        tauint=uw_tmp$tauint, dtauint=uw_tmp$dtauint)
+    }
+  }
+
+  res <- list()
+  res[["uwcf"]] <- cbind(as.data.frame(t(apply(X=cf$cf, MARGIN=2L, FUN=uw_wrapper))),
+                         t=(1:ncol(cf$cf)))
+  if( has_icf(cf) ){
+    res[["uwicf"]] <- cbind(as.data.frame(t(apply(X=cf$icf, MARGIN=2L, FUN=uw_wrapper))),
+                            t=(1:ncol(cf$icf)))
+  }
+  return(res)
 }
 
 addConfIndex2cf <- function(cf, conf.index) {
@@ -545,37 +624,6 @@ addStat.cf <- function(cf1, cf2) {
   return (invisible(cf))
 }
 
-#' @title Average local-smeared and smeared-local correlators
-#' @description
-#' averages local-smeared and smeared-local correlators in cf and adjusts
-#' nrStypes accordingly
-#' by default, assumes that LS and SL are in columns (T/2+1)+1:3*(T/2+1)
-#'
-#' @param cf object of type \link{cf}
-#' @param cols columns to be averaged over
-#' 
-avg.ls.cf <- function(cf, cols = c(2, 3)) {
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
-  stopifnot(cf$nrStypes >= 2)
-
-  timeslices <- cf$Time/2+1
-
-  ind.ls <- ( (cols[1]-1)*timeslices+1 ):( cols[1]*timeslices )
-  ind.sl <- ( (cols[2]-1)*timeslices+1 ):( cols[2]*timeslices )
-
-  cf$cf[,ind.ls] <- 0.5 * ( cf$cf[,ind.ls] + cf$cf[,ind.sl] )
-  cf$cf <- cf$cf[,-ind.sl]
-
-  if( has_icf(cf) ){
-    cf$icf[,ind.ls] <- 0.5 * ( cf$icf[,ind.ls] + cf$icf[,ind.sl] )
-    cf$icf <- cf$icf[,-ind.sl]
-  }
-
-  cf$nrStypes <- cf$nrStypes-1
-  return (cf)
-}
-
 #' @title average close-by-times in a correlation function
 #' @description
 #' "close-by-times" averaging replaces the value of the correlation function at t
@@ -598,7 +646,6 @@ avg.cbt.cf <- function(cf){
   for( p in c(-1,1) ){
     cf <- cf + mul.cf(shift.cf(cf2,p),0.25)
   }
-  cf <- invalidate.samples.cf(cf)
   return(invisible(cf))
 }
 
@@ -607,6 +654,9 @@ avg.cbt.cf <- function(cf){
 #' @param cf1,cf2 `cf_orig` object.
 #' @param a,b Numeric. Factors that multiply the correlation function before
 #' the addition.
+#' 
+#' Since addition is associative, this operates also on the bootstrap samples
+#' and these are thus not invalidated in the process.
 #'
 #' @return
 #' The value is
@@ -623,15 +673,52 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
   stopifnot(cf1$Time == cf2$Time)
 
+  if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
+    res_compat <- resampling_is_compatible(cf1, cf2)
+    if( !all(unlist(res_compat)) ){
+      print(res_compat)
+      stop("Samples were found to be incompatible in add.cf!\n")
+    }
+  }
+
   cf <- cf1
   cf$cf <- a*cf1$cf + b*cf2$cf
 
   if( has_icf(cf1) | has_icf(cf2) ){
     stopifnot( has_icf(cf1) & has_icf(cf2) )
+    stopifnot( all(dim(cf1$icf) == dim(cf2$icf) ) )
     cf$icf <- a*cf1$icf + b*cf2$icf
   }
 
-  cf <- invalidate.samples.cf(cf)
+  # now reconstruct the bootstrap samples
+  invalidate.samples.cf(cf)
+
+  if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
+    cf.tsboot <- cf1$cf.tsboot
+    cf.tsboot$t <- a*cf1$cf.tsboot$t + b*cf2$cf.tsboot$t
+    cf.tsboot$t0 <- a*cf1$cf.tsboot$t0 + b*cf2$cf.tsboot$t0
+    cf.tsboot$data <- a*cf1$cf.tsboot$data + b*cf2$cf.tsboot$data
+
+    if( has_icf(cf1) ){
+      # no further tests required as this was already tested for compatibility twice
+      icf.tsboot <- cf1$icf.tsboot
+      icf.tsboot$t <- a*cf1$icf.tsboot$t + b*cf2$icf.tsboot$t
+      icf.tsboot$t0 <- a*cf1$icf.tsboot$t0 + b*cf2$icf.tsboot$t0
+      icf.tsboot$data <- a*cf1$icf.tsboot$data + b*cf2$icf.tsboot$data
+    } else {
+      icf.tsboot <- NULL
+    }
+    # use constructor to also update cf0 / icf0 and tsboot.se / itsboot.se
+    cf <- cf_boot(cf,
+                  boot.R = cf1$boot.R,
+                  boot.l = cf1$boot.l,
+                  seed = cf1$seed,
+                  sim = cf1$sim,
+                  endcorr = cf1$endcorr,
+                  cf.tsboot = cf.tsboot,
+                  icf.tsboot = icf.tsboot,
+                  resampling_method = cf1$resampling_method)
+  }
   return(cf)
 }
 
@@ -653,7 +740,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-#' Divide real and imaginary parts of two cf objects by each other 
+#' Divide two cf objects by each other measurement by measurement
 #'
 #' Note that no complex arithmetic is used, real and imaginary parts are 
 #' treated as seperate and indepenent, such that the real part of one
@@ -702,8 +789,27 @@ mul.cf <- function(cf, a=1.) {
   if( has_icf(cf) ){
     cf$icf <- a*cf$icf
   }
+  if( inherits(cf, 'cf_boot') ){
+    cf$cf.tsboot$t <- a*cf$cf.tsboot$t
+    cf$cf.tsboot$t0 <- a*cf$cf.tsboot$t0
+    cf$cf.tsboot$data <- a*cf$cf.tsboot$data
 
-  cf <- invalidate.samples.cf(cf)
+    if( has_icf(cf) ){
+      cf$icf.tsboot$t <- a*cf$icf.tsboot$t
+      cf$icf.tsboot$t0 <- a*cf$icf.tsboot$t0
+      cf$icf.tsboot$data <- a*cf$icf.tsboot$data
+    }
+    # cf_boot will take care of cf0 / icf0 and tsboot.se / itsboot.se
+    cf <- cf_boot(cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
+  }
   return (cf)
 }
 
@@ -768,10 +874,6 @@ concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
 
-  if (inherits(left, 'cf_boot') || inherits(right, 'cf_boot')) {
-    warning('At least one argument of concat.cf has bootstrap/jacknife samples which cannot be concatenated. The samples will be discarded.')
-  }
-
   # In case that one of them does not contain data, the other one is the
   # result. This satisfies the neutral element axiom of a monoid.
   if (is_empty.cf(left)) {
@@ -793,6 +895,19 @@ concat.cf <- function (left, right) {
   stopifnot(left$symmetrised == right$symmetrised)
   stopifnot(left$nrStypes == right$nrStypes)
 
+  if( has_icf(left) | has_icf(right) ){
+    stopifnot( has_icf(left) & has_icf(right) )
+    stopifnot( nrow(left$icf) == nrow(right$icf) )
+  }
+  
+  if( inherits(left, 'cf_boot') | inherits(right, 'cf_boot') ){
+    res_compat <- resampling_is_concatenable(left, right)
+    if( !all(unlist(res_compat)) ){
+      print(res_compat)
+      stop("Samples were found to be inconcatenable in concat.cf!\n")
+    }
+  }
+
   rval <- cf_meta(nrObs = left$nrObs + right$nrObs,
                   Time = left$Time,
                   nrStypes = left$nrStypes,
@@ -800,6 +915,35 @@ concat.cf <- function (left, right) {
   rval <- cf_orig(.cf = rval,
                   cf = cbind(left$cf, right$cf),
                   icf = cbind(left$icf, right$icf))
+  
+  # finally deal with the resampling samples
+  if( inherits(left, 'cf_boot') | inherits(right, 'cf_boot') ){
+
+    cf.tsboot <- left$cf.tsboot
+    cf.tsboot$t <- cbind(left$cf.tsboot$t, right$cf.tsboot$t)
+    cf.tsboot$t0 <- c(left$cf.tsboot$t0, right$cf.tsboot$t0)
+    cf.tsboot$data <- cbind(left$cf.tsboot$data, right$cf.tsboot$data)
+
+    # no need to test both as this has been done already
+    if( has_icf(left) ){
+      icf.tsboot <- left$icf.tsboot
+      icf.tsboot$t <- cbind(left$icf.tsboot$t, right$icf.tsboot$t)
+      icf.tsboot$t0 <- c(left$icf.tsboot$t0, right$icf.tsboot$t0)
+      icf.tsboot$data <- cbind(left$icf.tsboot$data, right$icf.tsboot$data)
+    } else {
+      icf.tsboot <- NULL
+    }
+    rval <- cf_boot(.cf = rval,
+                    boot.R = left$boot.R,
+                    boot.l = left$boot.l,
+                    seed = left$seed,
+                    sim = left$sim,
+                    endcorr = left$endcorr,
+                    cf.tsboot = cf.tsboot,
+                    icf.tsboot = icf.tsboot,
+                    resampling_method = left$resampling_method)
+  }
+
   return (invisible(rval))
 }
 
@@ -854,7 +998,6 @@ shift.cf <- function(cf, places) {
     return(invisible(cf))
   }
 
-  cf <- invalidate.samples.cf(cf)
   n <- cf$Time
 
   for( oidx in 0:(cf$nrObs-1) ){
@@ -869,11 +1012,39 @@ shift.cf <- function(cf, places) {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
       }
+
+      # drop=FALSE to catch edge case of a single measurement
       cf$cf[,istart:iend] <- cf$cf[,ishift, drop=FALSE]
       if( has_icf(cf) ){
         cf$icf[,istart:iend] <- cf$icf[,ishift, drop=FALSE]
       }
-    }
+
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,istart:iend] <- cf$cf.tsboot$t[,ishift,drop=FALSE]
+        cf$cf.tsboot$t0[istart:iend] <- cf$cf.tsboot$t0[ishift]
+        cf$cf.tsboot$data[,istart:iend] <- cf$cf.tsboot$data[,ishift,drop=FALSE]
+
+        if( has_icf(cf) ){
+          cf$icf.tsboot$t[,istart:iend] <- cf$icf.tsboot$t[,ishift,drop=FALSE]
+          cf$icf.tsboot$t0[istart:iend] <- cf$icf.tsboot$t0[ishift]
+          cf$icf.tsboot$data[,istart:iend] <- cf$icf.tsboot$data[,ishift,drop=FALSE]
+        }
+      }
+    } # for(sidx)
+  } # for(oidx)
+
+  if( inherits(cf, 'cf_boot') ){
+    # trigger cf0 / icf0, tsboot.se / itsboot.se to
+    # be refreshed
+    cf <- cf_boot(cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
   }
   return(invisible(cf))
 }
@@ -892,6 +1063,8 @@ invalidate.samples.cf <- function (cf) {
   cf$boot.samples <- NULL
   cf$seed <- NULL
   cf$sim <- NULL
+  cf$endcorr <- NULL
+  cf$resampling_method <- NULL
 
   cf$cf.tsboot <- NULL
   cf$tsboot.se <- NULL
@@ -940,12 +1113,31 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
       istart <- oidx*cf$nrStypes*cf$Time + cf$Time*sidx + 1
       ihalf <- istart + Thalf
       iend <- istart + cf$Time - 1
+      ifwd <- (istart+1):(ihalf-1)
+      ibwd <- rev((ihalf+1):iend)
+      
       isub <- c(isub,(ihalf+1):iend)
-      cf$cf[, (istart+1):(ihalf-1)] <- 0.5*( cf$cf[, (istart+1):(ihalf-1)] +
-                                             sym.vec[oidx+1]*cf$cf[, rev((ihalf+1):iend)] )
+      
+      cf$cf[,ifwd] <- 0.5*( cf$cf[,ifwd] + sym.vec[oidx+1]*cf$cf[,ibwd] )
       if( has_icf(cf) ){
-        cf$icf[, (istart+1):(ihalf-1)] <- 0.5*( cf$icf[, (istart+1):(ihalf-1)] +
-                                                sym.vec[oidx+1]*cf$icf[, rev((ihalf+1):iend)] )
+        cf$icf[,ifwd] <- 0.5*( cf$icf[,ifwd] + sym.vec[oidx+1]*cf$icf[,ibwd] )
+      }
+
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,ifwd] <- 0.5*( cf$cf.tsboot$t[,ifwd] + 
+                                       sym.vec[oidx+1]*cf$cf.tsboot$t[,ibwd] )
+        cf$cf.tsboot$t0[ifwd] <- 0.5*( cf$cf.tsboot$t0[ifwd] + 
+                                       sym.vec[oidx+1]*cf$cf.tsboot$t0[ibwd] )
+        cf$cf.tsboot$data[,ifwd] <- 0.5*( cf$cf.tsboot$data[,ifwd] + 
+                                          sym.vec[oidx+1]*cf$cf.tsboot$data[,ibwd] )
+        if(has_icf(cf)){
+          cf$icf.tsboot$t[,ifwd] <- 0.5*( cf$icf.tsboot$t[,ifwd] + 
+                                          sym.vec[oidx+1]*cf$icf.tsboot$t[,ibwd] )
+          cf$icf.tsboot$t0[ifwd] <- 0.5*( cf$icf.tsboot$t0[ifwd] +
+                                          sym.vec[oidx+1]*cf$icf.tsboot$t0[ibwd] )
+          cf$icf.tsboot$data[,ifwd] <- 0.5*( cf$icf.tsboot$data[,ifwd] + 
+                                             sym.vec[oidx+1]*cf$icf.tsboot$data[,ibwd] )
+        }
       }
     }
   }
@@ -954,6 +1146,28 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   if( has_icf(cf) ){
     cf$icf <- cf$icf[, -isub]
   }
+  
+  if( inherits(cf, 'cf_boot') ){
+    cf$cf.tsboot$t <- cf$cf.tsboot$t[,-isub]
+    cf$cf.tsboot$t0 <- cf$cf.tsboot$t0[-isub]
+    cf$cf.tsboot$data <- cf$cf.tsboot$data[,-isub]
+    if( has_icf(cf) ){
+      cf$icf.tsboot$t <- cf$icf.tsboot$t[,-isub]
+      cf$icf.tsboot$t0 <- cf$icf.tsboot$t0[-isub]
+      cf$icf.tsboot$data <- cf$icf.tsboot$data[,-isub]
+    }
+    # update central value and error
+    cf <- cf_boot(.cf = cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
+  }
+
   cf$symmetrised <- TRUE
   return(invisible(cf))
 }
@@ -987,16 +1201,6 @@ summary.cf <- function(object, ...) {
 
     if( has_icf(cf) ){
       out <- cbind(out, iC=cf$icf0, itsboot.se = cf$itsboot.se)
-    }
-  }
-
-  if (inherits(cf, 'cf_jackknife')) {
-    out <- cbind(out, jackknife.se=cf$jackknife.se)
-    out <- cbind(out, jab.se=cf$jack.boot.se)
-
-    if( has_icf(cf) ){
-      out <- cbind(out, ijackknife.se = cf$ijackknife.se)
-      out <- cbind(out, ijab.se = cf$ijack.boot.se)
     }
   }
 
