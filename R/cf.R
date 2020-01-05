@@ -564,15 +564,13 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #'         `NA` for all members.
 #' 
 #' @examples
-#' x <- uwerr.cf(samplecf)
-#' summary(x)
-#' plot(x)
+#' uwerr.cf(samplecf)
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
   uw_wrapper <- function(x){
     uw_tmp <- try(uwerrprimary(data=x), silent=TRUE)
-    if( any(class(uw_temp) == "try-error") ){
+    if( any(class(uw_tmp) == "try-error") ){
       c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
     } else {
       c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
