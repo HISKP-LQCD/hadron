@@ -563,6 +563,10 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #'         or `cf$icf`, the corresponding row of `uwcf` and/or `uwicf` will contain
 #'         `NA` for all members.
 #' 
+#' @example
+#' x <- uwerr.cf(samplecf)
+#' summary(x)
+#' plot(x)
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
