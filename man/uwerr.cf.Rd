@@ -25,7 +25,5 @@ or \code{cf$icf}, the corresponding row of \code{uwcf} and/or \code{uwicf} will 
 Gamma method analysis on all time-slices in a 'cf' object
 }
 \examples{
-x <- uwerr.cf(samplecf)
-summary(x)
-plot(x)
+uwerr.cf(samplecf)
 }

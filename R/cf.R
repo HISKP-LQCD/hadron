@@ -564,9 +564,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #'         `NA` for all members.
 #' 
 #' @examples
-#' x <- uwerr.cf(samplecf)
-#' summary(x)
-#' plot(x)
+#' uwerr.cf(samplecf)
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
