@@ -7,7 +7,7 @@
 hankel2effectivemass(hankel, id = c(1), type = "log")
 }
 \arguments{
-\item{hankel}{object of type \link{hankel}}
+\item{hankel}{object as returned from \link{bootstrap.hankel}}
 
 \item{id}{Integer. ID of the principal correlator to extract}
 
@@ -17,6 +17,9 @@ hankel2effectivemass(hankel, id = c(1), type = "log")
 hankel2effectivemass
 }
 \seealso{
+input is generated via \link{bootstrap.hankel}
+alternatively use \link{hankel2effectivemass}.
+
 Other hankel: 
 \code{\link{bootstrap.hankel}()},
 \code{\link{gevp.hankel}()},

@@ -16,7 +16,7 @@ gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
 
 \item{deltat}{Integer. Time shift to be used to build the Hankel matrix}
 
-\item{n}{Integer. Size of the submatrix Hankel matrices to generate}
+\item{n}{Integer. Size of the Hankel matrices to generate}
 
 \item{N}{Integer. Maximal time index in correlation function to be used in
 Hankel matrix}
@@ -35,7 +35,7 @@ matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
 
-\item{id}{Integer. Vector of indices of eigenvalues to consider.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.}
 
 \item{debug}{Boolean. Enable debug output.}
 }

@@ -13,12 +13,12 @@ bootstrap.hankel(cf, t0, n = 2, N = cf$Time/2 + 1, id = c(1),
 \item{t0}{initial time value of the GEVP, must be in between 0 and
 \code{Time/2-2}. Default is 1.}
 
-\item{n}{Integer. Size of the submatrix Hankel matrices to generate}
+\item{n}{Integer. Size of the Hankel matrices to generate}
 
 \item{N}{Integer. Maximal time index in correlation function to be used in
 Hankel matrix}
 
-\item{id}{Integer. Vector of indices of eigenvalues to consider.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.}
 
 \item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 

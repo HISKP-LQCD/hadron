@@ -7,7 +7,7 @@
 hankel2cf(hankel, id = 1)
 }
 \arguments{
-\item{hankel}{object of type \link{hankel}}
+\item{hankel}{object as returned from \link{bootstrap.hankel}}
 
 \item{id}{Integer. ID of the principal correlator to extract}
 }
@@ -15,6 +15,9 @@ hankel2cf(hankel, id = 1)
 hankel2cf
 }
 \seealso{
+input is generated via \link{bootstrap.hankel}
+alternatively use \link{hankel2effectivemass}.
+
 Other hankel: 
 \code{\link{bootstrap.hankel}()},
 \code{\link{gevp.hankel}()},

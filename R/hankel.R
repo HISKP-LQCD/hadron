@@ -95,13 +95,13 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param cf object of type \link{cf}
 #' @param t0     initial time value of the GEVP, must be in between 0 and
 #'    \code{Time/2-2}. Default is 1.
-#' @param n Integer. Size of the submatrix Hankel matrices to generate
+#' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
 #' @param eps Numeric. Cut-off: if the imaginary part of the generalised
 #' eigenvalues is larger than eps, the eigenvalue is discarded.
 #' @param range Numeric vector. Value-range of eigenvalues to be considered
-#' @param id Integer. Vector of indices of eigenvalues to consider.
+#' @param id Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.
 #'
 #' @examples
 #'
@@ -151,10 +151,14 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
 
 #' @title hankel2cf
 #'
-#' @param hankel object of type \link{hankel}
+#' @param hankel object as returned from \link{bootstrap.hankel}
 #' @param id Integer. ID of the principal correlator to extract
 #' 
 #' @family hankel
+#' @seealso input is generated via \link{bootstrap.hankel}
+#' alternatively use \link{hankel2effectivemass}.
+#'
+#' @export
 hankel2cf <- function(hankel, id=1) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
@@ -186,11 +190,15 @@ hankel2cf <- function(hankel, id=1) {
 
 #' @title hankel2effectivemass
 #'
-#' @param hankel object of type \link{hankel}
+#' @param hankel object as returned from \link{bootstrap.hankel}
 #' @param id Integer. ID of the principal correlator to extract
 #' @param type Character vector. Type of effective mass to use.
 #' 
 #' @family hankel
+#' @seealso input is generated via \link{bootstrap.hankel}
+#' alternatively use \link{hankel2effectivemass}.
+#'
+#' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
