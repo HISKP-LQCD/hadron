@@ -5,8 +5,7 @@
 \title{GEVP method based on Hankel matrices.}
 \usage{
 gevp.hankel(cf, t0 = 1, deltat = 1, n, N, eps = 1e-04, range = c(0, 1),
-  submatrix.size = 1, element.order = c(1, 2, 3, 4), id = c(1),
-  debug = FALSE)
+  submatrix.size = 1, element.order = c(1, 2, 3, 4), debug = FALSE)
 }
 \arguments{
 \item{cf}{object of type \link{cf}}
@@ -34,10 +33,6 @@ correlators into the correlator
 matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
-
-\item{id}{Integer. Vector of indices of eigenvalues to consider,
-\eqn{1\leq id\leq n}{1 <= id <= n}. \code{id} can also be set to "all" in which
-case all eigenvalues will be returned.}
 
 \item{debug}{Boolean. Enable debug output.}
 }

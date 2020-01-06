@@ -31,10 +31,15 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' @description
 #' Alternative method to determine energy levels from correlation
 #'   matrices. A so-called Hankel matrix is generated from an input
-#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   real numeric vector and a generalised eigenvalue problem is solved
 #'   then.
 #'
-#' @inheritParams bootstrap.hankel
+#' @param cf Numeric vector.
+#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
+#'    \code{Time/2-2}. Default is 1.
+#' @param n Integer. Size of the Hankel matrices to generate
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
 #' @param debug Boolean. Enable debug output.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
 #' @param submatrix.size Integer. Submatrix size to be used in build
@@ -47,18 +52,17 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'
 #'
 #' @return
-#' A complex vector of \code{length(id)} with the eigenvalues
+#' A complex vector of \code{n} with the eigenvalues
 #' corresponding to \code{id} is returned.
-#' A vector of NAs of \code{length(id)} is returend in case the QR decomposition fails.
+#' A vector of NAs of \code{n} is returend in case the QR decomposition fails.
 #' 
 #' @family hankel
-gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
-                        submatrix.size=1, element.order=c(1,2,3,4), id=c(1),
+gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
+                        submatrix.size=1, element.order=c(1,2,3,4),
                         debug=FALSE) {
   if(t0+2*n+deltat > N) {
     stop("t0+n+deltat > N\n")
   }
-  if(id == "all") id <- c(1:n)
   t0 <- t0+1
   cM1 <- array(NA, dim=c(submatrix.size*n, submatrix.size*n))
   cM2 <- cM1
@@ -75,16 +79,14 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 
   M <- try(qr.coef(qr.cM1, cM2), TRUE)
   if(inherits(M, "try-error")) {
-    return(rep(NA, times=length(id)))
+    return(rep(NA, times=n))
   }
 
   M.eigen <- try(eigen(M, symmetric=FALSE, only.values=TRUE), TRUE)
   if(inherits(M.eigen, "try-error")) {
-    return(rep(NA, times=length(id)))
+    return(rep(NA, times=n))
   }
-  ii <- which(abs(Im(M.eigen$values)) < eps & Re(M.eigen$values) > range[1]
-              & Re(M.eigen$values) < range[2])
-  return(invisible(Re(M.eigen$values[ii[id]])))
+  return(invisible(M.eigen$values))
 }
 
 #' @title GEVP method based on Hankel matrices. 
@@ -102,13 +104,14 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
-#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
-#' eigenvalues is larger than eps, the eigenvalue is discarded.
-#' @param range Numeric vector. Value-range of eigenvalues to be considered
-#' @param id Integer. Vector of indices of eigenvalues to consider,
-#' \eqn{1\leq id\leq n}{1 <= id <= n}. \code{id} can also be set to "all" in which
-#' case all eigenvalues will be returned.
 #'
+#' @details
+#' See `vignette(name="hankel", package="hadron")`
+#'
+#' @return
+#' List object of class "hankel". The eigenvalues are stored in a
+#' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
+#' time \code{t0} is stored as \code{reference_time} in the returned list.
 #' @examples
 #'
 #' data(correlatormatrix)
@@ -128,24 +131,26 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
   stopifnot(inherits(cf, 'cf_boot'))
 
   boot.R <- cf$boot.R
-  evs <- array(NA, dim=c(N, length(id)))
-  evs.tsboot <- array(NA, dim=c(boot.R, N, length(id)))
+  evs <- array(NA, dim=c(N, n))
+  evs.tsboot <- array(NA, dim=c(boot.R, N, n))
+
   
   for(deltat in c(1:(N-2-t0-2*n))) {
-    evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0, n=n, N=N, id=id, range=range, eps=eps, debug=FALSE, deltat=deltat,
-                       submatrix.size=1, element.order=c(1))
-    
+    evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0, n=n, N=N, 
+                                    debug=FALSE, deltat=deltat,
+                                    submatrix.size=1, element.order=c(1))
+
     evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
-                                         n=n, N=N, id=id, range=range, eps=eps, deltat=deltat,
+                                         n=n, N=N, debug=FALSE, deltat=deltat,
                                          submatrix.size=1, element.order=1))
   }
   ret <- list(cf=cf,
-              res.hankel=evs,
-              hankel.tsboot=evs.tsboot,
+              t0=evs,
+              t=evs.tsboot,
               boot.R=boot.R,
               boot.l=cf$boot.l,
               seed=cf$seed,
-              t0=t0,
+              reference_time=t0,
               n=n,
               N=N,
               eps=eps,
@@ -154,21 +159,84 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
   return(invisible(ret))
 }
 
+#' @title plot_hankel_spectrum
+#'
+#' @description
+#' produces a scatter plot of the complex \eqn{-\log}{-log}
+#' of the eigenvalues produced by the
+#' \link{bootstrap.hankel} method. In addition, produces a
+#' histogramm of all real and positive eigenvalues after computing
+#' \eqn{-\log(ev)/\delta t}{-log(ev)/delta t} in the range
+#' (0,1) and determines its mode.
+#' 
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param deltat Integer. Time shift at which to plot 
+#' @param id Integer vector. Indices of eigenvalues to be plotted.
+#' Must be part of \code{c(1:hankel$n)}.
+#' 
+#' @family hankel
+#'
+#' @export
+plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
+  n <- hankel$n
+  stopifnot(max(id) <= n & min(id) >= 1)
+  col <- c("black", rainbow(n=n-1))
+  xlim <- range(c(Re(-log(hankel$t)/deltat), Re(-log(hankel$t0)/deltat)), na.rm=TRUE)
+  ylim <- range(c((Im(-log(hankel$t)) %% pi)/deltat,
+                  (Im(-log(hankel$t0)) %% pi)/deltat),
+                na.rm=TRUE)
+  if(max(abs(ylim)) < 0.001) ylim=c(-0.01, 0.01)
+  plot(NA, xlim=xlim, ylim=ylim,
+       xlab="Re", ylab="Im")
+
+  tt <- hankel$reference_time+deltat
+  for(i in id) {
+    points(x=Re(-log(hankel$t[, tt, i])/deltat),
+           y=(Im(-log(hankel$t[, tt, i])) %% pi)/deltat,
+           col=col[i], bg="white")
+    points(x=Re(-log(hankel$t0[tt, i])/deltat),
+           y=(Im(-log(hankel$t0[tt, i])) %% pi)/deltat,
+           col=col[i], bg=col[i])
+  }
+  tmp <- hankel$t
+  tmp[Im(tmp) != 0] <- NA
+  tmp[Re(tmp) < 0] <- NA
+  tmp[Re(tmp) > 1] <- NA
+  tmp <- Re(-log(tmp[, tt, ])/deltat)
+  tmp[tmp > 1]  <- NA
+  hadron:::new_window_if_appropriate()
+  hist(tmp, xlim=c(0, 1), main="Histogram of Samples",
+       xlab="E", breaks=seq(0, 1, 0.02))
+  mode<-density(tmp, na.rm=TRUE)$x[which.max(density(tmp, na.rm=TRUE)$y)]
+  hadron:::new_window_if_appropriate()
+  plot(density(tmp, na.rm=TRUE))
+  cat("Mode of this density:", mode, "deltat:", deltat, "\n")
+}
 
 #' @title hankel2cf
 #'
 #' @param hankel object as returned from \link{bootstrap.hankel}
 #' @param id Integer. ID of the principal correlator to extract
+#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
+#' eigenvalues is larger than eps, the eigenvalue is discarded.
+#' @param range Numeric vector. Value-range for the real part of the eigenvalues.
+#' If outside this range, the eigenvalue will be discarded
+#' @param id Integer. Index of eigenvalue to consider,
+#' \eqn{1\leq id\leq n}{1 <= id <= n}.
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
 #' alternatively use \link{hankel2effectivemass}.
 #'
 #' @export
-hankel2cf <- function(hankel, id=1) {
+hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
+  stopifnot(length(id) == 1)
+  N <- hankel$N
+  n <- hankel$n
   
+  reftime <- hankel$reference_time
   ## Base `cf` properties.
   mycf <- cf_meta(nrObs = 1,
                   Time = hankel$cf$Time,
@@ -176,9 +244,25 @@ hankel2cf <- function(hankel, id=1) {
                   symmetrised = hankel$cf$symmetrised)
 
   ## Add the `cf_boot` mixin.
-  cf.tsboot <- list(t = hankel$hankel.tsboot[, , id],
-                    t0 = hankel$res.hankel[,id])
-  
+  cf.tsboot <- list(
+      t0 = array(NA, dim=c(N)),
+      t = array(NA, dim=c(hankel$boot.R, N))
+  )
+
+  .fn <- function(evs, range, eps, id) {
+    ii <- which(abs(Im(evs)) < eps & Re(evs) > range[1]
+                & Re(evs) < range[2])
+    return(evs[ii[id]])
+  }
+
+  for(deltat in c(1:(N-2-reftime-2*n))) {
+    cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, ],
+                                        range=range, eps=eps, id=id)
+    cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, ],
+                                           MARGIN=1, FUN=.fn,
+                                           range=range, eps=eps, id=id)
+  }
+
   mycf <- cf_boot(.cf = mycf,
                   boot.R = hankel$boot.R,
                   boot.l = hankel$boot.l,
@@ -190,23 +274,24 @@ hankel2cf <- function(hankel, id=1) {
   
   mycf <- cf_principal_correlator(.cf = mycf,
                                   id = id,
-                                  gevp_reference_time = hankel$t0)
+                                  gevp_reference_time = hankel$reference_time)
   
   return(invisible(mycf))
 }
 
 #' @title hankel2effectivemass
 #'
-#' @param hankel object as returned from \link{bootstrap.hankel}
-#' @param id Integer. ID of the principal correlator to extract
+#' @inheritParams hankel2cf
 #' @param type Character vector. Type of effective mass to use.
+#' Must be in \code{c("log", "acosh")}
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
 #' alternatively use \link{hankel2effectivemass}.
 #'
 #' @export
-hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
+hankel2effectivemass  <- function(hankel, id=c(1), type="log",
+                                  range=c(0,1), eps=0.001) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
@@ -217,16 +302,16 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
     tmax <- hankel$cf$Time-1
   }
 
-  nrObs <- 1
+  pc <- hankel2cf(hankel=hankel, id=id, range=range, eps=eps)
 
-  deltat <- c(1:(tmax+1))-hankel$t0
+  deltat <- c(1:(tmax+1))-hankel$reference_time
   if(type == "log") {
-    effMass <- -log(hankel$res.hankel[,id])/deltat
-    effMass.tsboot <- -log(hankel$hankel.tsboot[,, id])/t(array(deltat, dim=rev(dim(hankel$hankel.tsboot[,, id]))))
+    effMass <- -log(pc$cf.tsboot$t0)/deltat
+    effMass.tsboot <- -log(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
   }
   if(type == "acosh") {
-    effMass <- -acosh(hankel$res.hankel[,id])/deltat
-    effMass.tsboot <- -acosh(hankel$hankel.tsboot[,, id])/t(array(deltat, dim=rev(dim(hankel$hankel.tsboot[,, id]))))
+    effMass <- -acosh(pc$cf.tsboot$t0)/deltat
+    effMass.tsboot <- -acosh(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
   }
   deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
 
@@ -234,13 +319,76 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed,
-              massfit.tsboot=NULL, Time=hankel$cf$Time, N=1, nrObs=nrObs, dof=NULL,
+              massfit.tsboot=NULL, Time=hankel$cf$Time, N=1, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
   ret$cf <- hankel$cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
   ret$se <- apply(ret$t, MARGIN=2L, FUN=hankel$cf$error_fn, na.rm=TRUE)
+  attr(ret, "class") <- c("effectivemass", class(ret))
+  return(ret)
+}
+
+#' hankeldensity2effectivemass
+#'
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param range Numeric vector. Value-range for the real part of the eigenvalues.
+#' If outside this range, the eigenvalue will be discarded
+#' @param method Character vector. Method to be used to determine the central value
+#' of the effective mass
+#' @description
+#' 
+#' @export
+hankeldensity2effectivemass <- function(hankel, range=c(0,1),
+                                        method="median") {
+
+  stopifnot(inherits(hankel, "hankel"))
+  stopifnot(method %in% c("median", "density"))
+  
+  N <- hankel$N
+  n <- hankel$n
+  reftime <- hankel$reference_time
+  
+  
+  tmax <- hankel$cf$Time/2
+  if(!hankel$cf$symmetrised){
+    tmax <- hankel$cf$Time-1
+  }
+
+  effMass <- rep(NA, times=N)
+  effMass.tsboot <- array(NA, dim=c(hankel$boot.R, N))
+  se <- rep(NA, times=N)
+  for(deltat in c(1:(N-2-reftime-2*n))) {
+    tmp <- as.vector(hankel$t[, deltat+reftime,])
+  
+    ii <- which(Im(tmp) == 0 &
+                Re(tmp) > 0 &
+                Re(tmp) < 1)
+    tmp <- -log(Re(tmp[ii]))/deltat
+    ii <- which(tmp <= range[2] & tmp >= range[1])
+    tmp <- tmp[ii]
+    
+    if(method=="median") {
+      effMass[reftime+deltat] <- median(tmp)
+    }
+    else {
+      hdens <- density(tmp, na.rm=TRUE, from=range[1], to=range[2])  
+      effMass[reftime+deltat] <- hdens$x[which.max(hdens$y)]
+    }
+    se[reftime+deltat] <- hankel$cf$error_fn(tmp)
+  }
+  ret <- list(t.idx=c(1:(tmax)),
+              effMass=effMass, deffMass=se, effMass.tsboot=effMass.tsboot,
+              opt.res=NULL, t1=NULL, t2=NULL, type="log", useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
+              boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed,
+              massfit.tsboot=NULL, Time=hankel$cf$Time, N=1, nrObs=1, dof=NULL,
+              chisqr=NULL, Qval=NULL
+             )
+  ret$cf <- hankel$cf
+  ret$t0 <- effMass
+  ret$t <- effMass.tsboot
+  ret$se <- se
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }

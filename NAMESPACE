@@ -49,7 +49,7 @@ importFrom("graphics", "abline", "arrows", "axis", "barplot",
 importFrom("stats", "acf", "approx", "complete.cases", "cov", "deltat",
            "na.omit", "optim", "pchisq", "pgamma", "qchisq", "qqplot",
            "quantile", "rchisq", "rnorm", "sd", "spec.pgram", "spline",
-           "uniroot", "var", "weighted.mean", "cor", "rgeom")
+           "uniroot", "var", "weighted.mean", "cor", "rgeom", "density")
 importFrom("utils", "count.fields", "read.table", "setTxtProgressBar",
            "txtProgressBar")
 importFrom("grDevices", "dev.new")
