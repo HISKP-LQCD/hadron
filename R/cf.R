@@ -691,8 +691,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   }
 
   # now reconstruct the bootstrap samples
-  invalidate.samples.cf(cf)
-
+  cf <- invalidate.samples.cf(cf)
   if( inherits(cf1, 'cf_boot') | inherits(cf2, 'cf_boot') ){
     cf.tsboot <- cf1$cf.tsboot
     cf.tsboot$t <- a*cf1$cf.tsboot$t + b*cf2$cf.tsboot$t
