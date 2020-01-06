@@ -24,3 +24,6 @@ or \code{cf$icf}, the corresponding row of \code{uwcf} and/or \code{uwicf} will 
 \description{
 Gamma method analysis on all time-slices in a 'cf' object
 }
+\examples{
+uwerr.cf(samplecf)
+}

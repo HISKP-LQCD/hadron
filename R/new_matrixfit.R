@@ -395,6 +395,7 @@ new_matrixfit <- function(cf,
   
   stopifnot(cf$symmetrised == TRUE)
   stopifnot(length(higher_states$val) == ncol(higher_states$boot))
+  stopifnot(length(higher_states$val) == length(higher_states$ampl))
   stopifnot(nrow(higher_states$boot) %in% c(0, cf$boot.R))
   
   t1p1 <- t1 + 1

@@ -3,10 +3,10 @@ title: "Hankel method for energy level extraction"
 author: "Carsten Urbach"
 output:
   pdf_document:
-    citation_package: biblatex
+    #citation_package: biblatex
 
-bibliography: hankel.bib
-link_citation: yes
+#bibliography: hankel.bib
+#link_citation: yes
 vignette: >
   %\VignetteIndexEntry{Hankel method for energy level extraction}
   %\VignetteEngine{knitr::rmarkdown}

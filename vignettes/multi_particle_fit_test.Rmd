@@ -147,6 +147,7 @@ fit_n_particle <- new_matrixfit(
   fit.method = 'lm',
   useCov = TRUE,
   higher_states = list(val = c(e1_val),
+                       ampl = c(1),
                        boot = matrix(rnorm(boot_R, e1_val, e1_err / sqrt(n_meas)), ncol = 1)))
 
 plot(fit_n_particle,
