@@ -35,9 +35,16 @@ matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 \code{matrix(cf[element.order], nrow=2)}.
 Double indexing is allowed.}
 
-\item{id}{Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider,
+\eqn{1\leq id\leq n}{1 <= id <= n}. \code{id} can also be set to "all" in which
+case all eigenvalues will be returned.}
 
 \item{debug}{Boolean. Enable debug output.}
+}
+\value{
+A complex vector of \code{length(id)} with the eigenvalues
+corresponding to \code{id} is returned.
+A vector of NAs of \code{length(id)} is returend in case the QR decomposition fails.
 }
 \description{
 Alternative method to determine energy levels from correlation

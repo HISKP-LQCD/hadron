@@ -15,6 +15,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 
   qr.cM1 <- qr(cM1)
   M <- qr.coef(qr.cM1, cM2)
+  ## M = cM1^-1 * cM2
 
   M.eigen <- eigen(M, symmetric=FALSE, only.values=TRUE)
 
@@ -43,6 +44,12 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 #'    \code{matrix(cf[element.order], nrow=2)}.
 #'    Double indexing is allowed.
+#'
+#'
+#' @return
+#' A complex vector of \code{length(id)} with the eigenvalues
+#' corresponding to \code{id} is returned.
+#' A vector of NAs of \code{length(id)} is returend in case the QR decomposition fails.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
@@ -51,6 +58,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   if(t0+2*n+deltat > N) {
     stop("t0+n+deltat > N\n")
   }
+  if(id == "all") id <- c(1:n)
   t0 <- t0+1
   cM1 <- array(NA, dim=c(submatrix.size*n, submatrix.size*n))
   cM2 <- cM1
@@ -65,21 +73,17 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   }
   qr.cM1 <- qr(cM1)
 
-  ## M = cM1^-1 * cM2
   M <- try(qr.coef(qr.cM1, cM2), TRUE)
   if(inherits(M, "try-error")) {
-    return(c(NA))
+    return(rep(NA, times=length(id)))
   }
-  M[abs(M) < 1.e-12] <- 0
+
   M.eigen <- try(eigen(M, symmetric=FALSE, only.values=TRUE), TRUE)
   if(inherits(M.eigen, "try-error")) {
-    return(NA)
+    return(rep(NA, times=length(id)))
   }
   ii <- which(abs(Im(M.eigen$values)) < eps & Re(M.eigen$values) > range[1]
               & Re(M.eigen$values) < range[2])
-  if(id == "all") {
-    return(invisible(Re(M.eigen$values[ii])))
-  }
   return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
@@ -101,7 +105,9 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param eps Numeric. Cut-off: if the imaginary part of the generalised
 #' eigenvalues is larger than eps, the eigenvalue is discarded.
 #' @param range Numeric vector. Value-range of eigenvalues to be considered
-#' @param id Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.
+#' @param id Integer. Vector of indices of eigenvalues to consider,
+#' \eqn{1\leq id\leq n}{1 <= id <= n}. \code{id} can also be set to "all" in which
+#' case all eigenvalues will be returned.
 #'
 #' @examples
 #'
@@ -164,29 +170,29 @@ hankel2cf <- function(hankel, id=1) {
   stopifnot((id <= hankel$n && id >= 1))
   
   ## Base `cf` properties.
-  cf <- cf_meta(nrObs = 1,
-                Time = hankel$cf$Time,
-                nrStypes = 1,
-                symmetrised = hankel$cf$symmetrised)
+  mycf <- cf_meta(nrObs = 1,
+                  Time = hankel$cf$Time,
+                  nrStypes = 1,
+                  symmetrised = hankel$cf$symmetrised)
 
   ## Add the `cf_boot` mixin.
   cf.tsboot <- list(t = hankel$hankel.tsboot[, , id],
                     t0 = hankel$res.hankel[,id])
   
-  cf <- cf_boot(cf,
-                boot.R = hankel$boot.R,
-                boot.l = hankel$boot.l,
-                seed = hankel$seed,
-                sim = hankel$cf$sim,
-                endcorr = TRUE,
-                cf.tsboot = cf.tsboot,
-                resampling_method = hankel$cf$resampling_method)
+  mycf <- cf_boot(.cf = mycf,
+                  boot.R = hankel$boot.R,
+                  boot.l = hankel$boot.l,
+                  seed = hankel$seed,
+                  sim = hankel$cf$sim,
+                  endcorr = hankel$cf$endcorr,
+                  cf.tsboot = cf.tsboot,
+                  resampling_method = hankel$cf$resampling_method)
   
-  cf <- cf_principal_correlator(cf,
-                                id = id,
-                                gevp_reference_time = hankel$t0)
+  mycf <- cf_principal_correlator(.cf = mycf,
+                                  id = id,
+                                  gevp_reference_time = hankel$t0)
   
-  return(invisible(cf))
+  return(invisible(mycf))
 }
 
 #' @title hankel2effectivemass
@@ -231,7 +237,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
               massfit.tsboot=NULL, Time=hankel$cf$Time, N=1, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
-  ret$cf <- cf
+  ret$cf <- hankel$cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
   ret$se <- apply(ret$t, MARGIN=2L, FUN=hankel$cf$error_fn, na.rm=TRUE)

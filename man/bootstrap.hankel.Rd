@@ -18,7 +18,9 @@ bootstrap.hankel(cf, t0, n = 2, N = cf$Time/2 + 1, id = c(1),
 \item{N}{Integer. Maximal time index in correlation function to be used in
 Hankel matrix}
 
-\item{id}{Integer. Vector of indices of eigenvalues to consider, \eqn{1\leq id\leq n}{1 <= id <= n}.}
+\item{id}{Integer. Vector of indices of eigenvalues to consider,
+\eqn{1\leq id\leq n}{1 <= id <= n}. \code{id} can also be set to "all" in which
+case all eigenvalues will be returned.}
 
 \item{range}{Numeric vector. Value-range of eigenvalues to be considered}
 
