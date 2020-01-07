@@ -443,6 +443,42 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
   return(list(starts = st, lengths = lens))
 }
 
+
+
+#' bootstrap a set of correlation functions
+#' 
+#' bootstrap a set of correlation functions
+#' 
+#' 
+#' @param cf correlation matrix of class \code{cf} e.g. obtained with a call to
+#' \code{extrac.obs}.
+#' @param boot.R number of bootstrap samples.
+#' @param boot.l block size for autocorrelation analysis
+#' @param seed seed for the random number generation used for boostrapping.
+#' @param sim The type of simulation required to generate the replicate time
+#' series.  The possible input values are ‘"fixed"’ (block resampling with
+#' fixed block lengths of ‘boot.l’) and ‘"geom"’ (block resampling with block
+#' lengths having a geometric distribution with mean ‘boot.l’). Default is
+#' ‘"geom"’. See \link[boot]{tsboot} for details.
+#' @param endcorr A logical variable indicating whether end corrections are to
+#' be applied when ‘sim’ is ‘"fixed"’.  When ‘sim’ is ‘"geom"’, ‘endcorr’ is
+#' automatically set to ‘TRUE’; ‘endcorr’ is not used when ‘sim’ is ‘"model"’
+#' or ‘"scramble"’. See \link[boot]{tsboot} for details.
+#' @return returns an object of class \code{cf} with bootstrap samples added
+#' for th correlation function called \code{cf.tsboot}. Moreover, the original
+#' average of \code{cf} is returned as \code{cf0} and the bootstrap errors as
+#' \code{tsboot.se}. We also copy the input parameters over and set
+#' \code{bootstrap.samples} to \code{TRUE}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link[boot]{tsboot}}, \code{jackknife.cf}
+#' @keywords bootstrap
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' plot(samplecf, log=c("y"))
+#' 
+#' @export bootstrap.cf
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -483,6 +519,32 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   return(invisible(cf))
 }
 
+
+
+#' jackknife a set of correlation functions
+#' 
+#' jackknife a set of correlation functions
+#' 
+#' 
+#' @param cf correlation matrix of class \code{cf} e.g. obtained with a call to
+#' \code{extrac.obs}.
+#' @param boot.l block size for autocorrelation analysis
+#' @return returns an object of class \code{cf} with blocked jackknife samples
+#' added for the correlation function called \code{cf.jackknife}.  Currently,
+#' only the moving block jackknife approach is implemented.  Moreover, the
+#' original average of \code{cf} is returned as \code{cf0} and the bootstrap
+#' errors as \code{jackknife.se}. We also copy the input parameters over and
+#' set \code{jackknife.samples} to \code{TRUE}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{boot::tsboot}, \code{bootstrap.cf}
+#' @references H.R. Künsch, "The jackknife and the bootstrap for general
+#' stationary observations", The Annals of Statistics, 1989, Vol. 17, No. 3,
+#' 1217-1241
+#' 
+#' S.N. Lahiri, "On the jackknife-after-bootstrap method for dependent data and
+#' its consistency properties", Econometric Theory, 2002, Vol. 18, 79-98
+#' @keywords bootstrap, time series,
+#' @export jackknife.cf
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -588,6 +650,21 @@ uwerr.cf <- function(cf){
   return(res)
 }
 
+
+
+#' add a configuration index to an \code{cf} object
+#' 
+#' add a configuration number index and adds it to a \code{cf} object.
+#' 
+#' 
+#' @param cf and object of class \code{cf}
+#' @param conf.index a configuration index of the same length as \code{cf}.
+#' @return Returns an object of class \code{cf} equal to the input but with
+#' element \code{conf.index} added
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \link{cf}
+#' @keywords correlator analysis bootstrap
+#' @export addConfIndex2cf
 addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
     cf$conf.index <- conf.index
@@ -595,6 +672,28 @@ addConfIndex2cf <- function(cf, conf.index) {
   return(cf)
 }
 
+
+
+#' Combine statistics of two cf objects
+#' 
+#' \code{addStat.cf} takes the raw data of two \code{cf} objects and combines
+#' them into one
+#' 
+#' Note that the two \code{cf} objects to be combined need to be compatible.
+#' Otherwise, \code{addStat.cf} will abort with an error.
+#' 
+#' @param cf1 the first of the two \code{cf} objects to be combined
+#' @param cf2 the second of the two \code{cf} objects to be combined
+#' @return an object of class \code{cf} with the statistics of the two input
+#' \code{cf} objects combined
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords correlation function
+#' @examples
+#' 
+#' \dontrun{cf0 <- addStat(cf1=cf1, cf2=cf2)}
+#' 
+#' @export addStat.cf
 addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
@@ -812,6 +911,23 @@ mul.cf <- function(cf, a=1.) {
   return (cf)
 }
 
+
+
+#' extract one single correlator object as \code{cf} object from a large
+#' \code{cf} object.
+#' 
+#' \code{cf} objects are capable of storing several correlation functions in
+#' form of a correlation matrix. \code{extractSingleCor.cf} lets one extract
+#' one of them.
+#' 
+#' 
+#' @param cf input object of class \code{cf}
+#' @param id id of the correlators in \code{cf} to be extracted
+#' @return A \code{cf} object containing only the single correlator
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords bootstrap correlator
+#' @export extractSingleCor.cf
 extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
