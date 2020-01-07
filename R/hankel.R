@@ -336,7 +336,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
 #' @param range Numeric vector. Value-range for the real part of the eigenvalues.
 #' If outside this range, the eigenvalue will be discarded
 #' @param method Character vector. Method to be used to determine the central value
-#' of the effective mass
+#' of the effective mass. Must be "median" (default) or "density"
 #' @description
 #' 
 #' @export
