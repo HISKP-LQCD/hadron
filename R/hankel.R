@@ -315,7 +315,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   }
   deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
 
-  ret <- list(t.idx=c(1:(tmax)),
+  ret <- list(t.idx=c(1:(tmax+1)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed,
@@ -378,7 +378,7 @@ hankeldensity2effectivemass <- function(hankel, range=c(0,1),
     }
     se[reftime+deltat] <- hankel$cf$error_fn(tmp)
   }
-  ret <- list(t.idx=c(1:(tmax)),
+  ret <- list(t.idx=c(1:(tmax+1)),
               effMass=effMass, deffMass=se, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type="log", useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed,
