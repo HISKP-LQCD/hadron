@@ -1,13 +1,15 @@
-#' @title HDF5 key for Cyprus CalcLoops scalar-type loops
-#' @description Generates an HDF5 key (full path) for the scalar
-#'              type loops from the Cyprus CalcLoops application.
-#' @param istoch Integer, index of the stochastic sample that the key should
-#'               be generated for.
-#' @param loop_type String, name of loop type. Allowed values:
-#'                  'Scalar', 'dOp'
-#' @param cid Integer, configuration number, internally produced by the CalcLoops
-#'            tool via the "trajectory" input flag. The default is '4' as this is
-#'            often not used in practice.
+#' HDF5 key for Cyprus CalcLoops scalar-type loops
+#' 
+#' Generates an HDF5 key (full path) for the scalar type loops from the Cyprus
+#' CalcLoops application.
+#' 
+#' 
+#' @param istoch Integer, index of the stochastic sample that the key should be
+#' generated for.
+#' @param loop_type String, name of loop type. Allowed values: 'Scalar', 'dOp'
+#' @param cid Integer, configuration number, internally produced by the
+#' CalcLoops tool via the "trajectory" input flag. The default is '4' as this
+#' is often not used in practice.
 cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
   if( any( !(loop_type %in% c("Scalar","dOp","Naive")) ) ){
     stop("The only scalar loop types are 'Scalar', 'Naive' and 'dOp'")
@@ -17,18 +19,23 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4){
         )
 }
 
-#' @title HDF5 key for Cyprus CalcLoops derivative-type loops
-#' @description Generates an HDF5 key (full path) for the derivative
-#'              type loops from the Cyprus CalcLoops application.
-#' @param istoch Integer, index of the stochastic sample that the key should
-#'               be generated for.
-#' @param loop_type String, name of loop type. Allowed values:
-#'                  'Loops', 'LpsDw', 'LpsDwCv', 'LoopsCv'
+
+
+#' HDF5 key for Cyprus CalcLoops derivative-type loops
+#' 
+#' Generates an HDF5 key (full path) for the derivative type loops from the
+#' Cyprus CalcLoops application.
+#' 
+#' 
+#' @param istoch Integer, index of the stochastic sample that the key should be
+#' generated for.
+#' @param loop_type String, name of loop type. Allowed values: 'Loops',
+#' 'LpsDw', 'LpsDwCv', 'LoopsCv'
 #' @param dir Integer, lattice direction of the derivative. Allowed values:
-#'            \code{0 == x}, \code{1 == y}, \code{2 == z}, \code{3 == t}.
-#' @param cid Integer, configuration number, internally produced by the CalcLoops
-#'            tool via the "trajectory" input flag. The default is '4' as this is
-#'            often not used in practice.
+#' \code{0 == x}, \code{1 == y}, \code{2 == z}, \code{3 == t}.
+#' @param cid Integer, configuration number, internally produced by the
+#' CalcLoops tool via the "trajectory" input flag. The default is '4' as this
+#' is often not used in practice.
 cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
   deriv_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
   if( any( !(loop_type %in% deriv_loop_types ) ) ) {
@@ -43,45 +50,42 @@ cyprus_make_key_deriv <- function(istoch, loop_type, dir, cid = 4){
 }
 
 
-#' @title read HDF5 loop files in the Cyprus CalcLoops format
-#' @description The CalcLoops code produces HDF5 files which contain
-#'              a matrix of momenta and the data for the loops (without
-#'              spin projection) organised by stochastic sample. Currently, the
-#'              reading code assumes that there is a single configuration stored per
-#'              file and the "trajectory" parameter in CalcLoops is assumed
-#'              to take its default value of '4'.
-#' @param selections Named list with names from the list 'Naive', 'Scalar', 'dOp', 'Loops'
-#'                   'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop types. 
-#'                   The elements of this list are in turn expected
-#'                   be data frames of the form
-#'                     \tabular{rrr}{
-#'                       \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr
-#'                       0           \tab 0           \tab 1           \cr
-#'                       -2          \tab 1           \tab -3          \cr
-#'                       ...         \tab ...         \tab ...
-#'                     }
-#'                   specifying the momentum combinations to be extracted for each
-#'                   loop type.
+
+
+#' read HDF5 loop files in the Cyprus CalcLoops format
+#' 
+#' The CalcLoops code produces HDF5 files which contain a matrix of momenta and
+#' the data for the loops (without spin projection) organised by stochastic
+#' sample. Currently, the reading code assumes that there is a single
+#' configuration stored per file and the "trajectory" parameter in CalcLoops is
+#' assumed to take its default value of '4'.
+#' 
+#' 
+#' @param selections Named list with names from the list 'Naive', 'Scalar',
+#' 'dOp', 'Loops' 'LpsDw', 'LpsDwCv', 'LoopsCv' specifying the requesetd loop
+#' types. The elements of this list are in turn expected be data frames of the
+#' form \tabular{rrr}{ \strong{qx} \tab \strong{qy} \tab \strong{qz} \cr 0 \tab
+#' 0 \tab 1 \cr -2 \tab 1 \tab -3 \cr ...  \tab ...  \tab ... } specifying the
+#' momentum combinations to be extracted for each loop type.
 #' @param files Vector of strings, list of HDF5 files to be processed.
 #' @param Time Integer, time extent of the lattice.
 #' @param nstoch Integer, number of stochastic samples to be expected in file.
-#' @param accumulated Boolean, specifies whether the loops, as organised by stochastic sample,
-#'                    are accumulated, such that, say, element \code{n} corresponds to the 
-#'                    sum over the first \code{n} stochastic samples. If specified as \code{TRUE},
-#'                    the data is post-processed to recover the measurements for the particular
-#'                    samples.
-#' @param legacy_traj Boolean. The root group for the loop data is 'conf_xxxx', where 'xxxx'
-#'                    corresponds to what is passed via the 'traj' flag to CalcLoops. When
-#'                    left empty, this defaults to '0004'. If this was left emtpy when
-#'                    the loop files were generated, set this to \code{TRUE} and the paths
-#'                    will be constructed with 'conf_0004' as their root group.
+#' @param accumulated Boolean, specifies whether the loops, as organised by
+#' stochastic sample, are accumulated, such that, say, element \code{n}
+#' corresponds to the sum over the first \code{n} stochastic samples. If
+#' specified as \code{TRUE}, the data is post-processed to recover the
+#' measurements for the particular samples.
+#' @param legacy_traj Boolean. The root group for the loop data is 'conf_xxxx',
+#' where 'xxxx' corresponds to what is passed via the 'traj' flag to CalcLoops.
+#' When left empty, this defaults to '0004'. If this was left emtpy when the
+#' loop files were generated, set this to \code{TRUE} and the paths will be
+#' constructed with 'conf_0004' as their root group.
 #' @param verbose Boolean, output I/O time per file. Requires 'tictoc' package.
-#' @return Named nested list of the same length as \code{selections} containg the loop data
-#'         in the \link{raw_cf} format. Each named element corresponds to one loop
-#'         type and each element of the underlying numbered list corresponds to one momentum
-#'         combination as specified via \code{selections} for this loop type in the same order.
-#'         
-#' @export
+#' @return Named nested list of the same length as \code{selections} containg
+#' the loop data in the \link{raw_cf} format. Each named element corresponds to
+#' one loop type and each element of the underlying numbered list corresponds
+#' to one momentum combination as specified via \code{selections} for this loop
+#' type in the same order.
 cyprus_read_loops <- function(selections, files, Time, nstoch, accumulated = TRUE, legacy_traj = TRUE, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")

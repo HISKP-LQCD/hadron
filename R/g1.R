@@ -1,8 +1,8 @@
 #' g1
-#'
-#' @description
-#' Implementation of the Gasser-Leutwyler function g_1 for
-#' computing finite volume effects.
+#' 
+#' Implementation of the Gasser-Leutwyler function g_1 for computing finite
+#' volume effects.
+#' 
 #' 
 #' @param x Numeric. x-value
 g1 <- function(x) {

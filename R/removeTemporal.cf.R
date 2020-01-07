@@ -1,32 +1,32 @@
 #' Remove temporal states
-#'
+#' 
 #' Performs weighting and shifting in the rest and moving frames.
-#'
-#' @param cf Object of type `cf`, two-to-two particle correlation function which
-#'   shall be weighted and shifted. It must be a correlation function in the
-#'   frame \eqn{p_1 + p_2}.
-#' @param single.cf1,single.cf2 Object of type `effectivemassfit` or `matrixfit`
-#'   which contains the one particle mass in the rest frame.
-#'
-#'   If `single.cf2` is missing, then the mass given as `single.cf1` is used as
-#'   well. This is sensibly done when one scatters identical particles. But be
-#'   careful: Even when `single.cf2` is missing, the `p2` is _not_ automatically
-#'   copied from `p1`.
-#'
-#'   In case `single.cf1` is missing, no weighting is performed. Instead it is
-#'   assumed that the user only wants to have a simple shifting. Then this
-#'   function just calls `takeTimeDiff.cf`.
+#' 
+#' 
+#' @param cf Object of type \code{cf}, two-to-two particle correlation function
+#' which shall be weighted and shifted. It must be a correlation function in
+#' the frame \eqn{p_1 + p_2}.
+#' @param single.cf1,single.cf2 Object of type \code{effectivemassfit} or
+#' \code{matrixfit} which contains the one particle mass in the rest frame.
+#' 
+#' If \code{single.cf2} is missing, then the mass given as \code{single.cf1} is
+#' used as well. This is sensibly done when one scatters identical particles.
+#' But be careful: Even when \code{single.cf2} is missing, the \code{p2} is
+#' \emph{not} automatically copied from \code{p1}.
+#' 
+#' In case \code{single.cf1} is missing, no weighting is performed. Instead it
+#' is assumed that the user only wants to have a simple shifting. Then this
+#' function just calls \code{takeTimeDiff.cf}.
 #' @param p1,p2 Integer vector with three elements, containing the momenta that
-#'   the one particle mass should be boosted to.
+#' the one particle mass should be boosted to.
 #' @param L Integer, spatial extent of the lattice.
 #' @param lat.disp Logical, true when the lattice dispersion relation shall be
-#'   used, otherwise continuum dispersion relation.
+#' used, otherwise continuum dispersion relation.
 #' @param weight.cosh Logical, If single.cf1 is a pure cosh, the leading two
-#'   thermal states also may be expressed as a cosh. If `weight.cosh` is set,
-#'   they are removed simultaneously.
+#' thermal states also may be expressed as a cosh. If \code{weight.cosh} is
+#' set, they are removed simultaneously.
 #' @param deltat Integer. Time shift value.
-#'
-#' @export
+#' @export old_removeTemporal.cf
 old_removeTemporal.cf <- function(cf, 
                               single.cf1, 
                               single.cf2,
@@ -168,20 +168,20 @@ old_removeTemporal.cf <- function(cf,
   return (invisible(ret))
 }
 
+
+
 #' Take time difference
-#'
-#' @description
-#' Performs the calculation of the shifted correlator C_shift(t) = C(t) - C(t +/- deltat).
-#'
-#' @param cf Object of type `cf`, a particle correlation function which shall be shifted.
+#' 
+#' Performs the calculation of the shifted correlator C_shift(t) = C(t) - C(t
+#' +/- deltat).
+#' 
+#' 
+#' @param cf Object of type \code{cf}, a particle correlation function which
+#' shall be shifted.
 #' @param deltat integer. the time shift
-#' @param forwardshift boolean. If set to `TRUE`, the forward finite
-#'   difference is used instead of the backward one
-#'
-#' @return
-#' The shifted correlator as an object of type `cf`, see \link{cf}
-#'
-#' @export
+#' @param forwardshift boolean. If set to \code{TRUE}, the forward finite
+#' difference is used instead of the backward one
+#' @return The shifted correlator as an object of type \code{cf}, see \link{cf}
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -256,23 +256,23 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   return(invisible(ret))
 }
 
+
+
 #' Continuum dispersion relation for CM to lattice frame
-#'
-#' @description
+#' 
 #' Converts a center of mass (CM) frame energy to the lattice frame using the
 #' continuum dispersion relation.
-#'
-#' @param energy `double`. CM energy in lattice units, \eqn{aE}.
-#' @param momentum_d `integer`. Total momentum squared of the moving frame in lattice units, \eqn{d^2}.
-#' @param extent_space `integer`. Spatial extent of the lattice as a dimensionless quantity, \eqn{L/a}.
+#' 
+#' 
+#' @param energy \code{double}. CM energy in lattice units, \eqn{aE}.
+#' @param momentum_d \code{integer}. Total momentum squared of the moving frame
+#' in lattice units, \eqn{d^2}.
+#' @param extent_space \code{integer}. Spatial extent of the lattice as a
+#' dimensionless quantity, \eqn{L/a}.
 #' @param plus Boolean. Sign of a^2 artefacts.
-#' @param lattice_disp Boolean. Use the lattice dispersion relation instead of the continuum one
-#'
-#' @return
-#' `double`. Energy in the lattice frame, \eqn{aW}.
-#'
-#' @export
-#' @family dispersion relations
+#' @param lattice_disp Boolean. Use the lattice dispersion relation instead of
+#' the continuum one
+#' @return \code{double}. Energy in the lattice frame, \eqn{aW}.
 dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, lattice_disp = FALSE) {
   sign <- if (plus) +1 else -1
 
@@ -287,38 +287,48 @@ dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, 
   return (energy_out)
 }
 
+
+
 #' generic function to extract a fitted mass
-#'
-#' @description
-#' One of the main analysis tasks in \link{hadron} is the estimation
-#'   of energy levels or masses from correlation functions. The
-#'   corresponding analysis functions return objects, typically lists,
-#'   containing the masses or energy levels. `extract_mass` is a
-#'   generic function to extrac such fitted mass values.
+#' 
+#' One of the main analysis tasks in \link{hadron} is the estimation of energy
+#' levels or masses from correlation functions. The corresponding analysis
+#' functions return objects, typically lists, containing the masses or energy
+#' levels. \code{extract_mass} is a generic function to extrac such fitted mass
+#' values.
+#' 
 #' 
 #' @param object Object to extract the mass from.
-#'
 #' @return Numeric. The mass value.
 extract_mass <- function (object) {
   UseMethod('extract_mass')
 }
 
+
+
 #' specialisation of \link{extract_mass} to objects of type
-#' `effectivemassfit`
+#' \code{effectivemassfit}
 #' 
-#' @param object Object of type `effectivemassfit` to extract the mass from.
-#'
+#' specialisation of \link{extract_mass} to objects of type
+#' \code{effectivemassfit}
+#' 
+#' 
+#' @param object Object of type \code{effectivemassfit} to extract the mass
+#' from.
 #' @return Numeric. The mass value.
 extract_mass.effectivemassfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$massfit.tsboot[,1])
 }
 
-#' specialisation of \link{extract_mass} to objects of type
-#' `matrixfit`
+
+
+#' specialisation of \link{extract_mass} to objects of type \code{matrixfit}
 #' 
-#' @param object Object of type `matrixfit` to extract the mass from.
-#'
+#' specialisation of \link{extract_mass} to objects of type \code{matrixfit}
+#' 
+#' 
+#' @param object Object of type \code{matrixfit} to extract the mass from.
 #' @return Numeric. The mass value.
 extract_mass.matrixfit <- function (object) {
   list(t0 = object$opt.res$par[1],
@@ -332,23 +342,25 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
     cosh_factor * exp(energy_difference * (time_extent - time_slices))
 }
 
+
+
 #' Weight a correlation function
-#'
-#' @description
-#' Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
-#' such that the function is first multiplied with
-#' \eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
-#'
+#' 
+#' Weights a correlation function with the given energy difference \eqn{\Delta
+#' E}{Delta E} such that the function is first multiplied with \eqn{\exp(\Delta
+#' E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
+#' 
+#' 
 #' @param cf cf_orig and possibly cf_boot object.
-#' @param energy_difference_val numeric. A single energy value \eqn{\Delta E}{Delta E} for
-#'   the weighting.
+#' @param energy_difference_val numeric. A single energy value \eqn{\Delta
+#' E}{Delta E} for the weighting.
 #' @param energy_difference_boot numeric vector. Samples for the energy
-#'   difference value.
-#' @param cosh_factor integer, either `+1` or `-1`. Determines the sign $c$ in
-#'   the weight factor.
+#' difference value.
+#' @param cosh_factor integer, either \code{+1} or \code{-1}. Determines the
+#' sign $c$ in the weight factor.
 #' @param offset integer. Offset for the time $t$, needed for the reweighting
-#'   after a shift.
-#' @param inverse boolean. If `TRUE` apply inverse weight.
+#' after a shift.
+#' @param inverse boolean. If \code{TRUE} apply inverse weight.
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
@@ -372,12 +384,22 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
   return (cf)
 }
 
+
+
 #' Weight-shift-reweight a correlation function
-#'
-#' The correlation function is weighted with [`weight.cf`], then shifted, and
-#' then weighted again with the inverse weighting factor.
-#'
-#' @inheritParams weight.cf
+#' 
+#' The correlation function is weighted with \code{\link{weight.cf}}, then
+#' shifted, and then weighted again with the inverse weighting factor.
+#' 
+#' 
+#' @param cf cf_orig and possibly cf_boot object.
+#' @param energy_difference_val numeric. A single energy value \eqn{\Delta
+#' E}{Delta E} for the weighting.
+#' @param energy_difference_boot numeric vector. Samples for the energy
+#' difference value.
+#' @param cosh_factor integer, either \code{+1} or \code{-1}. Determines the
+#' sign $c$ in the weight factor.
+#' @export weight_shift_reweight.cf
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
                   cosh_factor, 0, TRUE)
@@ -409,8 +431,13 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
   return (invisible(ret))
 }
 
+
+
 #' Remove Thermal States by Weighting and Shifting
-#'
+#' 
+#' Remove Thermal States by Weighting and Shifting
+#' 
+#' 
 #' @param cf Object of type \link{cf}
 #' @param single.cf1 Object of type \link{cf}
 #' @param single.cf2 Object of type \link{cf}
@@ -418,10 +445,9 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
 #' @param p2 Numeric vector. Spatial momentum of second state
 #' @param L Integer. Spatial lattice extend.
 #' @param lat.disp Boolean. Use lattice dispersion relation instead of
-#'   continuum one
-#' @param weight.cosh Boolean. Use cosh functional form in the
-#'   weighting procedure
-#'
+#' continuum one
+#' @param weight.cosh Boolean. Use cosh functional form in the weighting
+#' procedure
 #' @return weighted and shifted correlation function as a \link{cf} object.
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,

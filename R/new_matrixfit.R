@@ -292,10 +292,13 @@ TwoStateModel <- R6::R6Class(
   )
 )
 
+
+
 #' Model for the n particle correlator fit
-#'
-#' @description
+#' 
 #' n particle correlator with thermal pollution term(s)
+#' 
+#' 
 NParticleModel <- R6::R6Class(
   'NParticleModel',
   inherit = MatrixModel,
@@ -336,12 +339,15 @@ NParticleModel <- R6::R6Class(
   )
 )
 
+
+
 #' Model for a single correlator and a simple additive constant.
-#'
-#' @description
-#' This model is just the “single” model plus a simple additive
-#' constant. In some way it is a specialization of the “n particles” model as
-#' the energy difference is just set to zero.
+#' 
+#' This model is just the “single” model plus a simple additive constant. In
+#' some way it is a specialization of the “n particles” model as the energy
+#' difference is just set to zero.
+#' 
+#' 
 SingleConstantModel <- R6::R6Class(
   'SingleConstantModel',
   inherit = MatrixModel,
@@ -364,42 +370,43 @@ SingleConstantModel <- R6::R6Class(
   )
 )
 
+
+
 #' perform a factorising fit of a matrix of correlation functions
-#'
+#' 
 #' Modernised and extended implementation of \link{matrixfit}
-#'
-#' @param cf Object of class `cf` with `cf_meta` and `cf_boot`.
+#' 
+#' 
+#' @param cf Object of class \code{cf} with \code{cf_meta} and \code{cf_boot}.
 #' @param t1 Integer, start time slice of fit range (inclusive).
 #' @param t2 Integer, end time slie of fit range (inclusive).
 #' @param parlist Numeric vector, list of parameters for the model function.
 #' @param sym.vec Integer, numeric or vectors thereof specifying the symmetry
-#'   properties of the correlation functions stored in `cf`. See
-#'   \link{matrixfit} for details.
+#' properties of the correlation functions stored in \code{cf}. See
+#' \link{matrixfit} for details.
 #' @param neg.vec Integer or integer vector of global signs, see
-#'   \link{matrixfit} for details.
+#' \link{matrixfit} for details.
 #' @param useCov Boolean, specifies whether a correlated chi^2 fit should be
-#'   performed.
+#' performed.
 #' @param model String, specifies the type of model to be assumed for the
-#'   correlator. See \link{matrixfit} for details.
+#' correlator. See \link{matrixfit} for details.
 #' @param boot.fit Boolean, specifies if the fit should be bootstrapped.
 #' @param fit.method String, specifies which minimizer should be used. See
-#'   \link{matrixfit} for details.
+#' \link{matrixfit} for details.
 #' @param autoproceed Boolean, if TRUE, specifies that if inversion of the
-#'   covariance matrix fails, the function should proceed anyway assuming no
-#'   correlation (diagonal covariance matrix).
+#' covariance matrix fails, the function should proceed anyway assuming no
+#' correlation (diagonal covariance matrix).
 #' @param par.guess Numeric vector, initial values for the paramters, should be
-#'   of the same length as `parlist`.
-#' @param every Integer, specifies a stride length by which the fit range should
-#'   be sparsened, using just `every`th time slice in the fit.
-#' @param higher_states List with elements `val` and `boot`. The member `val`
-#'   must have the central energy values for all the states that are to be
-#'   fitted. The `boot` member will be a matrix that has the various states as
-#'   columns and the corresponding bootstrap samples as rows. The length of
-#'   `val` must be the column number of `boot`. The row number of `boot` must be
-#'   the number of samples.
+#' of the same length as \code{parlist}.
+#' @param every Integer, specifies a stride length by which the fit range
+#' should be sparsened, using just \code{every}th time slice in the fit.
+#' @param higher_states List with elements \code{val} and \code{boot}. The
+#' member \code{val} must have the central energy values for all the states
+#' that are to be fitted. The \code{boot} member will be a matrix that has the
+#' various states as columns and the corresponding bootstrap samples as rows.
+#' The length of \code{val} must be the column number of \code{boot}. The row
+#' number of \code{boot} must be the number of samples.
 #' @param ... Further parameters.
-#'
-#' @export
 new_matrixfit <- function(cf,
                           t1, t2,
                           parlist,
@@ -557,12 +564,15 @@ new_matrixfit <- function(cf,
   return (res)
 }
 
-#' Create a parameter list for `matrixfit`
-#'
+
+
+#' Create a parameter list for \code{matrixfit}
+#' 
+#' Create a parameter list for \code{matrixfit}
+#' 
+#' 
 #' @param corr_matrix_size integer. Number of correlators in the matrix. This
 #' must be a the square of an integer.
-#'
-#' @export
 make_parlist <- function (corr_matrix_size) {
   n <- sqrt(corr_matrix_size)
   row1 <- rep(1:n, each = n)
@@ -572,15 +582,19 @@ make_parlist <- function (corr_matrix_size) {
   return(parlist_matrix)
 }
 
-#' Create a parameter index matrix for `matrixfit`
-#'
-#' @param parlist integer array. Parameter list generated with `make_parlist`.
+
+
+#' Create a parameter index matrix for \code{matrixfit}
+#' 
+#' Create a parameter index matrix for \code{matrixfit}
+#' 
+#' 
+#' @param parlist integer array. Parameter list generated with
+#' \code{make_parlist}.
 #' @param length_time integer. Number of time slices per correlator.
 #' @param summands integer. Number of summands in the fit model that shall be
 #' fitted. The signal counts as one summand, each explicit pollution term with
 #' independent amplitudes counts as its own summand.
-#'
-#' @export
 make_parind <- function (parlist, length_time, summands = 1) {
   corr_matrix_size <- ncol(parlist)
   ## parind is the index vector for the matrix elements

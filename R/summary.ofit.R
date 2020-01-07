@@ -1,14 +1,22 @@
 #' print.ofit
-#'
-#' @param x Object of type `ofit`
+#' 
+#' print.ofit
+#' 
+#' 
+#' @param x Object of type \code{ofit}
 #' @param ... Generic parameters to pass on.
 print.ofit <- function (x, ...) {
   summary(x, ...)
 }
 
+
+
 #' summary.ofit
-#'
-#' @param object Object of type `ofit`
+#' 
+#' summary.ofit
+#' 
+#' 
+#' @param object Object of type \code{ofit}
 #' @param ... Generic parameters to pass on.
 summary.ofit <- function (object, ...) {
   fit <- object

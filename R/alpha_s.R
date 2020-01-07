@@ -1,6 +1,29 @@
 ## alpha_s at scale mu to nl's order in PT
 ## input needed is Lambda_QCD, Nc, Nf
 ## original fortran code by Vittorio Lubicz
+
+
+#' compute alpha strong at given scale
+#' 
+#' compute alpha strong (\eqn{\alpha_s}{alpha_s}) at given scale \eqn{\mu}{mu}
+#' up to N3LO in PT in the RI' renormalisation scheme.
+#' 
+#' 
+#' @param mu the renormalisation scale \eqn{\mu}{mu} in GeV
+#' @param nl order in PT, range 0 to 3
+#' @param lam0 \eqn{\Lambda_\mathrm{QCD}}{Lambda_QCD} in GeV
+#' @param Nc number of colours \eqn{N_c}{Nc}, defaults to 3
+#' @param Nf number of flavours \eqn{N_f}{Nf}, default is 2
+#' @param use.cimpl Use the C implementation instead of the R implementation,
+#' which might improve speed.
+#' @return returns the value of alpha strong \eqn{\alpha_s}{alpha_s} at scale
+#' \eqn{\mu}{mu}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{zetazp}}
+#' @examples
+#' 
+#' alphas(mu=2.0, nl=3)
+#' 
 alphas <- function(mu, nl=3, lam0=0.250, Nc=3., Nf=2., use.cimpl=TRUE) {
   if(!use.cimpl) {
     return(alphas.R( mu, nl, lam0, Nc, Nf))

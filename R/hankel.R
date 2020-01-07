@@ -25,26 +25,35 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   
 }
 
-#' @title GEVP method based on Hankel matrices.
+
+
+#' GEVP method based on Hankel matrices.
 #' 
-#' @description
-#' Alternative method to determine energy levels from correlation
-#'   matrices. A so-called Hankel matrix is generated from an input
-#'   \link{cf} object and a generalised eigenvalue problem is solved
-#'   then.
-#'
-#' @inheritParams bootstrap.hankel
-#' @param debug Boolean. Enable debug output.
+#' Alternative method to determine energy levels from correlation matrices. A
+#' so-called Hankel matrix is generated from an input real numeric vector and a
+#' generalised eigenvalue problem is solved then.
+#' 
+#' 
+#' @param cf Numeric vector.
+#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
+#' \code{Time/2-2}. Default is 1.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
-#' @param submatrix.size Integer. Submatrix size to be used in build
-#'   of Hankel matrices. Submatrix.size > 1 is experimental.
-#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
-#'    correlators into the correlator
-#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
-#'    \code{matrix(cf[element.order], nrow=2)}.
-#'    Double indexing is allowed.
-#' 
-#' @family hankel
+#' @param n Integer. Size of the Hankel matrices to generate
+#' @param N Integer. Maximal time index in correlation function to be used in
+#' Hankel matrix
+#' @param submatrix.size Integer. Submatrix size to be used in build of Hankel
+#' matrices. Submatrix.size > 1 is experimental.
+#' @param element.order Integer vector. specifies how to fit the \code{n}
+#' linearly ordered single correlators into the correlator matrix for
+#' submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
+#' \code{matrix(cf[element.order], nrow=2)}. Double indexing is allowed.
+#' @param debug Boolean. Enable debug output.
+#' @return A complex vector of \code{n} with the eigenvalues corresponding to
+#' \code{id} is returned. A vector of NAs of \code{n} is returend in case the
+#' QR decomposition fails.
+#' @seealso Other hankel: \code{\link{bootstrap.hankel}()},
+#' \code{\link{hankel2cf}()}, \code{\link{hankel2effectivemass}()},
+#' \code{\link{plot_hankel_spectrum}()}
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
                         submatrix.size=1, element.order=c(1,2,3,4), id=c(1),
                         debug=FALSE) {
@@ -83,28 +92,33 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
-#' @title GEVP method based on Hankel matrices. 
+
+
+#' GEVP method based on Hankel matrices.
 #' 
-#' @description
-#' Alternative method to determine energy levels from correlation
-#'   matrices. A so-called Hankel matrix is generated from an input
-#'   \link{cf} object and a generalised eigenvalue problem is solved
-#'   then. This is the function to call. It will perform a bootstrap
-#'   analysis. 
-#'
+#' Alternative method to determine energy levels from correlation matrices. A
+#' so-called Hankel matrix is generated from an input \link{cf} object and a
+#' generalised eigenvalue problem is solved then. This is the function to call.
+#' It will perform a bootstrap analysis.
+#' 
+#' See \code{vignette(name="hankel", package="hadron")}
+#' 
 #' @param cf object of type \link{cf}
-#' @param t0     initial time value of the GEVP, must be in between 0 and
-#'    \code{Time/2-2}. Default is 1.
-#' @param n Integer. Size of the submatrix Hankel matrices to generate
+#' @param t0 initial time value of the GEVP, must be in between 0 and
+#' \code{Time/2-2}. Default is 1.
+#' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
-#'                   Hankel matrix
-#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
-#' eigenvalues is larger than eps, the eigenvalue is discarded.
-#' @param range Numeric vector. Value-range of eigenvalues to be considered
-#' @param id Integer. Vector of indices of eigenvalues to consider.
-#'
+#' Hankel matrix
+#' @return List object of class "hankel". The eigenvalues are stored in a
+#' numeric vector \code{t0}, the corresonding samples in \code{t}. The
+#' reference input time \code{t0} is stored as \code{reference_time} in the
+#' returned list.
+#' @seealso Other hankel: \code{\link{gevp.hankel}()},
+#' \code{\link{hankel2cf}()}, \code{\link{hankel2effectivemass}()},
+#' \code{\link{plot_hankel_spectrum}()}
 #' @examples
-#'
+#' 
+#' 
 #' data(correlatormatrix)
 #' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
 #' t0 <- 4
@@ -115,7 +129,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
-#' @family hankel
+#' 
 bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
 
   stopifnot(inherits(cf, 'cf_meta'))
@@ -149,12 +163,25 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
 }
 
 
-#' @title hankel2cf
-#'
-#' @param hankel object of type \link{hankel}
-#' @param id Integer. ID of the principal correlator to extract
+
+
+#' hankel2cf
 #' 
-#' @family hankel
+#' hankel2cf
+#' 
+#' 
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param id Integer. Index of eigenvalue to consider, \eqn{1\leq id\leq n}{1
+#' <= id <= n}.
+#' @param range Numeric vector. Value-range for the real part of the
+#' eigenvalues. If outside this range, the eigenvalue will be discarded
+#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
+#' eigenvalues is larger than eps, the eigenvalue is discarded.
+#' @seealso input is generated via \link{bootstrap.hankel} alternatively use
+#' \link{hankel2effectivemass}.
+#' 
+#' Other hankel: \code{\link{bootstrap.hankel}()}, \code{\link{gevp.hankel}()},
+#' \code{\link{hankel2effectivemass}()}, \code{\link{plot_hankel_spectrum}()}
 hankel2cf <- function(hankel, id=1) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
@@ -185,13 +212,27 @@ hankel2cf <- function(hankel, id=1) {
   return(invisible(cf))
 }
 
-#' @title hankel2effectivemass
-#'
-#' @param hankel object of type \link{hankel}
-#' @param id Integer. ID of the principal correlator to extract
-#' @param type Character vector. Type of effective mass to use.
+
+
+#' hankel2effectivemass
 #' 
-#' @family hankel
+#' hankel2effectivemass
+#' 
+#' 
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param id Integer. Index of eigenvalue to consider, \eqn{1\leq id\leq n}{1
+#' <= id <= n}.
+#' @param type Character vector. Type of effective mass to use. Must be in
+#' \code{c("log", "acosh")}
+#' @param range Numeric vector. Value-range for the real part of the
+#' eigenvalues. If outside this range, the eigenvalue will be discarded
+#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
+#' eigenvalues is larger than eps, the eigenvalue is discarded.
+#' @seealso input is generated via \link{bootstrap.hankel} alternatively use
+#' \link{hankel2effectivemass}.
+#' 
+#' Other hankel: \code{\link{bootstrap.hankel}()}, \code{\link{gevp.hankel}()},
+#' \code{\link{hankel2cf}()}, \code{\link{plot_hankel_spectrum}()}
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)

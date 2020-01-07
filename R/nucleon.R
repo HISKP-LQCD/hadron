@@ -13,12 +13,16 @@ Gamma5 <- matrix(c(1+0*1i,  0+0*1i,  0+0*1i,  0+0*1i,
                    0+0*1i,  0+0*1i,  0+0*1i, -1+0*1i),
                  nrow=4, ncol=4)
 
+
+
 #' proton
-#'
+#' 
+#' proton
+#' 
+#' 
 #' @param data Proton correlator matrix
 #' @param bc String. Boundary conditions, default 'antiperiodic'
 #' @param twistangle Numeric. Angle in twisted boundary conditions.
-#' 
 proton <- function(data, bc="antiperiodic", twistangle=0) {
 
   Time <- max(data[,1])+1

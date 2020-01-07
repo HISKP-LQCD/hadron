@@ -1,7 +1,11 @@
-#' @title get dataset from HDF5 file
+#' get dataset from HDF5 file
+#' 
+#' get dataset from HDF5 file
+#' 
+#' 
 #' @param h5f HDF5 file opened with \code{rhdf5::H5Fopen}
 #' @param key String, full path to dataset.
-#' @export
+#' @export h5_get_dataset
 h5_get_dataset <- function(h5f,key)
 {
   rhdf5_avail <- requireNamespace("rhdf5")
@@ -17,18 +21,22 @@ h5_get_dataset <- function(h5f,key)
   return(rval)
 }
 
-#' @title check if group names exist in HDF5 file
-#' @description The group names in an HDF5 file are stored as full paths
-#'              as well as a flat vector. It is thus possible to check
-#'              if a particular set of group names exist in the file
-#'              by parsing the \code{name} member of the output
-#'              of \code{rhdf5::h5ls}. This function does just that.
+
+
+#' check if group names exist in HDF5 file
+#' 
+#' The group names in an HDF5 file are stored as full paths as well as a flat
+#' vector. It is thus possible to check if a particular set of group names
+#' exist in the file by parsing the \code{name} member of the output of
+#' \code{rhdf5::h5ls}. This function does just that.
+#' 
+#' 
 #' @param h5f HDF5 file openend with \code{rhdf5::H5Fopen}
-#' @param nms_to_find Vector of strings, group names (not full paths) which
-#'                    are to be located in the file.
+#' @param nms_to_find Vector of strings, group names (not full paths) which are
+#' to be located in the file.
 #' @return Vector of booleans of the same length as \code{nms_to_find}
-#'         indicating whether the name at the same index position
-#'         was located in the file.
+#' indicating whether the name at the same index position was located in the
+#' file.
 h5_names_exist <- function(h5f, nms_to_find){
   rhdf5_avail <- requireNamespace("rhdf5")
   stopifnot( rhdf5_avail )

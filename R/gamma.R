@@ -1,30 +1,18 @@
-#' @title Accessor function for \code{\link{gm}}
-#'
-#' @description
-#' Retrieve the entries of the \code{\link[hadron]{gm}} list of 
-#' three-index arrays containing various
-#' gamma structures in a natural indexing.
-#'
-#' @param mu Number or string denoting
-#' \itemize{
-#'   \item Lorentz index (0,1,2,3,4) for \eqn{\gamma^\mu}
-#'   \item 5 for \eqn{\gamma^5}
-#'   \item "Pp" or "Pm" for the positive and negative parity projectors respectively
-#' }
-#' @param basis String, gamma basis to use. Possible values
-#'              \describe{
-#'                \item{'ukqcd':}{UKQCD gamma basis with \eqn{\gamma^i, i \in [1,2,3,4]} 
-#'                                and \eqn{\gamma^5 = \gamma^1 \gamma^2 \gamma^3 \gamma^4},
-#'                                such that \eqn{1 = x}, \eqn{4 = t}.}
-#'                \item{'chiral_tmlqcd':}{Chiral gamma basis used by tmLQCD with 
-#'                                        \eqn{\gamma^\mu, \mu \in [0,1,2,3]} and 
-#'                                        \eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3},
-#'                                        such that \eqn{0 = t}, \eqn{3 = z}.}
-#'              }
-#'
-#' @concept Dirac
-#' @concept gamma
-#' @export
+#' Accessor function for \code{\link{gm}}
+#' 
+#' Retrieve the entries of the \code{\link[hadron]{gm}} list of three-index
+#' arrays containing various gamma structures in a natural indexing.
+#' 
+#' 
+#' @param mu Number or string denoting \itemize{ \item Lorentz index
+#' (0,1,2,3,4) for \eqn{\gamma^\mu} \item 5 for \eqn{\gamma^5} \item "Pp" or
+#' "Pm" for the positive and negative parity projectors respectively }
+#' @param basis String, gamma basis to use. Possible values \describe{
+#' \item{'ukqcd':}{UKQCD gamma basis with \eqn{\gamma^i, i \in [1,2,3,4]} and
+#' \eqn{\gamma^5 = \gamma^1 \gamma^2 \gamma^3 \gamma^4}, such that \eqn{1 = x},
+#' \eqn{4 = t}.} \item{'chiral_tmlqcd':}{Chiral gamma basis used by tmLQCD with
+#' \eqn{\gamma^\mu, \mu \in [0,1,2,3]} and \eqn{\gamma^5 = \gamma^0 \gamma^1
+#' \gamma^2 \gamma^3}, such that \eqn{0 = t}, \eqn{3 = z}.} }
 gm_mu <- function(mu, basis = 'chiral_tmlqcd'){
   if( !(basis %in% c('ukqcd', 'chiral_tmlqcd')) ){
     stop("Only 'ukqcd' and 'chiral_tmlqcd' gamma bases are currently supported!")

@@ -9,6 +9,30 @@
 ## hep-lat/0601033
 ## which can be applied to a0 by using the effective range expansion
 ## q*cot(delta) = 1/(-a0)
+
+
+#' Finite Size Corrections to \eqn{q\cot\delta}{qcotdelta} for I=2
+#' \eqn{\pi\pi}{pipi} near threshold
+#' 
+#' \code{fs.qcotdelta} computes the finite size corrections to
+#' \eqn{q\cot\delta}{qcotdelta} while \code{fs.mpia0} computes the
+#' corresponding finite size corrections to \eqn{M_\pi a_0}{Mpi a0} directly
+#' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
+#' 
+#' 
+#' @aliases fs.qcotdelta fs.mpia0 fs.a0
+#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param mps pion mass as a scalar variable (must not be a vector)
+#' @param fps pion decay constant as a scalar variable (must not be a vector)
+#' @param a0 scattering length at finite L
+#' @return returns a numeric value representing the finite size correction or
+#' in case of \code{fs.a0} the corrected value for a0.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @references For the original formula see Eq. (31) from hep-lat/0601033
+#' @examples
+#' 
+#'   fs.qcotdelta(mps=0.123, L=24)
+#' 
 fs.qcotdelta <- function(mps, L) {
   ## the 7th is zero, so we skip sqrt(7)
   cn <- c(6, 12, 8, 6, 24, 24, 12)

@@ -1,3 +1,15 @@
+#' convert data into a \code{cf} object
+#' 
+#' Lets one convert data of certain type into an object of class \code{cf}
+#' 
+#' 
+#' @param data a \code{data.frame}
+#' @param symmetric is the data symmetric or anti-symmetric in t
+#' @param symmetrise symmetrise the data
+#' @return An object of class \code{cf}
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords correlator
 convert2cf <- function(data, symmetric=TRUE, symmetrise=TRUE) {
   sign <- +1.
   if(!symmetric) {
@@ -68,9 +80,14 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
   return(invisible(res))
 }
 
+
+
 #' summary.pionff
-#'
-#' @param object Object of type `pionff`
+#' 
+#' summary.pionff
+#' 
+#' 
+#' @param object Object of type \code{pionff}
 #' @param ... Generic parameters to pass on.
 summary.pionff <- function (object, ...) {
   ff <- object
@@ -82,6 +99,50 @@ summary.pionff <- function (object, ...) {
 }
 
 
+
+
+#' Compute <x> From Bare Data
+#' 
+#' Compute <x> from bare data by fitting to a constant
+#' 
+#' 
+#' @param data3pt 3pt correlator as read in with \code{\link{read.table}} from
+#' a file produced with the GWC code from routine momf2e
+#' @param data2pt 2pt pseudo-scalar correlator as read in with
+#' \code{\link{read.table}} from a file produced with the GWC code from routine
+#' pssca.
+#' @param pionfit a fit to the 2pt function. If not provided, it will be
+#' performed internally.
+#' @param boot.R number of bootstrap samples.
+#' @param boot.l bootstrap block length.
+#' @param useCov whether or not to use a correlated fit.
+#' @param piont1 t1 of fitrange to pion 2pt function
+#' @param piont2 t2 of fitrange to pion 2pt function
+#' @param seed seed for PRNG.
+#' @param type type for the effective mass formula, see
+#' \link{bootstrap.effectivemass}.
+#' @param t1 lower bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param t2 upper bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param force.optim If set to `TRUE`, the usage of \link{optim} will be
+#' enforced.
+#' @return returns a list containing
+#' 
+#' \item{averx}{ value of <x> } \item{daverx}{ error of <x> } \item{data}{
+#' average 3pt correlator and its error } \item{fit.uwerr}{ return object of
+#' the uwerr call } \item{mps}{ pseudo-scalar mass as given as input or as
+#' determined } \item{N}{ number of measurements }
+#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @seealso \code{\link{uwerr}}, \code{\link{plot.averx}}
+#' @keywords optimize ts
+#' @examples
+#' 
+#' library(hadron)
+#' \dontrun{data3pt <- read.table("momf2e_op_d_0.dat")}
+#' \dontrun{data2pt <- read.table("pssca_corr_0.dat")}
+#' \dontrun{res3pt <- averx(data=data3pt, data2pt=data2pt, t1 = 6, t2 = 18, mps=0.13587)}
+#' 
 averx <- function(data3pt, data2pt, pionfit, 
                   boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE,
                   t1, t2, seed=123456, type="solve", force.optim=FALSE) {
@@ -199,9 +260,14 @@ averx <- function(data3pt, data2pt, pionfit,
   return(invisible(res))
 }
 
+
+
 #' summary.averx
-#'
-#' @param object Object of type `averx`
+#' 
+#' summary.averx
+#' 
+#' 
+#' @param object Object of type \code{averx}
 #' @param ... Generic parameters to pass on.
 summary.averx <- function(object, ...) {
   averx <- object
@@ -231,9 +297,14 @@ summary.averx <- function(object, ...) {
   cat("error    =", averx$daverx.wm, "\n")  
 }
 
+
+
 #' print.averx
-#'
-#' @param x Object of type `averx`
+#' 
+#' print.averx
+#' 
+#' 
+#' @param x Object of type \code{averx}
 #' @param ... Generic parameters to pass on.
 print.averx <- function(x, ...) {
   summary.averx(x, ...)

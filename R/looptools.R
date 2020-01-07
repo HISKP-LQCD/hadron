@@ -1,23 +1,25 @@
-#' @title disconnected contribution to current insertion three-point function
-#' @description Computes the quark-line disconnected contribution to a three-point function
-#'              of the form
-#'                \deqn{ C_3(t, \Delta t = t_{snk} - t_{src}) = C_2(t_{snk}, t_{src}) * L(t) }
-#'              \eqn{\forall t} considering only the case t_{snk} > t_{src}.
-#' @param cf_2pt 'raw_cf' container holding two-point part of three-point function
-#'               in lattice-absolute coordinates (not relative to source!)         
-#' @param loop 'raw_cf' container holding loop contribution, suitably spin-projected
-#'             and averaged over stochastic samples.
-#' @param src_ts Integer vector, the source time slices that were used for the computation
-#'               of the two-point function in lattice-absolute coordinates.
-#'               Must be of the same length as the number of measurements in \code{cf_2pt}.
+#' disconnected contribution to current insertion three-point function
+#' 
+#' Computes the quark-line disconnected contribution to a three-point function
+#' of the form \deqn{ C_3(t, \Delta t = t_{snk} - t_{src}) = C_2(t_{snk},
+#' t_{src}) * L(t) } \eqn{\forall t} considering only the case t_snk > t_src.
+#' 
+#' 
+#' @param cf_2pt 'raw_cf' container holding two-point part of three-point
+#' function in lattice-absolute coordinates (not relative to source!)
+#' @param loop 'raw_cf' container holding loop contribution, suitably
+#' spin-projected and averaged over stochastic samples.
+#' @param src_ts Integer vector, the source time slices that were used for the
+#' computation of the two-point function in lattice-absolute coordinates. Must
+#' be of the same length as the number of measurements in \code{cf_2pt}.
 #' @param dt Integer, the source-sink separation that should be computed.
 #' @param reim_loop String, one of 'real', 'imag' or 'both'. Specifies whether
-#'                  just the real or imaginary part should be considered when
-#'                  constructing the correlation with the two-point function.
+#' just the real or imaginary part should be considered when constructing the
+#' correlation with the two-point function.
 #' @param reim_2pt String, same as \code{reim_loop} but for the two-point
-#'                 contribution to the three-point function.
-#' @param vev_subtract Boolean, whether the loop contains a vev which should
-#'                     be subtracted.
+#' contribution to the three-point function.
+#' @param vev_subtract Boolean, whether the loop contains a vev which should be
+#' subtracted.
 disc_3pt <- function(cf_2pt, 
                      loop,
                      src_ts,
@@ -108,22 +110,25 @@ disc_3pt <- function(cf_2pt,
   return(cf_3pt)
 }
 
-#' @title compute two-point correlation function between quark loops
-#' @param loop_snk 'raw_cf' container with spin-projected quark loop
-#'                 at sink (see \link{loop_spin_project})
-#' @param loop_src 'raw_cf' container with spin-projected quark loop 
-#'                 at source (see \link{loop_spin_project})
-#' @param random_vectors_outer_product Boolean. 
-#'               For testing purposes, the average over all
-#'               random sample combinations can be carried out explicitly
-#'               as \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] }
-#'               instead of the (much faster) equivalent
-#'               \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
-#'                     \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.
+
+
+#' compute two-point correlation function between quark loops
+#' 
+#' compute two-point correlation function between quark loops
+#' 
+#' 
+#' @param loop_snk 'raw_cf' container with spin-projected quark loop at sink
+#' (see \link{loop_spin_project})
+#' @param loop_src 'raw_cf' container with spin-projected quark loop at source
+#' (see \link{loop_spin_project})
+#' @param random_vectors_outer_product Boolean. For testing purposes, the
+#' average over all random sample combinations can be carried out explicitly as
+#' \eqn{ \sum_{i \neq j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] } instead of
+#' the (much faster) equivalent \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[
+#' \Gamma_src M_j ]) - \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.
 #' @return 'raw_cf' container with two-point function of these two quark loops.
-#'         In the calculation, both averaging over all source locations and
-#'         the average over all stochastic sample combinations are performed.
-#' @export
+#' In the calculation, both averaging over all source locations and the average
+#' over all stochastic sample combinations are performed.
 loop_2pt <- function(loop_snk, loop_src,
                      random_vectors_outer_product = FALSE){
   stopifnot( inherits(loop_snk, 'raw_cf_meta') )
@@ -188,15 +193,18 @@ loop_2pt <- function(loop_snk, loop_src,
   return(cf_2pt)
 }
 
-#' @title average over stochastic samples of loop
-#' @description Perform mean over the third dimension of the loop data.
+
+
+#' average over stochastic samples of loop
+#' 
+#' Perform mean over the third dimension of the loop data.
+#' 
+#' 
 #' @param loop 'raw_cf' container with loop data
-#' @param nstoch_to_avg String or integer, number of stochastic samples 
-#'                      to average over. Only possible string is 'all'.
-#'                      If an integer is supplied, it must be at least '1'
-#'                      and at most consistent with the number of stochastic
-#'                      samples in \code{loop}.
-#' @export
+#' @param nstoch_to_avg String or integer, number of stochastic samples to
+#' average over. Only possible string is 'all'. If an integer is supplied, it
+#' must be at least '1' and at most consistent with the number of stochastic
+#' samples in \code{loop}.
 loop_stochav <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )
@@ -221,17 +229,21 @@ loop_stochav <- function(loop, nstoch_to_avg = 'all'){
   return(loop)
 }
 
-#' @title subtract vev from loop data
-#' @description Convenience function to subtract any possible vacuum-expectation
-#'              value from a loop matrix. The expectation value of each component
-#'              of the internal dimensions is subtracted individually.
-#'              Averaging over stochstic samples can be restricted to a subset, see
-#'              \code{nstoch_to_avg} input parameter.
+
+
+#' subtract vev from loop data
+#' 
+#' Convenience function to subtract any possible vacuum-expectation value from
+#' a loop matrix. The expectation value of each component of the internal
+#' dimensions is subtracted individually. Averaging over stochstic samples can
+#' be restricted to a subset, see \code{nstoch_to_avg} input parameter.
+#' 
+#' 
 #' @param loop 'raw_cf' container with loop data
-#' @param nstoch_to_avg String or integer, number of stochastic samples 
-#'                      to average over. Only possible string is 'all'. If an
-#'                      integer is provided it must be at least '1' and at most
-#'                      consistent with the number of stochastic samples in \code{loop}.
+#' @param nstoch_to_avg String or integer, number of stochastic samples to
+#' average over. Only possible string is 'all'. If an integer is provided it
+#' must be at least '1' and at most consistent with the number of stochastic
+#' samples in \code{loop}.
 loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )
@@ -262,25 +274,28 @@ loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
 }
   
 
-#' @title spin projection of quark loop data
-#' @description Implements the operation
-#'   \deqn{ L = a*( \Gamma_{ik} M_{ki} ) }
-#' to give the trace of a quark loop \eqn{M} multiplied by a gamma structure \eqn{\Gamma}
+
+
+#' spin projection of quark loop data
+#' 
+#' Implements the operation \deqn{ L = a*( \Gamma_{ik} M_{ki} ) } to give the
+#' trace of a quark loop \eqn{M} multiplied by a gamma structure \eqn{\Gamma}
 #' and scaled by a complex factor \eqn{a}.
+#' 
+#' 
 #' @param loop 'raw_cf' container with loop data
 #' @param gamma 4x4 complex matrix
-#' @param reim String, one of 'real', 'imag' or 'both'. After the spin projection and trace,
-#'             the result can be restricted to just the real or imaginary part, if desired.
-#'             Useful for the cases in which it is clear that only one or the other contains
-#'             any signal.
-#' @param stochav Boolean, specifies whether the average over stochastic samples should be
-#'                performed. This makes the projection much faster
-#'                but of course prevents the projected loop data to be
-#'                used for the construction of diagrams with multiple quark loops.
+#' @param reim String, one of 'real', 'imag' or 'both'. After the spin
+#' projection and trace, the result can be restricted to just the real or
+#' imaginary part, if desired. Useful for the cases in which it is clear that
+#' only one or the other contains any signal.
+#' @param stochav Boolean, specifies whether the average over stochastic
+#' samples should be performed. This makes the projection much faster but of
+#' course prevents the projected loop data to be used for the construction of
+#' diagrams with multiple quark loops.
 #' @param scale_factor Complex scaling factor to be applied.
-#' @param herm_conj Boolean, optionally the loop matrix \eqn{M} can be hermitian
-#'                  conjugated before the spin projection is performed.
-#' @export
+#' @param herm_conj Boolean, optionally the loop matrix \eqn{M} can be
+#' hermitian conjugated before the spin projection is performed.
 loop_spin_project <- function(loop,
                               gamma,
                               reim = 'both',

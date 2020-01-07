@@ -1,40 +1,48 @@
 #' Correlation function container
-#'
-#' This function `cf()` creates containers for correlation functions
-#' of class `cf`. This class is particularly designed to deal with
+#' 
+#' This function \code{cf()} creates containers for correlation functions of
+#' class \code{cf}. This class is particularly designed to deal with
 #' correlation functions emerging in statistical and quantum field theory
-#' simulations. Arithmetic operations are defined for this class in
-#' several ways, as well as concatenation and \link{is.cf}.
-#'
-#' @details
-#'
-#' And last but not least, these are the fields that are used somewhere in the library but we have not figured out which mixin these should belong to:
-#'
-#' - `conf.index`: TODO
-#' - `N`: Integer, number of measurements.
-#' - `blockind`: TODO
-#' - `jack.boot.se`: TODO
-#'
-#' @family cf constructors
-#'
-#' @export
+#' simulations. Arithmetic operations are defined for this class in several
+#' ways, as well as concatenation and \link{is.cf}.
+#' 
+#' And last but not least, these are the fields that are used somewhere in the
+#' library but we have not figured out which mixin these should belong to:
+#' \itemize{ \item \code{conf.index}: TODO \item \code{N}: Integer, number of
+#' measurements. \item \code{blockind}: TODO \item \code{jack.boot.se}: TODO }
+#' 
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_principal_correlator}()}, \code{\link{cf_shifted}()},
+#' \code{\link{cf_smeared}()}, \code{\link{cf_subtracted}()},
+#' \code{\link{cf_weighted}()}
 cf <- function () {
   cf <- list()
   class(cf) <- append(class(cf), 'cf')
   return (cf)
 }
 
+
+
 #' CF metadata mixin constructor
-#'
-#' @param .cf `cf` object to extend.
-#' @param nrObs Integer, number of different measurements contained in this correlation function. One can use \link{c.cf} to add multiple observables into one container. This is for instance needed when passing to the \link{gevp} function.
+#' 
+#' CF metadata mixin constructor
+#' 
+#' 
+#' @param .cf \code{cf} object to extend.
+#' @param nrObs Integer, number of different measurements contained in this
+#' correlation function. One can use \link{c.cf} to add multiple observables
+#' into one container. This is for instance needed when passing to the
+#' \link{gevp} function.
 #' @param Time Integer, full time extent.
 #' @param nrStypes Integer, number of smearing types.
-#' @param symmetrised Logical, indicating whether the correlation function has been symmetrized.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @param symmetrised Logical, indicating whether the correlation function has
+#' been symmetrized.
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_orig}()}, \code{\link{cf_principal_correlator}()},
+#' \code{\link{cf_shifted}()}, \code{\link{cf_smeared}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -47,30 +55,39 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
   return (.cf)
 }
 
+
+
 #' Bootstrapped CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
+#' 
+#' Bootstrapped CF mixin constructor
+#' 
+#' The following fields will also be made available: \itemize{ \item
+#' \code{cf0}: Numeric vector, mean value of original measurements, convenience
+#' copy of \code{cf.tsboot$t0}. \item \code{tsboot.se}: Numeric vector,
+#' standard deviation over bootstrap samples. \item \code{boot.samples}:
+#' Logical, indicating whether there are bootstrap samples available. This is
+#' deprecated and instead the presence of bootstrap samples should be queried
+#' with \code{inherits(cf, 'cf_boot')}. \item \code{error_fn}: Function, takes
+#' a vector of samples and computes the error. In the bootstrap case this is
+#' just the \code{sd} function. Use this function instead of a \code{sd} in
+#' order to make the code compatible with jackknife samples. }
+#' 
+#' @param .cf \code{cf} object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
 #' @param boot.l Integer, block length in the time-series bootstrap process.
 #' @param seed Integer, random number generator seed used in bootstrap.
-#' @param sim Character, `sim` argument of \link[boot]{tsboot}.
-#' @param endcorr Boolean, `endcorr` argumetn of \link[boot]{tsboot}.
-#' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the real part.
-#' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the imaginay part.
+#' @param sim Character, \code{sim} argument of \link[boot]{tsboot}.
+#' @param endcorr Boolean, \code{endcorr} argumetn of \link[boot]{tsboot}.
+#' @param cf.tsboot List, result from the \link[boot]{tsboot} function for the
+#' real part.
+#' @param icf.tsboot List, result from the \link[boot]{tsboot} function for the
+#' imaginay part.
 #' @param resampling_method Character, either 'bootstrap' or 'jackknife'
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `cf0`: Numeric vector, mean value of original measurements, convenience copy of `cf.tsboot$t0`.
-#' - `tsboot.se`: Numeric vector, standard deviation over bootstrap samples.
-#' - `boot.samples`: Logical, indicating whether there are bootstrap samples available. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_boot')`.
-#' - `error_fn`: Function, takes a vector of samples and computes the error. In the bootstrap case this is just the `sd` function. Use this function instead of a `sd` in order to make the code compatible with jackknife samples.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_meta}()},
+#' \code{\link{cf_orig}()}, \code{\link{cf_principal_correlator}()},
+#' \code{\link{cf_shifted}()}, \code{\link{cf_smeared}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -110,27 +127,14 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, 
   return (.cf)
 }
 
+
+
 #' Estimates error from jackknife samples
-#'
-#' Currently this uses the mean over the jackknife samples in order to compute
-#' the error. It would be better in the case of a bias to use the mean over the
-#' original data instead. This would require a second parameter and therefore
-#' is incompatible with the previously used `sd` everywhere for the bootstrap
-#' samples. As the `sd` for the bootstrap samples also does not include the
-#' original data, this likely is similar in terms of bias.
-#'
-#' @param samples Numeric vector.
-#' @param boot.l Block length for bootstrapping.
-#' @param na.rm Logical. Determines whether `NA` values shall be removed, see
-#' Description for details.
-#'
-#' @description
-#' Computes the jackknife error which is just
-#' \deqn{\sum_{i=0}^N (x_i - \bar x)^2 \,.}
-#' Internally we use
-#' \deqn{\frac{(N-1)^2}{N} \mathop{\mathrm{sd}}(X)}
+#' 
+#' Computes the jackknife error which is just \deqn{\sum_{i=0}^N (x_i - \bar
+#' x)^2 \,.} Internally we use \deqn{\frac{(N-1)^2}{N} \mathop{\mathrm{sd}}(X)}
 #' in order to benefit from the optimized standard deviation function.
-#'
+#' 
 #' The width of the bootstrap distribution does not change with the number of
 #' elements. The jackknife distribution crucially depends on the number of
 #' measurements that one started with. Therefore we cannot just drop the NA
@@ -138,8 +142,19 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, 
 #' \eqn{\sqrt{N / m}} where \eqn{N} is the number of original measurements and
 #' \eqn{m} is the number of non-NA values. With NA values removed we would
 #' otherwise underestimate the uncertainty.
-#'
-#' @export
+#' 
+#' Currently this uses the mean over the jackknife samples in order to compute
+#' the error. It would be better in the case of a bias to use the mean over the
+#' original data instead. This would require a second parameter and therefore
+#' is incompatible with the previously used \code{sd} everywhere for the
+#' bootstrap samples. As the \code{sd} for the bootstrap samples also does not
+#' include the original data, this likely is similar in terms of bias.
+#' 
+#' @param samples Numeric vector.
+#' @param boot.l Block length for bootstrapping.
+#' @param na.rm Logical. Determines whether \code{NA} values shall be removed,
+#' see Description for details.
+#' @export jackknife_error
 jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   ## Number of jackknife samples.
   N <- length(samples)
@@ -157,20 +172,21 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   sqrt((N - 1) * (m - 1) / (m * boot.l)) * sd(samples)
 }
 
+
+
 #' jackknife_cov
-#'
-#' @description
+#' 
 #' Computes covariance matrix for jackknife samples.
-#'
+#' 
+#' 
 #' @param x a numeric vector, matrix or data frame.
-#' @param y ‘NULL’ (default) or a vector, matrix or data frame with
-#'        compatible dimensions to ‘x’. The default is equivalent to 
-#'        ‘y = x’ (but more efficient).
-#' @param na.rm logical. The rows containing any `NA` will be deleted if this
-#' option is set.
+#' @param y ‘NULL’ (default) or a vector, matrix or data frame with compatible
+#' dimensions to ‘x’. The default is equivalent to ‘y = x’ (but more
+#' efficient).
+#' @param na.rm logical. The rows containing any \code{NA} will be deleted if
+#' this option is set.
 #' @param ... parameters to be forwarded to \link{cov}.
-#'
-#' @export
+#' @export jackknife_cov
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     factor <- 1.0
     
@@ -196,15 +212,25 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     (N-1)^2 / N * factor * cov(x, y, ...)
 }
 
+
+
 #' Original data CF mixin constructor
-#'
-#' @param .cf `cf` object to extend. Named with a leading period just to distinguish it from the member also named `cf`.
-#' @param cf Numeric matrix, original data for all observables and measurements.
-#' @param icf Numeric matrix, imaginary part of original data. Be very careful with this as quite a few functions just ignore the imaginary part and drop it in operations.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' 
+#' Original data CF mixin constructor
+#' 
+#' 
+#' @param .cf \code{cf} object to extend. Named with a leading period just to
+#' distinguish it from the member also named \code{cf}.
+#' @param cf Numeric matrix, original data for all observables and
+#' measurements.
+#' @param icf Numeric matrix, imaginary part of original data. Be very careful
+#' with this as quite a few functions just ignore the imaginary part and drop
+#' it in operations.
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_principal_correlator}()},
+#' \code{\link{cf_shifted}()}, \code{\link{cf_smeared}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -215,17 +241,23 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   return (.cf)
 }
 
+
+
 #' Principal correlator CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
+#' 
+#' Principal correlator CF mixin constructor
+#' 
+#' 
+#' @param .cf \code{cf} object to extend.
 #' @param id Integer, number of the principal correlator from the GEVP.
-#' Ascending with eigenvalue, so `id = 1` is the lowest state.
+#' Ascending with eigenvalue, so \code{id = 1} is the lowest state.
 #' @param gevp_reference_time Integer, reference time \eqn{t_0} that has been
 #' used in the GEVP.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_shifted}()}, \code{\link{cf_smeared}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -236,21 +268,25 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
   return (.cf)
 }
 
+
+
 #' Shifted CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
+#' 
+#' Shifted CF mixin constructor
+#' 
+#' The following fields will also be made available: \itemize{ \item
+#' \code{shifted}: Logical, whether the correlation function has been shifted
+#' This is deprecated and instead the presence of a shift should be queried
+#' with \code{inherits(cf, 'cf_shifted')}. }
+#' 
+#' @param .cf \code{cf} object to extend.
 #' @param deltat TODO
 #' @param forwardshift Logical, TODO
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `shifted`: Logical, whether the correlation function has been shifted This is deprecated and instead the presence of a shift should be queried with `inherits(cf, 'cf_shifted')`.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_principal_correlator}()}, \code{\link{cf_smeared}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -263,23 +299,27 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
   return (.cf)
 }
 
+
+
 #' Smeared CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
-#' @param scf Like `cf`, but with the smeared data.
-#' @param iscf Like `icf`, but with the smeared data.
+#' 
+#' Smeared CF mixin constructor
+#' 
+#' The following fields will also be made available: \itemize{ \item
+#' \code{smeared}: Logical, whether the correlation function has smeared data.
+#' This is deprecated and instead the presence of bootstrap samples should be
+#' queried with \code{inherits(cf, 'cf_smeared')}. }
+#' 
+#' @param .cf \code{cf} object to extend.
+#' @param scf Like \code{cf}, but with the smeared data.
+#' @param iscf Like \code{icf}, but with the smeared data.
 #' @param nrSamples TODO
 #' @param obs TODO
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `smeared`: Logical, whether the correlation function has smeared data. This is deprecated and instead the presence of bootstrap samples should be queried with `inherits(cf, 'cf_smeared')`.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_principal_correlator}()}, \code{\link{cf_shifted}()},
+#' \code{\link{cf_subtracted}()}, \code{\link{cf_weighted}()},
+#' \code{\link{cf}()}
 cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -294,15 +334,20 @@ cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
   return (.cf)
 }
 
+
+
 #' Subtracted CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
+#' 
+#' Subtracted CF mixin constructor
+#' 
+#' 
+#' @param .cf \code{cf} object to extend.
 #' @param subtracted.values Numeric matrix, TODO
 #' @param subtracted.ii Integer vector, TODO
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_principal_correlator}()}, \code{\link{cf_shifted}()},
+#' \code{\link{cf_smeared}()}, \code{\link{cf_weighted}()}, \code{\link{cf}()}
 cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -313,21 +358,25 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
   return (.cf)
 }
 
+
+
 #' Weighted CF mixin constructor
-#'
-#' @param .cf `cf` object to extend.
+#' 
+#' Weighted CF mixin constructor
+#' 
+#' The following fields will also be made available: \itemize{ \item
+#' \code{weighted}: Logical, indicating whether the correlation function has
+#' been weighted. This is deprecated and instead the presence of this should be
+#' queried with \code{inherits(cf, 'cf_weighted')}. }
+#' 
+#' @param .cf \code{cf} object to extend.
 #' @param weight.factor TODO
 #' @param weight.cosh TODO
-#'
-#' @details
-#'
-#' The following fields will also be made available:
-#'
-#' - `weighted`: Logical, indicating whether the correlation function has been weighted. This is deprecated and instead the presence of this should be queried with `inherits(cf, 'cf_weighted')`.
-#'
-#' @family cf constructors
-#'
-#' @export
+#' @seealso Other cf constructors: \code{\link{cf_boot}()},
+#' \code{\link{cf_meta}()}, \code{\link{cf_orig}()},
+#' \code{\link{cf_principal_correlator}()}, \code{\link{cf_shifted}()},
+#' \code{\link{cf_smeared}()}, \code{\link{cf_subtracted}()},
+#' \code{\link{cf}()}
 cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
   stopifnot(inherits(.cf, 'cf'))
 
@@ -340,35 +389,45 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
   return (.cf)
 }
 
+
+
 #' Checks whether the cf object contains no data
-#'
-#' @param .cf `cf` object.
-#'
+#' 
+#' Checks whether the cf object contains no data
+#' 
+#' 
+#' @param .cf \code{cf} object.
 #' @examples
+#' 
 #' # The empty cf object must be empty:
 #' is_empty.cf(cf())
-#'
+#' 
 #' # The sample cf must not be empty:
 #' is_empty.cf(samplecf)
+#' 
 is_empty.cf <- function (.cf) {
   setequal(class(.cf), class(cf())) &&
     is.null(names(.cf))
 }
 
+
+
 #' Checks whether the resampling of two cf objects is compatible
 #' 
-#' @param cf1 `cf` object with `cf_boot`
-#' @param cf2 `cf` object with `cf_boot`
-#'
-#' @details Checks whether operations such as addition can be performed on the
-#'          resampling samples of `cf1` and `cf2`. In addition to all
-#'          meta parameters, the dimensions of the resampling sample arrays
-#'          must be identical.
-#'
-#' @return List of named booleans for each of the checked conditions
-#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
-#'         `resampling_method`, `boot_dim`, `icf` and, optionally
-#'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
+#' Checks whether the resampling of two cf objects is compatible
+#' 
+#' Checks whether operations such as addition can be performed on the
+#' resampling samples of \code{cf1} and \code{cf2}. In addition to all meta
+#' parameters, the dimensions of the resampling sample arrays must be
+#' identical.
+#' 
+#' @param cf1 \code{cf} object with \code{cf_boot}
+#' @param cf2 \code{cf} object with \code{cf_boot}
+#' @return List of named booleans for each of the checked conditions with
+#' elements \code{boot}, \code{boot.R}, \code{boot.l}, \code{sim},
+#' \code{endcorr}, \code{resampling_method}, \code{boot_dim}, \code{icf} and,
+#' optionally \code{iboot_dim} (if both \code{cf1} and \code{cf2} contain
+#' imaginary parts).
 resampling_is_compatible <- function(cf1, cf2){
   
   res <- list()
@@ -388,21 +447,24 @@ resampling_is_compatible <- function(cf1, cf2){
   return(res)
 }
 
+
+
 #' Checks whether the resampling of two cf objects is concatenable
 #' 
-#' @param cf1 `cf` object with `cf_boot`
-#' @param cf2 `cf` object with `cf_boot`
-#'
-#' @details In contrast to \link{resampling_is_compatible}, this function
-#'          checks if the resampling samples are concatenable on the
-#'          horizontal axis. In addition to checking all meta parameters,
-#'          the number of rows in the resampling arrays must be identical
-#'          but the number of columns may differ.
+#' Checks whether the resampling of two cf objects is concatenable
 #' 
-#' @return List of named booleans for each of the checked conditions
-#'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
-#'         `resampling_method`, `boot_nrow`, `icf` and, optionally
-#'         `iboot_nrow` (if both `cf1` and `cf2` contain imaginary parts).
+#' In contrast to \link{resampling_is_compatible}, this function checks if the
+#' resampling samples are concatenable on the horizontal axis. In addition to
+#' checking all meta parameters, the number of rows in the resampling arrays
+#' must be identical but the number of columns may differ.
+#' 
+#' @param cf1 \code{cf} object with \code{cf_boot}
+#' @param cf2 \code{cf} object with \code{cf_boot}
+#' @return List of named booleans for each of the checked conditions with
+#' elements \code{boot}, \code{boot.R}, \code{boot.l}, \code{sim},
+#' \code{endcorr}, \code{resampling_method}, \code{boot_nrow}, \code{icf} and,
+#' optionally \code{iboot_nrow} (if both \code{cf1} and \code{cf2} contain
+#' imaginary parts).
 resampling_is_concatenable <- function(cf1, cf2){
   res <- list()
   res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
@@ -422,11 +484,14 @@ resampling_is_concatenable <- function(cf1, cf2){
 
 }
 
+
+
 #' Checks whether the cf object contains an imaginary part
-#'
-#' @param .cf `cf` object
-#'
-#'
+#' 
+#' Checks whether the cf object contains an imaginary part
+#' 
+#' 
+#' @param .cf \code{cf} object
 has_icf <- function(.cf) {
   stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
@@ -443,6 +508,41 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
   return(list(starts = st, lengths = lens))
 }
 
+
+
+#' bootstrap a set of correlation functions
+#' 
+#' bootstrap a set of correlation functions
+#' 
+#' 
+#' @param cf correlation matrix of class \code{cf} e.g. obtained with a call to
+#' \code{extrac.obs}.
+#' @param boot.R number of bootstrap samples.
+#' @param boot.l block size for autocorrelation analysis
+#' @param seed seed for the random number generation used for boostrapping.
+#' @param sim The type of simulation required to generate the replicate time
+#' series.  The possible input values are ‘"fixed"’ (block resampling with
+#' fixed block lengths of ‘boot.l’) and ‘"geom"’ (block resampling with block
+#' lengths having a geometric distribution with mean ‘boot.l’). Default is
+#' ‘"geom"’. See \link[boot]{tsboot} for details.
+#' @param endcorr A logical variable indicating whether end corrections are to
+#' be applied when ‘sim’ is ‘"fixed"’.  When ‘sim’ is ‘"geom"’, ‘endcorr’ is
+#' automatically set to ‘TRUE’; ‘endcorr’ is not used when ‘sim’ is ‘"model"’
+#' or ‘"scramble"’. See \link[boot]{tsboot} for details.
+#' @return returns an object of class \code{cf} with bootstrap samples added
+#' for th correlation function called \code{cf.tsboot}. Moreover, the original
+#' average of \code{cf} is returned as \code{cf0} and the bootstrap errors as
+#' \code{tsboot.se}. We also copy the input parameters over and set
+#' \code{bootstrap.samples} to \code{TRUE}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link[boot]{tsboot}}, \code{jackknife.cf}
+#' @keywords bootstrap
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' plot(samplecf, log=c("y"))
+#' 
 bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -483,6 +583,31 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
   return(invisible(cf))
 }
 
+
+
+#' jackknife a set of correlation functions
+#' 
+#' jackknife a set of correlation functions
+#' 
+#' 
+#' @param cf correlation matrix of class \code{cf} e.g. obtained with a call to
+#' \code{extrac.obs}.
+#' @param boot.l block size for autocorrelation analysis
+#' @return returns an object of class \code{cf} with blocked jackknife samples
+#' added for the correlation function called \code{cf.jackknife}.  Currently,
+#' only the moving block jackknife approach is implemented.  Moreover, the
+#' original average of \code{cf} is returned as \code{cf0} and the bootstrap
+#' errors as \code{jackknife.se}. We also copy the input parameters over and
+#' set \code{jackknife.samples} to \code{TRUE}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{boot::tsboot}, \code{bootstrap.cf}
+#' @references H.R. Künsch, "The jackknife and the bootstrap for general
+#' stationary observations", The Annals of Statistics, 1989, Vol. 17, No. 3,
+#' 1217-1241
+#' 
+#' S.N. Lahiri, "On the jackknife-after-bootstrap method for dependent data and
+#' its consistency properties", Econometric Theory, 2002, Vol. 18, 79-98
+#' @keywords bootstrap, time series,
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -546,25 +671,29 @@ jackknife.cf <- function(cf, boot.l = 1) {
   return (invisible(cf))
 }
 
+
+
 #' uwerr.cf
-#' @description
-#' Gamma method analysis on all time-slices in a 'cf' object
-#'
-#' @param cf Object of type `cf` containing `cf_orig`
-#'
-#' @return A list with a named element `uwcf` which contains a data frame
-#'         with six columns, `value`, `dvalue`, `ddvalue`, `tauint`, `dtauint`
-#'         corresponding to what is returned by \link{uwerrprimary}. The sixth
-#'         column, `t`, is just an index counting the columns in the original `cf$cf`.
-#'         If `cf` contains an imaginary part, the return value contains another
-#'         list element, `uwicf` of the same structure as `uwcf`.
-#'         There are as many rows as there were columns in `cf$cf` and/or `cf$icf`.
-#'         When the call to \link{uwerrprimary} fails for a particular column of `cf$cf`
-#'         or `cf$icf`, the corresponding row of `uwcf` and/or `uwicf` will contain
-#'         `NA` for all members.
 #' 
+#' Gamma method analysis on all time-slices in a 'cf' object
+#' 
+#' 
+#' @param cf Object of type \code{cf} containing \code{cf_orig}
+#' @return A list with a named element \code{uwcf} which contains a data frame
+#' with six columns, \code{value}, \code{dvalue}, \code{ddvalue},
+#' \code{tauint}, \code{dtauint} corresponding to what is returned by
+#' \link{uwerrprimary}. The sixth column, \code{t}, is just an index counting
+#' the columns in the original \code{cf$cf}. If \code{cf} contains an imaginary
+#' part, the return value contains another list element, \code{uwicf} of the
+#' same structure as \code{uwcf}. There are as many rows as there were columns
+#' in \code{cf$cf} and/or \code{cf$icf}. When the call to \link{uwerrprimary}
+#' fails for a particular column of \code{cf$cf} or \code{cf$icf}, the
+#' corresponding row of \code{uwcf} and/or \code{uwicf} will contain \code{NA}
+#' for all members.
 #' @examples
+#' 
 #' uwerr.cf(samplecf)
+#' 
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -588,6 +717,20 @@ uwerr.cf <- function(cf){
   return(res)
 }
 
+
+
+#' add a configuration index to an \code{cf} object
+#' 
+#' add a configuration number index and adds it to a \code{cf} object.
+#' 
+#' 
+#' @param cf and object of class \code{cf}
+#' @param conf.index a configuration index of the same length as \code{cf}.
+#' @return Returns an object of class \code{cf} equal to the input but with
+#' element \code{conf.index} added
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \link{cf}
+#' @keywords correlator analysis bootstrap
 addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
     cf$conf.index <- conf.index
@@ -595,6 +738,27 @@ addConfIndex2cf <- function(cf, conf.index) {
   return(cf)
 }
 
+
+
+#' Combine statistics of two cf objects
+#' 
+#' \code{addStat.cf} takes the raw data of two \code{cf} objects and combines
+#' them into one
+#' 
+#' Note that the two \code{cf} objects to be combined need to be compatible.
+#' Otherwise, \code{addStat.cf} will abort with an error.
+#' 
+#' @param cf1 the first of the two \code{cf} objects to be combined
+#' @param cf2 the second of the two \code{cf} objects to be combined
+#' @return an object of class \code{cf} with the statistics of the two input
+#' \code{cf} objects combined
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords correlation function
+#' @examples
+#' 
+#' \dontrun{cf0 <- addStat(cf1=cf1, cf2=cf2)}
+#' 
 addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
@@ -624,16 +788,17 @@ addStat.cf <- function(cf1, cf2) {
   return (invisible(cf))
 }
 
-#' @title average close-by-times in a correlation function
-#' @description
-#' "close-by-times" averaging replaces the value of the correlation function at t
-#' with the "hypercubic" average with the values at the neighbouring time-slices
-#' with weights 0.25, 0.5 and 0.25
-#'   C(t') = 0.25 C(t-1) + 0.5 C(t) + 0.25 C(t+1)
-#' where periodic boundary conditions are assumed in shift.cf
-#'
-#' @param cf object of type \link{cf}
+
+
+#' average close-by-times in a correlation function
 #' 
+#' "close-by-times" averaging replaces the value of the correlation function at
+#' t with the "hypercubic" average with the values at the neighbouring
+#' time-slices with weights 0.25, 0.5 and 0.25 C(t') = 0.25 C(t-1) + 0.5 C(t) +
+#' 0.25 C(t+1) where periodic boundary conditions are assumed in shift.cf
+#' 
+#' 
+#' @param cf object of type \link{cf}
 avg.cbt.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -649,20 +814,20 @@ avg.cbt.cf <- function(cf){
   return(invisible(cf))
 }
 
+
+
 #' Arithmetically adds two correlation functions
-#'
-#' @param cf1,cf2 `cf_orig` object.
+#' 
+#' Arithmetically adds two correlation functions
+#' 
+#' 
+#' @param cf1,cf2 \code{cf_orig} object.
 #' @param a,b Numeric. Factors that multiply the correlation function before
 #' the addition.
 #' 
 #' Since addition is associative, this operates also on the bootstrap samples
 #' and these are thus not invalidated in the process.
-#'
-#' @return
-#' The value is
-#' \deqn{a C_1 + b C_2 \,.}
-#'
-#' @export
+#' @return The value is \deqn{a C_1 + b C_2 \,.}
 add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
@@ -730,29 +895,31 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
+
+
 #' Arithmetically subtract correlators
-#'
-#' @param cf1,cf2 `cf_orig` objects.
-#'
-#' @export
+#' 
+#' Arithmetically subtract correlators
+#' 
+#' 
+#' @param cf1,cf2 \code{cf_orig} objects.
 '-.cf' <- function(cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
+
+
 #' Divide two cf objects by each other measurement by measurement
-#'
-#' Note that no complex arithmetic is used, real and imaginary parts are 
-#' treated as seperate and indepenent, such that the real part of one
-#' is the divided by the real part of the other and similarly for the
-#' imaginary parts.
-#'
-#' Note that this is generally only allowed on bootstrap samples and mean values,
-#' although it makes sense in some exeptional circumstances. Don't use this
-#' function unless you're certain that you should!
 #' 
-#' @param cf1,cf2 `cf_orig` objects.
-#'
-#' @export
+#' Note that no complex arithmetic is used, real and imaginary parts are
+#' treated as seperate and indepenent, such that the real part of one is the
+#' divided by the real part of the other and similarly for the imaginary parts.
+#' 
+#' Note that this is generally only allowed on bootstrap samples and mean
+#' values, although it makes sense in some exeptional circumstances. Don't use
+#' this function unless you're certain that you should!
+#' 
+#' @param cf1,cf2 \code{cf_orig} objects.
 '/.cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
@@ -773,12 +940,15 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   return (cf)
 }
 
+
+
 #' Arithmetically scale a correlator
-#'
-#' @param cf `cf_orig` objects.
+#' 
+#' Arithmetically scale a correlator
+#' 
+#' 
+#' @param cf \code{cf_orig} objects.
 #' @param a Numeric, scaling factor.
-#'
-#' @export
 mul.cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'cf_orig'))
   stopifnot(is.numeric(a))
@@ -812,6 +982,22 @@ mul.cf <- function(cf, a=1.) {
   return (cf)
 }
 
+
+
+#' extract one single correlator object as \code{cf} object from a large
+#' \code{cf} object.
+#' 
+#' \code{cf} objects are capable of storing several correlation functions in
+#' form of a correlation matrix. \code{extractSingleCor.cf} lets one extract
+#' one of them.
+#' 
+#' 
+#' @param cf input object of class \code{cf}
+#' @param id id of the correlators in \code{cf} to be extracted
+#' @return A \code{cf} object containing only the single correlator
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords bootstrap correlator
 extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -849,26 +1035,39 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
   return (cf)
 }
 
+
+
 #' Checks whether an object is a cf
-#'
-#' @param x Object, possibly of class `cf`.
-#'
-#' @export
+#' 
+#' Checks whether an object is a cf
+#' 
+#' 
+#' @param x Object, possibly of class \code{cf}.
 is.cf <- function (x) {
   inherits(x, "cf")
 }
 
+
+
 #' Concatenate correlation function objects
-#'
-#' @param ... Zero or multiple objects of type `cf`.
+#' 
+#' Concatenate correlation function objects
+#' 
+#' 
+#' @param ... Zero or multiple objects of type \code{cf}.
 c.cf <- function (...) {
   rval <- Reduce(concat.cf, list(...), cf())
   return (invisible(rval))
 }
 
+
+
 #' Concatenate two correlation function objects
-#'
-#' @param left,right `cf` objects to concatenate.
+#' 
+#' Concatenate two correlation function objects
+#' 
+#' 
+#' @param left,right \code{cf} objects to concatenate.
 concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
@@ -946,16 +1145,19 @@ concat.cf <- function (left, right) {
   return (invisible(rval))
 }
 
+
+
 #' Plot a correlation function
-#'
-#' @param x `cf_boot` object
-#' @param neg.vec Numeric vector of length `cf$cf0`. This allows switching the
-#' sign for certain time slices or observables such that displaying in
+#' 
+#' Plot a correlation function
+#' 
+#' 
+#' @param x \code{cf_boot} object
+#' @param neg.vec Numeric vector of length \code{cf$cf0}. This allows switching
+#' the sign for certain time slices or observables such that displaying in
 #' log-scale is sensible.
 #' @param rep See \code{\link{plotwitherror}}.
 #' @param ... Graphical parameter to be passed on to \link{plotwitherror}
-#'
-#' @export
 plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
   cf <- x
   stopifnot(inherits(cf, 'cf_boot'))
@@ -979,13 +1181,18 @@ plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ..
   return(invisible(df))
 }
 
+
+
 #' shift a correlation function by 'places' time-slices
-#'
-#'   C'(t) = C(t+places)
-#' where places can be positive or negative as required and periodic boundary conditions
-#' in time are assumed
-#' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins required)
-#' @param places integer number of time-slices for backward (negative) or forward (positive) shifts
+#' 
+#' C'(t) = C(t+places) where places can be positive or negative as required and
+#' periodic boundary conditions in time are assumed
+#' 
+#' 
+#' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins
+#' required)
+#' @param places integer number of time-slices for backward (negative) or
+#' forward (positive) shifts
 shift.cf <- function(cf, places) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1048,14 +1255,16 @@ shift.cf <- function(cf, places) {
   return(invisible(cf))
 }
 
+
+
 #' Invalidate samples
-#'
+#' 
 #' When a correlation function is modified, any resampling should be
 #' invalidated. We could instead also choose to properly work with the samples,
 #' but most computations are done with the original data anyway.
-#'
-#' @param cf `cf` object.
-#'
+#' 
+#' 
+#' @param cf \code{cf} object.
 invalidate.samples.cf <- function (cf) {
   cf$boot.l <- NULL
   cf$boot.R <- NULL
@@ -1080,17 +1289,18 @@ invalidate.samples.cf <- function (cf) {
   return(invisible(cf))
 }
 
+
+
 #' symmetrise.cf
-#'
-#' @description
+#' 
 #' Symmetrises a correlation function
 #' 
-#' @param cf Object of type `cf`.
-#' @param sym.vec Integer vector. Takes values -+1 for
-#'   (anti)symmmetrisation. If longer than 1, it must be of length
-#'   equal to the number of observalbes in `cf`. Otherwise, the same
-#'   operation is applied to all observables in `cf`, which is the
-#'   default. 
+#' 
+#' @param cf Object of type \code{cf}.
+#' @param sym.vec Integer vector. Takes values -+1 for (anti)symmmetrisation.
+#' If longer than 1, it must be of length equal to the number of observalbes in
+#' \code{cf}. Otherwise, the same operation is applied to all observables in
+#' \code{cf}, which is the default.
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1171,8 +1381,13 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   return(invisible(cf))
 }
 
+
+
 #' summary.cf
-#'
+#' 
+#' summary.cf
+#' 
+#' 
 #' @param object Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
 summary.cf <- function(object, ...) {
@@ -1208,8 +1423,13 @@ summary.cf <- function(object, ...) {
   }
 }
 
+
+
 #' print.cf
-#'
+#' 
+#' print.cf
+#' 
+#' 
 #' @param x Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
 print.cf <- function (x, ...) {

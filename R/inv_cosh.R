@@ -1,13 +1,14 @@
-#' @title numerically invert the cosh function for the mass
-#'
+#' numerically invert the cosh function for the mass
+#' 
+#' numerically invert the cosh function for the mass
+#' 
+#' 
 #' @param ratio Numeric. The value of the ratio.
 #' @param timeextent Integer. Time extend of the lattice.
 #' @param t Integer. The t-value where the ratio was taken.
 #' @param eps Numeric. Precision of the numerical solution
-#' @param maxiterations Integer. Maximal number of iterations to be
-#'   used in the iterative solver.
-#'
-#' @export
+#' @param maxiterations Integer. Maximal number of iterations to be used in the
+#' iterative solver.
 invcosh <- function(ratio, timeextent, t, eps=1.e-9, maxiterations=1000) {
 
   if(ratio < 1 || is.na(ratio)) {

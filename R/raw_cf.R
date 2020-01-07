@@ -1,35 +1,40 @@
-#' @title Container for raw correlation functions
-#'
-#' @description
-#' This function \code{raw_cf()} creates containers for raw correlation functions
-#' of class \code{raw_cf}. This class is particularly designed to deal with
-#' complex and matrix-valued correlation functions emerging in statistical
-#' mechanics and quantum field theory simulations. 
-#' Arithmetic operations are defined for this class and utility functions
-#' such as \code{is.raw_cf} and \code{is_empty.raw_cf}.
-#'
-#' @family raw_cf constructors
-#'
-#' @export
+#' Container for raw correlation functions
+#' 
+#' This function \code{raw_cf()} creates containers for raw correlation
+#' functions of class \code{raw_cf}. This class is particularly designed to
+#' deal with complex and matrix-valued correlation functions emerging in
+#' statistical mechanics and quantum field theory simulations. Arithmetic
+#' operations are defined for this class and utility functions such as
+#' \code{is.raw_cf} and \code{is_empty.raw_cf}.
+#' 
+#' 
+#' @seealso Other raw_cf constructors: \code{\link{raw_cf_data}()},
+#' \code{\link{raw_cf_meta}()}
 raw_cf <- function () {
   cf <- list()
   class(cf) <- append(class(cf), 'raw_cf')
   return (cf)
 }
 
-#' @title \code{raw_cf} metadata mixin constructor
-#'
+
+
+#' \code{raw_cf} metadata mixin constructor
+#' 
+#' \code{raw_cf} metadata mixin constructor
+#' 
+#' 
 #' @param cf initial \link{raw_cf} object
-#' @param nrObs Integer, number of different observables assembled in the data field of this container. 
+#' @param nrObs Integer, number of different observables assembled in the data
+#' field of this container.
 #' @param Time Integer, full time extent.
-#' @param nts Integer, number of time separations actually stored in the data field.
 #' @param nrStypes Integer, number of smearing types.
-#' @param dim Integer vector of "internal" dimensions for matrix-valued correlation functions. 
-#'            For a scalar correlation, this should be specified as \code{c(1,1)}.
-#'
-#' @family raw_cf constructors
-#'
-#' @export
+#' @param dim Integer vector of "internal" dimensions for matrix-valued
+#' correlation functions. For a scalar correlation, this should be specified as
+#' \code{c(1,1)}.
+#' @param nts Integer, number of time separations actually stored in the data
+#' field.
+#' @seealso Other raw_cf constructors: \code{\link{raw_cf_data}()},
+#' \code{\link{raw_cf}()}
 raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=c(1,1), nts = Time ) {
   stopifnot(inherits(cf, 'raw_cf'))
   
@@ -43,18 +48,22 @@ raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=
   return (cf)
 }
 
-#' @title Original data mixin constructor for `raw_cf`
-#'
-#' @param cf `raw_cf` object to extend.
-#' @param data Numeric or complex array, original data for all observables and measurements. 
-#'             This should have dimensions c(Nmeas,cf$Time*cf$nrObs*cf$nrStypes,cf$dim).
-#'             Having the internal dimensions innermost is not as efficient, but it allows
-#'             different transformations to be applied to different observables in the same
-#'             container more easily.
-#'
-#' @family raw_cf constructors
-#'
-#' @export
+
+
+#' Original data mixin constructor for \code{raw_cf}
+#' 
+#' Original data mixin constructor for \code{raw_cf}
+#' 
+#' 
+#' @param cf \code{raw_cf} object to extend.
+#' @param data Numeric or complex array, original data for all observables and
+#' measurements. This should have dimensions
+#' c(Nmeas,cf$Time\emph{cf$nrObs}cf$nrStypes,cf$dim). Having the internal
+#' dimensions innermost is not as efficient, but it allows different
+#' transformations to be applied to different observables in the same container
+#' more easily.
+#' @seealso Other raw_cf constructors: \code{\link{raw_cf_meta}()},
+#' \code{\link{raw_cf}()}
 raw_cf_data <- function (cf, data) {
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -74,12 +83,17 @@ raw_cf_data <- function (cf, data) {
   return (cf)
 }
 
-#' @title Extract a particular internal component of a 'raw_cf' into a 'cf'
+
+
+#' Extract a particular internal component of a 'raw_cf' into a 'cf'
+#' 
+#' Extract a particular internal component of a 'raw_cf' into a 'cf'
+#' 
+#' 
 #' @param x 'raw_cf' container with 'raw_cf_data' and 'raw_cf_meta'
 #' @param component Integer vector of the same length as the internal dimension
-#'                  of the 'raw_cf' specifying which component should be extracted.
+#' of the 'raw_cf' specifying which component should be extracted.
 #' @return 'cf' object
-#' @export
 raw_cf_to_cf <- function(x, component){
   stopifnot(inherits(x, 'raw_cf_meta'))
   stopifnot(inherits(x, 'raw_cf_data'))
@@ -109,19 +123,21 @@ raw_cf_to_cf <- function(x, component){
   return(cf)
 }
 
-#' @title Gamma method analysis on all time-slices in a 'raw_cf' object
-#'
+
+
+#' Gamma method analysis on all time-slices in a 'raw_cf' object
+#' 
+#' Gamma method analysis on all time-slices in a 'raw_cf' object
+#' 
+#' 
 #' @param cf Correlation function container of class 'raw_cf'
-#' @return The return value is a list with elements
-#'         \describe{
-#'           \item{\code{value}}{central value}
-#'           \item{\code{dvalue}}{statistical error}
-#'           \item{\code{ddvalue}}{error of the statistical error}
-#'           \item{\code{tauint}}{auto-correlation time estimate}
-#'           \item{\code{dtauint}}{error of auto-correlation time estimate}
-#'         }
-#'         Each of these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
-#'         hance lacks the first dimension index compared for \code{cf$data}.
+#' @return The return value is a list with elements \describe{
+#' \item{list("value")}{central value} \item{list("dvalue")}{statistical error}
+#' \item{list("ddvalue")}{error of the statistical error}
+#' \item{list("tauint")}{auto-correlation time estimate}
+#' \item{list("dtauint")}{error of auto-correlation time estimate} } Each of
+#' these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
+#' hance lacks the first dimension index compared for \code{cf$data}.
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))
   
@@ -186,20 +202,24 @@ uwerr.raw_cf <- function(cf){
               idx_matrix = idx_matrix_uwerr)) 
 }
 
-#' @title Block average correlation function data
-#' @description Block `block_length` sequential measurements of the correlation
-#'              function together. This occurs, for example, when multiple
-#'              stochastic noise vectors are used per measurement or multiple
-#'              source locations. Alternatively, it can also be used to
-#'              account for auto-correlations in the data. If the total numbers
-#'              of measurements is not divisible by `block_length`, the last
-#'              measurements are discarded.
-#'
-#' @param cf `raw_cf` object
-#' @param block_length Integer, number of successive measurements to average over.
-#' @return cf `raw_cf` object with the data member reduced in its first dimension
-#'        by a factor of `block_length` and restricted (at the end) to the number
-#'        of measurements divisible by `block_length`.
+
+
+#' Block average correlation function data
+#' 
+#' Block \code{block_length} sequential measurements of the correlation
+#' function together. This occurs, for example, when multiple stochastic noise
+#' vectors are used per measurement or multiple source locations.
+#' Alternatively, it can also be used to account for auto-correlations in the
+#' data. If the total numbers of measurements is not divisible by
+#' \code{block_length}, the last measurements are discarded.
+#' 
+#' 
+#' @param cf \code{raw_cf} object
+#' @param block_length Integer, number of successive measurements to average
+#' over.
+#' @return cf \code{raw_cf} object with the data member reduced in its first
+#' dimension by a factor of \code{block_length} and restricted (at the end) to
+#' the number of measurements divisible by \code{block_length}.
 block.raw_cf <- function(cf, block_length){
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -243,16 +263,19 @@ block.raw_cf <- function(cf, block_length){
   return(cf)
 }
 
-#' @title Extend statistics of an existing `raw_cf` container
+
+
+#' Extend statistics of an existing \code{raw_cf} container
 #' 
-#' @param cf1 `raw_cf` container with or without 'data' and 'meta' mixins
-#' @param cf2 `raw_cf` container with or without 'data' and 'meta' mixins
-#'
-#' @details 
-#' When either of `cf1` or `cf2` does not contain any data,
-#' the other object is returned. (allows empty `raw_cf` to be extended).
-#' If the dimensions (except for the measurements) of the `data` fields of the
+#' Extend statistics of an existing \code{raw_cf} container
+#' 
+#' When either of \code{cf1} or \code{cf2} does not contain any data, the other
+#' object is returned. (allows empty \code{raw_cf} to be extended). If the
+#' dimensions (except for the measurements) of the \code{data} fields of the
 #' two containers match, they are concatenated along the measurement dimension.
+#' 
+#' @param cf1 \code{raw_cf} container with or without 'data' and 'meta' mixins
+#' @param cf2 \code{raw_cf} container with or without 'data' and 'meta' mixins
 addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -283,7 +306,13 @@ addStat.raw_cf <- function(cf1, cf2) {
   return (invisible(cf))
 }
 
-#' @title add two `raw_cf` objects
+
+
+#' add two \code{raw_cf} objects
+#' 
+#' add two \code{raw_cf} objects
+#' 
+#' 
 #' @param cf1 first 'raw_cf' container with data and meta-data
 #' @param cf2 second 'raw_cf' container with data and meta-data
 #' @param a Numeric or complex, scaling factor applied to \code{cf1}.
@@ -314,18 +343,30 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   add.raw_cf(cf1, cf2, a = 1.0, b = 1.0)
 }
 
-#' @title add two `raw_cf` objects
+
+
+#' add two \code{raw_cf} objects
+#' 
+#' add two \code{raw_cf} objects
+#' 
+#' 
 #' @param cf1 first 'raw_cf' container to be subtracted
 #' @param cf2 second 'raw_cf' container to be subtracted
-#' @return `raw_cf` object with \code{cf$data == cf1$data - cf2$data}
+#' @return \code{raw_cf} object with \code{cf$data == cf1$data - cf2$data}
 '-.raw_cf' <- function(cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
-#' @title divide two `raw_cf` objects
+
+
+#' divide two \code{raw_cf} objects
+#' 
+#' divide two \code{raw_cf} objects
+#' 
+#' 
 #' @param cf1 'raw_cf' container with data and meta-data to be the dividend
 #' @param cf2 'raw_cf' container with data and meta-data to be the divisor
-#' @return `raw_cf` object with \code{cf$data == cf1$data / cf2$data}
+#' @return \code{raw_cf} object with \code{cf$data == cf1$data / cf2$data}
 '/.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
@@ -358,11 +399,17 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
-#' @title scale `raw_cf` data
+
+
+#' scale \code{raw_cf} data
+#' 
+#' scale \code{raw_cf} data
+#' 
+#' 
 #' @param cf 'raw_cf' container with data to be scaled by the factor \code{a}
-#' @param a Numeric or complex scaling factor, although it could also be
-#'          an array of dimensions compatible with \code{cf$data}
-#' @return `raw_cf` object with \code{res$data == a*cf$data}
+#' @param a Numeric or complex scaling factor, although it could also be an
+#' array of dimensions compatible with \code{cf$data}
+#' @return \code{raw_cf} object with \code{res$data == a*cf$data}
 mul.raw_cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(is.numeric(a) | is.complex(a))
@@ -371,35 +418,69 @@ mul.raw_cf <- function(cf, a=1.) {
   return (cf)
 }
 
-#' @title check if an object is of class `raw_cf`
-#' @param x object to be checked 
+
+
+#' check if an object is of class \code{raw_cf}
+#' 
+#' check if an object is of class \code{raw_cf}
+#' 
+#' 
+#' @param x object to be checked
 is.raw_cf <- function(x){
   inherits(x, "raw_cf")
 }
 
-#' @title check if an obect is of class `raw_cf` and empty otherwise
+
+
+#' check if an obect is of class \code{raw_cf} and empty otherwise
+#' 
+#' check if an obect is of class \code{raw_cf} and empty otherwise
+#' 
+#' 
 #' @param x object to be checked
 is_empty.raw_cf <- function(x){
+
+
+
+
+#' multiply two \code{raw_cf} objects
+#' 
+#' multiply two \code{raw_cf} objects
+#' 
+#' 
+#' @param cf1 first 'raw_cf' container with data and meta-data to be multiplied
+#' @param cf2 second 'raw_cf' container with data and meta-data to be
+#' multiplied
+#' @return \code{raw_cf} object with \code{cf$data == cf1$data * cf2$data}
   .raw_cf <- x
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))
 }
 
 
-#' @title Concatenate `raw_cf` correlation function objects
-#'
-#' @param ... Zero or multiple objects of type `raw_cf`.
+
+
+#' Concatenate \code{raw_cf} correlation function objects
+#' 
+#' Concatenate \code{raw_cf} correlation function objects
+#' 
+#' 
+#' @param ... Zero or multiple objects of type \code{raw_cf}.
 c.raw_cf <- function (...) {
   rval <- Reduce(concat.raw_cf, list(...), raw_cf())
   return (rval)
 }
 
-#' @title Concatenate two `raw_cf` correlation function objects
-#' @description The data of the \code{left} and \code{right} objects
-#'              is concatenated along the second array dimension
-#'              such that the output contains the tensor slices of \code{right}
-#'              after the slices of \code{left}
-#' @param left `raw_cf` object to be concatenated with \code{right}
-#' @param right `raw_cf` object to be concatenated with \code{left}
+
+
+#' Concatenate two \code{raw_cf} correlation function objects
+#' 
+#' The data of the \code{left} and \code{right} objects is concatenated along
+#' the second array dimension such that the output contains the tensor slices
+#' of \code{right} after the slices of \code{left}
+#' 
+#' 
+#' @param left \code{raw_cf} object to be concatenated with \code{right}
+#' @param right \code{raw_cf} object to be concatenated with \code{left}
 concat.raw_cf <- function (left, right) {
   stopifnot(inherits(left, 'raw_cf'))
   stopifnot(inherits(right, 'raw_cf'))
@@ -437,34 +518,36 @@ concat.raw_cf <- function (left, right) {
   return (rval)
 }
 
-#' @title extract data from 'raw_cf' in format convenient to plot
-#' @description When dealing with with tensorial `raw_cf` objects
-#'              pre-processing and reshaping is always required to
-#'              prepare the data for plotting (or similar). This function
-#'              conveniently prepares a named list of prepared data.
-#'              The list elements are themselves lists which contain
-#'              `val` and `dval` members with the central value and error
-#'              of the element in question. These are in turn
-#'              arrays of dimension \code{ c( cf$nts, cf$dim ) } and thus
-#'              lack the first index compared to \code{cf$data}.
-#' @param cf `raw_cf` object with meta-data and data.
-#' @param reim String, one of 'real', 'imag' or 'both'. Specifies
-#'             whether the real and/or imaginary parts should be extracted.
-#' @param tauint Boolean, specifies if the tensor of auto-correlation times
-#'               and corresponding errors should be extracted. 
+
+
+#' extract data from 'raw_cf' in format convenient to plot
+#' 
+#' When dealing with with tensorial \code{raw_cf} objects pre-processing and
+#' reshaping is always required to prepare the data for plotting (or similar).
+#' This function conveniently prepares a named list of prepared data. The list
+#' elements are themselves lists which contain \code{val} and \code{dval}
+#' members with the central value and error of the element in question. These
+#' are in turn arrays of dimension \code{ c( cf$nts, cf$dim ) } and thus lack
+#' the first index compared to \code{cf$data}.
+#' 
+#' 
+#' @param cf \code{raw_cf} object with meta-data and data.
+#' @param reim String, one of 'real', 'imag' or 'both'. Specifies whether the
+#' real and/or imaginary parts should be extracted.
+#' @param tauint Boolean, specifies if the tensor of auto-correlation times and
+#' corresponding errors should be extracted.
 #' @param relerr Boolean, specifies if the return value should also include
-#'               estimates of the relative error and its error.
+#' estimates of the relative error and its error.
 #' @return List of up to six named elements (depending on what was passed for
-#'         \code{reim}, \code{tauint}, \code{relerr}) containing the central
-#'         values and errors of the real and/or imaginary part of `cf$data`
-#'         as well as the corresponding arrays of auto-correlation times and
-#'         relative errors. The list elements come in the order
-#'         \code{real}, \code{imag}, \code{relerr_real}, \code{relerr_imag},
-#'         \code{tauint_real}, \code{tauint_imag} if \code{reim} is `both` and
-#'         \code{tauint} and \code{relerr} are \code{TRUE}. The \code{val} and
-#'         \code{dval} members of these list elements are arrays of dimension
-#'         \code{ c( cf$nts, cf$dim ) } and thus lack the first index compared
-#'         to \code{cf$data}.
+#' \code{reim}, \code{tauint}, \code{relerr}) containing the central values and
+#' errors of the real and/or imaginary part of \code{cf$data} as well as the
+#' corresponding arrays of auto-correlation times and relative errors. The list
+#' elements come in the order \code{real}, \code{imag}, \code{relerr_real},
+#' \code{relerr_imag}, \code{tauint_real}, \code{tauint_imag} if \code{reim} is
+#' \code{both} and \code{tauint} and \code{relerr} are \code{TRUE}. The
+#' \code{val} and \code{dval} members of these list elements are arrays of
+#' dimension \code{ c( cf$nts, cf$dim ) } and thus lack the first index
+#' compared to \code{cf$data}.
 get_plotdata_raw_cf <- function(cf,
                                 reim,
                                 tauint,
@@ -550,14 +633,20 @@ get_plotdata_raw_cf <- function(cf,
   return(plotdata)
 }
 
-#' @title plot all correlators in `raw_cf` object
-#' @param x Object of class `raw_cf` with data and meta-data.
-#' @param reim Character vector, may contain 'real', 'imag' or 'both'. Determines
-#'             whether the real and/or imaginary parts of the correlation funtions
-#'             should be plotted.
-#' @param reim_same Boolean, determines whether the real and imaginary parts, if both
-#'                  are to be plotted, will be plotted in the same plot.
+
+
+#' plot all correlators in \code{raw_cf} object
+#' 
+#' plot all correlators in \code{raw_cf} object
+#' 
+#' 
+#' @param x Object of class \code{raw_cf} with data and meta-data.
 #' @param ... Further parameters passed to \link{plotwitherror}.
+#' @param reim Character vector, may contain 'real', 'imag' or 'both'.
+#' Determines whether the real and/or imaginary parts of the correlation
+#' funtions should be plotted.
+#' @param reim_same Boolean, determines whether the real and imaginary parts,
+#' if both are to be plotted, will be plotted in the same plot.
 #' @return Invisibly returns the plotdata, see \link{get_plotdata_raw_cf}.
 plot.raw_cf <- function(x,
                         ...,
@@ -612,20 +701,36 @@ plot.raw_cf <- function(x,
 #'                  be 'both'. If this is given, the imaginary part as well as its
 #'                  relative error and per-time-slice integrated autocorreation times
 #                   are plotted in red.
+
+
+#' create convenient overview plots for a \code{raw_cf} object
+#' 
+#' create convenient overview plots for a \code{raw_cf} object
+#' 
+#' 
+#' @param cf 'raw_cf' container with data and meta-data
+#' @param grid Optional, integer vector which satisfies \code{prod(grid) ==
+#' prod(cf$dim)}. This is passed to \code{par} via \code{par(mfrow=grid)} to
+#' produce a grid of plots as defined by the components of \code{grid}.
+#' @param reim Vector of strings, one of 'real', 'imag' or 'both'. Specified
+#' whether the real or imaginary parts (or both) should be plotted.
+#' @param reim_same Boolean, whether real and imaginary parts should be plotted
+#' on the same plot. If \code{TRUE}, then \code{reim} must be 'both'. If this
+#' is given, the imaginary part as well as its relative error and
+#' per-time-slice integrated autocorreation times
 #' @param relerr Boolean, whether a plot of the relative error per time slice
-#'               should be added.
-#' @param tauint Boolean, whether a plot of the integrated auto-correlation time
-#'               on each time slice should be added.
+#' should be added.
+#' @param tauint Boolean, whether a plot of the integrated auto-correlation
+#' time on each time slice should be added.
 #' @param value_logplot Boolean, whether the plot of the correlator should be
-#'                      on a logarithmic vertical axis. (does not affect \code{tauint}
-#'                      and \code{relerr}).
-#' @param value_factor Numeric, either of length '1' or as long as the number of
-#'                     correlation functions in \code{cf}. The data will be scaled
-#'                     by this factor before plotting.
+#' on a logarithmic vertical axis. (does not affect \code{tauint} and
+#' \code{relerr}).
+#' @param value_factor Numeric, either of length '1' or as long as the number
+#' of correlation functions in \code{cf}. The data will be scaled by this
+#' factor before plotting.
 #' @param title Character vector, will be passed as the \code{main} argument to
-#'              \link{plotwitherror} which in turn passes it to \link{plot}. Can
-#'              be either of length '1' or \code{prod(cf$dim)}
-#' @export
+#' \link{plotwitherror} which in turn passes it to \link{plot}. Can be either
+#' of length '1' or \code{prod(cf$dim)}
 overview_plot_raw_cf <- function(cf,
                                  grid,
                                  reim = 'real', 
@@ -745,22 +850,24 @@ overview_plot_raw_cf <- function(cf,
   }
 }
 
-#' @title shift a \code{raw_cf} correlation function by 'places' time-slices
-#' @param cf \code{raw_cf} container
-#' @param places Integer (possibly a vector), number of time slices that the correlation function
-#'               should be shifted by. Can be positive or negative. This can either
-#'               be a single value such that a shift by this many time slices will be
-#'               applied to every measurement or it can be a vector of values of the
-#'               same length as the number of measurements in \code{cf}. In that case,
-#'               a different shift will be applied to each measurement. This is useful
-#'               if it is important to preserve the absolute time coordinates of a
-#'               correlation function until some time-dependent transformations
-#'               have been applied.
-#' @details
+
+
+#' shift a \code{raw_cf} correlation function by 'places' time-slices
+#' 
+#' shift a \code{raw_cf} correlation function by 'places' time-slices
+#' 
 #' The correlation funtion \eqn{C(t)} is shifted in time to produce:
-#'   \deqn{C'(t) = C(t+places)}
-#' using periodic boundary conditions in time.
-#' @export
+#' \deqn{C'(t) = C(t+places)} using periodic boundary conditions in time.
+#' 
+#' @param cf \code{raw_cf} container
+#' @param places Integer (possibly a vector), number of time slices that the
+#' correlation function should be shifted by. Can be positive or negative. This
+#' can either be a single value such that a shift by this many time slices will
+#' be applied to every measurement or it can be a vector of values of the same
+#' length as the number of measurements in \code{cf}. In that case, a different
+#' shift will be applied to each measurement. This is useful if it is important
+#' to preserve the absolute time coordinates of a correlation function until
+#' some time-dependent transformations have been applied.
 shift.raw_cf <- function(cf, places) {
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -820,11 +927,17 @@ shift.raw_cf <- function(cf, places) {
   return(cf)
 }
 
-#' @title Construct the tensor index set for the entire raw correlator
+
+
+#' Construct the tensor index set for the entire raw correlator
+#' 
+#' Construct the tensor index set for the entire raw correlator
+#' 
+#' 
 #' @param cf 'raw_cf' container with data and meta-data
 #' @param component Integer vector. Optional argument to obtain a subset of the
-#'                  index matrix to access a particular element of the interior
-#'                  dimensions. Must of the the same length as cf$dim.
+#' index matrix to access a particular element of the interior dimensions. Must
+#' of the the same length as cf$dim.
 idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -848,8 +961,14 @@ idx_matrix.raw_cf <- function(cf, component){
   as.matrix(do.call(expand.grid, args))
 }
 
-#' @title Construct tensor index set for the internal degrees of freedom
-#' @param cf `raw_cf` container
+
+
+#' Construct tensor index set for the internal degrees of freedom
+#' 
+#' Construct tensor index set for the internal degrees of freedom
+#' 
+#' 
+#' @param cf \code{raw_cf} container
 int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   args <- list()
@@ -860,12 +979,17 @@ int_idx_matrix.raw_cf <- function(cf){
 }
 
 
-#' @title Print summary of data contained in `raw_cf` container
-#' @param object `raw_cf` container with data and meta-data
+
+
+#' Print summary of data contained in \code{raw_cf} container
+#' 
+#' Print summary of data contained in \code{raw_cf} container
+#' 
+#' 
+#' @param object \code{raw_cf} container with data and meta-data
 #' @param ... ignored
-#' @param statistics Boolean, return central value and error
-#'                   for all components of the 'raw_cf'. This can
-#'                   be slow so the default is \code{FALSE}.
+#' @param statistics Boolean, return central value and error for all components
+#' of the 'raw_cf'. This can be slow so the default is \code{FALSE}.
 summary.raw_cf <- function(object, ..., statistics = FALSE) {
   cf <- object
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -899,8 +1023,14 @@ summary.raw_cf <- function(object, ..., statistics = FALSE) {
   }
 }
 
-#' @title Print summary of data contained in `raw_cf` container
-#' @param x `raw_cf` container with data and meta-data
+
+
+#' Print summary of data contained in \code{raw_cf} container
+#' 
+#' Print summary of data contained in \code{raw_cf} container
+#' 
+#' 
+#' @param x \code{raw_cf} container with data and meta-data
 #' @param ... ignored
 print.raw_cf <- function(x, ...) {
   cf <- x
