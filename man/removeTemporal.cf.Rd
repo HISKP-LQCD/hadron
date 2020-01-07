@@ -4,8 +4,8 @@
 \alias{removeTemporal.cf}
 \title{Remove Thermal States by Weighting and Shifting}
 \usage{
-removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0), p2 = c(0, 0,
-  0), L, lat.disp = TRUE, weight.cosh = FALSE)
+removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0),
+  p2 = c(0, 0, 0), L, lat.disp = TRUE, weight.cosh = FALSE)
 }
 \arguments{
 \item{cf}{Object of type \link{cf}}

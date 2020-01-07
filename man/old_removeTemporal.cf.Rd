@@ -4,8 +4,9 @@
 \alias{old_removeTemporal.cf}
 \title{Remove temporal states}
 \usage{
-old_removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0), p2 = c(0,
-  0, 0), L, lat.disp = TRUE, weight.cosh = FALSE, deltat = 1)
+old_removeTemporal.cf(cf, single.cf1, single.cf2, p1 = c(0, 0, 0),
+  p2 = c(0, 0, 0), L, lat.disp = TRUE, weight.cosh = FALSE,
+  deltat = 1)
 }
 \arguments{
 \item{cf}{Object of type \code{cf}, two-to-two particle correlation function which

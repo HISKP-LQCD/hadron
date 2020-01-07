@@ -4,11 +4,12 @@
 \alias{simple.nlsfit}
 \title{NLS fit with without bootstrap}
 \usage{
-simple.nlsfit(fn, par.guess, y, x, errormodel, priors = list(param = c(), p =
-  c(), psamples = c()), ..., lower = rep(x = -Inf, times = length(par.guess)),
-  upper = rep(x = +Inf, times = length(par.guess)), dy, dx, CovMatrix,
-  boot.R = 0, gr, dfn, use.minpack.lm = TRUE, error = sd, maxiter = 500,
-  success.infos = 1:3, relative.weights = FALSE, na.rm = FALSE)
+simple.nlsfit(fn, par.guess, y, x, errormodel, priors = list(param = c(),
+  p = c(), psamples = c()), ..., lower = rep(x = -Inf, times =
+  length(par.guess)), upper = rep(x = +Inf, times = length(par.guess)),
+  dy, dx, CovMatrix, boot.R = 0, gr, dfn, use.minpack.lm = TRUE,
+  error = sd, maxiter = 500, success.infos = 1:3,
+  relative.weights = FALSE, na.rm = FALSE)
 }
 \arguments{
 \item{fn}{\code{fn(par, x, ...)}. The (non-linear) function to be fitted to the
@@ -29,6 +30,14 @@ numerical vector.}
 
 \item{errormodel}{Either "yerror" or "xyerror", depending on the x-values having
 errors or not.}
+
+\item{priors}{List possessing the elements \code{param}, \code{p} and \code{psamples}.
+The vector \code{param} includes the indices of all fit parameters that are
+to be constrained and the vector \code{p} the corresponding paramater values
+(e.g. known from a previous fit). The list element \code{psamples} is a matrix of
+dimensions \code{(boot.R, length(param))} and contains the corresponding
+bootstrap samples. If this list is not specified priors are omitted
+within the fit.}
 
 \item{...}{Additional parameters passed to \code{fn}, \code{gr} and \code{dfn}.}
 
@@ -117,14 +126,13 @@ fit.result <- simple.nlsfit(fn, c(1, 1), value, x, "xyerrors", dy=dvalue, dx=dx)
 summary(fit.result)
 }
 \seealso{
-Other NLS fit functions: 
-\code{\link{bootstrap.nlsfit}()},
-\code{\link{parametric.bootstrap.cov}()},
-\code{\link{parametric.bootstrap}()},
-\code{\link{parametric.nlsfit.cov}()},
-\code{\link{parametric.nlsfit}()},
-\code{\link{plot.bootstrapfit}()},
-\code{\link{print.bootstrapfit}()},
-\code{\link{summary.bootstrapfit}()}
+Other NLS fit functions: \code{\link{bootstrap.nlsfit}},
+  \code{\link{parametric.bootstrap.cov}},
+  \code{\link{parametric.bootstrap}},
+  \code{\link{parametric.nlsfit.cov}},
+  \code{\link{parametric.nlsfit}},
+  \code{\link{plot.bootstrapfit}},
+  \code{\link{print.bootstrapfit}},
+  \code{\link{summary.bootstrapfit}}
 }
 \concept{NLS fit functions}

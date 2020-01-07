@@ -10,7 +10,7 @@ escapeLatexSpecials(x)
 \item{x}{String or vector of strings.}
 }
 \value{
-String or vector of strings with all occurences of "#", "$", "\%",
+String or vector of strings with all occurences of "#", "$", "%",
 "&", "~", "_", "^", ">", "<" replaced by escaped
 counterparts which should render fine when used in a tikz plot, for
 example.

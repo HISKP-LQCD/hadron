@@ -6,9 +6,9 @@
 \usage{
 new_matrixfit(cf, t1, t2, parlist, sym.vec = rep(1, cf$nrObs),
   neg.vec = rep("cosh", cf$nrObs), useCov = FALSE, model = "single",
-  boot.fit = TRUE, fit.method = "optim", autoproceed = FALSE, par.guess,
-  every, higher_states = list(val = numeric(0), boot = matrix(nrow = 0, ncol =
-  0), ampl = numeric(0)), ...)
+  boot.fit = TRUE, fit.method = "optim", autoproceed = FALSE,
+  par.guess, every, higher_states = list(val = numeric(0), boot =
+  matrix(nrow = 0, ncol = 0), ampl = numeric(0)), ...)
 }
 \arguments{
 \item{cf}{Object of class \code{cf} with \code{cf_meta} and \code{cf_boot}.}

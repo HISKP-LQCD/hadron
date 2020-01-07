@@ -46,9 +46,8 @@ heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 
 }
 \seealso{
-Other hankel: 
-\code{\link{gevp.hankel}()},
-\code{\link{hankel2cf}()},
-\code{\link{hankel2effectivemass}()}
+Other hankel: \code{\link{gevp.hankel}},
+  \code{\link{hankel2cf}},
+  \code{\link{hankel2effectivemass}}
 }
 \concept{hankel}
