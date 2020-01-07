@@ -267,7 +267,7 @@ TwoStateModel <- R6::R6Class(
       res[, 3] <- exp(-par[1] * xx) * (1 - exp(-par[2] * xx))
       return(res)
     },
-    initial_guess = function (corr, parlist, t1, t2) {
+    initial_guess = function (corr, t1, t2) {
       par = numeric(3)
 
       ## the ground state energy
@@ -331,6 +331,34 @@ NParticleModel <- R6::R6Class(
         }
       }
       return(y)
+    },
+    sm = NA
+  )
+)
+
+#' Model for a single correlator and a simple additive constant.
+#'
+#' @description
+#' This model is just the “single” model plus a simple additive
+#' constant. In some way it is a specialization of the “n particles” model as
+#' the energy difference is just set to zero.
+SingleConstantModel <- R6::R6Class(
+  'SingleConstantModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+      self$sm <- SingleModel$new(time_extent, parlist, sym_vec, neg_vec, m_size)
+    },
+    prediction = function (par, x, ...) {
+      self$sm$prediction(par[1:2], x, ...) + par[3]
+    },
+    prediction_jacobian = function (par, x, ...) {
+      y <- self$sm$prediction_jacobian(par[1:2], x, ...)
+      cbind(y, rep(1, length(x)))
+    },
+    initial_guess = function (corr, t1, t2) {
+      c(self$sm$initial_guess(corr, t1, t2), 1e-10)
     },
     sm = NA
   )
@@ -472,6 +500,11 @@ new_matrixfit <- function(cf,
   } else if (model == 'n_particles') {
     stopifnot(cf$nrObs == 1)
     model_object <- NParticleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else if (model == 'single_constant') {
+    stopifnot(cf$nrObs == 1)
+    model_object <- SingleConstantModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else {
+    stop(sprintf('Unknown matrixfit model `%s`.', model))
   }
   
   if (missing(par.guess)) {
