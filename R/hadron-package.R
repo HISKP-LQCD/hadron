@@ -1,0 +1,315 @@
+
+
+#' Sample correlator matrix
+#' 
+#' Sample data for a correlation function for a 24 cube times 48 lattice QCD
+#' simulation representing a pion propagation. It is stored in form of an
+#' object of class \code{cf}, which is derived from \code{list}.
+#' 
+#' 
+#' @name correlatormatrix
+#' @docType data
+#' @format list of 7 elements: [1] "nrObs" "Time" "nrStypes" "symmetrised" "cf"
+#' [6] "icf" "cf0"
+#' @keywords datasets
+#' @examples
+#' 
+#' data("correlatormatrix")
+#' 
+NULL
+
+
+
+
+
+#' List of arrays of gamma structures
+#' 
+#' List of arrays of 4x4 complex gamma matrices in the tmLQCD chiral gamma
+#' basis, where \eqn{\gamma^5 = \gamma^0 \gamma^1 \gamma^2 \gamma^3 = }
+#' \code{diag(c(1,1,-1,-1))} and the UKQCD gamma basis, where \eqn{\gamma^5 =
+#' \gamma^0 \gamma^1 \gamma^2 \gamma^3}.
+#' 
+#' The index mappings are as follows \itemize{ \item
+#' \code{gm[['chiral_tmlqcd']][1,,]} \eqn{\gamma^0} \item
+#' \code{gm[['chiral_tmlqcd']][2,,]} \eqn{\gamma^1} \item
+#' \code{gm[['chiral_tmlqcd']][3,,]} \eqn{\gamma^2} \item
+#' \code{gm[['chiral_tmlqcd']][4,,]} \eqn{\gamma^3} \item
+#' \code{gm[['chiral_tmlqcd']][5,,]} \eqn{\gamma^5} \item
+#' \code{gm[['chiral_tmlqcd']][6,,]} positive parity projector \eqn{
+#' \frac{1}{2} (1 + \gamma^0) } \item \code{gm[['chiral_tmlqcd']][7,,]}
+#' negative parity projector \eqn{ \frac{1}{2} (1 - \gamma^0) } } \itemize{
+#' \item \code{gm[['ukqcd']][1,,]} \eqn{\gamma^1} \item
+#' \code{gm[['ukqcd']][2,,]} \eqn{\gamma^2} \item \code{gm[['ukqcd']][3,,]}
+#' \eqn{\gamma^3} \item \code{gm[['ukqcd']][4,,]} \eqn{\gamma^4} \item
+#' \code{gm[['ukqcd']][5,,]} \eqn{\gamma^5} \item \code{gm[['ukqcd']][6,,]}
+#' positive parity projector \eqn{ \frac{1}{2} (1 + \gamma^4) } \item
+#' \code{gm[['ukqcd']][7,,]} negative parity projector \eqn{ \frac{1}{2} (1 -
+#' \gamma^4) } }
+#' 
+#' The function \code{\link{gm_mu}} can be used to access its elements using a
+#' more "natural" indexing.
+#' 
+#' 
+#' @name gm
+#' @docType data
+#' @format An object of class \code{list} of length 2.
+#' @keywords datasets
+NULL
+
+
+
+
+
+#' Internal Hadron Functions
+#' 
+#' Internal hadron functions
+#' 
+#' These are not to be called by the user (or in some cases are just waiting
+#' for proper documentation to be written :).
+#' 
+#' @aliases arrangeCor.vector arrangeCor.pion arrangeCor.b1 arrangeCor.a0
+#' getNxNmatrix ChiSqr.1mass ChiSqr.2mass ChiSqr.3mass fitmasses.vector
+#' fitmasses.vector.boot fitmasses.pion fitmasses.pion.boot fitmasses.b1
+#' fitmasses.b1.boot fitmasses.a0 fitmasses.a0.boot fitf.pion mean.index
+#' fitmpcac.pion effectivemass effmass effmass2 read_nissa_textcf_kernel
+#' compute.qtildesq compute.qtildesq.contdisp
+#' @keywords internal
+NULL
+
+
+
+
+
+#' The Hadron Package
+#' 
+#' An R implementation of fitting routines used in lattice QCD. It provides
+#' useful functions for extraction hadronic quantities and such like.
+#' 
+#' An R implementation of fitting routines used in lattice QCD. It provides
+#' useful functions for extraction hadronic quantities and such like.
+#' 
+#' More to come.
+#' 
+#' @name hadron
+#' @docType package
+#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @keywords package
+NULL
+
+
+
+
+
+#' hankeldensity2effectivemass
+#' 
+#' 
+#' 
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param range Numeric vector. Value-range for the real part of the
+#' eigenvalues. If outside this range, the eigenvalue will be discarded
+#' @param method Character vector. Method to be used to determine the central
+#' value of the effective mass
+NULL
+
+
+
+
+
+#' jackknife-after-bootstrap analysis
+#' 
+#' jackknife-after-bootstrap (JAB) analysis for errors of errors of correlation
+#' functions of class \code{cf}.
+#' 
+#' We apply the jackknife-after-bootstrap method as proposed by Efron (1992)
+#' for iid data and extended by Lahiri (2002) for dependent data. Blocks of
+#' bootstrap samples are deleted for a jackknife analysis. The jackknife
+#' replicates are computed from the bootstrap samples in which the
+#' corresponding block of blocks is missing.
+#' 
+#' We use here the moving blocked bootstrap (MBB) which uses overlapping
+#' blocks. The estimate of standard error of the bootstrap error is computed
+#' using formula (2.3) from Lahiri, 2002: \deqn{\mathrm{var}_\mathrm{jab} =
+#' (m(N-m)^{-1})M^{-1} \sum_{i=1}^M (\tilde t_n^{(i)}-\hat t_n)^2}{% var_jap =
+#' (m(N-m)^-1)M^-1 \sum_{i=1}^M (ttilde_n^(i)-that_n)^2} with \deqn{\tilde
+#' t_n^{(i)} = m^{-1}(N\hat t_n - (N-m)\hat t_n^{(i)}).}{% ttilde_n^(i) = m^-1
+#' (N that_n - (N-m) that_n^(i)).} Here, \eqn{\hat t_n}{that_n} is the MBB
+#' estimate (in our case of standard deviation) and \eqn{\hat
+#' t_n^{(i)}}{that_n^(i)} is the i-th jackknife replication of it.
+#' 
+#' @aliases jackknifeafterboot jab.cf jab.cf.derived jab.effectivemass
+#' jab.effectivemassfit jab.matrixfit
+#' @param cf An object of class \code{cf} generated by
+#' \code{\link{bootstrap.cf}} with \code{sim="fixed"}.
+#' @param m \code{m} denotes the number of (overlapping) blocks to delete for
+#' the JAB analysis.
+#' @return Returns an object of class \code{cf} with an element
+#' \code{jack.boot.se}, which is the JAB estimate of standard error of the
+#' standard error.
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @seealso \code{\link{bootstrap.cf}}, \code{\link{cf}},
+#' \code{\link{jackknife.cf}}
+#' @references S.N. Lahiri, "On the jackknife-after-bootstrap method for
+#' dependent data and its consistency properties", Econometric Theory, 2002,
+#' Vol. 18, 79-98
+#' @keywords bootstrap, jackknife, boostrap-after-jackknife, error of error
+NULL
+
+
+
+
+
+#' Sample plaquette time series
+#' 
+#' A time series of so-called plaquette values generated by a Markov Chain MC
+#' process using the Hybrid Monte-Carlo algorithm. Plaquettes are the smallest
+#' possible closed loops which can be build in lattice QCD in discretised
+#' Euclidean space time.
+#' 
+#' 
+#' @name plaq.sample
+#' @docType data
+#' @format The format is: num [1:6352] 0.583 0.582 0.582 0.582 0.582 ...
+#' @keywords datasets
+#' @examples
+#' 
+#' data(plaq.sample)
+#' plot(x=c(1:length(plaq.sample)), y=plaq.sample, type="l", xlab="t", ylab="<P>")
+#' 
+NULL
+
+
+
+
+
+#' plot_hankel_spectrum
+#' 
+#' produces a scatter plot of the complex \eqn{-\log}{-log} of the eigenvalues
+#' produced by the \link{bootstrap.hankel} method. In addition, produces a
+#' histogramm of all real and positive eigenvalues after computing
+#' \eqn{-\log(ev)/\delta t}{-log(ev)/delta t} in the range (0,1) and determines
+#' its mode.
+#' 
+#' 
+#' @param hankel object as returned from \link{bootstrap.hankel}
+#' @param deltat Integer. Time shift at which to plot
+#' @param id Integer vector. Indices of eigenvalues to be plotted. Must be part
+#' of \code{c(1:hankel$n)}.
+#' @seealso Other hankel: \code{\link{bootstrap.hankel}()},
+#' \code{\link{gevp.hankel}()}, \code{\link{hankel2cf}()},
+#' \code{\link{hankel2effectivemass}()}
+NULL
+
+
+
+
+
+#' Arithmetically add correlators
+#' 
+#' Arithmetically add correlators
+#' 
+#' 
+#' @param cf1,cf2 \code{cf_orig} objects.
+NULL
+
+
+
+
+
+#' Sample pseudoscalar correlator
+#' 
+#' Sample data for a pseudoscalar correlator for time extend T=48.
+#' 
+#' 
+#' @name pscor.sample
+#' @docType data
+#' @format list of 2 elements: [1] "t" "ps"
+#' @keywords datasets
+#' @examples
+#' 
+#' data("pscor.sample")
+#' 
+NULL
+
+
+
+
+
+#' Sample cf data
+#' 
+#' Sample data for a correlation function for a 24 cube times 48 lattice QCD
+#' simulation representing a pion propagation. It is stored in form of an
+#' object of class \code{cf}, which is derived from \code{list}.
+#' 
+#' 
+#' @name samplecf
+#' @docType data
+#' @format The format is: List of 15 $ cf : num [1:1018, 1:25] 521 533 532 531
+#' 561 ...  $ icf : num [1:1018, 1:25] 521 533 532 531 561 ...  $ Time : num 48
+#' $ nrStypes : num 1 $ nrObs : num 1 $ boot.samples : logi TRUE $
+#' jackknife.samples: logi FALSE $ symmetrised : logi TRUE $ boot.R : num 1500
+#' $ boot.l : num 2 $ seed : num 1442556 $ sim : chr "geom" $ cf0 : num [1:25]
+#' 519 375 274 221 185 ...  $ cf.tsboot :List of 11 ..$ t0 : num [1:25] 519 375
+#' 274 221 185 ...  ..$ t : num [1:1500, 1:25] 521 518 520 519 519 ...  ..$ R :
+#' num 1500 ..$ data : num [1:1018, 1:25] 521 533 532 531 561 ...  ..$ seed :
+#' int [1:626] 403 624 -867935848 1692432057 -1535150298 -1438296209 912697060
+#' 1838233749 1438572626 999279531 ...  ..$ statistic:function (x) ..$ sim :
+#' chr "geom" ..$ n.sim : int 1018 ..$ call : language tsboot(tseries = cf$cf,
+#' statistic = function(x) return(apply(x, MARGIN = 2L, FUN = mean)) ...)  ..$
+#' l : num 2 ..$ endcorr : logi TRUE ..- attr(*, "class")= chr "boot" ..-
+#' attr(*, "boot_type")= chr "tsboot" $ tsboot.se : num [1:25] 1.001 0.615
+#' 0.572 0.537 0.499 ...  - attr(*, "class")= chr [1:2] "cf" "list"
+#' @keywords datasets
+#' @examples
+#' 
+#' data(samplecf)
+#' bootstrapped <- bootstrap.cf(samplecf)
+#' plot(bootstrapped)
+#' 
+NULL
+
+
+
+
+
+#' Convenience Functions for \code{tikzDevice}
+#' 
+#' initialize and finalize a \code{tikzDevice} and carry out optional
+#' post-processing
+#' 
+#' 
+#' @aliases tikzutils tikz.init tikz.finalize
+#' @param basename the base of the files which will be used by
+#' \code{tikzDevice}, e.g. "basename" -> "basename.pdf", etc.
+#' @param ...  optional arguments which are passed to \code{tikz}, see
+#' \code{\link[tikzDevice:tikz]{tikzDevice::tikz}}
+#' @param tikzfiles a list with members $pdf, $tex, $aux and $log, returned by
+#' \code{tikz.init} which must be passed to \code{tikz.finalize}
+#' @param standAlone A logical value indicating whether the output file should
+#' be suitable for direct processing by LaTeX. A value of \code{FALSE}
+#' indicates that the file is intended for inclusion in a larger document.
+#' @param crop boolean indicating whether \code{pdfcrop} should be called on
+#' the resulting pdf ( existence of \code{pdfcrop} is checked before the
+#' command is called ), default TRUE
+#' @param margins margins argument for pdfcrop command, should be passed as a
+#' string consisting of one or multiple numbers (e.g. "10" or "10.5 7.5 6.2
+#' 10"), default 0
+#' @param clean boolean indicating whether temporary files, e.g.
+#' "basename.tex", "basename.aux" and "basename.log" should be deleted after
+#' the pdf has been generated, default TRUE
+#' @param engine used to specify the LaTex engine. If missing, the standard
+#' engine of tikz is used.
+#' @return \code{tikz.init} returns a list with character vector members, $pdf,
+#' $tex, $aux $log containing the corresponding filenames
+#' @author Bartosz Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
+#' @keywords file
+#' @examples
+#' 
+#' library(hadron)
+#' \dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)}
+#' \dontrun{plot(...)}
+#' \dontrun{tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
+#' 
+NULL
+
+
+
