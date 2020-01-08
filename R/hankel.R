@@ -287,7 +287,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
-#' alternatively use \link{hankel2effectivemass}.
+#' alternatively use \link{hankel2cf}.
 #'
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
