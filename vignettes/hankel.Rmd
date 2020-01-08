@@ -171,13 +171,17 @@ H =
 \end{pmatrix}
 \]
 with the signal vector
-\[
+\begin{equation}
+\label{eq:signal}
 s_k\ =\ \sum_{i=1}^r c_i z_i^{k-1}\,;\qquad z_j\ =\ e^{\mathrm{i} \omega_j}\,,
-\]
-(real frequencies $\omega_j$ and coefficients $c_i$) and
+\end{equation}
+(complex frequencies $\omega_j$ and coefficients $c_i$) and
 \[
 k=m-n+1 >  n \geq 1\,.
 \]
+In case the sum does not start with $z_i^0$ for $k=1$ but with some
+$z_i^{t_0}$, we can simply re-define the coefficients
+$c_i\to c_i' = c_i z_i^{t_0}$ to bring $s_k$ into the form Eq. (\ref{eq:signal}).
 Define further
 \[
 e\ =\
