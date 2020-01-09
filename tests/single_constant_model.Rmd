@@ -1,0 +1,60 @@
+---
+title: "Single Constant Model Test"
+author: "Martin Ueding"
+date: "7 1 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+```
+
+```{r}
+offset_val <- 50
+offset_err <- 0.1
+offset_matrix <- matrix(
+  rnorm(nrow(samplecf$cf) * ncol(samplecf$cf), offset_val, offset_err),
+  nrow = nrow(samplecf$cf),
+  ncol = ncol(samplecf$cf))
+
+samplecf_offset <- samplecf
+samplecf_offset$cf <- samplecf$cf + offset_matrix
+
+samplecf_boot <- bootstrap.cf(samplecf)
+samplecf_offset_boot <- bootstrap.cf(samplecf_offset)
+```
+
+```{r}
+plot(samplecf_boot, col = 'blue')
+plot(samplecf_offset_boot, col = 'red', rep = TRUE)
+```
+
+```{r}
+effmass <- bootstrap.effectivemass(samplecf_boot)
+effmass_offset <- bootstrap.effectivemass(samplecf_offset_boot)
+```
+
+```{r}
+plot(effmass_offset, col = 'red')
+plot(effmass, col = 'blue', rep = TRUE)
+```
+
+```{r}
+fit <- new_matrixfit(samplecf_boot, 8, 20)
+plot(fit, log = 'y')
+residual_plot(fit)
+```
+
+```{r}
+fit_offset <- new_matrixfit(samplecf_offset_boot, 8, 20)
+plot(fit_offset, log = 'y')
+residual_plot(fit_offset)
+```
+
+```{r}
+fit_offset2 <- new_matrixfit(samplecf_offset_boot, 8, 20, model = 'single_constant')
+plot(fit_offset2, log = 'y')
+residual_plot(fit_offset2)
+```
