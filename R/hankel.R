@@ -227,7 +227,7 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' alternatively use \link{hankel2effectivemass}.
 #'
 #' @export
-hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.00001) {
+hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-12) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(length(id) == 1)
@@ -290,7 +290,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.00001) {
 #'
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
-                                  range=c(0,1), eps=0.00001) {
+                                  range=c(0,1), eps=1.e-12) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
