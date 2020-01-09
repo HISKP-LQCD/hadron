@@ -104,7 +104,7 @@ abline(h = e0_val)
 
 We first try the “single” model, that will of course fail miserably.
 
-```{r}
+```{r, eval=FALSE}
 fit_single <- new_matrixfit(
   corr_boot,
   t1 = 1,
@@ -121,7 +121,7 @@ residual_plot(fit_single)
 
 The “shifted” model will of course work.
 
-```{r}
+```{r, eval=FALSE}
 fit_shifted <- new_matrixfit(
   corr_shifted,
   t1 = 1,
@@ -138,7 +138,7 @@ residual_plot(fit_shifted)
 
 And with the “n_particle” model we can also get the result. It is not entirely correct because I must not use the original data for $E_1$ but rather the bootstrapped one. But I do not want to bootstrap that vector since I lack a function to do it nicely for me. So I just generate it uncorrelated.
 
-```{r}
+```{r, eval=FALSE}
 fit_n_particle <- new_matrixfit(
   corr_boot,
   t1 = 1,
