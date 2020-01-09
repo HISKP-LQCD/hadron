@@ -125,7 +125,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
 #' @family hankel
-bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
+bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
 
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -152,9 +152,7 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
               seed=cf$seed,
               reference_time=t0,
               n=n,
-              N=N,
-              eps=eps,
-              range=range)
+              N=N)
   class(ret) <- c("hankel", class(ret))
   return(invisible(ret))
 }
@@ -229,7 +227,7 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' alternatively use \link{hankel2effectivemass}.
 #'
 #' @export
-hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
+hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.00001) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(length(id) == 1)
@@ -252,13 +250,13 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
   .fn <- function(evs, range, eps, id) {
     ii <- which(abs(Im(evs)) < eps & Re(evs) > range[1]
                 & Re(evs) < range[2])
-    return(evs[ii[id]])
+    return(Re(evs[ii[id]]))
   }
 
   for(deltat in c(1:(N-2-reftime-2*n))) {
-    cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, ],
+    cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
                                         range=range, eps=eps, id=id)
-    cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, ],
+    cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
                                            MARGIN=1, FUN=.fn,
                                            range=range, eps=eps, id=id)
   }
@@ -275,7 +273,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
   mycf <- cf_principal_correlator(.cf = mycf,
                                   id = id,
                                   gevp_reference_time = hankel$reference_time)
-  
+  mycf$hankel_eps <- eps
+  mycf$hankel_range <- range
   return(invisible(mycf))
 }
 
@@ -291,7 +290,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=0.001) {
 #'
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
-                                  range=c(0,1), eps=0.001) {
+                                  range=c(0,1), eps=0.00001) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
