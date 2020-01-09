@@ -40,7 +40,6 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
-#' @param debug Boolean. Enable debug output.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
 #' @param submatrix.size Integer. Submatrix size to be used in build
 #'   of Hankel matrices. Submatrix.size > 1 is experimental.
@@ -58,8 +57,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
-                        submatrix.size=1, element.order=c(1,2,3,4),
-                        debug=FALSE) {
+                        submatrix.size=1, element.order=c(1,2,3,4)) {
   if(t0+2*n+deltat > N) {
     stop("t0+n+deltat > N\n")
   }
@@ -136,12 +134,12 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
 
   
   for(deltat in c(1:(N-2-t0-2*n))) {
-    evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0, n=n, N=N, 
-                                    debug=FALSE, deltat=deltat,
+    evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
+                                    n=n, N=N, deltat=deltat,
                                     submatrix.size=1, element.order=c(1))
 
     evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
-                                         n=n, N=N, debug=FALSE, deltat=deltat,
+                                         n=n, N=N, deltat=deltat,
                                          submatrix.size=1, element.order=1))
   }
   ret <- list(cf=cf,
