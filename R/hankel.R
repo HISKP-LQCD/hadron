@@ -51,9 +51,10 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'
 #'
 #' @return
-#' A complex vector of \code{n} with the eigenvalues
-#' corresponding to \code{id} is returned.
-#' A vector of NAs of \code{n} is returend in case the QR decomposition fails.
+#' A complex vector of length \code{n + n^2} with firsth the eigenvalues and
+#' then the eigenvectors is returned
+#' 
+#' A vector of NAs of \code{n + n^2} is returend in case the QR decomposition fails.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
@@ -77,14 +78,14 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 
   M <- try(qr.coef(qr.cM1, cM2), TRUE)
   if(inherits(M, "try-error")) {
-    return(rep(NA, times=n))
+    return(rep(NA, times=(n+n^2)))
   }
 
-  M.eigen <- try(eigen(M, symmetric=FALSE, only.values=TRUE), TRUE)
+  M.eigen <- try(eigen(M, symmetric=FALSE, only.values=FALSE), TRUE)
   if(inherits(M.eigen, "try-error")) {
-    return(rep(NA, times=n))
+    return(rep(NA, times=(n+n^2)))
   }
-  return(invisible(M.eigen$values))
+  return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
 
 #' @title GEVP method based on Hankel matrices. 
@@ -129,8 +130,8 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
   stopifnot(inherits(cf, 'cf_boot'))
 
   boot.R <- cf$boot.R
-  evs <- array(NA, dim=c(N, n))
-  evs.tsboot <- array(NA, dim=c(boot.R, N, n))
+  evs <- array(NA, dim=c(N, n + n^2))
+  evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2))
 
   
   for(deltat in c(1:(N-2-t0-2*n))) {
@@ -143,8 +144,10 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
                                          submatrix.size=1, element.order=1))
   }
   ret <- list(cf=cf,
-              t0=evs,
-              t=evs.tsboot,
+              t0=evs[ ,c(1:n), drop=FALSE],
+              t=evs.tsboot[ ,, c(1:n), drop=FALSE],
+              vectors=evs[ ,c((n+1):(n+n^2)), drop=FALSE],
+              vectors.tsboot=evs.tsboot[ ,, c((n+1):(n+n^2)), drop=FALSE],
               boot.R=boot.R,
               boot.l=cf$boot.l,
               seed=cf$seed,
@@ -219,16 +222,21 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' If outside this range, the eigenvalue will be discarded
 #' @param id Integer. Index of eigenvalue to consider,
 #' \eqn{1\leq id\leq n}{1 <= id <= n}.
+#' @param sort.type the sort algorithm to be used to sort the eigenvalues. This can be
+#' either simply "values", or the eigenvector information is used in addition with
+#' "vectors"
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
 #' alternatively use \link{hankel2effectivemass}.
 #'
 #' @export
-hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-12) {
+hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
+                      sort.type="values") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(length(id) == 1)
+  stopifnot(sort.type %in% c("values", "vectors"))
   N <- hankel$N
   n <- hankel$n
   
@@ -245,18 +253,78 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-12) {
       t = array(NA, dim=c(hankel$boot.R, N))
   )
 
-  .fn <- function(evs, range, eps, id) {
-    ii <- which(abs(Im(evs)) < eps & Re(evs) > range[1]
-                & Re(evs) < range[2])
-    return(Re(evs[ii[id]]))
+  cf.tsboot$t0[reftime] <- 1
+  cf.tsboot$t[, reftime] <- 1
+  if(sort.type == "values") {
+    .fn <- function(evs, range, eps, id) {
+      ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
+                  & Re(evs) < range[2])
+      return(Re(evs[ii[id]]))
+    }
+    
+    for(deltat in c(1:(N-2-reftime-2*n))) {
+      cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
+                                          range=range, eps=eps, id=id)
+      cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
+                                             MARGIN=1, FUN=.fn,
+                                             range=range, eps=eps, id=id)
+    }
   }
+  if(sort.type == "vectors") {
+    ## that's still a mess
+    ii  <- array(NA, dim=c(N, n))
+    ii.tsboot  <- array(NA, dim=c(hankel$boot.R, N, n))
 
-  for(deltat in c(1:(N-2-reftime-2*n))) {
-    cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
-                                        range=range, eps=eps, id=id)
-    cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
-                                           MARGIN=1, FUN=.fn,
-                                           range=range, eps=eps, id=id)
+    ## obtain indices of "real" eigenvalues in the appropriate range
+    .fn <- function(evs, range, eps) {
+      ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
+                  & Re(evs) < range[2])
+      return(c(ii, rep(NA, times=length(evs)-length(ii))))
+    }
+    for(deltat in c(1:(N-2-reftime-2*n))) {
+      ii[deltat+reftime, ] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
+                                range=range, eps=eps)
+      ii.tsboot[, deltat+reftime, ] <- t(apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
+                                               MARGIN=1, FUN=.fn,
+                                               range=range, eps=eps))
+    }
+
+    ## reference eigenvector at deltat == 1
+    v0 <- hankel$vectors[reftime+1, c(((ii[reftime+1, id]-1)*n+1) : (ii[reftime+1, id]*n))]
+    v0.tsboot <- array(NA, dim=c(hankel$boot.R, n))
+    cf.tsboot$t0[1+reftime] <- Re(hankel$t0[1+reftime, ii[reftime+1, id], drop = FALSE])
+    for(rr in c(1:hankel$boot.R)) {
+      v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii.tsboot[rr, reftime+1, id]-1)*n+1) : (ii.tsboot[rr, reftime+1, id]*n))]
+      cf.tsboot$t[rr, reftime+1] <- Re(hankel$t[rr, reftime+1, ii.tsboot[rr, reftime+1, id], drop = FALSE])
+    }
+    for(deltat in c(2:(N-2-reftime-2*n))) {
+      sp <- c()
+      ## chose the one with maximal overlap in the eigenvectors
+      for(i in c(1:n)) {
+        if(is.na(ii[reftime+deltat, i])) sp[i] <- NA
+        else {
+          sp[i] <- abs(sum(Conj(v0) * hankel$vectors[reftime+deltat, c(((ii[reftime+deltat, i]-1)*n+1) : (ii[reftime+deltat, i]*n))]))
+        }
+      }
+      if(all(is.na(sp))) cf.tsboot$t0[deltat+reftime] <- NA
+      else {
+        cf.tsboot$t0[deltat+reftime] <- Re(hankel$t0[deltat+reftime, order(sp, decreasing=TRUE, na.last=TRUE)[id], drop = FALSE])
+      }
+      
+      for(rr in c(1:hankel$boot.R)) {
+        sp <- c()
+        for(i in c(1:n)) {
+          if(is.na(ii.tsboot[rr, reftime+deltat, i])) sp[i] <- NA
+          else {
+            sp[i] <- abs(sum(Conj(v0.tsboot[rr,]) * hankel$vectors.tsboot[rr, reftime+deltat, c(((ii.tsboot[rr, reftime+deltat, i]-1)*n+1) : (ii.tsboot[rr, reftime+deltat, i]*n))]))
+          }
+        }
+        if(all(is.na(sp))) cf.tsboot$t[rr, deltat+reftime] <- NA
+        else {
+          cf.tsboot$t[rr, deltat+reftime] <- Re(hankel$t[rr, deltat+reftime, order(sp, decreasing=TRUE, na.last=TRUE)[id], drop = FALSE])
+        }
+      }
+    }
   }
 
   mycf <- cf_boot(.cf = mycf,
@@ -288,7 +356,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-12) {
 #'
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
-                                  range=c(0,1), eps=1.e-12) {
+                                  range=c(0,1), eps=1.e-16) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
