@@ -225,6 +225,8 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' @param sort.type the sort algorithm to be used to sort the eigenvalues. This can be
 #' either simply "values", or the eigenvector information is used in addition with
 #' "vectors"
+#' @param sort.t0 Boolean. Whether to use the eigenvector at t0 or the one at deltat-1
+#' for sorting
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
@@ -232,7 +234,7 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #'
 #' @export
 hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
-                      sort.type="values") {
+                      sort.type="values", sort.t0=TRUE) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(length(id) == 1)
@@ -271,57 +273,67 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     }
   }
   if(sort.type == "vectors") {
-    ## that's still a mess
-    ii  <- array(NA, dim=c(N, n))
-    ii.tsboot  <- array(NA, dim=c(hankel$boot.R, N, n))
-
     ## obtain indices of "real" eigenvalues in the appropriate range
-    .fn <- function(evs, range, eps) {
-      ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
-                  & Re(evs) < range[2])
-      return(c(ii, rep(NA, times=length(evs)-length(ii))))
+    ## chosing the one with maximal overlap in the eigenvectors
+    .fnii <- function(evs, range, eps) {
+      return(which(abs(Im(evs)) <= eps & Re(evs) > range[1]
+                & Re(evs) < range[2]))
     }
-    for(deltat in c(1:(N-2-reftime-2*n))) {
-      ii[deltat+reftime, ] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
-                                range=range, eps=eps)
-      ii.tsboot[, deltat+reftime, ] <- t(apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
-                                               MARGIN=1, FUN=.fn,
-                                               range=range, eps=eps))
-    }
-
-    ## reference eigenvector at deltat == 1
-    v0 <- hankel$vectors[reftime+1, c(((ii[reftime+1, id]-1)*n+1) : (ii[reftime+1, id]*n))]
-    v0.tsboot <- array(NA, dim=c(hankel$boot.R, n))
-    cf.tsboot$t0[1+reftime] <- Re(hankel$t0[1+reftime, ii[reftime+1, id], drop = FALSE])
-    for(rr in c(1:hankel$boot.R)) {
-      v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii.tsboot[rr, reftime+1, id]-1)*n+1) : (ii.tsboot[rr, reftime+1, id]*n))]
-      cf.tsboot$t[rr, reftime+1] <- Re(hankel$t[rr, reftime+1, ii.tsboot[rr, reftime+1, id], drop = FALSE])
-    }
-    for(deltat in c(2:(N-2-reftime-2*n))) {
+    .fn <- function(evs, ii, id, n,
+                    vectors, v0) {
+      if(length(ii) == 0) {
+        return(NA)
+      }
+      if(is.na(v0[1])) {
+        return(Re(evs[ii[id]]))
+      }
       sp <- c()
       ## chose the one with maximal overlap in the eigenvectors
-      for(i in c(1:n)) {
-        if(is.na(ii[reftime+deltat, i])) sp[i] <- NA
-        else {
-          sp[i] <- abs(sum(Conj(v0) * hankel$vectors[reftime+deltat, c(((ii[reftime+deltat, i]-1)*n+1) : (ii[reftime+deltat, i]*n))]))
-        }
+      for(i in c(1:length(ii))) {
+        sp[i] <- abs(sum(Conj(v0) * vectors[c(((ii[i]-1)*n+1) : (ii[i]*n))]))
       }
-      if(all(is.na(sp))) cf.tsboot$t0[deltat+reftime] <- NA
-      else {
-        cf.tsboot$t0[deltat+reftime] <- Re(hankel$t0[deltat+reftime, order(sp, decreasing=TRUE, na.last=TRUE)[id], drop = FALSE])
+      return(Re(evs[ii[order(sp, decreasing=TRUE, na.last=TRUE)[id]]]))
+    }
+
+    ## precompute reference eigenvector at deltat == 1
+    ## and use method "values" at detlat == 1
+    ii <- .fnii(evs=hankel$t0[reftime+1, , drop = FALSE],
+                range=range, eps=eps)
+    v0 <- hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+    cf.tsboot$t0[reftime+1] <- .fn(evs=hankel$t0[1+reftime, , drop = FALSE],
+                                   ii=ii, id=id, n=n,
+                                   vectors=NA, v0=NA)
+    v0.tsboot <- array(NA, dim=c(hankel$boot.R, n))
+    for(rr in c(1:hankel$boot.R)) {
+      ii <- .fnii(evs=hankel$t[rr, reftime+1, , drop = FALSE],
+                  range=range, eps=eps)
+      v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+      cf.tsboot$t[rr, reftime+1] <- .fn(evs=hankel$t[rr, 1+reftime, , drop = FALSE],
+                                        ii=ii, id=id, n=n,
+                                        vectors=NA, v0=NA)
+    }
+    ## now use pre-computed vectors
+    for(deltat in c(2:(N-2-reftime-2*n))) {
+      ii <- .fnii(evs=hankel$t0[reftime+deltat, , drop = FALSE],
+                  range=range, eps=eps)
+      cf.tsboot$t0[reftime+deltat] <- .fn(evs=hankel$t0[reftime+deltat, , drop = FALSE],
+                                          ii=ii, id=id, n=n,
+                                          vectors=hankel$vectors[reftime+deltat,],
+                                          v0=v0)
+      if(!sort.t0 && !is.na(cf.tsboot$t0[reftime+deltat])) {
+        k <- which(Re(hankel$t0[reftime+deltat, ]) == cf.tsboot$t0[reftime+deltat])
+        v0 <- hankel$vectors[reftime+deltat, c(((k-1)*n+1) : (k*n))]
       }
-      
       for(rr in c(1:hankel$boot.R)) {
-        sp <- c()
-        for(i in c(1:n)) {
-          if(is.na(ii.tsboot[rr, reftime+deltat, i])) sp[i] <- NA
-          else {
-            sp[i] <- abs(sum(Conj(v0.tsboot[rr,]) * hankel$vectors.tsboot[rr, reftime+deltat, c(((ii.tsboot[rr, reftime+deltat, i]-1)*n+1) : (ii.tsboot[rr, reftime+deltat, i]*n))]))
-          }
-        }
-        if(all(is.na(sp))) cf.tsboot$t[rr, deltat+reftime] <- NA
-        else {
-          cf.tsboot$t[rr, deltat+reftime] <- Re(hankel$t[rr, deltat+reftime, order(sp, decreasing=TRUE, na.last=TRUE)[id], drop = FALSE])
+        ii <- .fnii(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
+                    range=range, eps=eps)
+        cf.tsboot$t[rr, reftime+deltat] <- .fn(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
+                                               ii=ii, id=id, n=n,
+                                               vectors=hankel$vectors.tsboot[rr, reftime+deltat,],
+                                               v0=v0.tsboot[rr,])
+        if(!sort.t0 && !is.na(cf.tsboot$t[rr, reftime+deltat])) {
+          k <- which(Re(hankel$t[rr, reftime+deltat,]) == cf.tsboot$t[rr, reftime+deltat])
+          v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+deltat, c(((k-1)*n+1) : (k*n))]
         }
       }
     }
