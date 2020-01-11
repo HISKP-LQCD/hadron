@@ -184,45 +184,5 @@ NULL
 
 
 
-#' Convenience Functions for \code{tikzDevice}
-#' 
-#' initialize and finalize a \code{tikzDevice} and carry out optional
-#' post-processing
-#' 
-#' 
-#' @aliases tikzutils tikz.init tikz.finalize
-#' @param basename the base of the files which will be used by
-#' \code{tikzDevice}, e.g. "basename" -> "basename.pdf", etc.
-#' @param ...  optional arguments which are passed to \code{tikz}, see
-#' \code{\link[tikzDevice:tikz]{tikzDevice::tikz}}
-#' @param tikzfiles a list with members $pdf, $tex, $aux and $log, returned by
-#' \code{tikz.init} which must be passed to \code{tikz.finalize}
-#' @param standAlone A logical value indicating whether the output file should
-#' be suitable for direct processing by LaTeX. A value of \code{FALSE}
-#' indicates that the file is intended for inclusion in a larger document.
-#' @param crop boolean indicating whether \code{pdfcrop} should be called on
-#' the resulting pdf ( existence of \code{pdfcrop} is checked before the
-#' command is called ), default TRUE
-#' @param margins margins argument for pdfcrop command, should be passed as a
-#' string consisting of one or multiple numbers (e.g. "10" or "10.5 7.5 6.2
-#' 10"), default 0
-#' @param clean boolean indicating whether temporary files, e.g.
-#' "basename.tex", "basename.aux" and "basename.log" should be deleted after
-#' the pdf has been generated, default TRUE
-#' @param engine used to specify the LaTex engine. If missing, the standard
-#' engine of tikz is used.
-#' @return \code{tikz.init} returns a list with character vector members, $pdf,
-#' $tex, $aux $log containing the corresponding filenames
-#' @author Bartosz Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
-#' @keywords file
-#' @examples
-#' 
-#' library(hadron)
-#' \dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)}
-#' \dontrun{plot(...)}
-#' \dontrun{tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
-#' 
-NULL
-
 
 

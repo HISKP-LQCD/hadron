@@ -627,6 +627,8 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #' 
 #' @examples
 #' uwerr.cf(samplecf)
+#' 
+#' @export
 uwerr.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_orig'))
 
@@ -732,7 +734,8 @@ addStat.cf <- function(cf1, cf2) {
 #' where periodic boundary conditions are assumed in shift.cf
 #'
 #' @param cf object of type \link{cf}
-#' 
+#'
+#' @export
 avg.cbt.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -977,6 +980,8 @@ is.cf <- function (x) {
 #' Concatenate correlation function objects
 #'
 #' @param ... Zero or multiple objects of type `cf`.
+#'
+#' @export
 c.cf <- function (...) {
   rval <- Reduce(concat.cf, list(...), cf())
   return (invisible(rval))
@@ -985,6 +990,8 @@ c.cf <- function (...) {
 #' Concatenate two correlation function objects
 #'
 #' @param left,right `cf` objects to concatenate.
+#'
+#' @export
 concat.cf <- function (left, right) {
   stopifnot(inherits(left, 'cf'))
   stopifnot(inherits(right, 'cf'))
@@ -1102,6 +1109,8 @@ plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ..
 #' in time are assumed
 #' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins required)
 #' @param places integer number of time-slices for backward (negative) or forward (positive) shifts
+#'
+#' @export
 shift.cf <- function(cf, places) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1172,6 +1181,7 @@ shift.cf <- function(cf, places) {
 #'
 #' @param cf `cf` object.
 #'
+#' @export
 invalidate.samples.cf <- function (cf) {
   cf$boot.l <- NULL
   cf$boot.R <- NULL
@@ -1206,7 +1216,9 @@ invalidate.samples.cf <- function (cf) {
 #'   (anti)symmmetrisation. If longer than 1, it must be of length
 #'   equal to the number of observalbes in `cf`. Otherwise, the same
 #'   operation is applied to all observables in `cf`, which is the
-#'   default. 
+#'   default.
+#'
+#' @export
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1291,6 +1303,8 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 #'
 #' @param object Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.cf <- function(object, ...) {
   cf <- object
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1328,6 +1342,8 @@ summary.cf <- function(object, ...) {
 #'
 #' @param x Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 print.cf <- function (x, ...) {
   summary(x, ...)
 }
