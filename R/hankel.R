@@ -14,15 +14,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   cM2 <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
 
   qr.cM1 <- qr(cM1)
-  ##M <- try(qr.coef(qr.cM1, cM2), TRUE)
   M <- qr.coef(qr.cM1, cM2)
-  if(inherits(M, "try-error")) {
-    ##cM1.svd <- svd(cM1)
-    ##D <- diag(1./cM1.svd$d)
-    ##M <- cM1.svd$v %*% D %*% t(cM1.svd$u)
-    
-    return(rep(NA, times=length(id)))
-  }
 
   M.eigen <- eigen(M, symmetric=FALSE, only.values=TRUE)
 
@@ -33,7 +25,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
   
 }
 
-#' @title GEVP method based on Hankel matrices. Experimental.
+#' @title GEVP method based on Hankel matrices.
 #' 
 #' @description
 #' Alternative method to determine energy levels from correlation
@@ -45,10 +37,10 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #' @param debug Boolean. Enable debug output.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
 #' @param submatrix.size Integer. Submatrix size to be used in build
-#'   of Hankel matrices
+#'   of Hankel matrices. Submatrix.size > 1 is experimental.
 #' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
 #'    correlators into the correlator
-#'    matrix. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 #'    \code{matrix(cf[element.order], nrow=2)}.
 #'    Double indexing is allowed.
 #' 
@@ -71,19 +63,11 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
       cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
     }
   }
-  ## symmetrise matrices
-  cM1 <- 0.5*(cM1 + t(cM1))
-  cM2 <- 0.5*(cM2 + t(cM2))
-
   qr.cM1 <- qr(cM1)
 
   ## M = cM1^-1 * cM2
   M <- try(qr.coef(qr.cM1, cM2), TRUE)
   if(inherits(M, "try-error")) {
-    ##cM1.svd <- svd(cM1)
-    ##D <- diag(1./cM1.svd$d)
-    ##M <- cM1.svd$v %*% D %*% t(cM1.svd$u)
-    
     return(c(NA))
   }
   M[abs(M) < 1.e-12] <- 0
@@ -99,7 +83,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
   return(invisible(Re(M.eigen$values[ii[id]])))
 }
 
-#' @title GEVP method based on Hankel matrices. Experimental.
+#' @title GEVP method based on Hankel matrices. 
 #' 
 #' @description
 #' Alternative method to determine energy levels from correlation
@@ -112,9 +96,11 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param t0     initial time value of the GEVP, must be in between 0 and
 #'    \code{Time/2-2}. Default is 1.
 #' @param n Integer. Size of the submatrix Hankel matrices to generate
-#' @param N Integer.
-#' @param eps Numeric. Cut-off
-#' @param range Numeric vector. Range of eigenvalues to be considered
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#' @param eps Numeric. Cut-off: if the imaginary part of the generalised
+#' eigenvalues is larger than eps, the eigenvalue is discarded.
+#' @param range Numeric vector. Value-range of eigenvalues to be considered
 #' @param id Integer. Vector of indices of eigenvalues to consider.
 #'
 #' @examples
@@ -130,16 +116,12 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
 #' @family hankel
-bootstrap.hankel <- function(cf, t0, n=2, N, id=c(1), range=c(0,1), eps=0.001) {
+bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
 
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-  if(missing(N)) N <- cf$Time/2+1 
 
   boot.R <- cf$boot.R
-  ##if(t0+2*n+deltat >= N) {
-  ##  stop("t0+2*n+1+deltat must be smaller than N\n")
-  ## }
   evs <- array(NA, dim=c(N, length(id)))
   evs.tsboot <- array(NA, dim=c(boot.R, N, length(id)))
   
@@ -192,6 +174,7 @@ hankel2cf <- function(hankel, id=1) {
                 boot.l = hankel$boot.l,
                 seed = hankel$seed,
                 sim = hankel$cf$sim,
+                endcorr = TRUE,
                 cf.tsboot = cf.tsboot,
                 resampling_method = hankel$cf$resampling_method)
   

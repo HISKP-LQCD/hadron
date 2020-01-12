@@ -121,11 +121,11 @@ old_removeTemporal.cf <- function(cf,
   ## Multiply with the exponential correction factor
   Exptt <- exp((mass2$t0-mass1$t0)*c(0:(Time/2))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(0:(Time/2))))
   if(!is.null(cf$cf)) {
-    cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
+    cf$cf <- cf$cf/t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
-  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
+  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0/Exptt
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]/
       (exp((mass2$t[i]-mass1$t[i])*c(0:(Time/2))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(0:(Time/2)))))
   }
   ## Take the differences C(t) - C(t + deltat)
@@ -136,11 +136,11 @@ old_removeTemporal.cf <- function(cf,
   ## up with NaN by takeTimeDiff()
   Exptt <- exp((mass2$t0-mass1$t0)*c(-deltat:(Time/2-deltat))) + cosh.factor *exp((mass2$t0-mass1$t0)*(Time-c(-deltat:(Time/2-deltat))))
   if(!is.null(cf$cf)) {
-    cf$cf <- cf$cf/t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
+    cf$cf <- cf$cf*t(array(Exptt, dim=dim(cf$cf)[c(2,1)]))
   }
-  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0/Exptt
+  cf$cf.tsboot$t0 <- cf$cf.tsboot$t0*Exptt
   for(i in c(1:cf$boot.R)) {
-    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]/
+    cf$cf.tsboot$t[i,] <- cf$cf.tsboot$t[i,]*
       (exp((mass2$t[i]-mass1$t[i])*c(-deltat:(Time/2-deltat))) + cosh.factor *exp((mass2$t[i]-mass1$t[i])*(Time-c(-deltat:(Time/2-deltat)))) )
   }
 
@@ -155,6 +155,7 @@ old_removeTemporal.cf <- function(cf,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
+                 endcorr = cf$endcorr,
                  cf.tsboot = cf$cf.tsboot,
                  resampling_method = cf$resampling_method)
   ret <- cf_shifted(ret,
@@ -244,6 +245,7 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                    boot.l = cf$boot.l,
                    seed = cf$seed,
                    sim = cf$sim,
+                   endcorr = cf$endcorr,
                    cf.tsboot = cf$cf.tsboot,
                    resampling_method = cf$resampling_method)
   }
@@ -378,10 +380,10 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 #' @inheritParams weight.cf
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
-                  cosh_factor, 0, FALSE)
+                  cosh_factor, 0, TRUE)
   cf <- takeTimeDiff.cf(cf)
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
-                  cosh_factor, -1, TRUE)
+                  cosh_factor, -1, FALSE)
 
   # We perform a clean copy of the data now to make sure that all invariants
   # hold and that no new fields have been added that we are not aware of.
@@ -394,6 +396,7 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
                  boot.l = cf$boot.l,
                  seed = cf$seed,
                  sim = cf$sim,
+                 endcorr = cf$endcorr,
                  cf.tsboot = cf$cf.tsboot,
                  resampling_method = cf$resampling_method)
   ret <- cf_shifted(ret,

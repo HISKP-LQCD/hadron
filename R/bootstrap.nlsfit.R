@@ -436,6 +436,13 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
 #' @param boot.R If larger than 0, \code{boot.R} paramtetric bootstrap samples are
 #' generated on the fit results after fit and error calculation are finished.
 #' The original data is never boostraped in this function.
+#' @param priors List possessing the elements `param`, `p` and `psamples`.
+#' The vector `param` includes the indices of all fit parameters that are
+#' to be constrained and the vector `p` the corresponding paramater values
+#' (e.g. known from a previous fit). The list element `psamples` is a matrix of
+#' dimensions \code{(boot.R, length(param))} and contains the corresponding
+#' bootstrap samples. If this list is not specified priors are omitted
+#' within the fit.
 #'
 #' @export
 #' @family NLS fit functions
@@ -659,6 +666,13 @@ simple.nlsfit <- function(fn,
 #' Must be provided as array of dimensions \code{c(boot.R, n)} with \code{n}
 #' equals to \code{length(y)} in case of 'yerrors' and For 'xyerrors' to
 #' \code{length(y) + length(x)}.
+#' @param priors List possessing the elements `param`, `p` and `psamples`.
+#' The vector `param` includes the indices of all fit parameters that are
+#' to be constrained and the vector `p` the corresponding paramater values
+#' (e.g. known from a previous fit). The list element `psamples` is a matrix of
+#' dimensions \code{(boot.R, length(param))} and contains the corresponding
+#' bootstrap samples. If this list is not specified priors are omitted
+#' within the fit.
 #' @param ... Additional parameters passed to `fn`, `gr` and `dfn`.
 #' @param lower Numeric vector of length \code{length(par.guess)}
 #' of lower bounds on the fit parameters. If missing, \code{-Inf}
@@ -790,9 +804,9 @@ bootstrap.nlsfit <- function(fn,
   if(!is.null(priors$param)){
     stopifnot(is.vector(priors$param))
   }
-  stopifnot( length(priors$param) == length(priors$p) &&
-               length(priors$param) == ncolps &&
-               length(priors$p) == ncolps )
+  stopifnot(length(priors$param) == length(priors$p) &&
+              length(priors$param) == ncolps &&
+              length(priors$p) == ncolps )
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
@@ -872,6 +886,7 @@ bootstrap.nlsfit <- function(fn,
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
     bsamples <- cbind(bsamples, priors$psamples)
+    CovMatrix <- cov_fn(bsamples)
   }
   
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)

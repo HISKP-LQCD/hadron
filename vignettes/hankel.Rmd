@@ -3,17 +3,17 @@ title: "Hankel method for energy level extraction"
 author: "Carsten Urbach"
 output:
   pdf_document:
-    citation_package: biblatex
+    #citation_package: biblatex
 
-bibliography: hankel.bib
-link_citation: yes
+#bibliography: hankel.bib
+#link_citation: yes
 vignette: >
   %\VignetteIndexEntry{Hankel method for energy level extraction}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
-```{r echo=FALSE}
+```{r setup, echo=FALSE}
 library(hadron)
 ```
 
@@ -49,9 +49,9 @@ H_1 = H[x_1, n]\,,\qquad H_2 = H[x_2, n]\,.
 With these we can define the following generalised eigenvalue problem
 (GEVP)
 \begin{equation}
-H_2\, v\ =\ H_1\, \lambda(t_0, \delta t)\, v
+H_2\, v(t_0, \delta t)\ =\ H_1\, \lambda(t_0, \delta t)\, v(t_0, \delta t)
 \end{equation}
-with eigenvectors $v$ and eigenvalues $\lambda(t_0, \delta t)$.
+with eigenvectors $v(t_0, \delta t)$ and eigenvalues $\lambda(t_0, \delta t)$.
 
 If the correlator $C(t)$ is given by a sum of exponentials, i.e.
 \[
@@ -155,3 +155,129 @@ legend("topright", legend=c("ppcor", "hankel1"), bty="n", pch=c(21,22), col=c("r
 
 which works not as well as the method applied to the principal
 correlator. 
+
+# Proof
+
+In order to proof the GEVP relation from above, we first introduce a
+more general Hankel matrix
+\[
+H =
+\begin{pmatrix}
+  s_1 & s_2 & \ldots & s_n\\
+  s_2 & s_3 & \ldots &    \\
+  \vdots &  &        &    \\
+  s_k & \ldots & & s_m\\
+\end{pmatrix}
+\]
+with the signal vector
+\[
+s_k\ =\ \sum_{i=1}^r c_i z_i^{k-1}\,;\qquad z_j\ =\ e^{\mathrm{i} \omega_j}\,,
+\]
+(real frequencies $\omega_j$ and coefficients $c_i$) and
+\[
+k=m-n+1 >  n \geq 1\,.
+\]
+Define further
+\[
+e\ =\
+\begin{pmatrix}
+  1\\
+  1\\
+  \vdots\\
+  1\\
+\end{pmatrix}
+\]
+and
+\[
+D_c = \mathrm{diag}(c_1, \ldots, c_r)\,,\quad D_z\ =\ \mathrm{diag}(z_1,
+\ldots, z_r)\,.
+\]
+Then, by multiplying out, one can see that
+\[
+H =
+\begin{pmatrix}
+  e^T\\
+  e^T D_z\\
+  \vdots\\
+  e^T D_z^{k-1}\\
+\end{pmatrix}\cdot
+D_c\cdot
+(e\  D_z e\ \ldots\ D_z^{n-1} e)\,.
+\]
+With this one has shown implicitly that the rank of $H$ is $r$.
+Now write
+\[
+H\ =\
+\begin{pmatrix}
+  g_1 \\
+  H_1\\
+\end{pmatrix}\ =\
+\begin{pmatrix}
+  H_2\\
+  g_2\\
+\end{pmatrix}
+\]
+with
+\[
+g_1\ =\
+\begin{pmatrix}
+  s_1 & s_2 & \ldots & s_n\\
+  \vdots &  &        & \vdots \\
+  s_{\delta t+1} & & & s_{\delta t+n}\\
+\end{pmatrix}
+\,,\qquad
+g_2\ =\
+\begin{pmatrix}
+  s_{k-\delta t} &  & \ldots & s_{m-\delta t}\\
+  \vdots &  &        & \vdots \\
+  s_{k} & & & s_{m}\\
+\end{pmatrix}\,.
+\]
+Define two Vandermonde matrices, which have full rank
+\[
+V_1\ =\
+\begin{pmatrix}
+  e^T\\
+  e^T D_z\\
+  \vdots\\
+  e^T D_z^{k-1-\delta t}
+\end{pmatrix}\,,\qquad
+V_2\ =\
+\begin{pmatrix}
+  e^T\\
+  e^T D_z\\
+  \vdots\\
+  e^T D_z^{n-1}
+\end{pmatrix}\,.
+\]
+With these we can re-write $H$ as
+\[
+H\ =\
+\begin{pmatrix}
+  V_1 \\
+  e^T D_z^{k-\delta t}\\
+  \vdots\\
+  e^T D_z^{k-1}\\
+\end{pmatrix}
+\cdot D_c\cdot
+V_2^T
+\]
+From this follows
+\begin{equation}
+H_2\ =\ V_1 D_c V_2^T\,,\quad H_1\ =\ V_1 D_z^{\delta t} D_c V_2^T\,.
+\end{equation}
+Now, perform a $QR$ decomposition, with $Q$ unitary and $R$ upper
+triagular of the Vandermonde matrices $V_i =Q_i R_i\,,\ i=1,2$, which
+is always possible due to the full rank property. This 
+means 
+\[
+H_2\ =\ Q_1 R_1 D_c R_2^T Q_2^T\,,\quad H_1\ =\ Q_1 R_1 D_z^{\delta t} D_c R_2^T Q_2^T
+\]
+and, since $D_z$ is diagonal, by multiplying both equations with
+$(R_2^T Q_2^T)^{-1}$ from the right one obtains
+\begin{equation}
+Q_1 R_1 D_c\ =\ H_2 Q_2 R_2^{-T}\ =\ D_z^{-\delta t} H_1 Q_2 R_2^{-T} \,.
+\end{equation}
+The last equation is the desired generalised eigenvalue relation with
+eigenvalues the diagonal elements of $D_z^{\delta t}$ and the eigenvectors the
+columns of the matrix $Q_2 R_2^{-T}$.
