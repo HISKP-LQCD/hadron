@@ -368,7 +368,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #'
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
-                                  range=c(0,1), eps=1.e-16) {
+                                  range=c(0,1), eps=1.e-16,
+                                  sort.type="values", sort.t0=TRUE) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
@@ -379,7 +380,8 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
     tmax <- hankel$cf$Time-1
   }
 
-  pc <- hankel2cf(hankel=hankel, id=id, range=range, eps=eps)
+  pc <- hankel2cf(hankel=hankel, id=id, range=range, eps=eps,
+                  sort.type=sort.type, sort.t0=sort.t0)
 
   deltat <- c(1:(tmax+1))-hankel$reference_time
   if(type == "log") {
