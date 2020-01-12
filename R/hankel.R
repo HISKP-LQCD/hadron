@@ -299,7 +299,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     ## and use method "values" at detlat == 1
     ii <- .fnii(evs=hankel$t0[reftime+1, , drop = FALSE],
                 range=range, eps=eps)
-    v0 <- hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+    v0 <- NA
+    if(length(ii) != 0) v0 <- hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
     cf.tsboot$t0[reftime+1] <- .fn(evs=hankel$t0[1+reftime, , drop = FALSE],
                                    ii=ii, id=id, n=n,
                                    vectors=NA, v0=NA)
@@ -307,7 +308,10 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     for(rr in c(1:hankel$boot.R)) {
       ii <- .fnii(evs=hankel$t[rr, reftime+1, , drop = FALSE],
                   range=range, eps=eps)
-      v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+      v0.tsboot[rr,] <- NA
+      if(length(ii) != 0) {
+        v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+      }
       cf.tsboot$t[rr, reftime+1] <- .fn(evs=hankel$t[rr, 1+reftime, , drop = FALSE],
                                         ii=ii, id=id, n=n,
                                         vectors=NA, v0=NA)
@@ -374,6 +378,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(type %in% c("log", "acosh"))
+  stopifnot(sort.type %in% c("values", "vectors"))
   
   tmax <- hankel$cf$Time/2
   if(!hankel$cf$symmetrised){
