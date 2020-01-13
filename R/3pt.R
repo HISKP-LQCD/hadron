@@ -85,6 +85,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
 #'
 #' @param object Object of type `pionff`
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.pionff <- function (object, ...) {
   ff <- object
   T <- ff$Cf2ptp0$Time
@@ -132,14 +134,14 @@ summary.pionff <- function (object, ...) {
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
 #' @seealso \code{\link{uwerr}}, \code{\link{plot.averx}}
 #' @keywords optimize ts
+#' 
+#' @export averx
 #' @examples
 #' 
 #' library(hadron)
 #' \dontrun{data3pt <- read.table("momf2e_op_d_0.dat")}
 #' \dontrun{data2pt <- read.table("pssca_corr_0.dat")}
 #' \dontrun{res3pt <- averx(data=data3pt, data2pt=data2pt, t1 = 6, t2 = 18, mps=0.13587)}
-#' 
-#' @export averx
 averx <- function(data3pt, data2pt, pionfit, 
                   boot.R=400, boot.l=2, piont1, piont2, useCov=FALSE,
                   t1, t2, seed=123456, type="solve", force.optim=FALSE) {
@@ -261,6 +263,8 @@ averx <- function(data3pt, data2pt, pionfit,
 #'
 #' @param object Object of type `averx`
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.averx <- function(object, ...) {
   averx <- object
   cat("\n")
@@ -293,6 +297,8 @@ summary.averx <- function(object, ...) {
 #'
 #' @param x Object of type `averx`
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 print.averx <- function(x, ...) {
   summary.averx(x, ...)
 }

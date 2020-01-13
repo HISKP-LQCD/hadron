@@ -565,6 +565,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
 #'
 #' @param object Object of type `gevp.amplitude`.
 #' @param ... Generic Parameters to be passed on.
+#' @export
 summary.gevp.amplitude <- function (object, ...) {
   amp <- object
   cat("\n ** Result of a GEVP analysis for the amplitude **\n\n")
@@ -598,6 +599,8 @@ summary.gevp.amplitude <- function (object, ...) {
 #'
 #' @param x Object of type `gevp.amplitude`.
 #' @param ... Graphical parameters to be passed on.
+#'
+#' @export
 plot.gevp.amplitude <- function (x, ...) {
   amp <- x
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)

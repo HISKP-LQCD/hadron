@@ -375,6 +375,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
 #' @param col String. Colour.
 #' @param x0 Numeric. Left value of the range of the horizontal line.
 #' @param x1 Numeric. Right value of the range of the horizontal line.
+#'
+#' @export
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
     dm <- dp
@@ -393,6 +395,8 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #' @param xlab String. Label for x-axis
 #' @param ylab String. Lable for y-axis
+#'
+#' @export
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
   plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
@@ -404,6 +408,8 @@ plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
 #'
 #' @param x Object of type `pionfit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.pionfit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -415,6 +421,8 @@ plot.pionfit <- function(x, ...) {
 #'
 #' @param x Object of type `rhofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.rhofit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -426,6 +434,8 @@ plot.rhofit <- function(x, ...) {
 #'
 #' @param x Object of type `b1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.b1fit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -437,6 +447,8 @@ plot.b1fit <- function(x, ...) {
 #'
 #' @param x Object of type `ofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.ofit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -448,6 +460,8 @@ plot.ofit <- function(x, ...) {
 #'
 #' @param x Object of type `c1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.cfit <- function(x, ...) {
   fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
@@ -519,6 +533,8 @@ plot.cfit <- function(x, ...) {
 #' @param ll local-local effective mass object
 #' @param lf local-fuzzed effective mass object
 #' @param ff fuzzed-fuzzed effective mass object
+#'
+#' @export
 plot.effmass <- function (x, ..., ll, lf, ff) {
   m <- x
 
@@ -551,6 +567,8 @@ plot.effmass <- function (x, ..., ll, lf, ff) {
 #'
 #' @param x `averx` object
 #' @param ... ignored
+#'
+#' @export
 plot.averx <- function(x, ...) {
   averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
@@ -583,6 +601,8 @@ plot.averx <- function(x, ...) {
 #'
 #' @param x Object of type `pionff`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.pionff <- function (x, ...) {
   ff <- x
   T <- ff$Cf2ptp0$Time

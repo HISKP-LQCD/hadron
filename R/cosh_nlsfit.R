@@ -243,6 +243,7 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   return(invisible(effMass))
 }
 
+#' @export
 plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr = FALSE, ...) {
   effMass <- x
   stopifnot(inherits(effMass, 'coshfit'))
@@ -300,6 +301,7 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
   }
 }
 
+#' @export
 summary.coshfit <- function (object, verbose = FALSE, ...) {
   effMass <- object
   cat("\n ** Result of", effMass$coshfit$n.cosh, "-fold cosh-fit **\n\n")

@@ -6,7 +6,8 @@
 #' @param data Original data to bootstrap
 #' @param R Number of bootstrap replicates.
 #' @param l Block length.
-#' 
+#'
+#' @export
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
@@ -625,6 +626,8 @@ matrixfit <- function(cf, t1, t2,
 #' @param ... Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.
 #' 
 #' @seealso \code{\link{matrixfit}}
+#'
+#' @export
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
                             do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
   mfit <- x
@@ -752,6 +755,7 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
 #'
 #' @param object Object of type \link{matrixfit}
 #' @param ... Generic parameters to pass on.
+#' @export
 summary.matrixfit <- function (object, ...) {
   mfit <- object
   if(mfit$model == "pc") {
@@ -863,6 +867,8 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
 #'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
 #'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
 #'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
+#'
+#' @export
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {

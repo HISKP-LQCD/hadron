@@ -1,3 +1,4 @@
+#' @export
 readcmicor <- function(filename, colClasses=c("integer","integer","integer","numeric","numeric","integer"),
                        skip=0) {
   data <- read.table(filename, header=F, skip=skip,
@@ -25,11 +26,11 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmidatafiles}}, \code{\link{extract.obs}}
 #' @keywords file
+#' @export
 #' @examples
 #' 
 #' \dontrun{filelist <- getorderedfilelist("ouptrc")}
 #' 
-#' @export getorderedfilelist
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
   ii <- getorderedconfigindices(path=path, basename=basename, last.digits=last.digits, ending=ending)
@@ -64,6 +65,7 @@ getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digit
   return(invisible(order(gaugeno)))
 }
 
+#' @export
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
@@ -272,6 +274,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   return(invisible(ldata))
 }
 
+#' @export
 readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","numeric","numeric"),
                              obs=NULL, obs.index=1, avg=1, stride=1) {
@@ -282,6 +285,7 @@ readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
   return(invisible(data))
 }
 
+#' @export
 readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","integer",
                                "numeric","numeric","numeric","numeric"),
@@ -483,6 +487,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
 #'
 #' @param filename String. Filename of the heavy light correlator data file.
 #' 
+#' @export
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
@@ -649,6 +654,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #' @param symmetrise Boolean, specifies whether averaging over backward and forward
 #'                   correlators should be done after the correlator has been read in.
 #' @param nts Integer, number of time slices to be read from the correlator files.
+#'
+#' @export
 readnissatextcf <- function(file_basenames_to_read,
                             smear_combs_to_read,
                             Time,

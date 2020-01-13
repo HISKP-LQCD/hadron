@@ -108,6 +108,7 @@ uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   }
 }
 
+#' @export
 uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   
   N = length(data)
@@ -234,6 +235,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   return(invisible(res))
 }
 
+#' @export
 uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   Nalpha <- dim(data)[2]
   N <- dim(data)[1]
@@ -429,6 +431,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 #'
 #' @param object Object of type \link{uwerr}
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.uwerr <- function (object, ...) {
   uwerr <- object
 

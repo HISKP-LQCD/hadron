@@ -299,6 +299,8 @@ dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, 
 #' @param object Object to extract the mass from.
 #'
 #' @return Numeric. The mass value.
+#'
+#' @export
 extract_mass <- function (object) {
   UseMethod('extract_mass')
 }
@@ -309,6 +311,8 @@ extract_mass <- function (object) {
 #' @param object Object of type `effectivemassfit` to extract the mass from.
 #'
 #' @return Numeric. The mass value.
+#'
+#' @export
 extract_mass.effectivemassfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$massfit.tsboot[,1])
@@ -320,6 +324,8 @@ extract_mass.effectivemassfit <- function (object) {
 #' @param object Object of type `matrixfit` to extract the mass from.
 #'
 #' @return Numeric. The mass value.
+#'
+#' @export
 extract_mass.matrixfit <- function (object) {
   list(t0 = object$opt.res$par[1],
        t = object$opt.tsboot[1,])
@@ -349,6 +355,8 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 #' @param offset integer. Offset for the time $t$, needed for the reweighting
 #'   after a shift.
 #' @param inverse boolean. If `TRUE` apply inverse weight.
+#'
+#' @export
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
   Exptt <- make_weight_factor(energy_difference_val, cf$Time, offset,
@@ -378,6 +386,8 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 #' then weighted again with the inverse weighting factor.
 #'
 #' @inheritParams weight.cf
+#'
+#' @export
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
                   cosh_factor, 0, TRUE)
@@ -423,6 +433,8 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
 #'   weighting procedure
 #'
 #' @return weighted and shifted correlation function as a \link{cf} object.
+#'
+#' @export
 removeTemporal.cf <- function(cf, single.cf1, single.cf2,
                               p1=c(0,0,0), p2=c(0,0,0), L,
                               lat.disp=TRUE, weight.cosh=FALSE) {

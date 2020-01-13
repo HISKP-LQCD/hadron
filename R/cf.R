@@ -344,6 +344,7 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
 #'
 #' @param .cf `cf` object.
 #'
+#' @export
 #' @examples
 #' # The empty cf object must be empty:
 #' is_empty.cf(cf())
@@ -426,7 +427,7 @@ resampling_is_concatenable <- function(cf1, cf2){
 #'
 #' @param .cf `cf` object
 #'
-#'
+#' @export
 has_icf <- function(.cf) {
   stopifnot( inherits(.cf, 'cf') ) 
   return( !is.null(.cf$icf) )
