@@ -72,7 +72,9 @@ def main():
 
     diff = list(sorted(set(manual_exports) - set(auto_exports)))
 
-    print('Set difference:\n ', diff, '\n')
+    print('Set difference:\n')
+    for x in diff:
+        print('- `{}`'.format(x))
 
 
 def _parse_args():
