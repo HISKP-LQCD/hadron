@@ -40,9 +40,11 @@ env:
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
 
-install:
-  - R -e 'devtools::install_deps(dep = T)'
+
+script:
   - Rscript -e 'devtools::document();'
+  - R CMD build .
+  - R CMD check *tar.gz
 
 after_success:
   - Rscript -e 'devtools::install(); devtools::test()'
