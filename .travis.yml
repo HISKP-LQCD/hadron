@@ -40,7 +40,8 @@ env:
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
 
-before_install:
+install:
+  - R -e 'devtools::install_deps(dep = T)'
   - Rscript -e 'devtools::document();'
 
 after_success:
