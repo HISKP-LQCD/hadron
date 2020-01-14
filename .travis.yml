@@ -42,6 +42,7 @@ env:
 
 
 script:
+  - Rscript -e 'Rcpp::compileAttributes();'
   - Rscript -e 'devtools::document();'
   - R CMD build .
   - R CMD check *tar.gz
