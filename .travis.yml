@@ -42,6 +42,8 @@ env:
 
 
 script:
+  - Rscript .travis_install_texlive.R
+  - Rscript -e 'tinytex::pdflatex(list.files(pattern = "\\.tex$")[1], bib_engine = "biber")'
   - Rscript -e 'devtools::document();'
   - Rscript -e 'Rcpp::compileAttributes();'
   - R CMD build .
