@@ -103,6 +103,10 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' @param range Numeric vector. Value-range of eigenvalues to be considered
 #' @param id Integer. Vector of indices of eigenvalues to consider.
 #'
+#' @family hankel
+#'
+#' @export
+#'
 #' @examples
 #'
 #' data(correlatormatrix)
@@ -115,7 +119,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, eps=0.0001, range=c(0,1),
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 #' 
-#' @family hankel
 bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1), eps=0.001) {
 
   stopifnot(inherits(cf, 'cf_meta'))
@@ -155,6 +158,8 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
 #' @param id Integer. ID of the principal correlator to extract
 #' 
 #' @family hankel
+#'
+#' @export
 hankel2cf <- function(hankel, id=1) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
@@ -192,6 +197,7 @@ hankel2cf <- function(hankel, id=1) {
 #' @param type Character vector. Type of effective mass to use.
 #' 
 #' @family hankel
+#' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log") {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)

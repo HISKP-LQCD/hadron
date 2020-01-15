@@ -5,8 +5,17 @@
 #   https://docs.travis-ci.com/user/languages/r/
 
 language: r
+dist: trusty
+sudo: required
 cache: packages
+warnings_are_errors: false
+use_bioc: true
 
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+          
 r:
   - release 
 
@@ -17,20 +26,13 @@ r_packages:
   - Rcpp
   - rmarkdown
 
+r_binary_packages:
+  - devtools
+  - roxygen2
+
 apt_packages:
   - libgsl-dev  
 
-sudo: required
-dist: trusty
-
-warnings_are_errors: false
-use_bioc: true
-
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-          
 env:
   global:
     - R_CHECK_ARGS="--no-build-vignettes --no-manual --timings"
@@ -38,9 +40,12 @@ env:
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
 
-r_binary_packages:
-  - devtools
-  - roxygen2
+
+script:
+  - Rscript -e 'devtools::document();'
+  - Rscript -e 'Rcpp::compileAttributes();'
+  - R CMD build .
+  - R CMD check *tar.gz
 
 script:
   - Rscript .travis_install_texlive.R

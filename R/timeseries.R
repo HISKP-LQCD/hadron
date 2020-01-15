@@ -21,6 +21,8 @@
 #' @param debug Boolean. Generate debug output.
 #' @param uw.summary Boolean. Generate an \link{uwerr} summary.
 #' @param ... Generic graphical parameters to be passed on.
+#'
+#' @export
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
                             stat_range,
@@ -141,6 +143,8 @@ plot_timeseries <- function(dat,
 #' @param pdf.filename String. PDF filename.
 #' @param errorband_color String. Colour of the error band.
 #' @param debug Boolean. Generate debug output.
+#'
+#' @export
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
                                        ylab, plotsize, filelabel,titletext,

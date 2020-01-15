@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Copyright © 2020 Martin Ueding <dev@martin-ueding.de>
+
+import argparse
+import re
+import glob
+
+
+def read_namespace(path):
+    exports = []
+    export_patterns = []
+
+    with open(path) as f:
+        for line in f:
+            m = re.match(r'export\("?([^")]+)"?\)', line)
+            if m:
+                string = m.group(1)
+                parts = re.split(r', ?', string)
+                exports += parts
+
+            m = re.match(r'exportPattern\("([^")]+)"\)', line)
+            if m:
+                export_patterns.append(m.group(1))
+
+            m = re.match(r'S3method\([`"]?(.+?)[`"]?, ?(.+?)\)', line)
+            if m:
+                exports.append('{}.{}'.format(m.group(1), m.group(2)))
+
+    print('Found exports:\n ', exports, '\n')
+    print('Found export patterns:\n ', export_patterns, '\n')
+
+    exports.sort()
+    export_patterns.sort()
+
+    return exports, export_patterns
+
+
+def main():
+    options = _parse_args()
+
+    manual_exports, manual_export_patterns = read_namespace('NAMESPACE.manual')
+    auto_exports, auto_export_patterns = read_namespace('NAMESPACE')
+
+    def_pattern = re.compile(r'^\'?(\S+?)\'? ?<- ?function')
+    available = []
+
+    for path in glob.glob('R/*.R'):
+        with open(path) as f:
+            for line in f:
+                m = def_pattern.match(line)
+                if m:
+                    available.append(m.group(1))
+
+    available.sort()
+
+    print('Available functions:\n ', available, '\n')
+
+    for func in available:
+        if func not in manual_exports:
+            for pattern in manual_export_patterns:
+                m = re.match(pattern, func)
+                if m:
+                    manual_exports.append(func)
+
+    manual_exports.sort()
+    auto_exports.sort()
+
+    print('Manual exports:\n ', manual_exports, '\n')
+    print('Auto exports:\n ', auto_exports, '\n')
+
+    diff = list(sorted(set(manual_exports) - set(auto_exports)))
+
+    print('Set difference:\n')
+    for x in diff:
+        print('- `{}`'.format(x))
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(description='')
+    options = parser.parse_args()
+
+    return options
+
+
+if __name__ == '__main__':
+    main()
