@@ -47,5 +47,8 @@ script:
   - R CMD build .
   - R CMD check *tar.gz
 
+script:
+  - Rscript .travis_install_texlive.R
+
 after_success:
   - Rscript -e 'devtools::install(); devtools::test()'
