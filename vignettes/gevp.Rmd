@@ -6,7 +6,7 @@ output:
     citation_package: biblatex
     toc: yes
     
-bibliography: gevp.bib
+#bibliography: gevp.bib
 link_citation: yes
 vignette: >
   %\VignetteIndexEntry{GEVP energy level extraction}
