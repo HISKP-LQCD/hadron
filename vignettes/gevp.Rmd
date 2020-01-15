@@ -19,13 +19,13 @@ library(knitr)
 library(hadron)
 ```
 
-# Data Type \texttt{cf} for Correlation Functions
+# Data Type `cf` for Correlation Functions
 
-\texttt{hadron} provides a data type or better class for correlation
-functions and correlation matrices, which is called \texttt{cf}. There
+`hadron` provides a data type or better class for correlation
+functions and correlation matrices, which is called `cf`. There
 is a whole list of input
 routines available to import data from HDF5, text or binary formats
-into the \texttt{cf} container. The most important ones are compiled
+into the `cf` container. The most important ones are compiled
 in the following table:
 
 ```{r, echo=FALSE}
@@ -34,13 +34,13 @@ knitr::kable(data.frame(c("readtextcf", "readbinarycf", "readbinarysamples", "mo
              col.names=c("Hadron Function", "Correlator Format"))
 ```
 
-For even more flexibility there is the \texttt{raw\_cf} container, for
+For even more flexibility there is the `raw_cf` container, for
 which we refer to the documentation. 
 
 In oder to solve the generalised eigenvalue problem (GEVP) one has to
-read several correlation functions into one \texttt{cf} correlator
-matrix. For this purpose the combine operation \texttt{c} is defined
-for the class \texttt{cf}. Thus, for instance the following code
+read several correlation functions into one `cf` correlator
+matrix. For this purpose the combine operation `c` is defined
+for the class `cf`. Thus, for instance the following code
 snipped can be used:
 
 ```{r, eval=FALSE}
@@ -71,7 +71,7 @@ for which we refer to the documentation.
 
 # Resampling Strategies
 
-Once the bare data is available as a \texttt{cf}, one has to decide
+Once the bare data is available as a `cf`, one has to decide
 for an error analysis strategy. This can be either the bootstrap or
 the jackknife. To demonstrate this we first load the sample
 correlation matrix provided by hadron
@@ -95,9 +95,9 @@ correlatormatrix <- bootstrap.cf(cf=correlatormatrix,
                                  seed=seed)
 ```
 
-Analogously, \texttt{jackknife.cf} initiates the jackknife
-resampling. \texttt{boot.R} is the number of bootstrap replicates,
-\texttt{boot.l} the block lentgh. Now, it is also possible to plot the
+Analogously, `jackknife.cf` initiates the jackknife
+resampling. `boot.R` is the number of bootstrap replicates,
+`boot.l` the block lentgh. Now, it is also possible to plot the
 data with errors 
 
 ```{r, warning=FALSE}
@@ -132,7 +132,7 @@ and solve the simple eigenvalue problem
 \]
 instead.
 
-In \texttt{hadron} this task is performed as follows on the bootstrap
+In `hadron` this task is performed as follows on the bootstrap
 correlator matrix in the most simple case
 
 ```{r, cache=TRUE}
@@ -153,26 +153,26 @@ plot(pc2, rep=TRUE, col="blue", pch=22)
 ```
 
 These principal correlators can be analysed as every object of type
-\texttt{cf}, see below. 
+`cf`, see below. 
 
 ## Additional Options
 
-\texttt{bootstrap.gevp} has some additional options which are worth
+`bootstrap.gevp` has some additional options which are worth
 mentioning.
 
 1. During the bootstrap procedure for the GEVP, eigenvalues have to be
    sorted for every $t$-value. This can be either done by
-   \texttt{values}, \texttt{vectors} or \texttt{det} passed via the
-   parameter \texttt{sort.type}. When \texttt{vectors} is chosen,
+   `values`, `vectors` or `det` passed via the
+   parameter `sort.type`. When `vectors` is chosen,
    scalar products of eigenvectors are computed
    \[
    v(t', t_0) \cdot v(t, t_0)
    \]
-   and the overlap maximised. When \texttt{sort.t0} is set to
-   \texttt{TRUE}, the comparison time is chosen constant as
+   and the overlap maximised. When `sort.t0` is set to
+   `TRUE`, the comparison time is chosen constant as
    $t'=t_0+1$. Otherwise, $t'=t-1$ is set in dependence of $t$. 
 
-2. With parameter \texttt{element.order} the correlation functions in
+2. With parameter `element.order` the correlation functions in
    the input correlator matrix are specified for use in the GEVP. This
    can be a sub-set of all the correlation functions in the
    matrix. Double usage is allowed as well.
@@ -184,8 +184,8 @@ mentioning.
 
 First, a fit directly to the (principal) correlator can be
 performed. The corresponding functionality is provided in
-\texttt{hadron} by the function \texttt{matrixfit} and, more modern,
-\texttt{new\_matrixfit}. Let us discuss here the former in its
+`hadron` by the function `matrixfit` and, more modern,
+`new_matrixfit`. Let us discuss here the former in its
 application to
 
 ```{r, warning=FALSE}
@@ -196,7 +196,7 @@ plot(pc1.matrixfit, do.qqplot=FALSE,
      xlab="t", ylab="C(t)")
 ```
 
-An extended overview is provided by the overloaded \texttt{summary}
+An extended overview is provided by the overloaded `summary`
 function
 
 ```{r}
@@ -207,8 +207,8 @@ This yields an energy level with error of
 $E =`r tex.catwitherror(x=pc1.matrixfit$t0[1], dx=pc1.matrixfit$se[1], digits=2, with.dollar=FALSE)`$.
 
 As we know that $\lambda(t_0, t_0)=1$, we can fit more than a single
-exponential to the principal correlator. For this \texttt{matrixfit}
-knows the model \texttt{pc}. The corresponding fit model reads
+exponential to the principal correlator. For this `matrixfit`
+knows the model `pc`. The corresponding fit model reads
 \[
 f(t; E, \Delta E, A)\ =\ \exp(-E(t-t_0))(A + (1-A)\exp(-\Delta E(t-t_0))
 \]
