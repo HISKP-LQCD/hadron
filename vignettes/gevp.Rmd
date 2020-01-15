@@ -28,11 +28,12 @@ routines available to import data from HDF5, text or binary formats
 into the `cf` container. The most important ones are compiled
 in the following table:
 
-```{r, echo=FALSE}
-knitr::kable(data.frame(c("readtextcf", "readbinarycf", "readbinarysamples", "more?"),
-                        c("text", "binary, HDF5", "binary", "...")),
-             col.names=c("Hadron Function", "Correlator Format"))
-```
+Hadron Function | Correlator Format
+--- | ---
+readtextcf | text
+readbinarycf | binary, HDF5
+readbinarysamples | binary
+*more?* | *...*
 
 For even more flexibility there is the `raw_cf` container, for
 which we refer to the documentation. 
