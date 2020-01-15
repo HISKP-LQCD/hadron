@@ -55,7 +55,7 @@ rm(tmp)
 
 This code snippet reads a correlator matrix with four correlation
 functions from four files. The read functions can also directly read
-from a list of files. File lists ca be created conveniently using the
+from a list of files. File lists can be created conveniently using the
 following routines 
 
 ```{r, eval=FALSE}
