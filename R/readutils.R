@@ -708,7 +708,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' \code{getorderedfilelist}. The filelist is assumed to be order according to
 #' ascending gauge fields.
 #' @param T time extend of correlation functions.
-#' @param obs each file may contain many correlation functions. With \code{obs}
+#' @param obs each file may contain many correlation functions. With `obs`
 #' one choses which observable to read in. To be precise, in each file the
 #' reading will start at point T*obs*sizeof(complex<double>) and read
 #' Nop*T*sizeof(complex<double>).

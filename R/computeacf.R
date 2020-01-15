@@ -11,22 +11,22 @@
 #' @param W.max maximal time lag to be used.
 #' @param Lambda cut-off needed to estimate the standard error of the ACF.
 #' @return It returns a list of class \code{hadronacf} with members
-#' \item{lags}{ time lags of the integrated autocorrelation function }
-#' \item{Gamma}{ normalised autocorrelation function } \item{dGamma}{ error of
-#' normalised autocorrelation function } \item{W.max}{ max time lag used for
-#' the call of \code{acf} } \item{W}{ the cut-off up to which the ACF is
-#' integrated for the integrated autocorrelation time } \item{tdata}{ the
-#' original time series } \item{tau}{ the estimated integrated autocorrelation
-#' time } \item{dtau}{ the estimated error of the integrated autocorrelation
-#' time }
+#' \item{lags}{time lags of the integrated autocorrelation function}
+#' \item{Gamma}{normalised autocorrelation function} \item{dGamma}{error of
+#' normalised autocorrelation function} \item{W.max}{max time lag used for
+#' the call of \code{acf}} \item{W}{the cut-off up to which the ACF is
+#' integrated for the integrated autocorrelation time} \item{tdata}{the
+#' original time series} \item{tau}{the estimated integrated autocorrelation
+#' time} \item{dtau}{the estimated error of the integrated autocorrelation
+#' time}
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{uwerr}}, \code{\link{acf}}
 #' \code{\link{bootstrap.analysis}}
 #' @references 'Monte Carlo errors with less errors', Ulli Wolff,
-#' \href{http://arxiv.org/abs/hep-lat/0306017hep-lat/0306017}
+#' http://arxiv.org/abs/hep-lat/0306017hep-lat/0306017
 #' 
 #' 'Schwarz-preconditioned HMC algorithm for two-flavour lattice QCD', Martin
-#' Luescher, \href{http://arxiv.org/abs/hep-lat/0409106hep-lat/0409106}
+#' Luescher, http://arxiv.org/abs/hep-lat/0409106hep-lat/0409106
 #' 
 #' N. Madras, A. D. Sokal, J. Stat. Phys. 50 (1988) 109
 #' @keywords ts, acf, autocorrelationtime

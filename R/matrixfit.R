@@ -282,41 +282,41 @@ deriv.pcModel <- function(par, t, T, reference_time) {
 #' multiples of \code{every} are skipped. If no value is provided, all points
 #' are taken into account.
 #' @return returns an object of class \code{matrixfit} with entries: \item{CF}{
-#' object of class cf which contains the mean correlation functions } \item{M}{
-#' inverse variance-covariance matrix for weighted Chi squared minimization }
-#' \item{L}{ squre root of \code{M}.  } \item{parind}{ indices in the parameter
-#' vector used for the different matrix combinations } \item{sign.vec}{ vector
-#' of signs } \item{ii}{ vector of vector indices giving the columns of the
+#' object of class cf which contains the mean correlation functions} \item{M}{
+#' inverse variance-covariance matrix for weighted Chi squared minimization}
+#' \item{L}{squre root of \code{M}.} \item{parind}{indices in the parameter
+#' vector used for the different matrix combinations} \item{sign.vec}{vector
+#' of signs} \item{ii}{vector of vector indices giving the columns of the
 #' correlation function arrays (CF above, say), which are contained in the fit
-#' range } \item{opt.res}{ return value of the minimization (see ?optim) on the
-#' original data.  } \item{t0}{ Result of the chisqr fit on the original data.
+#' range} \item{opt.res}{return value of the minimization (see ?optim) on the
+#' original data.} \item{t0}{Result of the chisqr fit on the original data.
 #' \code{t0} is a vector of length npar+1, where \code{npar} the number of fit
-#' parameters. The last value is the chisqr value.  } \item{t}{ Bootstrap
+#' parameters. The last value is the chisqr value.} \item{t}{Bootstrap
 #' samples of the \code{R} Chi squared minimizations of length(par)+1. \code{t}
 #' has dimension \eqn{R x (npar+1)}, where \code{R} is the number of bootstrap
 #' samples and \code{npar} the number of fit parameters. The last column
-#' corresponds to the chisquare values.  } \item{se}{ Bootstrap estimate of
+#' corresponds to the chisquare values.} \item{se}{Bootstrap estimate of
 #' standard error for all parameters. \code{se} is a vector of length
-#' \code{npar}, where \code{npar} the number of fit parameters.  }
-#' \item{useCov}{ whether covariances in the data were taken into account }
-#' \item{invCovMatrix}{ inverse of covariance matrix or inverse variance
-#' weighted if useCov=FALSE } \item{Qval}{ real number between 0 and 1 giving
-#' the "quality" of the fit } \item{chisqr}{ total Chi squared of the fit }
-#' \item{dof}{ fit degrees of freedom } \item{mSize}{ integer size of the
-#' matrix which was fitted } \item{cf}{ object of type cf which contains,
+#' \code{npar}, where \code{npar} the number of fit parameters.}
+#' \item{useCov}{whether covariances in the data were taken into account}
+#' \item{invCovMatrix}{inverse of covariance matrix or inverse variance
+#' weighted if useCov=FALSE} \item{Qval}{real number between 0 and 1 giving
+#' the "quality" of the fit} \item{chisqr}{total Chi squared of the fit}
+#' \item{dof}{fit degrees of freedom} \item{mSize}{integer size of the
+#' matrix which was fitted} \item{cf}{object of type cf which contains,
 #' amongst other objects, cf$cf which is a concatenated array of raw
 #' correlation functions where each row is one of N observations and there are
-#' mSize*T columns (see ?extract.obs) } \item{boot.R}{ number of bootstrap
-#' samples } \item{boot.l}{ block size for blocked bootstrap } \item{t1}{
-#' beginning of fit range } \item{t2}{ end of fit range } \item{parlist}{ array
-#' of parameter combinations for the matrix fit } \item{sym.vec}{ vector of
+#' mSize*T columns (see ?extract.obs)} \item{boot.R}{number of bootstrap
+#' samples} \item{boot.l}{block size for blocked bootstrap} \item{t1}{
+#' beginning of fit range} \item{t2}{end of fit range} \item{parlist}{array
+#' of parameter combinations for the matrix fit} \item{sym.vec}{vector of
 #' strings indicating the functional form of correlation functions which were
-#' fitted } \item{seed}{ RNG seed for bootstrap procedure } \item{model}{ see
-#' input.  } \item{fit.method}{ see input.  } \item{reference_time}{ The GEVP
-#' reference time for the principal correlator model }
+#' fitted} \item{seed}{RNG seed for bootstrap procedure} \item{model}{see
+#' input.} \item{fit.method}{see input.} \item{reference_time}{The GEVP
+#' reference time for the principal correlator model}
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{cf}}, \code{\link{bootstrap.cf}}
-#' @references C. Michael, \href{hep-lat/9412087hep-lat/9412087}
+#' @references C. Michael, `hep-lat/9412087hep-lat/9412087`
 #' @keywords optimize ts
 #' @examples
 #' 

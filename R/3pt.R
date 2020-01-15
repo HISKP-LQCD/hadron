@@ -1,6 +1,6 @@
-#' convert data into a \code{cf} object
+#' convert data into a `cf` object
 #' 
-#' Lets one convert data of certain type into an object of class \code{cf}
+#' Lets one convert data of certain type into an object of class `cf`
 #' 
 #' 
 #' @param data a \code{data.frame}
@@ -127,10 +127,10 @@ summary.pionff <- function (object, ...) {
 #' enforced.
 #' @return returns a list containing
 #' 
-#' \item{averx}{ value of <x> } \item{daverx}{ error of <x> } \item{data}{
-#' average 3pt correlator and its error } \item{fit.uwerr}{ return object of
-#' the uwerr call } \item{mps}{ pseudo-scalar mass as given as input or as
-#' determined } \item{N}{ number of measurements }
+#' \item{averx}{value of <x>} \item{daverx}{error of <x> } \item{data}{
+#' average 3pt correlator and its error} \item{fit.uwerr}{return object of
+#' the uwerr call} \item{mps}{pseudo-scalar mass as given as input or as
+#' determined} \item{N}{number of measurements}
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
 #' @seealso \code{\link{uwerr}}, \code{\link{plot.averx}}
 #' @keywords optimize ts
