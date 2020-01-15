@@ -2,6 +2,8 @@
 #'
 #' @param x class pionfit. object to print
 #' @param ... additional parameters to be passed on
+#'
+#' @export
 print.pionfit <- function (x, ...) {
   summary(x, ...)
 }
@@ -10,6 +12,8 @@ print.pionfit <- function (x, ...) {
 #'
 #' @param object class pionfit. object to summarise
 #' @param ... additional parameters to be passed on
+#'
+#' @export
 summary.pionfit <- function (object, ...) {
   fit <- object
   kappa <- fit$kappa

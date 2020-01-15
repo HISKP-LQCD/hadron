@@ -29,6 +29,7 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
   return(jack.boot.se)
 }
 
+#' @export
 jab.cf <- function(cf, m = 1) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -51,6 +52,7 @@ jab.cf <- function(cf, m = 1) {
 }
 
 
+#' @export
 jab.cf.derived <- function(cf, m=1) {
   if(cf$cf$cf.tsboot$sim != "fixed") {
     stop("JAB only implemented for 'sim=fixed' at the moment")

@@ -1,3 +1,19 @@
+#' fits a plateau to an object of class \code{cf}
+#' 
+#' where applicable, a plateau is fitted to the averaged data in \code{cf}
+#' using a (correlated) chisquare fit.
+#' 
+#' 
+#' @param cf input object of class \code{cf}
+#' @param t1 starting t-value for the fit
+#' @param t2 final t-value for the fit.
+#' @param useCov perform a correlated chisquare fit or not.
+#' @return Returns a list with elements \item{plateau}{ the fitted plateau
+#' value } \item{dplateau}{ its error }
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}
+#' @keywords bootstrap fit
+#' @export fit.plateau2cf
 fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))

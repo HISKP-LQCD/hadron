@@ -1140,6 +1140,8 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
 #' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
+#'
+#' @export
 print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
@@ -1218,10 +1220,12 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 }
 
+#' @export
 residual_plot <- function (x, ...) {
   UseMethod("residual_plot", x)
 }
 
+#' @export
 residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
