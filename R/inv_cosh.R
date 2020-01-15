@@ -7,6 +7,9 @@
 #' @param maxiterations Integer. Maximal number of iterations to be
 #'   used in the iterative solver.
 #'
+#' @useDynLib hadron
+#' @importFrom Rcpp evalCpp
+#'
 #' @export
 invcosh <- function(ratio, timeextent, t, eps=1.e-9, maxiterations=1000) {
 

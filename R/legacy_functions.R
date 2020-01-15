@@ -4,16 +4,20 @@
 
 
 # this was originally in pp.R
+#'
+#' @export
 effmass <- function(data, timeextent, t) {
   mass <- invcosh((data[1]+data[4])/(data[2]+data[3]), timeextent=timeextent, t=t)
   return(invisible(mass))
 }
 
+#' @export
 effmass2 <- function(data, timeextent, t) {
   mass <- invcosh(ratio=(data[1])/(data[2]), timeextent=timeextent, t=t)
   return(invisible(mass))
 }
 
+#' @export
 effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   L <- (to-from+1)
   i <- 1

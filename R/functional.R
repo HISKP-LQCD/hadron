@@ -13,6 +13,8 @@
 #' element for certain operations, like `+.cf`. Still a functional programming
 #' style should be supported such that one can use maps and folds.
 #'
+#' @export
+#'
 #' @examples
 #' # We generate some random numbers.
 #' numbers <- rnorm(10)
