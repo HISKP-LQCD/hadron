@@ -20,6 +20,8 @@
 #'                     be subtracted.
 #' @return `raw_cf` container with the product of loop and 2pt function, shifted
 #'         in time to be relative to source using the info from \code{src_ts}
+#'
+#' @export
 disc_3pt <- function(cf_2pt, 
                      loop,
                      src_ts,
@@ -259,6 +261,8 @@ loop_stochav <- function(loop, nstoch_to_avg = 'all'){
 #'                      to average over. Only possible string is 'all'. If an
 #'                      integer is provided it must be at least '1' and at most
 #'                      consistent with the number of stochastic samples in \code{loop}.
+#'
+#' @export
 loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )

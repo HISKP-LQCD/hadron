@@ -122,6 +122,8 @@ raw_cf_to_cf <- function(x, component){
 #'         }
 #'         Each of these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
 #'         hance lacks the first dimension index compared for \code{cf$data}.
+#'
+#' @export
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))
   
@@ -200,6 +202,8 @@ uwerr.raw_cf <- function(cf){
 #' @return cf `raw_cf` object with the data member reduced in its first dimension
 #'        by a factor of `block_length` and restricted (at the end) to the number
 #'        of measurements divisible by `block_length`.
+#'
+#' @export
 block.raw_cf <- function(cf, block_length){
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -253,6 +257,8 @@ block.raw_cf <- function(cf, block_length){
 #' the other object is returned. (allows empty `raw_cf` to be extended).
 #' If the dimensions (except for the measurements) of the `data` fields of the
 #' two containers match, they are concatenated along the measurement dimension.
+#'
+#' @export
 addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -289,6 +295,8 @@ addStat.raw_cf <- function(cf1, cf2) {
 #' @param a Numeric or complex, scaling factor applied to \code{cf1}.
 #' @param b Numeric or complex, scaling factor applied to \code{cf2}.
 #' @return \code{a*cf1$data + b*cf2$data}
+#'
+#' @export
 add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -310,6 +318,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container to be added
 #' @param cf2 second 'raw_cf' container to be added
 #' @return `raw_cf` object with \code{cf$data == cf1$data + cf2$data}
+#'
+#' @export
 '+.raw_cf' <- function (cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = 1.0)
 }
@@ -318,6 +328,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container to be subtracted
 #' @param cf2 second 'raw_cf' container to be subtracted
 #' @return `raw_cf` object with \code{cf$data == cf1$data - cf2$data}
+#'
+#' @export
 '-.raw_cf' <- function(cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = -1.0)
 }
@@ -326,6 +338,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 'raw_cf' container with data and meta-data to be the dividend
 #' @param cf2 'raw_cf' container with data and meta-data to be the divisor
 #' @return `raw_cf` object with \code{cf$data == cf1$data / cf2$data}
+#'
+#' @export
 '/.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
@@ -344,6 +358,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container with data and meta-data to be multiplied
 #' @param cf2 second 'raw_cf' container with data and meta-data to be multiplied
 #' @return `raw_cf` object with \code{cf$data == cf1$data * cf2$data}
+#'
+#' @export
 '*.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
@@ -372,6 +388,8 @@ conj_raw_cf <- function(cf){
 #' @param a Numeric or complex scaling factor, although it could also be
 #'          an array of dimensions compatible with \code{cf$data}
 #' @return `raw_cf` object with \code{res$data == a*cf$data}
+#'
+#' @export
 mul.raw_cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(is.numeric(a) | is.complex(a))
@@ -382,12 +400,16 @@ mul.raw_cf <- function(cf, a=1.) {
 
 #' @title check if an object is of class `raw_cf`
 #' @param x object to be checked 
+#'
+#' @export
 is.raw_cf <- function(x){
   inherits(x, "raw_cf")
 }
 
 #' @title check if an obect is of class `raw_cf` and empty otherwise
 #' @param x object to be checked
+#'
+#' @export
 is_empty.raw_cf <- function(x){
   .raw_cf <- x
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))
@@ -397,6 +419,8 @@ is_empty.raw_cf <- function(x){
 #' @title Concatenate `raw_cf` correlation function objects
 #'
 #' @param ... Zero or multiple objects of type `raw_cf`.
+#'
+#' @export
 c.raw_cf <- function (...) {
   rval <- Reduce(concat.raw_cf, list(...), raw_cf())
   return (rval)
@@ -409,6 +433,8 @@ c.raw_cf <- function (...) {
 #'              after the slices of \code{left}
 #' @param left `raw_cf` object to be concatenated with \code{right}
 #' @param right `raw_cf` object to be concatenated with \code{left}
+#'
+#' @export
 concat.raw_cf <- function (left, right) {
   stopifnot(inherits(left, 'raw_cf'))
   stopifnot(inherits(right, 'raw_cf'))
@@ -474,6 +500,8 @@ concat.raw_cf <- function (left, right) {
 #'         \code{dval} members of these list elements are arrays of dimension
 #'         \code{ c( cf$nts, cf$dim ) } and thus lack the first index compared
 #'         to \code{cf$data}.
+#'
+#' @export
 get_plotdata_raw_cf <- function(cf,
                                 reim,
                                 tauint,
@@ -568,6 +596,8 @@ get_plotdata_raw_cf <- function(cf,
 #'                  are to be plotted, will be plotted in the same plot.
 #' @param ... Further parameters passed to \link{plotwitherror}.
 #' @return Invisibly returns the plotdata, see \link{get_plotdata_raw_cf}.
+#'
+#' @export
 plot.raw_cf <- function(x,
                         ...,
                         reim = 'real', 
@@ -841,6 +871,8 @@ shift.raw_cf <- function(cf, places) {
 #' @param component Integer vector. Optional argument to obtain a subset of the
 #'                  index matrix to access a particular element of the interior
 #'                  dimensions. Must of the the same length as cf$dim.
+#'
+#' @export
 idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -866,6 +898,8 @@ idx_matrix.raw_cf <- function(cf, component){
 
 #' @title Construct tensor index set for the internal degrees of freedom
 #' @param cf `raw_cf` container
+#'
+#' @export
 int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   args <- list()
@@ -882,6 +916,8 @@ int_idx_matrix.raw_cf <- function(cf){
 #' @param statistics Boolean, return central value and error
 #'                   for all components of the 'raw_cf'. This can
 #'                   be slow so the default is \code{FALSE}.
+#'
+#' @export
 summary.raw_cf <- function(object, ..., statistics = FALSE) {
   cf <- object
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -918,6 +954,8 @@ summary.raw_cf <- function(object, ..., statistics = FALSE) {
 #' @title Print summary of data contained in `raw_cf` container
 #' @param x `raw_cf` container with data and meta-data
 #' @param ... ignored
+#'
+#' @export
 print.raw_cf <- function(x, ...) {
   cf <- x
   summary(cf, ...)
