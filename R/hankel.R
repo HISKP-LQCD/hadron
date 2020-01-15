@@ -111,6 +111,9 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' List object of class "hankel". The eigenvalues are stored in a
 #' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
 #' time \code{t0} is stored as \code{reference_time} in the returned list.
+#'
+#' @family hankel
+#' @export
 #' @examples
 #'
 #' data(correlatormatrix)
@@ -122,10 +125,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
-#' 
 #' @family hankel
 bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
-
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 

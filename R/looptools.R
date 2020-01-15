@@ -18,6 +18,8 @@
 #'                 contribution to the three-point function.
 #' @param vev_subtract Boolean, whether the loop contains a vev which should
 #'                     be subtracted.
+#'
+#' @export
 disc_3pt <- function(cf_2pt, 
                      loop,
                      src_ts,
@@ -232,6 +234,8 @@ loop_stochav <- function(loop, nstoch_to_avg = 'all'){
 #'                      to average over. Only possible string is 'all'. If an
 #'                      integer is provided it must be at least '1' and at most
 #'                      consistent with the number of stochastic samples in \code{loop}.
+#'
+#' @export
 loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )

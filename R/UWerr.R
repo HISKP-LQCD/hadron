@@ -24,6 +24,69 @@
 #
 # 
 
+
+
+#' Time Series Analysis With Gamma Method
+#' 
+#' Analyse time series data with the so called gamma method
+#' 
+#' 
+#' @aliases uwerr uwerrprimary uwerrderived
+#' @param f function computing the derived quantity. If not given it is assumed
+#' that a primary quantity is analysed.
+#' 
+#' f must have the data vector of length Nalpha as the first argument. Further
+#' arguments to f can be passed to uwerr via the \code{...} argument.
+#' 
+#' f may return a vector object of numeric type.
+#' @param data array of data to be analysed. It must be of dimension (N x
+#' Nalpha) (i.e. N rows and Nalpha columns), where N is the total number of
+#' measurements and Nalpha is the number of primary observables
+#' @param nrep the vector (N1, N2, ...) of replica length N1, N2
+#' @param S initial guess for the ratio tau/tauint, with tau the exponetial
+#' autocorrelation length.
+#' @param pl logical: if TRUE, the autocorrelation function, the integrated
+#' autocorrelation time as function of the integration cut-off and (for primary
+#' quantities) the time history of the observable are plotted with plot.uwerr
+#' @param ...  arguments passed to function \code{f}.
+#' @return In case of a primary observable (\code{uwerrprimary}), an object of
+#' class \code{uwerr} with basis class \code{\link{list}} containing the
+#' following objects \item{value}{ the expectation value of the obsevable }
+#' \item{dvalue}{ the error estimate } \item{ddvalue}{ estimate of the error on
+#' the error } \item{tauint}{ estimate of the integrated autocorrelation time
+#' for that quantity } \item{dtauint}{ error of tauint } \item{Qval}{ the
+#' p-value of the weighted average in case of several replicas } In case of a
+#' derived observable (\code{uwerrderived}), i.e. if a function is specified,
+#' the above objects are contained in a list called \code{res}.
+#' 
+#' \code{uwerrprimary} returns in addition \item{data}{ input data } whereas
+#' \code{uwerrderived} returns \item{datamean}{ (vector of) mean(s) of the
+#' (vector of) data } and in addition \item{fgrad}{ the estimated gradient of
+#' \code{f} } and \item{f}{ the input statistics }
+#' 
+#' In both cases the return object containes \item{Wopt}{ value of optimal
+#' cut-off for the Gamma function integration } \item{Wmax}{ maximal value of
+#' the cut-off for the Gamma function integration } \item{tauintofW}{
+#' integrated autocorrelation time as a function of the cut-off W }
+#' \item{dtauintofW}{ error of the integrated autocorrelation time as a
+#' function of the cut-off W } \item{S}{ input parameter S } \item{N}{ total
+#' number of observations } \item{R}{ number of replicas } \item{nrep}{ vector
+#' of observations per replicum } \item{Gamma}{ normalised autocorrelation
+#' function } \item{primary}{ set to 1 for \code{uwerrprimary} and 0 for
+#' \code{uwerrderived} }
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{plot.uwerr}}
+#' @references ``Monte Carlo errors with less errors'', Ulli Wolff,
+#' hep-lat/0306017
+#' @keywords optimize ts
+#' @examples
+#' 
+#' data(plaq.sample)
+#' plaq.res <- uwerrprimary(plaq.sample)
+#' summary(plaq.res)
+#' plot(plaq.res)
+#' 
+#' @export uwerr
 uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   # f: scalar function handle, needed for derived quantities
   # data: the matrix of data with dim. (Nalpha x N)
@@ -45,6 +108,7 @@ uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   }
 }
 
+#' @export
 uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   
   N = length(data)
@@ -171,6 +235,7 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   return(invisible(res))
 }
 
+#' @export
 uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   Nalpha <- dim(data)[2]
   N <- dim(data)[1]
@@ -366,6 +431,8 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 #'
 #' @param object Object of type \link{uwerr}
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.uwerr <- function (object, ...) {
   uwerr <- object
 
@@ -391,6 +458,32 @@ summary.uwerr <- function (object, ...) {
   }
 }
 
+
+
+#' Plot Command For Class UWerr
+#' 
+#' Plot Command For Class UWerr
+#' 
+#' 
+#' @param x object of class \code{uwerr}
+#' @param ...  generic parameters, not used here.
+#' @param main main title of the plots.
+#' @param plot.hist whether or not to generate a histogram
+#' @param index index of the observable to plot.
+#' @param Lambda Cutoff to be used in the error computation for the ACF.
+#' @return produces various plots, including a histogram, the
+#' autocorrelationfunction and the integrated autocorrelation time, all with
+#' error bars.
+#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @seealso \code{\link{uwerr}}, \code{\link{pion}}
+#' @keywords methods hplot
+#' @examples
+#' 
+#' data(plaq.sample)
+#' plaq.res <- uwerrprimary(plaq.sample)
+#' plot(plaq.res)
+#' 
+#' @export plot.uwerr
 plot.uwerr <- function(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100) {
 
   if(x$primary && plot.hist) {
