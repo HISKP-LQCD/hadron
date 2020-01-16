@@ -11,3 +11,12 @@
 ^\.travis\.yml$
 ^\.travis\.yml$
 ^\.vimrc$
+vignettes/*RData
+vignettes/*log
+vignettes/*pdf
+CONTRIBUTING.md
+Weighted_Model.nb
+install
+notes/
+test/
+test_bootstrap_nlsfit.Rmd

@@ -64,6 +64,7 @@ NULL
 #'                spline uniroot var weighted.mean
 #' @importFrom utils combn count.fields head read.table
 #'                setTxtProgressBar txtProgressBar
+#' @importFrom rhdf5 h5ls H5Fclose
 #' @keywords package
 NULL
 

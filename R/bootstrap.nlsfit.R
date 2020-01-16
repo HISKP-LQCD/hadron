@@ -1183,6 +1183,13 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 }
 
+#' residual_plot
+#'
+#' generic residual_plot method
+#'
+#' @param x the object to plot
+#' @param ... additional parameters to be passed on to specialised functions
+#' 
 #' @export
 residual_plot <- function (x, ...) {
   UseMethod("residual_plot", x)
