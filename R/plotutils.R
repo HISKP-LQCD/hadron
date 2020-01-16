@@ -637,7 +637,7 @@ plot.pionff <- function (x, ...) {
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
 #' @keywords methods hplot
-#' @export plot.outputdata
+#' @export 
 #' @examples
 #' 
 #' \dontrun{plaq <- readoutputdata("output.data")}
