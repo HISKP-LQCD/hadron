@@ -391,7 +391,7 @@ cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE, che
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
    
     if( check_group_names ){ 
-      group_names <- h5ls(h5f)$name
+      group_names <- rhdf5::h5ls(h5f)$name
       
       avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
       if( any( !avail_loop_types ) ){
@@ -446,7 +446,7 @@ cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE, che
         } # imom
       } # igamma
     } # loop_type
-    H5Fclose(h5f)
+    rhdf5::H5Fclose(h5f)
     if(verbose) tictoc::toc()
   } # ifile
   
