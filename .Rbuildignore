@@ -20,3 +20,4 @@ install
 notes/
 test/
 test_bootstrap_nlsfit.Rmd
+verify-exports

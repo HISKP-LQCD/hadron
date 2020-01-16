@@ -477,7 +477,7 @@ summary.uwerr <- function (object, ...) {
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
 #' @seealso \code{\link{uwerr}}, \code{\link{pion}}
 #' @keywords methods hplot
-#' @export plot.uwerr
+#' @export 
 #' @examples
 #' 
 #' data(plaq.sample)

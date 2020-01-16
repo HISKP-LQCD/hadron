@@ -154,7 +154,7 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1), range=c(0,1)
 
 #' @title hankel2cf
 #'
-#' @param hankel object of type \link{hankel}
+#' @param hankel object of type hankel
 #' @param id Integer. ID of the principal correlator to extract
 #' 
 #' @family hankel
@@ -192,7 +192,7 @@ hankel2cf <- function(hankel, id=1) {
 
 #' @title hankel2effectivemass
 #'
-#' @param hankel object of type \link{hankel}
+#' @param hankel object of type hankel
 #' @param id Integer. ID of the principal correlator to extract
 #' @param type Character vector. Type of effective mass to use.
 #' 
