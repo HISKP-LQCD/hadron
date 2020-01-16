@@ -146,7 +146,6 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' Gamma=gamma_5 have VEV's, see \code{\link{computeDisc}}
 #' 
 #' @aliases readcmicor readcmifiles readcmidatafiles readcmiloopfiles
-#' @param filename A single file name to read from.
 #' @param files list of filenames to be read. Can be created using
 #' \code{getorderedfilelist}.
 #' @param skip Number of lines to be skipped at the beginning of each file
@@ -708,10 +707,10 @@ readnissatextcf <- function(file_basenames_to_read,
 #' \code{getorderedfilelist}. The filelist is assumed to be order according to
 #' ascending gauge fields.
 #' @param T time extend of correlation functions.
-#' @param obs each file may contain many correlation functions. With `obs`
+#' @param obs each file may contain many correlation functions. With 'obs'
 #' one choses which observable to read in. To be precise, in each file the
-#' reading will start at point T*obs*sizeof(complex<double>) and read
-#' Nop*T*sizeof(complex<double>).
+#' reading will start at point T*obs*sizeof(complex\code{<double>}) and read
+#' Nop*T*sizeof(complex\code{<double>}).
 #' @param symmetrise symmetrise the correlation function or not
 #' @param Nop number of replicas for the correlator to read in.
 #' @param endian the endianess of the binary file.

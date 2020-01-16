@@ -1,13 +1,12 @@
-#' convert data into a `cf` object
-#' 
-#' Lets one convert data of certain type into an object of class `cf`
-#' 
+#' convert data into an cf object
+#'
+#' Lets one convert data of certain type into an object of class \code{cf}
 #' 
 #' @param data a \code{data.frame}
 #' @param symmetric is the data symmetric or anti-symmetric in t
 #' @param symmetrise symmetrise the data
 #' @return An object of class \code{cf}
-#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @author Carsten Urbach \email{urbach@hiskp.uni-bonn.de}
 #' @seealso \code{\link{cf}}
 #' @keywords correlator
 #' @export convert2cf
@@ -99,9 +98,9 @@ summary.pionff <- function (object, ...) {
 
 
 
-#' Compute <x> From Bare Data
+#' Compute \code{<x>} From Bare Data
 #' 
-#' Compute <x> from bare data by fitting to a constant
+#' Compute \code{<x>} from bare data by fitting to a constant
 #' 
 #' 
 #' @param data3pt 3pt correlator as read in with \code{\link{read.table}} from
@@ -127,7 +126,7 @@ summary.pionff <- function (object, ...) {
 #' enforced.
 #' @return returns a list containing
 #' 
-#' \item{averx}{value of <x>} \item{daverx}{error of <x> } \item{data}{
+#' \item{averx}{value of  \eqn{<x>}} \item{daverx}{error of \eqn{<x>} } \item{data}{
 #' average 3pt correlator and its error} \item{fit.uwerr}{return object of
 #' the uwerr call} \item{mps}{pseudo-scalar mass as given as input or as
 #' determined} \item{N}{number of measurements}

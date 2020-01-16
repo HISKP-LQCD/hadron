@@ -477,13 +477,13 @@ summary.uwerr <- function (object, ...) {
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
 #' @seealso \code{\link{uwerr}}, \code{\link{pion}}
 #' @keywords methods hplot
+#' @export plot.uwerr
 #' @examples
 #' 
 #' data(plaq.sample)
 #' plaq.res <- uwerrprimary(plaq.sample)
 #' plot(plaq.res)
 #' 
-#' @export plot.uwerr
 plot.uwerr <- function(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100) {
 
   if(x$primary && plot.hist) {

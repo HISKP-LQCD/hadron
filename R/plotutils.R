@@ -637,13 +637,13 @@ plot.pionff <- function (x, ...) {
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
 #' @keywords methods hplot
+#' @export plot.outputdata
 #' @examples
 #' 
 #' \dontrun{plaq <- readoutputdata("output.data")}
 #' \dontrun{plaq.plot <- plot(plaq, skip=100)}
 #' \dontrun{summary(plaq.plot$plaq.res)}
 #' 
-#' @export plot.outputdata
 plot.outputdata <- function (x, skip = 0, ...) {
   data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])

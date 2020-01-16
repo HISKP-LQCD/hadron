@@ -43,7 +43,7 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
   vector_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
   if( any( !(loop_type %in% vector_loop_types ) ) ) {
     stop(sprintf("The only derivative loop types are %s",
-                 do.call(paste, list(deriv_loop_types))
+                 do.call(paste, list(vector_loop_types))
                  )
         )
   }
