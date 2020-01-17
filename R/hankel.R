@@ -125,7 +125,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
-#' @family hankel
 bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
