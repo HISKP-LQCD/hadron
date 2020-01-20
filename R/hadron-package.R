@@ -1,16 +1,15 @@
-
-
 #' Sample correlator matrix
-#' 
+#'
+#' @description
 #' Sample data for a correlation function for a 24 cube times 48 lattice QCD
 #' simulation representing a pion propagation. It is stored in form of an
 #' object of class \code{cf}, which is derived from \code{list}.
 #' 
-#' 
 #' @name correlatormatrix
+#' 
 #' @docType data
-#' @format list of 7 elements: [1] "nrObs" "Time" "nrStypes" "symmetrised" "cf"
-#' [6] "icf" "cf0"
+#' @format list of 7 elements: "nrObs" "Time" "nrStypes" "symmetrised" "cf"
+#' "icf" "cf0"
 #' @keywords datasets
 #' @examples
 #' 
@@ -54,7 +53,17 @@ NULL
 #' 
 #' @name hadron
 #' @docType package
-#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
+#'
+#' @importFrom grDevices col2rgb dev.cur dev.new dev.off rainbow rgb
+#' @importFrom graphics abline arrows grconvertX grconvertY hist legend
+#' lines par plot points polygon rect segments title
+#' @importFrom stats acf approx complete.cases cor cov
+#'                na.omit optim pchisq pgamma qchisq qqplot
+#'                quantile rchisq rgeom rnorm sd spec.pgram
+#'                spline uniroot var weighted.mean
+#' @importFrom utils combn count.fields head read.table
+#'                setTxtProgressBar txtProgressBar
 #' @keywords package
 NULL
 
@@ -115,7 +124,7 @@ NULL
 #' 
 #' @name plaq.sample
 #' @docType data
-#' @format The format is: num [1:6352] 0.583 0.582 0.582 0.582 0.582 ...
+#' @format The format is: num 0.583 0.582 0.582 0.582 0.582 ...
 #' @keywords datasets
 #' @examples
 #' 
@@ -135,7 +144,7 @@ NULL
 #' 
 #' @name pscor.sample
 #' @docType data
-#' @format list of 2 elements: [1] "t" "ps"
+#' @format list of 2 elements: "t" "ps"
 #' @keywords datasets
 #' @examples
 #' 
@@ -156,21 +165,21 @@ NULL
 #' 
 #' @name samplecf
 #' @docType data
-#' @format The format is: List of 15 $ cf : num [1:1018, 1:25] 521 533 532 531
-#' 561 ...  $ icf : num [1:1018, 1:25] 521 533 532 531 561 ...  $ Time : num 48
+#' @format The format is: List of 15 $ cf : num  521 533 532 531
+#' 561 ...  $ icf : num  521 533 532 531 561 ...  $ Time : num 48
 #' $ nrStypes : num 1 $ nrObs : num 1 $ boot.samples : logi TRUE $
 #' jackknife.samples: logi FALSE $ symmetrised : logi TRUE $ boot.R : num 1500
-#' $ boot.l : num 2 $ seed : num 1442556 $ sim : chr "geom" $ cf0 : num [1:25]
-#' 519 375 274 221 185 ...  $ cf.tsboot :List of 11 ..$ t0 : num [1:25] 519 375
-#' 274 221 185 ...  ..$ t : num [1:1500, 1:25] 521 518 520 519 519 ...  ..$ R :
-#' num 1500 ..$ data : num [1:1018, 1:25] 521 533 532 531 561 ...  ..$ seed :
-#' int [1:626] 403 624 -867935848 1692432057 -1535150298 -1438296209 912697060
+#' $ boot.l : num 2 $ seed : num 1442556 $ sim : chr "geom" $ cf0 : num 
+#' 519 375 274 221 185 ...  $ cf.tsboot :List of 11 ..$ t0 : num  519 375
+#' 274 221 185 ...  ..$ t : num  521 518 520 519 519 ...  ..$ R :
+#' num 1500 ..$ data : num  521 533 532 531 561 ...  ..$ seed :
+#' int  403 624 -867935848 1692432057 -1535150298 -1438296209 912697060
 #' 1838233749 1438572626 999279531 ...  ..$ statistic:function (x) ..$ sim :
 #' chr "geom" ..$ n.sim : int 1018 ..$ call : language tsboot(tseries = cf$cf,
 #' statistic = function(x) return(apply(x, MARGIN = 2L, FUN = mean)) ...)  ..$
 #' l : num 2 ..$ endcorr : logi TRUE ..- attr(*, "class")= chr "boot" ..-
-#' attr(*, "boot_type")= chr "tsboot" $ tsboot.se : num [1:25] 1.001 0.615
-#' 0.572 0.537 0.499 ...  - attr(*, "class")= chr [1:2] "cf" "list"
+#' attr(*, "boot_type")= chr "tsboot" $ tsboot.se : num  1.001 0.615
+#' 0.572 0.537 0.499 ...  - attr(*, "class")= chr "cf" "list"
 #' @keywords datasets
 #' @examples
 #' 

@@ -97,7 +97,7 @@ cdh <- function(parm = rep(0, times=6), rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb
 #' 
 #' and
 #' 
-#' R. Frezzotti, V. Lubicz, S. Simula, arXiv:0812.4042 [hep-lat]
+#' R. Frezzotti, V. Lubicz, S. Simula, arXiv:0812.4042 hep-lat
 #' @examples
 #' 
 #' mu <- c(0.004, 0.006, 0.008, 0.010, 0.004)

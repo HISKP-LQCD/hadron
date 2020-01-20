@@ -727,7 +727,7 @@ addStat.cf <- function(cf1, cf2) {
 }
 
 #' @title average close-by-times in a correlation function
-#' @description
+#' @description                                                                                                                                   
 #' "close-by-times" averaging replaces the value of the correlation function at t
 #' with the "hypercubic" average with the values at the neighbouring time-slices
 #' with weights 0.25, 0.5 and 0.25
@@ -1131,8 +1131,8 @@ shift.cf <- function(cf, places) {
       iend <- istart + cf$Time - 1
 
       if( places < 0 ){
-        ishift <- c( (iend - abs(places)):iend,
-                     (istart:(iend-abs(places)-1)) )
+        ishift <- c( (iend - abs(places) + 1):iend,
+                     (istart:(iend-abs(places))) )
       } else {
         ishift <- c( (istart+places):iend,
                       istart:(istart+places-1) )
@@ -1207,17 +1207,19 @@ invalidate.samples.cf <- function (cf) {
   return(invisible(cf))
 }
 
-#' symmetrise.cf
-#'
-#' @description
-#' Symmetrises a correlation function
+#' Average backward and forward-dominated parts of the correlation function
+#' 
+#' When a correlation function is symmetric or anti-symmetric in time,
+#' this symmetry can be exploited by averaging the part from source-sink
+#' separation 1 to cf$Time/2 with the part from cf$Time/2+1 to cf$Time-1
+#' in order to improve statistical precision. This function
+#' reduces the number of time slices in a `cf` object from cf$Time to 
+#' cf$Time/2+1 by performing this averaging.
 #' 
 #' @param cf Object of type `cf`.
-#' @param sym.vec Integer vector. Takes values -+1 for
-#'   (anti)symmmetrisation. If longer than 1, it must be of length
-#'   equal to the number of observalbes in `cf`. Otherwise, the same
-#'   operation is applied to all observables in `cf`, which is the
-#'   default.
+#' @param sym.vec Integer or integer vector of length cf$nrObs giving the
+#'                time-reflection symmetry (1 for symmetric, -1 for anti-symmetric)
+#'                of the observable in question. 
 #'
 #' @export
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
@@ -1298,6 +1300,110 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 
   cf$symmetrised <- TRUE
   return(invisible(cf))
+}
+
+#' Unfold a correlation function which has been symmetrised
+#' 
+#' After a symmetric correlation function has been averaged across the central
+#' time slice, it is sometimes useful to explicitly duplicate the resulting
+#' average to span all cf$Time time slices. This function takes a `cf` with
+#' cf$Time/2+1 time slices and turns it into one with cf$Time time slices by
+#' reflecting the correlation function along the cf$Time/2 axis.
+#'
+#' @param cf `cf` object which has been previously symmetrised
+#' @param sym.vec Integer vector giving the symmetry properties (see \link{symmetrise.cf})
+#'                of the original unsymmetrised correlation function. This should be of
+#'                length cf$nrObs
+unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  if(!cf$symmetrised){
+    stop("unsymmetrise.cf: cf is not symmetrised!")
+  }
+
+  if( cf$nrObs > 1 & length(sym.vec) == 1 ){
+    sym.vec <- rep(sym.vec[1],times=cf$nrObs)
+  } else if( cf$nrObs != length(sym.vec) ) {
+    stop("symmetrise.cf: length of sym.vec must either be 1 or match cf$nrObs!\n")
+  }
+
+  cf2 <- cf$cf
+  cf$cf <- array(NA, dim=c(nrow(cf$cf), cf$nrObs*cf$nrStypes*cf$Time))
+  
+  if( has_icf(cf) ){
+    icf2 <- cf$icf
+    cf$icf <- array(NA, dim=c(nrow(cf$icf), cf$nrObs*cf$nrStypes*cf$Time))
+  }
+
+  if( inherits(cf, 'cf_boot') ){
+    cf.tsboot <- cf$cf.tsboot
+    cf$cf.tsboot$t <- array(NA, dim=c(nrow(cf.tsboot$t), cf$nrObs*cf$nrStypes*cf$Time))
+    cf$cf.tsboot$t0 <- rep(NA, times=cf$nrObs*cf$nrStypes*cf$Time)
+    cf$cf.tsboot$data <- array(NA, dim=c(nrow(cf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
+
+    if( has_icf(cf) ){
+      icf.tsboot <- cf$icf.tsboot
+      cf$icf.tsboot$t <- array(NA, dim=c(nrow(icf.tsboot$t), cf$nrObs*cf$nrStypes*cf$Time))
+      cf$icf.tsboot$t0 <- rep(NA, times=cf$nrObs*cf$nrStypes*cf$Time)
+      cf$icf.tsboot$data <- array(NA, dim=c(nrow(icf.tsboot$data), cf$nrObs*cf$nrStypes*cf$Time))
+    }
+  }
+
+  Thalf <- cf$Time/2
+  Thalfp1 <- Thalf+1
+  for( oidx in 0:(cf$nrObs-1) ){
+    for( sidx in 0:(cf$nrStypes-1) ){
+      istart <- oidx*cf$nrStypes*Thalfp1 + sidx*Thalfp1 + 1
+      ihalf <- istart + Thalf
+      iend <- istart + cf$Time - 1
+      
+      ifwd <- (istart):(ihalf)
+      ifwd_2 <- (istart+1):(ihalf-1)
+      ibwd <- rev((ihalf+1):(iend))
+
+      cf$cf[,ifwd] <- cf2[,ifwd]
+      cf$cf[,ibwd] <- sym.vec[oidx+1]*cf2[,ifwd_2]
+      if( inherits(cf, 'cf_boot') ){
+        cf$cf.tsboot$t[,ifwd] <- cf.tsboot$t[,ifwd]
+        cf$cf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$t[,ifwd_2]
+        cf$cf.tsboot$t0[ifwd] <- cf.tsboot$t0[ifwd]
+        cf$cf.tsboot$t0[ibwd] <- sym.vec[oidx+1]*cf.tsboot$t0[ifwd_2]
+        cf$cf.tsboot$data[,ifwd] <- cf.tsboot$data[,ifwd]
+        cf$cf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*cf.tsboot$data[,ifwd_2]
+      }
+
+      if( has_icf(cf) ){
+        cf$icf[,ifwd] <- icf2[,ifwd]
+        cf$icf[,ibwd] <- sym.vec[oidx+1]*icf2[,ifwd_2]
+        if( inherits(cf, 'cf_boot') ){
+          cf$icf.tsboot$t[,ifwd] <- icf.tsboot$t[,ifwd]
+          cf$icf.tsboot$t[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$t[,ifwd_2]
+          cf$icf.tsboot$t0[ifwd] <- icf.tsboot$t0[ifwd]
+          cf$icf.tsboot$t0[ibwd] <- sym.vec[oidx+1]*icf.tsboot$t0[ifwd_2]
+          cf$icf.tsboot$data[,ifwd] <- icf.tsboot$data[,ifwd]
+          cf$icf.tsboot$data[,ibwd] <- sym.vec[oidx+1]*icf.tsboot$data[,ifwd_2]
+        }
+      }
+    }
+  }
+
+  cf$symmetrised <- FALSE
+
+  if( inherits(cf, 'cf_boot') ){
+    # update central value and error
+    cf <- cf_boot(.cf = cf,
+                  boot.R = cf$boot.R,
+                  boot.l = cf$boot.l,
+                  seed = cf$seed,
+                  sim = cf$sim,
+                  endcorr = cf$endcorr,
+                  cf.tsboot = cf$cf.tsboot,
+                  icf.tsboot = cf$icf.tsboot,
+                  resampling_method = cf$resampling_method)
+  }
+
+  return(invisible((cf)))
 }
 
 #' summary.cf
