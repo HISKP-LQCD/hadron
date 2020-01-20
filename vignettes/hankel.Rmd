@@ -17,7 +17,6 @@ vignette: >
 library(hadron)
 ```
 
-
 # Hankel Matrix for a Correlation Function
 
 A $n\times n$ Hankel matrix $H$ corresponding to a vector
