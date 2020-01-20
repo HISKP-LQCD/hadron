@@ -1,6 +1,6 @@
 #' @title Generate HDF5 key for a momentum and spin-projected CVC loop 
 #' @param loop_type String, loop type.
-#' @param i_stoch Integer, stochastic sample id number.
+#' @param istoch Integer, stochastic sample id number.
 #' @param gamma Integer, CVC convention gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
@@ -300,7 +300,7 @@ cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'                 
 cvc_to_raw_cf <- function(cf_dat, dims = c(1,1))
 {
-  number_of_interal_dims <- prod(dims)
+  number_of_internal_dims <- prod(dims)
 
   # idcs for real and imaginary parts
   ridcs <- seq(1,length(cf_dat),2)
@@ -391,7 +391,7 @@ cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE, che
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
    
     if( check_group_names ){ 
-      group_names <- h5ls(h5f)$name
+      group_names <- rhdf5::h5ls(h5f)$name
       
       avail_loop_types <- unlist( lapply( selected_loop_types, function(x){ x %in% group_names } ) )
       if( any( !avail_loop_types ) ){
@@ -446,7 +446,7 @@ cvc_read_loops <- function(selections, files, Time, nstoch, verbose = FALSE, che
         } # imom
       } # igamma
     } # loop_type
-    H5Fclose(h5f)
+    rhdf5::H5Fclose(h5f)
     if(verbose) tictoc::toc()
   } # ifile
   

@@ -1,7 +1,7 @@
 #' @title get dataset from HDF5 file
 #' @param h5f HDF5 file opened with \code{rhdf5::H5Fopen}
 #' @param key String, full path to dataset.
-#' @param check_exist Boolean, check if key actually exists (keep in mind overhead).
+#' @param check_exists Boolean, check if key actually exists (keep in mind overhead).
 #' @export
 h5_get_dataset <- function(h5f, key, check_exists = TRUE)
 {
