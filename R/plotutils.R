@@ -86,8 +86,6 @@ errorpos <- function(dx,errsum.method="linear") {
   rval
 }
 
-
-
 #' Plot Command For XY Plots With Error Bars
 #' 
 #' Plot command for XY scatterplots based on plot and points which provides
@@ -159,7 +157,7 @@ errorpos <- function(dx,errsum.method="linear") {
 #' plotwitherror(x, y, dy)
 #' 
 #' @export plotwitherror
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
+plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
   if(!missing(mdy) && missing(dy)){
     stop("plotwitherror: if 'mdy' is provided, 'dy' must be too (it can be 0)")
   }
@@ -227,13 +225,13 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     }  
   }
 
-  if(missing(xlim)) {
+  if( is.null(xlim) ){
     my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
-  if(missing(ylim)) {
+  if( is.null(ylim) ){
     my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
   } else {
     my.ylim <- ylim
@@ -639,13 +637,13 @@ plot.pionff <- function (x, ...) {
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
 #' @keywords methods hplot
+#' @export 
 #' @examples
 #' 
 #' \dontrun{plaq <- readoutputdata("output.data")}
 #' \dontrun{plaq.plot <- plot(plaq, skip=100)}
 #' \dontrun{summary(plaq.plot$plaq.res)}
 #' 
-#' @export plot.outputdata
 plot.outputdata <- function (x, skip = 0, ...) {
   data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])

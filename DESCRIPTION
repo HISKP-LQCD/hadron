@@ -1,6 +1,6 @@
 Package: hadron
-Version: 2.7.0
-Date: 2019-01-10
+Version: 3.0.0
+Date: 2020-01-16
 Title: package to extract hadronic quantities
 Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
                   role = c("aut", "cre")),
@@ -31,6 +31,7 @@ Suggests:
     testthat,
     tictoc,
     tikzDevice,
+    hash,
     numDeriv,
     staplr
 License: GPL-3

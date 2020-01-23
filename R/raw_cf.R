@@ -193,7 +193,7 @@ uwerr.raw_cf <- function(cf){
 #'              function together. This occurs, for example, when multiple
 #'              stochastic noise vectors are used per measurement or multiple
 #'              source locations. Alternatively, it can also be used to
-#'              account for auto-correlations in the data. If the total numbers
+#'              account for auto-correlations in the data. If the total number
 #'              of measurements is not divisible by `block_length`, the last
 #'              measurements are discarded.
 #'
@@ -371,6 +371,15 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 
   cf <- cf1
   cf$data <- cf1$data * cf2$data
+  return(cf)
+}
+
+#' @title Take the complex conjugate of a `raw_cf` object
+#' @param cf `raw_cf` cotnainer with data
+#' @return `raw_cf`
+conj_raw_cf <- function(cf){
+  stopifnot(inherits(cf, 'raw_cf_data'))
+  cf$data <- Conj(cf$data)
   return(cf)
 }
 
@@ -679,6 +688,7 @@ overview_plot_raw_cf <- function(cf,
     if( prod(grid) != prod(cf$dim) ){
       stop("'prod(grid)' must be equal to 'prod(cf$dim)'")
     }
+    par_save <- par()
     par(mfrow=grid)
   }
 
@@ -773,6 +783,10 @@ overview_plot_raw_cf <- function(cf,
       do.call(plotwitherror, args)
     }
   }
+  # reset par which was modified above
+  if(!missing(grid)){
+    par(par_save)
+  }
 }
 
 #' @title shift a \code{raw_cf} correlation function by 'places' time-slices
@@ -798,8 +812,10 @@ shift.raw_cf <- function(cf, places) {
   if( (length(places) != 1) & (length(places) != dim(cf$data)[1]) ){
     stop("'places' should be either of length '1' or of a length equalling the number of measurements in 'cf'")
   }
-  if(length(places) == 1 & places == 0){
-    return(cf)
+  if(length(places) == 1){
+    if(places == 0){
+      return(cf)
+    }
   }
 
   dims <- dim(cf$data)
@@ -832,8 +848,8 @@ shift.raw_cf <- function(cf, places) {
         out_dof <- as.matrix(do.call(expand.grid, args))
         
         if( places[imeas] < 0 ){
-          ishift <- c( (iend - abs(places[imeas])):iend,
-                       (istart:(iend-abs(places[imeas])-1)) )
+          ishift <- c( (iend - abs(places[imeas]) + 1):iend,
+                       (istart:(iend-abs(places[imeas]))) )
         } else {
           ishift <- c( (istart+places[imeas]):iend,
                         istart:(istart+places[imeas]-1))
@@ -943,4 +959,38 @@ summary.raw_cf <- function(object, ..., statistics = FALSE) {
 print.raw_cf <- function(x, ...) {
   cf <- x
   summary(cf, ...)
+}
+
+#' @title Store a 'raw_cf' correlator in an associative array together with a description
+#' The object \code{cf} will be stored as an element of \code{cmap} under key \code{out_key}
+#' in the member \code{obj} of \code{cmap}. The data frame passed via \code{desc} will be
+#' appended as a row to \code{cmap[[out_key]]$map}. If \code{out_key} does not exist
+#' as a key in \code{cmap}, a new element will be created. If it already exists,
+#' \code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}. Requires
+#' the 'hash' package.
+#' @return Since objects of class \code{hash} are passed and modified by reference, there
+#'         is no explicit return value. Instead, the passed \code{cmap} is modified.
+#' @param cmap Object of class \code{hash} to act as storage for 'raw_cf' correlators.
+#' @param cf Object of class \code{raw_cf} to be stored in \code{cmap}.
+#' @param out_key String, key associated with \code{cf} object to be stored in \code{cmap}.
+#' @param desc Single row data frame containing some descriptive parameters for \code{cf}.
+store_correl <- function(cmap, cf, out_key, desc)
+{
+  hash_avail <- requireNamespace("hash")
+  if( !hash_avail ){
+    stop("The 'hash' package is required to use this function!\n")
+  }
+  stopifnot( "hash" %in% class(cmap) )
+  stopifnot( "raw_cf" %in% class(cf) )
+  stopifnot( "raw_cf_meta" %in% class(cf) )
+  stopifnot( "raw_cf_data" %in% class(cf) )
+
+  if( hash::has.key(out_key, cmap) ){
+    cmap[[out_key]]$obj <- addStat.raw_cf(cmap[[out_key]]$obj, cf)
+    cmap[[out_key]]$map <- rbind(cmap[[out_key]]$map, desc)
+  } else {
+    cmap[[out_key]] <- list()
+    cmap[[out_key]]$obj <- cf
+    cmap[[out_key]]$map <- desc
+  }
 }
