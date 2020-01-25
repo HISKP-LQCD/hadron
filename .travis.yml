@@ -32,6 +32,7 @@ r_binary_packages:
 
 apt_packages:
   - libgsl-dev  
+  - pdfcrop
 
 env:
   global:
