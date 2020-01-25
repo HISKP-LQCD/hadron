@@ -40,15 +40,12 @@ env:
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
 
-
 script:
+  - Rscript .travis_install_texlive.R
   - Rscript -e 'devtools::document();'
   - Rscript -e 'Rcpp::compileAttributes();'
   - R CMD build .
   - R CMD check *tar.gz
-
-script:
-  - Rscript .travis_install_texlive.R
 
 after_success:
   - Rscript -e 'devtools::install(); devtools::test()'
