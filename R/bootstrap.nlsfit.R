@@ -106,7 +106,7 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
                                lower = rep(x = -Inf, times = length(par.guess)),
                                upper = rep(x = +Inf, times = length(par.guess)),
-                               ..., bootstrap=TRUE, na.rm = FALSE) {
+                               ..., bootstrap=TRUE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
@@ -126,12 +126,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., lower = lower, upper = upper, dx = dx, dy = dy, na.rm = na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., lower = lower, upper = upper, dx = dx, dy = dy)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., lower = lower, upper = upper, dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., lower = lower, upper = upper, dx = dx, dy = dy, boot.R = boot.R)
   }
 }
 
@@ -473,6 +473,7 @@ simple.nlsfit <- function(fn,
                           boot.R = 0,
                           gr,
                           dfn,
+                          mask,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
@@ -485,6 +486,7 @@ simple.nlsfit <- function(fn,
     ncolps <- length(priors$psamples)
   }
   stopifnot(!missing(y))
+  stopifnot(!missing(dy))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
@@ -508,6 +510,28 @@ simple.nlsfit <- function(fn,
     lm.avail <- FALSE
   }
 
+  ## Apply the mask as in bootstrap.nlsfit.
+  if (!missing(mask)) {
+    if(errormodel != "xyerrors") {
+      dx <- NA
+    }
+
+    full <- list(x=x, y=y,
+                 dx=dx, dy=dy)
+
+    x <- x[mask]
+    y <- y[mask]
+    if(errormodel == "xyerrors") dx <- dx[mask]
+    dy <- dy[mask]
+
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
+  }
+
+  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
+
   ## cast y and dy to Y and dY, respectively
   if (errormodel == 'yerrors') {
     Y <- y
@@ -520,16 +544,14 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## If a list 'priors' is specified, modify the parameters y and func
   ## by adding p, param and psamples, respectively.
   priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
   if(priors.avail) {
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
-    bsamples <- cbind(bsamples, priors$psamples)
   }
   
-  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
@@ -633,6 +655,17 @@ simple.nlsfit <- function(fn,
 
   if(boot.R > 0){
     res$t <- parametric.bootstrap.cov(boot.R, first.res$par, cov)
+  }
+
+  # The user might have supplied a mask, therefore we need to restore all the
+  # information and un-apply the mask.
+  if (!missing(mask)) {
+    for (name in names(full)) {
+      if (name %in% names(res)) {
+        res[[name]] <- full[[name]]
+      }
+    }
+    res$mask <- mask
   }
 
   attr(res, "class") <- c("bootstrapfit", "list")
@@ -813,43 +846,6 @@ bootstrap.nlsfit <- function(fn,
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
   
-  # Apply the mask. The user might have specified a mask that is used to
-  # restrict the selection of the points that are to be used in the fit. In
-  # order to make this additional feature a minimal change to the following code
-  # we will *change* the input parameters here and store them with new names.
-  # Then at the very end we switch them back.
-  if (!missing(mask)) {
-    full <- list()
-    
-    if (!missing(dx)) {
-      full$dx <- dx
-      dx <- dx[mask]
-    } else if (ncol(bsamples) > length(y)) {
-      full$dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
-    }
-    
-    if (!missing(dy)) {
-      full$dy <- dy
-      dy <- dy[mask]
-    } else {
-      full$dy <- apply(bsamples[, 1:length(y)], 2, error)
-    }
-    
-    full$x <- x
-    x <- x[mask]
-    
-    full$y <- y
-    y <- y[mask]
-    
-    full$bsamples <- bsamples
-    bsamples <- bsamples[, mask]
-    
-    if (!missing(CovMatrix)) {
-      full$CovMatrix <- CovMatrix
-      CovMatrix <- CovMatrix[mask, mask]
-    }
-  }
-  
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
   } else {
@@ -860,21 +856,60 @@ bootstrap.nlsfit <- function(fn,
     parallel <- requireNamespace('parallel')
   }
 
-  crr <- c(1:(boot.R+1))
-  rr <- c(2:(boot.R+1))
-
-  ## cast y and dy to Y and W, respectively
+  ## determine the errormodel
   if (ncol(bsamples) == length(y)) {
-    Y <- y
-    par.Guess <- par.guess
     errormodel <- "yerrors"
   } else if (ncol(bsamples) == length(y) + length(x)) {
-    Y <- c(y, x)
-    par.Guess <- c(par.guess, x)
     errormodel <- "xyerrors"
   } else {
     stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
+
+  # Apply the mask. The user might have specified a mask that is used to
+  # restrict the selection of the points that are to be used in the fit. In
+  # order to make this additional feature a minimal change to the following code
+  # we will *change* the input parameters here and store them with new names.
+  # Then at the very end we switch them back.
+  if (!missing(mask)) {
+    if(errormodel == "xyerrors") {
+      if(missing(dx)) {
+        dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
+      }
+    }else{
+      dx <- NA
+    }
+
+    if(missing(dy)) {
+      dy <- apply(bsamples[, 1:length(y)], 2, error)
+    }
+
+    full <- list(x=x, y=y,
+                 dx=dx, dy=dy,
+                 bsamples=bsamples)
+
+    x <- x[mask]
+    y <- y[mask]
+    if(errormodel == "xyerrors") dx <- dx[mask]
+    dy <- dy[mask]
+    bsamples <- bsamples[, mask]
+    
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      CovMatrix <- CovMatrix[mask, mask]
+    }
+  }
+
+  crr <- c(1:(boot.R+1))
+  rr <- c(2:(boot.R+1))
+
+  if(errormodel == "yerrors"){
+    Y <- y
+    par.Guess <- par.guess
+  }else{
+    Y <- c(y, x)
+    par.Guess <- c(par.guess, x)
+  }
+
 
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
@@ -890,6 +925,7 @@ bootstrap.nlsfit <- function(fn,
   }
   
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
