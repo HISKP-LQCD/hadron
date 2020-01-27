@@ -495,7 +495,7 @@ simple.nlsfit <- function(fn,
   stopifnot(length(upper) == length(par.guess))
 
   useCov <- !missing(CovMatrix)
-  if (!missing(dx) || !missing(dy)) {
+  if (useCov && !(missing(dx) && missing(dy))) {
     stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
   }
 
@@ -849,7 +849,7 @@ bootstrap.nlsfit <- function(fn,
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
-  if (!missing(dx) || !missing(dy)) {
+  if (useCov && !(missing(dx) && missing(dy))) {
     stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
   }
   
