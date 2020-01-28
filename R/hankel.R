@@ -47,7 +47,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'    correlators into the correlator
 #'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 #'    \code{matrix(cf[element.order], nrow=2)}.
-#'    Matrix elements can occur multiple times, such ass \code{c(1,2,2,3)} for a symmetric matrix,
+#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #'
 #'
