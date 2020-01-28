@@ -34,7 +34,7 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'   real numeric vector and a generalised eigenvalue problem is solved
 #'   then.
 #'
-#' @param cf Numeric vector.
+#' @param cf Numeric vector (this will generally be the time slices of a correlation function).
 #' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
 #'    \code{Time/2-2}. Default is 1.
 #' @param n Integer. Size of the Hankel matrices to generate
@@ -47,12 +47,13 @@ gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
 #'    correlators into the correlator
 #'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
 #'    \code{matrix(cf[element.order], nrow=2)}.
-#'    Double indexing is allowed.
+#'    Matrix elements can occur multiple times, such ass \code{c(1,2,2,3)} for a symmetric matrix,
+#'    for example.
 #'
 #'
 #' @return
-#' A complex vector of length \code{n + n^2} with firsth the eigenvalues and
-#' then the eigenvectors is returned
+#' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
+#' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements.
 #' 
 #' A vector of NAs of \code{n + n^2} is returend in case the QR decomposition fails.
 #' 
