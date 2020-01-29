@@ -21,6 +21,15 @@ convert.scientific <- function(str, errstr) {
 }
 
 
+## Convert the number of significant digits to the absolute number of digits, 
+## given a value.
+absolute.number.digits <- function(x, digits){
+  if(x == 0){
+    return(digits)
+  }else{
+    return(floor(digits-log10(abs(x))))
+  }
+}
 
 #' paste a number with error in tex-ready format
 #' 
@@ -61,8 +70,6 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
   lx <- length(x)
   tmp <- ""
-  N <- 0
-  threshold <- 10^(digits-1)
 
   ## In case the number is very small, printing it with fixed point (`%f`) will
   ## not work. For this case we divide out the exponent from both value and
@@ -83,9 +90,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   if(missing(dx) && lx < 2) {
     if( is.na(x) ) x <- 0.0
     ## just a number without error
-    while(round(10^N*abs(x)) < threshold) {
-      N <- N+1
-    }
+    N <- absolute.number.digits(x, digits)
     tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
     if(human.readable) tmp <- convert.scientific(str=tmp)
     else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), sep="")
@@ -110,9 +115,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
     }
 
     if(err > 0) {
-      while(round(10^N*err) < threshold) {
-	N <- N+1
-      }
+      N <- absolute.number.digits(err, digits)
       # if the error is large it may exceed the number of digits that one actually desires
       # also, the error may be larger or similar in size to the value itself
       # in these cases, we display it in the same format as the value, rounded to the
@@ -131,9 +134,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
 	tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
       }
     }else {
-      while(round(10^N*abs(x)) < threshold) {
-	N <- N+1
-      }
+      N <- absolute.number.digits(x, digits)
       displayerr <- paste(format(0))
       tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
       if(human.readable) tmp <- convert.scientific(str=tmp, errstr = displayerr)
