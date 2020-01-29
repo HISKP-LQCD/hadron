@@ -4,9 +4,28 @@ hankel.matrix <- function(n, z){
         function(x,y) z[x+y-1])
 }
 
+#' @title GEVP method based on Hankel matrices.
+#' 
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   real numeric vector and a generalised eigenvalue problem is solved
+#'   then.
+#'
+#' @param cf Numeric vector (this will generally be the time slices of a correlation function).
+#' @param t0values Integer vector. The t0 values to sum over.
+#' @param deltat Integer. The value of the time shift to use to build the Hankel matrices.
+#' @param n Integer. Size of the Hankel matrices to generate
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#'
 #' @family hankel
-#' @export
-gevp.hankel.summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
+#' @return
+#' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
+#' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements.
+#' 
+#' A vector of NAs of \code{n + n^2} is returend in case the QR decomposition fails.
+gevp.hankel_summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
 
   cM1 <- array(0., dim=c(n, n))
   cM2 <- cM1
@@ -30,19 +49,58 @@ gevp.hankel.summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
 
+#' @title GEVP method based on Hankel matrices. 
+#' 
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   then. This is the function to call. It will perform a bootstrap
+#'   analysis. 
+#'
+#' @param cf object of type \link{cf}
+#' @param t0values Integer vector. The t0 values to sum over. Default is \code{c(1:max)}.
+#' All elements must be larger or equal to zero and smaller or equal than
+#' \code{max=N-2*n-deltat}
+#' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1.
+#' 
+#' @param n Integer. Size of the Hankel matrices to generate, default is 2.
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#'
+#' @details
+#' See `vignette(name="hankel", package="hadron")`
+#'
+#' @return
+#' List object of class "hankel.summed". The eigenvalues are stored in a
+#' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
+#' times \code{t0values} is stored as \code{t0values} in the returned list. In addition,
+#' \code{deltat} is stored in the returned list.
+#'
+#' @family hankel
 #' @export
-bootstrap.hankel.summed <- function(cf, t0values=c(1), deltat=1,
+#' @examples
+#'
+#' data(correlatormatrix)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' pc1.hankel <- bootstrap.hankel.summed(cf=pc1, t0=c(1:15), n=2)
+bootstrap.hankel_summed <- function(cf, t0values=c(1:(N-2*n-deltat)), deltat=1,
                                     n=2, N = cf$Time/2+1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-
+  stopifnot(all(t0values>=0))
+  stopifnot(max(t0values) <= N-2*n-deltat)
+  
   boot.R <- cf$boot.R
   evs <- rep(NA, times=n + n^2)
   evs.tsboot <- array(NA, dim=c(boot.R, n + n^2))
 
-  evs <- gevp.hankel.summed(cf$cf0, t0values=t0values,
+  evs <- gevp.hankel_summed(cf$cf0, t0values=t0values,
                             deltat=deltat, n=n, N=N)
-  evs.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel.summed,
+  evs.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel_summed,
                         n=n, N=N, deltat=deltat,
                         t0values=t0values))
                                 
@@ -58,10 +116,26 @@ bootstrap.hankel.summed <- function(cf, t0values=c(1), deltat=1,
               deltat=deltat,
               n=n,
               N=N)
-  class(ret) <- c("hankel.summed", class(ret))
+  class(ret) <- c("hankel_summed", class(ret))
   return(invisible(ret))
 }
 
+#' summary.hankel_summed
+#'
+#' @param object Object of type "hankel_summed" generated
+#' by \link{bootstrap.hankel_summed}
+#' @param ... Generic parameters to pass on.
+#' @export
+summary.hankel_summed <- function(object, ...) {
+  X <- data.frame(E   =-log(object$t0)/object$deltat,
+                  dE  =apply(-log(object$t)/object$deltat, 2, FUN=sd, na.rm=TRUE),
+                  q16 =apply(-log(object$t)/object$deltat, 2, FUN=quantile, na.rm=TRUE, probs=0.159),
+                  q84 =apply(-log(object$t)/object$deltat, 2, FUN=quantile, na.rm=TRUE, probs=0.841))
+  cat("Summed Hankel analysis\n")
+  cat("t0 values", object$t0values, "\n")
+  print(X)
+  return(invisible(X))
+}
 
 #' @title GEVP method based on Hankel matrices.
 #' 
@@ -194,13 +268,13 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
   }
   else {
     for(t02 in c(1:(N-2-deltat-2*n))) {
-      evs[deltat+t02, ] <- gevp.hankel(cf$cf0, t0=t02,
-                                       n=n, N=N, deltat=deltat,
-                                       submatrix.size=1, element.order=c(1))
+      evs[t02, ] <- gevp.hankel(cf$cf0, t0=t02,
+                                n=n, N=N, deltat=deltat,
+                                submatrix.size=1, element.order=c(1))
       
-      evs.tsboot[, deltat+t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
-                                            n=n, N=N, deltat=deltat,
-                                            submatrix.size=1, element.order=1))
+      evs.tsboot[, t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
+                                     n=n, N=N, deltat=deltat,
+                                     submatrix.size=1, element.order=1))
     }
   }
   ret <- list(cf=cf,
@@ -327,9 +401,11 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                   & Re(evs) < range[2])
       return(Re(evs[ii[id]]))
     }
-    .fn2 <- function(evs, refvalue) {
-      ii <- which(abs(Im(evs)) <= eps)
-      return(Re(evs[which.min(abs(evs[ii]-refvalue))]))
+    .fn2 <- function(evs, refvalue, eps) {
+      evs2 <- evs[which(abs(Im(evs)) <= eps)]
+      ret <- Re(evs2[which.min(abs(evs2-refvalue))])
+      if(length(ret) == 0) return(NA)
+      else return(ret)
     }
     for(deltat in c(1:(N-2-reftime-2*n))) {
       cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
@@ -341,7 +417,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
       }
       else {
         cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
-                                               MARGIN=1, FUN=.fn2,
+                                               MARGIN=1, FUN=.fn2, eps=eps,
                                                refvalue=cf.tsboot$t0[deltat+reftime])
       }
     }
@@ -451,8 +527,6 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
-  stopifnot(type %in% c("log", "acosh"))
-  stopifnot(sort.type %in% c("values", "vectors"))
   
   tmax <- hankel$cf$Time/2
   if(!hankel$cf$symmetrised){
