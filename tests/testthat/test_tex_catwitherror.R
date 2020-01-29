@@ -37,6 +37,10 @@ test_that('zero_error', {
     expect_equal(tex.catwitherror(12.345, 0, digits = 3, with.dollar = FALSE), '12.3(0)')
 })
 
+test_that('zero_val_zero_err', {
+    expect_equal(tex.catwitherror(0., 0., digits = 4, with.dollar = FALSE), '0.000(0)')
+})
+
 test_that('vector', {
     for (i in 1:10) {
         x <- runif(1)
