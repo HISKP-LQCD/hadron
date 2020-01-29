@@ -25,9 +25,9 @@ convert.scientific <- function(str, errstr) {
 ## given a value.
 absolute.number.digits <- function(x, digits){
   if(x == 0){
-    return(digits)
+    return(digits-1)
   }else{
-    return(floor(digits-log10(abs(x))))
+    return(ceiling(digits-1-log10(abs(x))))
   }
 }
 
@@ -74,7 +74,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   ## In case the number is very small, printing it with fixed point (`%f`) will
   ## not work. For this case we divide out the exponent from both value and
   ## error and attach it at the end.
-  if (!is.finite(x[1])) {
+  if (is.infinite(x[1]) || is.na(x[1]) || x == 0) {
     base <- 0
   } else {
     base <- floor(log10(abs(x[1])))
@@ -122,16 +122,16 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
       # desired number of digits
       displayerr <- paste(round(10^N*err))
       if( nchar(displayerr) > digits |
-	  ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
-	  ( abs(err) >= abs(10*x) ) ){
-	displayerr <- paste(format(round(err, digits=N)))
+          ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
+          ( abs(err) >= abs(10*x) ) ){
+        displayerr <- paste(format(round(err, digits=N)))
       }
 
       if(human.readable){
-	tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
-				  errstr = displayerr)
+        tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
+                                  errstr = displayerr)
       } else {
-	tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
+        tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
       }
     }else {
       N <- absolute.number.digits(x, digits)
