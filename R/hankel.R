@@ -4,27 +4,64 @@ hankel.matrix <- function(n, z){
         function(x,y) z[x+y-1])
 }
 
-gevp.hankel.old <- function(cf, t0, deltat = 1, n, N, id=c(1),
-                            range=c(0.,1.), eps=0.001, debug=FALSE, cor.id=1) {
-  if(t0+2*n+deltat+1 > N) {
-    stop("t0+n+deltat > N\n")
-  }
+#' @family hankel
+#' @export
+gevp.hankel.summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
+
+  cM1 <- array(0., dim=c(n, n))
+  cM2 <- cM1
+
   ## build the two Hankel matrices
-  cM1 <- hankel.matrix(n=n, z=cf[((cor.id-1)*N+t0):((cor.id)*N)])
-  cM2 <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
-
+  for(i in c(1:length(t0values))) {
+    cM1 <- cM1 + hankel.matrix(n=n, z=cf[(t0values[i]):(N)])
+    cM2 <- cM2 + hankel.matrix(n=n, z=cf[(t0values[i]+deltat):(N)])
+  }
   qr.cM1 <- qr(cM1)
-  M <- qr.coef(qr.cM1, cM2)
-  ## M = cM1^-1 * cM2
 
-  M.eigen <- eigen(M, symmetric=FALSE, only.values=TRUE)
+  M <- try(qr.coef(qr.cM1, cM2), TRUE)
+  if(inherits(M, "try-error")) {
+    return(rep(NA, times=(n+n^2)))
+  }
 
-  ## reduce to real eigenvalues with real part larger than 1
-  ii <- which(abs(Im(M.eigen$values)) < eps*abs(Re(M.eigen$values)) & Re(M.eigen$values) > range[1] & Re(M.eigen$values) < range[2] )
-  if(debug) print(M.eigen$values[which(abs(Im(M.eigen$values)) < eps*abs(Re(M.eigen$values)))])
-  return(sort(Re(M.eigen$values[ii]), decreasing=TRUE)[id])
-  
+  M.eigen <- try(eigen(M, symmetric=FALSE, only.values=FALSE), TRUE)
+  if(inherits(M.eigen, "try-error")) {
+    return(rep(NA, times=(n+n^2)))
+  }
+  return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
+
+#' @export
+bootstrap.hankel.summed <- function(cf, t0values=c(1), deltat=1,
+                                    n=2, N = cf$Time/2+1) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+
+  boot.R <- cf$boot.R
+  evs <- rep(NA, times=n + n^2)
+  evs.tsboot <- array(NA, dim=c(boot.R, n + n^2))
+
+  evs <- gevp.hankel.summed(cf$cf0, t0values=t0values,
+                            deltat=deltat, n=n, N=N)
+  evs.tsboot <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel.summed,
+                        n=n, N=N, deltat=deltat,
+                        t0values=t0values))
+                                
+  ret <- list(cf=cf,
+              t0=evs[c(1:n)],
+              t=evs.tsboot[ ,c(1:n)],
+              vectors=evs[c((n+1):(n+n^2))],
+              vectors.tsboot=evs.tsboot[ ,c((n+1):(n+n^2))],
+              boot.R=boot.R,
+              boot.l=cf$boot.l,
+              seed=cf$seed,
+              t0values=t0values,
+              deltat=deltat,
+              n=n,
+              N=N)
+  class(ret) <- c("hankel.summed", class(ret))
+  return(invisible(ret))
+}
+
 
 #' @title GEVP method based on Hankel matrices.
 #' 
@@ -98,11 +135,15 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #'   analysis. 
 #'
 #' @param cf object of type \link{cf}
-#' @param t0     initial time value of the GEVP, must be in between 0 and
-#'    \code{Time/2-2}. Default is 1.
+#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
+#'    \code{Time/2-n}. Default is 1. Used when \code{t0fixed=TRUE}.
+#' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1. Used
+#'   \code{t0fixed=FALSE}
 #' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
+#' @param t0fixed Integer. If set to \code{TRUE}, keep t0 fixed and vary deltat, otherwise
+#'    keep deltat fixed and vary t0.
 #'
 #' @details
 #' See `vignette(name="hankel", package="hadron")`
@@ -125,23 +166,41 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
-bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
+bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
+                             t0fixed=TRUE, deltat=1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-
+  if(!t0fixed) {
+    stopifnot(deltat > 0)
+  }
+  else {
+    stopifnot(t0 > 0)
+  }
   boot.R <- cf$boot.R
   evs <- array(NA, dim=c(N, n + n^2))
   evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2))
 
-  
-  for(deltat in c(1:(N-2-t0-2*n))) {
-    evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
-                                    n=n, N=N, deltat=deltat,
-                                    submatrix.size=1, element.order=c(1))
-
-    evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
-                                         n=n, N=N, deltat=deltat,
-                                         submatrix.size=1, element.order=1))
+  if(t0fixed) {
+    for(deltat in c(1:(N-2-t0-2*n))) {
+      evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
+                                      n=n, N=N, deltat=deltat,
+                                      submatrix.size=1, element.order=c(1))
+      
+      evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
+                                           n=n, N=N, deltat=deltat,
+                                           submatrix.size=1, element.order=1))
+    }
+  }
+  else {
+    for(t02 in c(1:(N-2-deltat-2*n))) {
+      evs[deltat+t02, ] <- gevp.hankel(cf$cf0, t0=t02,
+                                       n=n, N=N, deltat=deltat,
+                                       submatrix.size=1, element.order=c(1))
+      
+      evs.tsboot[, deltat+t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
+                                            n=n, N=N, deltat=deltat,
+                                            submatrix.size=1, element.order=1))
+    }
   }
   ret <- list(cf=cf,
               t0=evs[ ,c(1:n), drop=FALSE],
@@ -152,8 +211,12 @@ bootstrap.hankel <- function(cf, t0, n=2, N = cf$Time/2+1, id=c(1)) {
               boot.l=cf$boot.l,
               seed=cf$seed,
               reference_time=t0,
+              t0fixed=t0fixed,
               n=n,
               N=N)
+  if(!t0fixed) {
+    ret$reference_time=deltat
+  }
   class(ret) <- c("hankel", class(ret))
   return(invisible(ret))
 }
@@ -238,7 +301,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
   stopifnot(inherits(hankel, "hankel"))
   stopifnot((id <= hankel$n && id >= 1))
   stopifnot(length(id) == 1)
-  stopifnot(sort.type %in% c("values", "vectors"))
+  stopifnot(sort.type %in% c("values", "vectors", "mindist"))
   N <- hankel$N
   n <- hankel$n
   
@@ -257,19 +320,29 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 
   cf.tsboot$t0[reftime] <- 1
   cf.tsboot$t[, reftime] <- 1
-  if(sort.type == "values") {
+  if(sort.type == "values" || sort.type=="mindist") {
     .fn <- function(evs, range, eps, id) {
       ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
                   & Re(evs) < range[2])
       return(Re(evs[ii[id]]))
     }
-    
+    .fn2 <- function(evs, refvalue) {
+      ii <- which(abs(Im(evs)) <= eps)
+      return(Re(evs[which.min(abs(evs[ii]-refvalue))]))
+    }
     for(deltat in c(1:(N-2-reftime-2*n))) {
       cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
                                           range=range, eps=eps, id=id)
-      cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
-                                             MARGIN=1, FUN=.fn,
-                                             range=range, eps=eps, id=id)
+      if(sort.type=="values") {
+        cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
+                                               MARGIN=1, FUN=.fn,
+                                               range=range, eps=eps, id=id)
+      }
+      else {
+        cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
+                                               MARGIN=1, FUN=.fn2,
+                                               refvalue=cf.tsboot$t0[deltat+reftime])
+      }
     }
   }
   if(sort.type == "vectors") {
@@ -388,14 +461,23 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   pc <- hankel2cf(hankel=hankel, id=id, range=range, eps=eps,
                   sort.type=sort.type, sort.t0=sort.t0)
 
-  deltat <- c(1:(tmax+1))-hankel$reference_time
-  if(type == "log") {
-    effMass <- -log(pc$cf.tsboot$t0)/deltat
-    effMass.tsboot <- -log(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
+  effMass <- c()
+  effMass.tsboot <- c()
+  if(hankel$t0fixed) {
+    deltat <- c(1:(tmax+1))-hankel$reference_time
+    if(type == "log") {
+      effMass <- -log(pc$cf.tsboot$t0)/deltat
+      effMass.tsboot <- -log(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
+    }
+    if(type == "acosh") {
+      effMass <- -acosh(pc$cf.tsboot$t0)/deltat
+      effMass.tsboot <- -acosh(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
+    }
   }
-  if(type == "acosh") {
-    effMass <- -acosh(pc$cf.tsboot$t0)/deltat
-    effMass.tsboot <- -acosh(pc$cf.tsboot$t)/t(array(deltat, dim=rev(dim(pc$cf.tsboot$t))))
+  else {
+    deltat <- hankel$reference_time
+    effMass <- -log(pc$cf.tsboot$t0)/deltat
+    effMass.tsboot <- -log(pc$cf.tsboot$t)/deltat
   }
   deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
 
