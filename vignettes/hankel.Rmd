@@ -170,13 +170,17 @@ H =
 \end{pmatrix}
 \]
 with the signal vector
-\[
+\begin{equation}
+\label{eq:signal}
 s_k\ =\ \sum_{i=1}^r c_i z_i^{k-1}\,;\qquad z_j\ =\ e^{\mathrm{i} \omega_j}\,,
-\]
-(real frequencies $\omega_j$ and coefficients $c_i$) and
+\end{equation}
+(complex frequencies $\omega_j$ and coefficients $c_i$) and
 \[
 k=m-n+1 >  n \geq 1\,.
 \]
+In case the sum does not start with $z_i^0$ for $k=1$ but with some
+$z_i^{t_0}$, we can simply re-define the coefficients
+$c_i\to c_i' = c_i z_i^{t_0}$ to bring $s_k$ into the form Eq. (\ref{eq:signal}).
 Define further
 \[
 e\ =\
@@ -267,7 +271,7 @@ From this follows
 H_2\ =\ V_1 D_c V_2^T\,,\quad H_1\ =\ V_1 D_z^{\delta t} D_c V_2^T\,.
 \end{equation}
 Now, perform a $QR$ decomposition, with $Q$ unitary and $R$ upper
-triagular of the Vandermonde matrices $V_i =Q_i R_i\,,\ i=1,2$, which
+triangular, of the Vandermonde matrices $V_i =Q_i R_i\,,\ i=1,2$, which
 is always possible due to the full rank property. This 
 means 
 \[
@@ -281,3 +285,37 @@ Q_1 R_1 D_c\ =\ H_2 Q_2 R_2^{-T}\ =\ D_z^{-\delta t} H_1 Q_2 R_2^{-T} \,.
 The last equation is the desired generalised eigenvalue relation with
 eigenvalues the diagonal elements of $D_z^{\delta t}$ and the eigenvectors the
 columns of the matrix $Q_2 R_2^{-T}$.
+
+## Alternative
+
+We assume $n$ states contributing, with $E_k\neq 0$ for
+$k=0, \ldots, n-1$ and all the $E_k$ distinct.
+Let $H(t)$ be a $n\times n$ Hankel matrix for
+$i,j=0, 1, 2, \ldots, n-1$ defined as 
+\begin{equation}
+H_{ij}(t)\ =\ \sum_{k=0}^{n-1} e^{-E_k (t + i + j)} c_k\ =\ \sum_{k=0}^{n-1}
+e^{-E_k t} e^{-E_k i} e^{-E_k j} b_k^2\,,
+\end{equation}
+with $b_k$ the (complex) root of $c_k$ with positive real part. Now define
+\begin{equation}
+\chi_{ki}\ =\ b_k e^{-E_k i}\,.
+\end{equation}
+Now introduce the dual vectors $u_k$ with
+\[
+(u_k, \chi_l)\ =\ \sum_{i=0}^{n-1} (u_{k}^*)_i \chi_{li}\ =\ \delta_{kl}\,.
+\]
+This means
+\begin{equation}
+H(t)\, u_l\ =\ \sum_{k=0}^{n-1} e^{-E_k t}\chi_k \chi_k^* u_l\ =\
+e^{-E_l t} \chi_l = e^{-E_l(t-t_0)}\ e^{-E_l t_0} \chi_l\ =\
+e^{-E_l(t-t_0)} H(t_0)\, u_l
+\end{equation}
+Thus,
+\begin{equation}
+H(t)\, u_l\ =\ e^{-E_l(t-t_0)} H(t_0)\, u_l\,.
+\end{equation}
+Moreover, we get the orthogonality
+\[
+(u_l,\, H(t) u_k)\ =\ e^{-E_l t}\delta_{lk}\,,
+\]
+because $H(t) u_k\propto \chi_k$.
