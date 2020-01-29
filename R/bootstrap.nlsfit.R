@@ -804,9 +804,9 @@ bootstrap.nlsfit <- function(fn,
   if(!is.null(priors$param)){
     stopifnot(is.vector(priors$param))
   }
-  stopifnot(length(priors$param) == length(priors$p) &&
-              length(priors$param) == ncolps &&
-              length(priors$p) == ncolps )
+  stopifnot(length(priors$param) == length(priors$p))
+  stopifnot(length(priors$param) == ncolps)
+  stopifnot(length(priors$p) == ncolps)
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
