@@ -1033,7 +1033,7 @@ bootstrap.nlsfit <- function(fn,
   if(!priors.avail) {
     dof = length(y) - length(par.guess)
   } else {
-    dof = length(yp) - length(par.guess)
+    dof = length(yp) - length(priors$p)
   }
 
   errors <- apply(par.boot[rr, , drop=FALSE], 2, error, na.rm = TRUE)
