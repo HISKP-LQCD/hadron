@@ -24,7 +24,7 @@ convert.scientific <- function(str, errstr) {
 ## Convert the number of significant digits to the absolute number of digits, 
 ## given a value.
 absolute.number.digits <- function(x, digits){
-  if(x == 0){
+  if(x == 0 || is.na(x)){
     return(digits-1)
   }else{
     return(ceiling(digits-1-log10(abs(x))))
@@ -65,7 +65,7 @@ absolute.number.digits <- function(x, digits){
 #' 
 #' @export tex.catwitherror
 tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=TRUE) {
-  if(missing(x) || !is.numeric(x) || length(x) == 0) {
+  if(missing(x) || length(x) == 0) {
     stop("x must be a numeric vector with length > 0")
   }
   lx <- length(x)
@@ -88,7 +88,6 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
 
   if(missing(dx) && lx < 2) {
-    if( is.na(x) ) x <- 0.0
     ## just a number without error
     N <- absolute.number.digits(x, digits)
     tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
@@ -99,31 +98,25 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
     ## now we need to typeset the error as well
     err <- 0.
     if(missing(dx)){
-      if( !is.na(x[2]) ){
-        err <- x[2]
-      }
+      err <- x[2]
     } else {
-      if( !is.na(dx[1]) ){
-        err <- dx[1]
-      }
+      err <- dx
     }
     if(lx > 1){
       x <- x[1]
-      if( is.na(x) ){
-        x <- 0.0
-      }
     }
 
-    if(err > 0) {
+    if(!is.na(err) && err > 0) {
       N <- absolute.number.digits(err, digits)
       # if the error is large it may exceed the number of digits that one actually desires
       # also, the error may be larger or similar in size to the value itself
       # in these cases, we display it in the same format as the value, rounded to the
       # desired number of digits
       displayerr <- paste(round(10^N*err))
-      if( nchar(displayerr) > digits |
-          ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
-          ( abs(err) >= abs(10*x) ) ){
+      if(is.na(x) |
+         nchar(displayerr) > digits |
+         ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
+         ( abs(err) >= abs(10*x) ) ){
         displayerr <- paste(format(round(err, digits=N)))
       }
 
@@ -135,7 +128,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
       }
     }else {
       N <- absolute.number.digits(x, digits)
-      displayerr <- paste(format(0))
+      displayerr <- paste(format(err))
       tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
       if(human.readable) tmp <- convert.scientific(str=tmp, errstr = displayerr)
       else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
