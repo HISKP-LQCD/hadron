@@ -21,6 +21,15 @@ convert.scientific <- function(str, errstr) {
 }
 
 
+## Convert the number of significant digits to the absolute number of digits, 
+## given a value.
+absolute.number.digits <- function(x, digits){
+  if(x == 0 || is.na(x)){
+    return(digits-1)
+  }else{
+    return(ceiling(digits-1-log10(abs(x))))
+  }
+}
 
 #' paste a number with error in tex-ready format
 #' 
@@ -56,18 +65,16 @@ convert.scientific <- function(str, errstr) {
 #' 
 #' @export tex.catwitherror
 tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=TRUE) {
-  if(missing(x) || !is.numeric(x) || length(x) == 0) {
+  if(missing(x) || length(x) == 0) {
     stop("x must be a numeric vector with length > 0")
   }
   lx <- length(x)
   tmp <- ""
-  N <- 0
-  threshold <- 10^(digits-1)
 
   ## In case the number is very small, printing it with fixed point (`%f`) will
   ## not work. For this case we divide out the exponent from both value and
   ## error and attach it at the end.
-  if (!is.finite(x[1])) {
+  if (is.infinite(x[1]) || is.na(x[1]) || x == 0) {
     base <- 0
   } else {
     base <- floor(log10(abs(x[1])))
@@ -81,11 +88,8 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
 
   if(missing(dx) && lx < 2) {
-    if( is.na(x) ) x <- 0.0
     ## just a number without error
-    while(round(10^N*abs(x)) < threshold) {
-      N <- N+1
-    }
+    N <- absolute.number.digits(x, digits)
     tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
     if(human.readable) tmp <- convert.scientific(str=tmp)
     else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), sep="")
@@ -94,47 +98,37 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
     ## now we need to typeset the error as well
     err <- 0.
     if(missing(dx)){
-      if( !is.na(x[2]) ){
-        err <- x[2]
-      }
+      err <- x[2]
     } else {
-      if( !is.na(dx[1]) ){
-        err <- dx[1]
-      }
+      err <- dx
     }
     if(lx > 1){
       x <- x[1]
-      if( is.na(x) ){
-        x <- 0.0
-      }
     }
 
-    if(err > 0) {
-      while(round(10^N*err) < threshold) {
-	N <- N+1
-      }
+    if(!is.na(err) && err > 0) {
+      N <- absolute.number.digits(err, digits)
       # if the error is large it may exceed the number of digits that one actually desires
       # also, the error may be larger or similar in size to the value itself
       # in these cases, we display it in the same format as the value, rounded to the
       # desired number of digits
       displayerr <- paste(round(10^N*err))
-      if( nchar(displayerr) > digits |
-	  ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
-	  ( abs(err) >= abs(10*x) ) ){
-	displayerr <- paste(format(round(err, digits=N)))
+      if(is.na(x) |
+         nchar(displayerr) > digits |
+         ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
+         ( abs(err) >= abs(10*x) ) ){
+        displayerr <- paste(format(round(err, digits=N)))
       }
 
       if(human.readable){
-	tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
-				  errstr = displayerr)
+        tmp <- convert.scientific(str = format(round(x, digits=N), nsmall=N), 
+                                  errstr = displayerr)
       } else {
-	tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
+        tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
       }
     }else {
-      while(round(10^N*abs(x)) < threshold) {
-	N <- N+1
-      }
-      displayerr <- paste(format(0))
+      N <- absolute.number.digits(x, digits)
+      displayerr <- paste(format(err))
       tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
       if(human.readable) tmp <- convert.scientific(str=tmp, errstr = displayerr)
       else tmp <- paste(format(round(x, digits=N), nsmall=N, scientific=FALSE), "(", displayerr, ")", sep="")
