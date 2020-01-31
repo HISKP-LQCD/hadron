@@ -423,7 +423,9 @@ new_matrixfit <- function(cf,
   
   stopifnot(cf$symmetrised == TRUE)
   stopifnot(length(higher_states$val) == ncol(higher_states$boot))
-  stopifnot(length(higher_states$val) == length(higher_states$ampl))
+  if (length(higher_states$ampl > 0)) {
+    stopifnot(length(higher_states$val) == length(higher_states$ampl))
+  }
   stopifnot(nrow(higher_states$boot) %in% c(0, cf$boot.R))
   
   t1p1 <- t1 + 1
@@ -533,8 +535,14 @@ new_matrixfit <- function(cf,
       p = higher_states$val,
       psamples = higher_states$boot)
     
-    for (i in 1:length(higher_states$val)) {
-      par.guess <- c(par.guess, higher_states$val[i], higher_states$ampl[i])
+    if(length(higher_states$ampl) > 0) {
+      for (i in 1:length(higher_states$val)) {
+        par.guess <- c(par.guess, higher_states$val[i], higher_states$ampl[i])
+      }
+    } else {
+      for (i in 1:length(higher_states$val)) {
+        par.guess <- c(par.guess, higher_states$val[i])
+      }
     }
     
     args$par.guess <- par.guess
