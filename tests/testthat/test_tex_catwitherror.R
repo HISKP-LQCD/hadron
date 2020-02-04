@@ -50,7 +50,6 @@ test_that('NA', {
     expect_equal(tex.catwitherror(NA, NA, digits = 4, with.dollar = FALSE), 'NA(NA)')
 })
 
-
 test_that('vector', {
     for (i in 1:10) {
         x <- runif(1)
