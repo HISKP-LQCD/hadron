@@ -28,6 +28,11 @@ test_that('large_error', {
     expect_equal(tex.catwitherror(1.12345, 12.3, digits = 4, with.dollar = FALSE), '1.12(12.3)')
 })
 
+test_that('similar_error', {
+    expect_equal(tex.catwitherror(7492.8291130334482659, 1759.0859320695926726,
+                                  digits = 3, with.dollar = FALSE), '7493(1759)')
+})
+
 test_that('no_error', {
     expect_equal(tex.catwitherror(0.00123, digits = 4, with.dollar = FALSE), '0.001230')
 })
