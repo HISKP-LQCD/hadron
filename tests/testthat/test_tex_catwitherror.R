@@ -30,7 +30,7 @@ test_that('large_error', {
 
 test_that('similar_error', {
     expect_equal(tex.catwitherror(7492.8291130334482659, 1759.0859320695926726,
-                                  digits = 3, with.dollar = FALSE), '7492.829(090)')
+                                  digits = 3, with.dollar = FALSE), '7492(1759)')
 })
 
 test_that('no_error', {
