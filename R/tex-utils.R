@@ -25,9 +25,9 @@ convert.scientific <- function(str, errstr) {
 ## given a value.
 absolute.number.digits <- function(x, digits){
   if(x == 0 || is.na(x)){
-    return(digits-1)
+    return(max(digits-1, 0))
   }else{
-    return(ceiling(digits-1-log10(abs(x))))
+    return(max(ceiling(digits-1-log10(abs(x))), 0))
   }
 }
 
