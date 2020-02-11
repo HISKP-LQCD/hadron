@@ -23,13 +23,19 @@ ref_gf_scales[["w0_Wsym"]] <- list(val=0.1755, dval=0.0019,
 #'
 #' @param path string. path to data files
 #' @param outputbasename string. basename of output files
-#' @param basename string. basename of input files
+#' @param basename string. basename of input files, for example "gradflow"
 #' @param read.data boolean. Indicates whether to read data fresh from
 #'   data files or to use `basename.raw.gradflow.Rdata` instead
 #' @param pl boolean. If set to `TRUE` plots will be generated
 #' @param skip integer. number of measurements to skip
 #' @param start integer. start value for time
-#' @param scale numeric. scale factor
+#' @param scale numeric. scale factor for the MD time, should be set to
+#'        the stridelength (in units of trajectories or configurations)
+#'        which was used to produce the gradient flow files, such that
+#'        the distance between measurements can be interpreted
+#'        correctly and the reported autocorrelation times scaled appropriately.
+#' @param plotsize numeric. Plot sidelength, this is passed to
+#'        \code{tikz.init}.
 #' @param dbg boolean. If set to `TRUE` debugging output will be provided.
 #'
 #' @description
@@ -44,8 +50,9 @@ ref_gf_scales[["w0_Wsym"]] <- list(val=0.1755, dval=0.0019,
 #'
 #' @export
 analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
-                                   read.data=TRUE, pl=FALSE, skip=0, start=0,
-                                    scale=1, dbg=FALSE) {
+                                   read.data=TRUE, pl=FALSE, plotsize=4,
+                                   skip=0, start=0,
+                                   scale=1, dbg=FALSE) {
 
   # much like for the analysis of online measurements, we store summary information
   # in the list "gradflow_resultsum" with elements named by "outputbasename"
@@ -146,7 +153,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
        file=resultsfile)
    
   if(pl) {
-    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
+    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=plotsize,height=plotsize)
     for( i in 1:length(ref_gf_scales) ){
       scale_obs <- ref_gf_scales[[i]]$obs
       scale_obslabel <- ref_gf_scales[[i]]$obslabel
