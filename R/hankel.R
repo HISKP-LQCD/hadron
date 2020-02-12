@@ -450,7 +450,9 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     ii <- .fnii(evs=hankel$t0[reftime+1, , drop = FALSE],
                 range=range, eps=eps)
     v0 <- NA
-    if(length(ii) != 0) v0 <- hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+    ## orthogonality is for <v_i, H(t0) v0_j>
+    if(length(ii) != 0) v0 <- hankel.matrix(n=n, z=hankel$cf$cf0[reftime+1]) %*%
+                          hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
     cf.tsboot$t0[reftime+1] <- .fn(evs=hankel$t0[1+reftime, , drop = FALSE],
                                    ii=ii, id=id, n=n,
                                    vectors=NA, v0=NA)
@@ -460,7 +462,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                   range=range, eps=eps)
       v0.tsboot[rr,] <- NA
       if(length(ii) != 0) {
-        v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
+        v0.tsboot[rr,] <- hankel.matrix(n=n, z=hankel$cf$cf.tsboot$t[rr, reftime+1]) %*%
+          hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
       }
       cf.tsboot$t[rr, reftime+1] <- .fn(evs=hankel$t[rr, 1+reftime, , drop = FALSE],
                                         ii=ii, id=id, n=n,
@@ -476,7 +479,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                                           v0=v0)
       if(!sort.t0 && !is.na(cf.tsboot$t0[reftime+deltat])) {
         k <- which(Re(hankel$t0[reftime+deltat, ]) == cf.tsboot$t0[reftime+deltat])
-        v0 <- hankel$vectors[reftime+deltat, c(((k-1)*n+1) : (k*n))]
+        v0 <- hankel.matrix(n=n, z=hankel$cf$cf0[reftime+deltat]) %*%
+          hankel$vectors[reftime+deltat, c(((k-1)*n+1) : (k*n))]
       }
       for(rr in c(1:hankel$boot.R)) {
         ii <- .fnii(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
@@ -487,7 +491,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                                                v0=v0.tsboot[rr,])
         if(!sort.t0 && !is.na(cf.tsboot$t[rr, reftime+deltat])) {
           k <- which(Re(hankel$t[rr, reftime+deltat,]) == cf.tsboot$t[rr, reftime+deltat])
-          v0.tsboot[rr,] <- hankel$vectors.tsboot[rr, reftime+deltat, c(((k-1)*n+1) : (k*n))]
+          v0.tsboot[rr,] <- hankel.matrix(n=n, z=hankel$cf$cf.tsboot$t[rr, reftime+deltat]) %*%
+            hankel$vectors.tsboot[rr, reftime+deltat, c(((k-1)*n+1) : (k*n))]
         }
       }
     }
