@@ -1314,6 +1314,7 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 #' @param sym.vec Integer vector giving the symmetry properties (see \link{symmetrise.cf})
 #'                of the original unsymmetrised correlation function. This should be of
 #'                length cf$nrObs
+#' @export
 unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))

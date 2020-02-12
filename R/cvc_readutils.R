@@ -4,6 +4,7 @@
 #' @param gamma Integer, CVC convention gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
+#' @export
 cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 {
   stopifnot( length(p) == 3 )
@@ -21,6 +22,7 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #' @param gamma Integer, CVC convention gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
+#' @export
 cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 {
   stopifnot( length(p) == 3 )
@@ -42,6 +44,7 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @export
 correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p)
 {
   stopifnot( length(snk_p) == 3 )
@@ -71,6 +74,7 @@ correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @export
 cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, snk_p)
 {
   stopifnot( length(snk_p) == 3 )
@@ -139,6 +143,7 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @export
 correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                                       src_ts, dt, 
                                       snk_gamma,
@@ -237,6 +242,7 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @export
 cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                              dt, 
                              snk_gamma,
@@ -298,6 +304,7 @@ cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'         in the shape \code{c(1,nts,dims)}, where `nts` is the number of time slices
 #'         inferred from the length of \code{cfdat} and the product of the internal dimensions \code{dims}.
 #'                 
+#' @export
 cvc_to_raw_cf <- function(cf_dat, dims = c(1,1))
 {
   number_of_internal_dims <- prod(dims)
