@@ -446,7 +446,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     }
 
     ## precompute reference eigenvector at deltat == 1
-    ## and use method "values" at detlat == 1
+    ## and use method "values" at deltat == 1
     ii <- .fnii(evs=hankel$t0[reftime+1, , drop = FALSE],
                 range=range, eps=eps)
     v0 <- NA
