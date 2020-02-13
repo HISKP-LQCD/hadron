@@ -11,6 +11,7 @@
 #' @param accumulated Boolean, depending on whether the loop data was accumulated
 #'                    over the stochastic source d.o.f. or not, the keys are
 #'                    different. Default: FALSE
+#' @export
 cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4, accumulated = FALSE){
   if( any( !(loop_type %in% c("Scalar","dOp","Naive")) ) ){
     stop("The only scalar loop types are 'Scalar', 'Naive' and 'dOp'")
@@ -39,6 +40,7 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4, accumulated = FAL
 #' @param accumulated Boolean, depending on whether the loop data was accumulated
 #'                    over the stochastic source d.o.f. or not, the keys are
 #'                    different. Default: FALSE
+#' @export
 cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated = FALSE){
   vector_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
   if( any( !(loop_type %in% vector_loop_types ) ) ) {
