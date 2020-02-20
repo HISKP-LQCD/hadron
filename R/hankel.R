@@ -294,11 +294,13 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
     for(t02 in c(1:(N-2-deltat-2*n))) {
       evs[t02, ] <- gevp.hankel(cf$cf0, t0=t02,
                                 n=n, N=N, deltat=deltat,
-                                submatrix.size=1, element.order=c(1))
+                                submatrix.size=1, element.order=c(1),
+                                Delta=Delta)
       
       evs.tsboot[, t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
                                      n=n, N=N, deltat=deltat,
-                                     submatrix.size=1, element.order=1))
+                                     submatrix.size=1, element.order=1,
+                                     Delta=Delta))
     }
   }
   ret <- list(cf=cf,
