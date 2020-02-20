@@ -173,19 +173,17 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
                         submatrix.size=1, element.order=c(1,2,3,4),
                         Delta=1) {
   stopifnot(t0 >= 0 && n > 0 && N > 0 && Delta > 0)
-  if(t0 + 1 + 2*(n-1)*Delta + deltat > N) {
-    stop("t0+n+deltat > N\n")
-  }
+  stopifnot(t0 + 1 + 2*(n-1)*Delta + deltat <= N)
   t0 <- t0+1
-  cM1 <- array(NA, dim=c(submatrix.size*n, submatrix.size*n))
+  cM1 <- array(NA, dim=c(n, n))
   cM2 <- cM1
-  ii <- seq(from=1, to=submatrix.size*n, by=submatrix.size)
+  ii <- seq(from=1, to=n, by=submatrix.size)
 
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[seq(from=(cor.id-1)*N+t0, to=(cor.id)*N, by=Delta)])
-      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[seq(from=(cor.id-1)*N+t0+deltat, to=(cor.id)*N, by=Delta)])
+      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0, to=(cor.id)*N, by=Delta)])
+      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0+deltat, to=(cor.id)*N, by=Delta)])
     }
   }
   ev.cM <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
@@ -263,7 +261,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
-bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
+bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
                              t0fixed=TRUE, deltat=1, Delta=1,
                              submatrix.size=1, element.order=1) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -287,11 +285,12 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
       
       evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
                                            n=n, N=N, deltat=deltat,
-                                           submatrix.size=submatrix.size, element.order=element.order, Delta=Delta))
+                                           submatrix.size=submatrix.size, element.order=element.order,
+                                           Delta=Delta))
     }
   }
   else {
-    for(t02 in c(1:(N-2-deltat-2*n))) {
+    for(t02 in c(1:(N-1-deltat-2*(n-1)*Delta))) {
       evs[t02, ] <- gevp.hankel(cf$cf0, t0=t02,
                                 n=n, N=N, deltat=deltat,
                                 submatrix.size=1, element.order=c(1),
