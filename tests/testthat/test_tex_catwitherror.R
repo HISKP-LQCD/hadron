@@ -8,7 +8,7 @@ test_that('small_error', {
 })
 
 test_that('another_borderline_error', {
-    expect_equal(tex.catwitherror(0.031921636680, 0.000098, digits = 1, with.dollar=FALSE), '0.03192(1)')
+    expect_equal(tex.catwitherror(0.031921636680, 0.000098, digits = 1, with.dollar=FALSE), '0.0319(1)')
 })
 
 test_that('very_small_number', {
