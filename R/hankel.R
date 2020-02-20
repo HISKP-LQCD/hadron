@@ -160,8 +160,8 @@ summary.hankel_summed <- function(object, ...) {
 #'    \code{matrix(cf[element.order], nrow=2)}.
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
-#'
-#'
+#' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' 
 #' @return
 #' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
 #' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements.
@@ -170,8 +170,10 @@ summary.hankel_summed <- function(object, ...) {
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
-                        submatrix.size=1, element.order=c(1,2,3,4)) {
-  if(t0+2*n+deltat > N) {
+                        submatrix.size=1, element.order=c(1,2,3,4),
+                        Delta=1) {
+  stopifnot(t0 >= 0 && n > 0 && N > 0 && Delta > 0)
+  if(t0 + 1 + 2*(n-1)*Delta + deltat > N) {
     stop("t0+n+deltat > N\n")
   }
   t0 <- t0+1
@@ -182,18 +184,29 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[((cor.id-1)*N+t0):((cor.id)*N)])
-      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[(((cor.id-1)*N+t0)+deltat):((cor.id)*N)])
+      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[seq(from=(cor.id-1)*N+t0, to=(cor.id)*N, by=Delta)])
+      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n, z=cf[seq(from=(cor.id-1)*N+t0+deltat, to=(cor.id)*N, by=Delta)])
     }
   }
-  qr.cM1 <- qr(cM1)
-
-  M <- try(qr.coef(qr.cM1, cM2), TRUE)
+  ev.cM <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
+  positive <- TRUE
+  if(any(ev.cM$values < 0)) positive <- FALSE
+  M <- matrix()
+  if(positive) {
+    ## compute Cholesky factorisation
+    invL <- solve(chol(cM1))
+    M <- t(invL) %*% cM2 %*% invL
+  }
+  else {
+    ## QR decomposition
+    qr.cM1 <- qr(cM1)
+    M <- try(qr.coef(qr.cM1, cM2), TRUE)
+  }
   if(inherits(M, "try-error")) {
     return(rep(NA, times=(n+n^2)))
   }
 
-  M.eigen <- try(eigen(M, symmetric=FALSE, only.values=FALSE), TRUE)
+  M.eigen <- try(eigen(M, symmetric=positive, only.values=FALSE), TRUE)
   if(inherits(M.eigen, "try-error")) {
     return(rep(NA, times=(n+n^2)))
   }
@@ -214,12 +227,21 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #'    \code{Time/2-n}. Default is 1. Used when \code{t0fixed=TRUE}.
 #' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1. Used
 #'   \code{t0fixed=FALSE}
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices. Submatrix.size > 1 is experimental.
 #' @param n Integer. Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
 #' @param t0fixed Integer. If set to \code{TRUE}, keep t0 fixed and vary deltat, otherwise
 #'    keep deltat fixed and vary t0.
-#'
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
+#'    for example.
+#' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' 
 #' @details
 #' See `vignette(name="hankel", package="hadron")`
 #'
@@ -242,7 +264,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
-                             t0fixed=TRUE, deltat=1) {
+                             t0fixed=TRUE, deltat=1, Delta=1,
+                             submatrix.size=1, element.order=1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   if(!t0fixed) {
@@ -256,14 +279,15 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = cf$Time/2+1,
   evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2))
 
   if(t0fixed) {
-    for(deltat in c(1:(N-2-t0-2*n))) {
+    for(deltat in c(1:(N-1-t0-2*(n-1)*Delta))) {
       evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
                                       n=n, N=N, deltat=deltat,
-                                      submatrix.size=1, element.order=c(1))
+                                      submatrix.size=submatrix.size, element.order=element.order,
+                                      Delta=Delta)
       
       evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
                                            n=n, N=N, deltat=deltat,
-                                           submatrix.size=1, element.order=1))
+                                           submatrix.size=submatrix.size, element.order=element.order, Delta=Delta))
     }
   }
   else {
