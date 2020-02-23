@@ -86,7 +86,7 @@ gevp.hankel_summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
 #' t0 <- 4
 #' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
 #' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
-#' pc1.hankel <- bootstrap.hankel.summed(cf=pc1, t0=c(1:15), n=2)
+#' pc1.hankel <- bootstrap.hankel_summed(cf=pc1, t0=c(1:15), n=2)
 bootstrap.hankel_summed <- function(cf, t0values=c(1:(N-2*n-deltat)), deltat=1,
                                     n=2, N = cf$Time/2+1) {
   stopifnot(inherits(cf, 'cf_meta'))
