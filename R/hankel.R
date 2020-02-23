@@ -173,7 +173,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
                         submatrix.size=1, element.order=c(1,2,3,4),
                         Delta=1) {
   stopifnot(t0 >= 0 && n > 0 && N > 0 && Delta > 0)
-  stopifnot(t0 + 1 + 2*(n-1)*Delta + deltat <= N)
+  stopifnot(t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat <= N)
   t0 <- t0+1
   cM1 <- array(NA, dim=c(n, n))
   cM2 <- cM1
@@ -186,16 +186,21 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
       cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0+deltat, to=(cor.id)*N, by=Delta)])
     }
   }
+  if(submatrix.size > 1) {
+    ## symmetrise
+    cM1 <- 0.5*(cM1 + t(cM1))
+    cM2 <- 0.5*(cM2 + t(cM2))
+  }
   ev.cM <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
   positive <- TRUE
-  if(any(ev.cM$values < 0)) positive <- FALSE
+  if(any(ev.cM$values <= 0)) positive <- FALSE
   M <- matrix()
   if(positive) {
     ## compute Cholesky factorisation
     invL <- solve(chol(cM1))
     M <- t(invL) %*% cM2 %*% invL
   }
-  else {
+  if(!positive) {
     ## QR decomposition
     qr.cM1 <- qr(cM1)
     M <- try(qr.coef(qr.cM1, cM2), TRUE)
@@ -266,6 +271,7 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
                              submatrix.size=1, element.order=1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot((n %% submatrix.size) == 0)
   if(!t0fixed) {
     stopifnot(deltat > 0)
   }
@@ -277,7 +283,7 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2))
 
   if(t0fixed) {
-    for(deltat in c(1:(N-1-t0-2*(n-1)*Delta))) {
+    for(deltat in c(1:(N-1-t0-2*(n/submatrix.size-1)*Delta))) {
       evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
                                       n=n, N=N, deltat=deltat,
                                       submatrix.size=submatrix.size, element.order=element.order,
@@ -290,15 +296,15 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
     }
   }
   else {
-    for(t02 in c(1:(N-1-deltat-2*(n-1)*Delta))) {
+    for(t02 in c(1:(N-1-deltat-2*(n/submatrix.size-1)*Delta))) {
       evs[t02, ] <- gevp.hankel(cf$cf0, t0=t02,
                                 n=n, N=N, deltat=deltat,
-                                submatrix.size=1, element.order=c(1),
+                                submatrix.size=submatrix.size, element.order=element.order,
                                 Delta=Delta)
       
       evs.tsboot[, t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
                                      n=n, N=N, deltat=deltat,
-                                     submatrix.size=1, element.order=1,
+                                     submatrix.size=submatrix.size, element.order=element.order,
                                      Delta=Delta))
     }
   }
@@ -312,6 +318,9 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
               seed=cf$seed,
               reference_time=t0,
               t0fixed=t0fixed,
+              submatrix.size=submatrix.size,
+              element.order=element.order,
+              Delta=Delta,
               n=n,
               N=N)
   if(!t0fixed) {
@@ -381,8 +390,8 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' @param id Integer. ID of the principal correlator to extract
 #' @param eps Numeric. Cut-off: if the imaginary part of the generalised
 #' eigenvalues is larger than eps, the eigenvalue is discarded.
-#' @param range Numeric vector. Value-range for the real part of the eigenvalues.
-#' If outside this range, the eigenvalue will be discarded
+#' @param range Numeric vector. Value-range for the real part of the eigenvalues
+#' (not the energies). If outside this range, the eigenvalue will be discarded
 #' @param id Integer. Index of eigenvalue to consider,
 #' \eqn{1\leq id\leq n}{1 <= id <= n}.
 #' @param sort.type the sort algorithm to be used to sort the eigenvalues. This can be
@@ -404,6 +413,10 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
   stopifnot(sort.type %in% c("values", "vectors", "mindist"))
   N <- hankel$N
   n <- hankel$n
+  submatrix.size <- hankel$submatrix.size
+  Delta <- hankel$Delta
+  
+  range <- range(range)
   
   reftime <- hankel$reference_time
   ## Base `cf` properties.
@@ -430,9 +443,9 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
       evs2 <- evs[which(abs(Im(evs)) <= eps)]
       ret <- Re(evs2[which.min(abs(evs2-refvalue))])
       if(length(ret) == 0) return(NA)
-      else return(ret)
+      return(ret)
     }
-    for(deltat in c(1:(N-2-reftime-2*n))) {
+    for(deltat in c(1:(N-1-reftime-2*(n/submatrix.size - 1)*Delta))) {
       cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
                                           range=range, eps=eps, id=id)
       if(sort.type=="values") {
@@ -440,7 +453,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                                                MARGIN=1, FUN=.fn,
                                                range=range, eps=eps, id=id)
       }
-      else {
+      else { ## mindist
         cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
                                                MARGIN=1, FUN=.fn2, eps=eps,
                                                refvalue=cf.tsboot$t0[deltat+reftime])
@@ -495,7 +508,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                                         vectors=NA, v0=NA)
     }
     ## now use pre-computed vectors
-    for(deltat in c(2:(N-2-reftime-2*n))) {
+    for(deltat in c(2:(N-1-reftime-2*(n/submatrix.size-1)*Delta))) {
       ii <- .fnii(evs=hankel$t0[reftime+deltat, , drop = FALSE],
                   range=range, eps=eps)
       cf.tsboot$t0[reftime+deltat] <- .fn(evs=hankel$t0[reftime+deltat, , drop = FALSE],
@@ -557,6 +570,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
+  range <- range(range)
   
   tmax <- hankel$cf$Time/2
   if(!hankel$cf$symmetrised){
