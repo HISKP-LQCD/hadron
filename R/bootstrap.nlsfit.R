@@ -1194,7 +1194,7 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1261,7 +1261,7 @@ residual_plot <- function (x, ...) {
 }
 
 #' @export
-residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, operation = `/`) {
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
   }
