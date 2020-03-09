@@ -677,6 +677,8 @@ hankeldensity2effectivemass <- function(hankel, range=c(0,1),
 #'  
 #' In case that no time slices had a finite error estimate, this function
 #' returns just `NA`.
+#'
+#' @export
 resample_hankel <- function (hankel_effmass, distance = 5.0) {
     boot_R <- nrow(hankel_effmass$effMass.tsboot)
     lower <- apply(hankel_effmass$effMass.tsboot, 2, quantile, 0.16, na.rm = TRUE)
