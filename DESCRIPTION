@@ -8,7 +8,7 @@ Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
                   role = c("aut")),
             person("Johann", "Ostmeyer", email = "ostmeyer@hiskp.uni-bonn.de",
                   role = c("aut")),
-            person("Martin", "Ueding", email = "dev@martin-ueding.de",
+            person("Martin", "Ueding", email = "mu@martin-ueding.de",
                   role = c("aut")))
 Author: Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut], Carsten Urbach [aut, cre]
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
