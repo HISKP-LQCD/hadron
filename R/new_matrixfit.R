@@ -124,6 +124,38 @@ SingleModel <- R6::R6Class(
   )
 )
 
+TwoAmplitudesModel <- R6::R6Class(
+  'TwoAmplitudesModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+    },
+    prediction = function (par, x, ...) {
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(-par[1] * (self$time_extent - x)))
+    },
+    prediction_jacobian = function (par, x, ...) {
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      res <- matrix(NA, nrow = length(x), ncol = length(par))
+      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(-par[1] * (self$time_extent - x)) * (-(self$time_extent - x)))
+      res[, 2] <- ov_sign_vec * par[2] * exp(-par[1] * x)
+      res[, 3] <- ov_sign_vec * par[3] * sign_vec * exp(-par[1] * (self$time_extent - x))
+      return (res)
+    },
+    initial_guess = function (corr, t1, t2) {
+      # This model has two amplitudes but only one energy. We will start by
+      # just replicating the forward amplitude to the backwards part.
+      normal <- super$initial_guess(corr, t1, t2)
+      c(normal, normal[2])
+    }
+  )
+)
+
 ShiftedModel <- R6::R6Class(
   'ShiftedModel',
   inherit = MatrixModel,
@@ -488,6 +520,9 @@ new_matrixfit <- function(cf,
   
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else if (model == 'two_amplitudes') {
+    stopifnot(cf$nrObs == 1)
+    model_object <- TwoAmplitudesModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   } else if (model == 'shifted') {
     stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$deltat)
