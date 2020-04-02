@@ -435,24 +435,33 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
   cf.tsboot$t0[reftime+1] <- 1
   cf.tsboot$t[, reftime+1] <- 1
   if(sort.type == "values" || sort.type=="mindist") {
+    idpass <- id
+    if(hankel$t0fixed) {
+      idpass <- NA
+    }
     .fn <- function(evs, range, eps, id) {
+      if(is.na(id)) {
+        ret <- Re(evs[which.min(abs(Re(evs)-mean(range)))])
+        if(length(ret) == 0) return(NA)
+        return(ret)
+      }
       ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
                   & Re(evs) < range[2])
       return(Re(evs[ii[id]]))
     }
     .fn2 <- function(evs, refvalue, eps) {
       evs2 <- evs[which(abs(Im(evs)) <= eps)]
-      ret <- Re(evs2[which.min(abs(evs2-refvalue))])
+      ret <- Re(evs2[which.min(abs(Re(evs2)-refvalue))])
       if(length(ret) == 0) return(NA)
       return(ret)
     }
     for(deltat in c(1:(N-1-reftime-2*(n/submatrix.size - 1)*Delta))) {
       cf.tsboot$t0[deltat+reftime] <- .fn(evs=hankel$t0[deltat+reftime, , drop = FALSE],
-                                          range=range, eps=eps, id=id)
+                                          range=range, eps=eps, id=idpass)
       if(sort.type=="values") {
         cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
                                                MARGIN=1, FUN=.fn,
-                                               range=range, eps=eps, id=id)
+                                               range=range, eps=eps, id=idpass)
       }
       else { ## mindist
         cf.tsboot$t[, deltat+reftime] <- apply(X=hankel$t[, deltat+reftime, , drop = FALSE],
