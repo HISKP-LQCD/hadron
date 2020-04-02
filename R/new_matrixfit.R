@@ -135,7 +135,7 @@ TwoAmplitudesModel <- R6::R6Class(
       sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
       ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
 
-      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(par[1] x))
+      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(par[1] * x))
     },
     prediction_jacobian = function (par, x, ...) {
       sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
