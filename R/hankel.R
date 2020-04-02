@@ -174,7 +174,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
                         Delta=1) {
   stopifnot(t0 >= 0 && n > 0 && N > 0 && Delta > 0)
   stopifnot(t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat <= N)
-  t0 <- t0+1
+  t0p1 <- t0+1
   cM1 <- array(NA, dim=c(n, n))
   cM2 <- cM1
   ii <- seq(from=1, to=n, by=submatrix.size)
@@ -182,8 +182,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0, to=(cor.id)*N, by=Delta)])
-      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0+deltat, to=(cor.id)*N, by=Delta)])
+      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0p1, to=(cor.id)*N, by=Delta)])
+      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[seq(from=(cor.id-1)*N+t0p1+deltat, to=(cor.id)*N, by=Delta)])
     }
   }
   if(submatrix.size > 1) {
@@ -278,21 +278,23 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   else {
     stopifnot(t0 > 0)
   }
+  ## R/Fortran index convention
+  t0p1 <- t0 + 1
   boot.R <- cf$boot.R
   evs <- array(NA, dim=c(N, n + n^2))
   evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2))
 
   if(t0fixed) {
     for(deltat in c(1:(N-1-t0-2*(n/submatrix.size-1)*Delta))) {
-      evs[deltat+t0, ] <- gevp.hankel(cf$cf0, t0=t0,
-                                      n=n, N=N, deltat=deltat,
-                                      submatrix.size=submatrix.size, element.order=element.order,
-                                      Delta=Delta)
+      evs[deltat+t0p1, ] <- gevp.hankel(cf$cf0, t0=t0,
+                                        n=n, N=N, deltat=deltat,
+                                        submatrix.size=submatrix.size, element.order=element.order,
+                                        Delta=Delta)
       
-      evs.tsboot[, deltat+t0, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
-                                           n=n, N=N, deltat=deltat,
-                                           submatrix.size=submatrix.size, element.order=element.order,
-                                           Delta=Delta))
+      evs.tsboot[, deltat+t0p1, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
+                                             n=n, N=N, deltat=deltat,
+                                             submatrix.size=submatrix.size, element.order=element.order,
+                                             Delta=Delta))
     }
   }
   else {
@@ -347,7 +349,6 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #' 
 #' @family hankel
 #'
-#' @export
 plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   n <- hankel$n
   stopifnot(max(id) <= n & min(id) >= 1)
@@ -431,8 +432,8 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
       t = array(NA, dim=c(hankel$boot.R, N))
   )
 
-  cf.tsboot$t0[reftime] <- 1
-  cf.tsboot$t[, reftime] <- 1
+  cf.tsboot$t0[reftime+1] <- 1
+  cf.tsboot$t[, reftime+1] <- 1
   if(sort.type == "values" || sort.type=="mindist") {
     .fn <- function(evs, range, eps, id) {
       ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
@@ -624,7 +625,6 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
 #' of the effective mass. Must be "median" (default) or "density"
 #' @description
 #' 
-#' @export
 hankeldensity2effectivemass <- function(hankel, range=c(0,1),
                                         method="median") {
 
