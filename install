@@ -3,6 +3,5 @@
 set -e
 set -u
 
-Rscript -e 'devtools::document()'
-Rscript -e 'Rcpp::compileAttributes()'
+./document
 R CMD INSTALL .
