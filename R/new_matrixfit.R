@@ -142,7 +142,7 @@ TwoAmplitudesModel <- R6::R6Class(
       ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
 
       res <- matrix(NA, nrow = length(x), ncol = length(par))
-      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(par[1] * x) * x
+      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(par[1] * x) * x)
       res[, 2] <- ov_sign_vec * par[2] * exp(-par[1] * x)
       res[, 3] <- ov_sign_vec * par[3] * sign_vec * exp(par[1] * x)
       return (res)
