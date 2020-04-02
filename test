@@ -4,4 +4,5 @@
 set -e
 set -u
 
-Rscript -e 'devtools::document(); devtools::test();'
+./document
+Rscript -e 'devtools::test();'
