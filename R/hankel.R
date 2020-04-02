@@ -638,3 +638,83 @@ hankeldensity2effectivemass <- function(hankel, range=c(0,1),
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }
+
+#' Resample bootstrap samples in Hankel effmass
+#'
+#' The bootstrap distribution in the Hankel effective mass can be quite broad
+#' due to outliers and long tails. These screw with proper error estimation.
+#' Therefore it can be useful to trim these tails. Just trimming a bootstrap
+#' distribution would lead to less samples, therefore we do a parametric
+#' resampling.
+#'
+#' The central values are also inferred from the distribution because they
+#' often are outliers themselves. The new central value is the middle between
+#' the upper and lower quantile, making the resulting distribution symmetric.
+#'
+#' Half the distance between the quantiles is taken to be the error, therefore
+#' the quantiles are chosen at 16 and 84 percent to match the standard
+#' deviation. All points that are more than “distance” errors away from the new
+#' central value are taken to be outliers.
+#'
+#' @param hankel_effmass Hankel effective mass from `hankel2effmass`.
+#' @param distance Numeric, threshold for marking outliers.
+#'
+#' @return
+#' The Hankel effmass object is returned with the same fields, the numbers
+#' have been changed.
+#'
+#' Additionally there are the followi1ng fields:
+#'
+#' - `cov_full` contains the full covariance matrix as determined from all the
+#'   data. This will be skewed by the outliers.
+#' - `finite_count` gives the number of non-outliers per time slice.
+#' - `complete_count` gives the numbers of complete cases if all outliers are
+#'   taken out. This number is often zero because the late time slices contain
+#'   lots of outliers due to the noise.
+#'- `cov_3sigma_pairwise` is the covariance matrix using only the non-outliers
+#'  and removing NAs in a pairwise fashion, using the maximum of the data. This
+#'  is the covariance matrix that is used for the resampling.
+#'  
+#' In case that no time slices had a finite error estimate, this function
+#' returns just `NA`.
+#'
+#' @export
+resample_hankel <- function (hankel_effmass, distance = 5.0) {
+    boot_R <- nrow(hankel_effmass$effMass.tsboot)
+    lower <- apply(hankel_effmass$effMass.tsboot, 2, quantile, 0.16, na.rm = TRUE)
+    upper <- apply(hankel_effmass$effMass.tsboot, 2, quantile, 0.84, na.rm = TRUE)
+    val <- (upper + lower) / 2
+    err <- (upper - lower) / 2
+    
+    use <- !is.na(err)
+    
+    if (sum(use[2:length(use)]) == 0) {
+        return (NA)
+    }
+    
+    hankel_effmass$cov_full <- cov(hankel_effmass$effMass.tsboot)
+    all_outlier <- matrix(NA, nrow = nrow(hankel_effmass$effMass.tsboot), ncol = ncol(hankel_effmass$effMass.tsboot))
+    
+    for (t in 1:ncol(hankel_effmass$effMass.tsboot)) {
+        outlier <- hankel_effmass$effMass.tsboot[, t] > val[t] + distance * err[t] |
+            hankel_effmass$effMass.tsboot[, t] < val[t] - distance * err[t]
+        all_outlier[, t] <- outlier
+        hankel_effmass$effMass.tsboot[outlier, t] <- NA
+    }
+    
+    hankel_effmass$finite_count <- apply(!all_outlier, 2, sum, na.rm = TRUE)
+    hankel_effmass$complete_count <- sum(complete.cases(all_outlier))
+    hankel_effmass$cov_3sigma_pairwise <- cov(hankel_effmass$effMass.tsboot, use = 'pairwise.complete.obs')
+    
+    hankel_effmass$effMass <- val
+    hankel_effmass$deffMass <- err
+    hankel_effmass$effMass.tsboot[, 1:ncol(hankel_effmass$effMass.tsboot)] <- NA
+    hankel_effmass$effMass.tsboot[, use] <- parametric.bootstrap.cov(boot_R, val[use], hankel_effmass$cov_3sigma_pairwise[use, use, drop = FALSE], 1)
+    
+    # Don't even ask …
+    hankel_effmass$t0 <- hankel_effmass$effMass
+    hankel_effmass$t <- hankel_effmass$effMass.tsboot
+    hankel_effmass$se <- hankel_effmass$deffMass
+
+    return (hankel_effmass)
+}
