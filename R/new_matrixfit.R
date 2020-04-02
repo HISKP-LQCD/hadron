@@ -135,16 +135,16 @@ TwoAmplitudesModel <- R6::R6Class(
       sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
       ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
 
-      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(-par[1] * (self$time_extent - x)))
+      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(par[1] x))
     },
     prediction_jacobian = function (par, x, ...) {
       sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
       ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
 
       res <- matrix(NA, nrow = length(x), ncol = length(par))
-      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(-par[1] * (self$time_extent - x)) * (-(self$time_extent - x)))
+      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(par[1] * x) * x
       res[, 2] <- ov_sign_vec * par[2] * exp(-par[1] * x)
-      res[, 3] <- ov_sign_vec * par[3] * sign_vec * exp(-par[1] * (self$time_extent - x))
+      res[, 3] <- ov_sign_vec * par[3] * sign_vec * exp(par[1] * x)
       return (res)
     },
     initial_guess = function (corr, t1, t2) {
@@ -460,7 +460,7 @@ SingleConstantModel <- R6::R6Class(
 #'
 #'   - `two_amplitudes`: Should there be a single state but different amplitudes
 #'   in the forward and backwards part, the following method is applicable.
-#'   \deqn{\frac{1}{2} (p_2 \exp(-p_1 t) \pm c p_3 \exp(-p_1 (T-t)))} This only
+#'   \deqn{\frac{1}{2} (p_2 \exp(-p_1 t) \pm c p_3 \exp(p_1 t))} This only
 #'   works with a single correlator at the moment.
 #'
 #'   - `single_constant`: Uses the `single` model and simply adds \eqn{+ p_3} to
