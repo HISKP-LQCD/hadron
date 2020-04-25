@@ -6,8 +6,6 @@ set -u
 
 version=$(grep Version: DESCRIPTION | cut -d ' ' -f 2)
 
-Rscript -e 'devtools::document()'
-Rscript -e 'Rcpp::compileAttributes()'
-
+./document
 R CMD build .
 R CMD check hadron_$version.tar.gz

@@ -124,6 +124,38 @@ SingleModel <- R6::R6Class(
   )
 )
 
+TwoAmplitudesModel <- R6::R6Class(
+  'TwoAmplitudesModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+    },
+    prediction = function (par, x, ...) {
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) + sign_vec * par[3]^2 * exp(par[1] * x))
+    },
+    prediction_jacobian = function (par, x, ...) {
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      res <- matrix(NA, nrow = length(x), ncol = length(par))
+      res[, 1] <- ov_sign_vec * 0.5 * (par[2]^2 * exp(-par[1] * x) * (-x) + sign_vec * par[3]^2 * exp(par[1] * x) * x)
+      res[, 2] <- ov_sign_vec * par[2] * exp(-par[1] * x)
+      res[, 3] <- ov_sign_vec * par[3] * sign_vec * exp(par[1] * x)
+      return (res)
+    },
+    initial_guess = function (corr, t1, t2) {
+      # This model has two amplitudes but only one energy. We will start by
+      # just replicating the forward amplitude to the backwards part.
+      normal <- super$initial_guess(corr, t1, t2)
+      c(normal, normal[2])
+    }
+  )
+)
+
 ShiftedModel <- R6::R6Class(
   'ShiftedModel',
   inherit = MatrixModel,
@@ -380,7 +412,7 @@ SingleConstantModel <- R6::R6Class(
 #' @param useCov Boolean, specifies whether a correlated chi^2 fit should be
 #'   performed.
 #' @param model String, specifies the type of model to be assumed for the
-#'   correlator. See \link{matrixfit} for details.
+#'   correlator. See below for details.
 #' @param boot.fit Boolean, specifies if the fit should be bootstrapped.
 #' @param fit.method String, specifies which minimizer should be used. See
 #'   \link{matrixfit} for details.
@@ -391,13 +423,54 @@ SingleConstantModel <- R6::R6Class(
 #'   of the same length as `parlist`.
 #' @param every Integer, specifies a stride length by which the fit range should
 #'   be sparsened, using just `every`th time slice in the fit.
-#' @param higher_states List with elements `val` and `boot`. The member `val`
-#'   must have the central energy values for all the states that are to be
-#'   fitted. The `boot` member will be a matrix that has the various states as
-#'   columns and the corresponding bootstrap samples as rows. The length of
-#'   `val` must be the column number of `boot`. The row number of `boot` must be
-#'   the number of samples.
+#' @param higher_states List with elements `val` and `boot`. Only used in the
+#'   `n_particles` fit model. The member `val` must have the central energy
+#'   values for all the states that are to be fitted. The `boot` member will be
+#'   a matrix that has the various states as columns and the corresponding
+#'   bootstrap samples as rows. The length of `val` must be the column number of
+#'   `boot`. The row number of `boot` must be the number of samples.
 #' @param ... Further parameters.
+#'
+#' @details There are different fit models available. The models generally
+#'   depend on one or multiple energies \eqn{E} and amplitudes \eqn{p_i} which
+#'   for a general matrix are row- and column-amplitudes. The relative sign
+#'   factor \eqn{c \in \{-1, 0, +1\}} depends on the chosen symmetry of the
+#'   correlator. It is a plus for a “cosh” symmetry and a minus for a “sinh”
+#'   symmetry. If the back propagating part is to be neglected (just “exp”
+#'   model), it will be zero.
+#'
+#'   When the back propagating part is not taken into account, then the
+#'   `single`, `shifted` and `weighted` model become the same except for changes
+#'   in the amplitude.
+#'
+#'   - `single`: The default model for a single state correlator is
+#'   \deqn{\frac{1}{2} p_i p_j (\exp(-p_1 t) \pm c \exp(-p_2 (T-t))) \,.}
+#'
+#'   - `shifted`: If the correlator has been shifted (using
+#'   \link{takeTimeDiff.cf}, then the following model is applicable: \deqn{p_i
+#'   p_j (\exp(-p_1 (t+1/2)) \mp c \exp(-p_1 (T-(t+1/2)))) \,.}
+#'
+#'   - `weighted`: Works similarly to the `shifted` model but includes the
+#'   effect of the weight factor from \link{removeTemporal.cf}.
+#'
+#'   - `pc`: In case only a single principal correlator from a GEVP is to be
+#'   fitted this model can be used. It implements \deqn{\exp(-p_1(t-t_0))(p_2 +
+#'   (1-p_2)\exp(-p_3 (t-t_0))} with \eqn{t_0} the reference timesclice of the
+#'   GEVP. See \link{bootstrap.gevp} for details.
+#'
+#'   - `two_amplitudes`: Should there be a single state but different amplitudes
+#'   in the forward and backwards part, the following method is applicable.
+#'   \deqn{\frac{1}{2} (p_2 \exp(-p_1 t) \pm c p_3 \exp(p_1 t))} This only
+#'   works with a single correlator at the moment.
+#'
+#'   - `single_constant`: Uses the `single` model and simply adds \eqn{+ p_3} to
+#'   the model such that a constant offset can be fitted. In total the model is
+#'   \deqn{\mathrm{single}(p_1, p_2) + p_3 \,.}
+#'
+#'   - `n_particles`: A sum of `single` models with independent energies and
+#'   amplitudes: \deqn{\sum_{i = 1}^n \mathrm{single}(p_{2n-1}, p_{2n}) \,.} Use
+#'   the `higher_states` parameter to restrict the thermal states with priors to
+#'   stabilize the fit.
 #'
 #' @export
 new_matrixfit <- function(cf,
@@ -488,6 +561,9 @@ new_matrixfit <- function(cf,
   
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else if (model == 'two_amplitudes') {
+    stopifnot(cf$nrObs == 1)
+    model_object <- TwoAmplitudesModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   } else if (model == 'shifted') {
     stopifnot(inherits(cf, 'cf_shifted'))
     model_object <- ShiftedModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize, cf$deltat)
