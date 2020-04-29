@@ -1,3 +1,25 @@
+#' variational analysis of a correlator matrix
+#' 
+#' variational analysis of a correlator matrix
+#' 
+#' 
+#' @param Cor correlator matrix
+#' @param ta first time value for eigenvector determination
+#' @param tb second time value for eigenvector determination
+#' @param tmax maximal time value to be considered in the analysis
+#' @param N matrix size. must be <= to the size of the correlator matrix
+#' @param T1 maximal time value in correlator matrix
+#' @param matrix.size matrix size to be used for start value determination
+#' (e.g. for pionfit)
+#' @param no.masses number of mass values for start value determination
+#' @return returns a list with following entries \item{t}{ the list of time
+#' values } \item{res.values}{ the mass values in a \code{tmax-ta} times
+#' \code{N} array for all analysed t-values } \item{par}{ startvalues for a fit
+#' } \item{variational.masses}{ the list of mass values as determined from the
+#' variational analysis }
+#' @author Carsten Urbach, \email{carsten.urbach@@physik.hu-berlin.de}
+#' @seealso pion
+#' @keywords variational
 variational <- function(Cor, ta, tb, tmax, N, T1, matrix.size, no.masses) {
 
   ta=ta+1

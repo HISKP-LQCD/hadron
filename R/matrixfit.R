@@ -6,7 +6,8 @@
 #' @param data Original data to bootstrap
 #' @param R Number of bootstrap replicates.
 #' @param l Block length.
-#' 
+#'
+#' @export
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
@@ -213,6 +214,121 @@ deriv.pcModel <- function(par, t, T, reference_time) {
 
 }
 
+
+
+#' Routine For A Factorising Matrix Fit
+#' 
+#' Performs a factorising fit on a correlation matrix
+#' 
+#' The routine expects in \code{cf$cf} a set of correlation functions.  The
+#' mapping of this linear construct to a matrix or a part of a matrix is
+#' achieved via \code{parlist}. The symmetry properties of the individual
+#' correlation functions must be encoded in \code{sym.vec}.
+#' 
+#' \code{matrixfit} will fit to every correlator in \code{cf$cf} a function
+#' \eqn{p_i p_j f(t)}. The indices \eqn{i,j} are determined from \code{parlist}
+#' and \eqn{f} is either \eqn{cosh}{\cosh} or \eqn{sinh}{\sinh}, depending on
+#' \code{sym.vec}.
+#' 
+#' The inverse covariance matrix is computed using a singular value
+#' decomposition. If the sample size N is too small, only sqrt(N) eigenvalues
+#' of the matrix are kept exactly, while all others are replaced by the mean of
+#' the rest. This helps to reduce instabilities induced by too small
+#' eigenvalues of the covariance matrix.
+#' 
+#' @param cf correlation matrix obtained with a call to \code{extrac.obs}.
+#' @param t1 lower bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param t2 upper bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param parlist a two dimensional array of dimension 2 times number of
+#' correlators in cf. Every column assigns a pair of fit parameters to the
+#' corresponding correlator in cf. In case this is missing there are defaults
+#' provided for certain matrix sizes.
+#' @param sym.vec a vector of length number of correlators in cf indicating
+#' whether the correlation function is a cosh, a sinh or an exponential.
+#' Possible values are \code{"cosh"}, \code{"sinh"} and \code{"exp"}.  In case
+#' this is missing there are defaults provided for certain matrix sizes.
+#' @param neg.vec a vector of length number of correlators in cf indicating
+#' whether the correlation function is to be multiplied globally with a minus
+#' sign.  In case this is missing there are defaults provided for certain
+#' matrix sizes.
+#' @param useCov use correlated or uncorrelated chisquare. Default is
+#' \code{useCov=FALSE}.
+#' @param boot.fit If set to \code{FALSE}, the fit is not bootstrapped, even if
+#' the bootstrapping parameters have been set and the correlation function has
+#' been bootstrapped.  This is a useful time-saver if error information is not
+#' strictly necessary.  Of course, this affects the return values related to
+#' the bootstrap, which are set to \code{NA}.
+#' @param fit.method Can be either \code{"optim"} or \code{"lm"}. The latter
+#' works only if the library \code{"minpack.lm"} can be loaded. Default and
+#' fallback is \code{"optim"}.
+#' @param model Sets the fit model to be used in the fit. The default model
+#' is\cr \eqn{0.5 p_i p_j (\exp(-Et) \pm c* \exp(-E(T-t)))}\cr with sign
+#' depending on \code{"cosh"} or \code{"sinh"}. c equals one except for the
+#' \code{"exp"} functional dependence. When model is set to \code{"shifted"},
+#' the fit uses the function\cr \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c*
+#' \exp(-E(T-(t+1/2))))}\cr which is useful when the original correlation
+#' function or matrix is shifted, see e.g. \link{bootstrap.gevp}.\cr In case
+#' only a single principal correlator from a GEVP is to be fitted the
+#' additional model \code{"pc"} is available. It implements\cr
+#' \eqn{\exp(-E(t-t_0))(A + (1-A)\exp(-DeltaE(t-t_0))}\cr with \eqn{t_0} the
+#' reference timesclice of the GEVP. See \link{bootstrap.gevp} for details.
+#' @param autoproceed When the inversion of the variance-covariance matrix
+#' fails, the default behaviour is to abort the fit. Setting this to
+#' \code{TRUE} means that the fit is instead continued with a diagonal inverse
+#' of the variance-covariance matrix.
+#' @param every Fit only a part of the data points. Indices that are not
+#' multiples of \code{every} are skipped. If no value is provided, all points
+#' are taken into account.
+#' @return returns an object of class \code{matrixfit} with entries: \item{CF}{
+#' object of class cf which contains the mean correlation functions} \item{M}{
+#' inverse variance-covariance matrix for weighted Chi squared minimization}
+#' \item{L}{squre root of \code{M}.} \item{parind}{indices in the parameter
+#' vector used for the different matrix combinations} \item{sign.vec}{vector
+#' of signs} \item{ii}{vector of vector indices giving the columns of the
+#' correlation function arrays (CF above, say), which are contained in the fit
+#' range} \item{opt.res}{return value of the minimization (see ?optim) on the
+#' original data.} \item{t0}{Result of the chisqr fit on the original data.
+#' \code{t0} is a vector of length npar+1, where \code{npar} the number of fit
+#' parameters. The last value is the chisqr value.} \item{t}{Bootstrap
+#' samples of the \code{R} Chi squared minimizations of length(par)+1. \code{t}
+#' has dimension \eqn{R x (npar+1)}, where \code{R} is the number of bootstrap
+#' samples and \code{npar} the number of fit parameters. The last column
+#' corresponds to the chisquare values.} \item{se}{Bootstrap estimate of
+#' standard error for all parameters. \code{se} is a vector of length
+#' \code{npar}, where \code{npar} the number of fit parameters.}
+#' \item{useCov}{whether covariances in the data were taken into account}
+#' \item{invCovMatrix}{inverse of covariance matrix or inverse variance
+#' weighted if useCov=FALSE} \item{Qval}{real number between 0 and 1 giving
+#' the "quality" of the fit} \item{chisqr}{total Chi squared of the fit}
+#' \item{dof}{fit degrees of freedom} \item{mSize}{integer size of the
+#' matrix which was fitted} \item{cf}{object of type cf which contains,
+#' amongst other objects, cf$cf which is a concatenated array of raw
+#' correlation functions where each row is one of N observations and there are
+#' mSize*T columns (see ?extract.obs)} \item{boot.R}{number of bootstrap
+#' samples} \item{boot.l}{block size for blocked bootstrap} \item{t1}{
+#' beginning of fit range} \item{t2}{end of fit range} \item{parlist}{array
+#' of parameter combinations for the matrix fit} \item{sym.vec}{vector of
+#' strings indicating the functional form of correlation functions which were
+#' fitted} \item{seed}{RNG seed for bootstrap procedure} \item{model}{see
+#' input.} \item{fit.method}{see input.} \item{reference_time}{The GEVP
+#' reference time for the principal correlator model}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}, \code{\link{bootstrap.cf}}
+#' @references C. Michael, `hep-lat/9412087hep-lat/9412087`
+#' @keywords optimize ts
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' fitres <- matrixfit(cf=samplecf, t1=16, t2=24, useCov=FALSE,
+#'                     parlist=array(c(1,1), dim=c(2,1)),
+#'                     sym.vec=c("cosh"), fit.method="lm")
+#' summary(fitres)
+#' plot(fitres)
+#' 
+#' @export matrixfit
 matrixfit <- function(cf, t1, t2,
                       parlist,
                       sym.vec,
@@ -510,6 +626,8 @@ matrixfit <- function(cf, t1, t2,
 #' @param ... Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.
 #' 
 #' @seealso \code{\link{matrixfit}}
+#'
+#' @export
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
                             do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
   mfit <- x
@@ -627,9 +745,9 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
   }
   if(do.qqplot){
     new_window_if_appropriate()
-    s <- seq(0,1,1./length(mfit$t[,1]))
+    s <- seq(0,1,1./nrow(mfit$t))
     x <- qchisq(p=s, df=mfit$dof, ncp=mfit$chisq)
-    qqplot(x=x, y=mfit$t[, length(mfit$t[1,])], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
+    qqplot(x=x, y=mfit$t[, ncol(mfit$t)-1], xlab="Theoretical Quantiles", ylab="Sample Quantiles", main="QQ-Plot non-central Chi^2 Values")
   }
 }
 
@@ -637,6 +755,7 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
 #'
 #' @param object Object of type \link{matrixfit}
 #' @param ... Generic parameters to pass on.
+#' @export
 summary.matrixfit <- function (object, ...) {
   mfit <- object
   if(mfit$model == "pc") {
@@ -708,7 +827,7 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
     if( !(opt.res$info %in% c(1,2,3) ) ){
       cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
-    opt.res$value <- opt.res$rsstrac[length(opt.res$rsstrace)]
+    opt.res$value <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn, reference_time=reference_time,
@@ -748,6 +867,8 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
 #'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
 #'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
 #'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
+#'
+#' @export
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {

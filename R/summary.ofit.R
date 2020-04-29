@@ -2,6 +2,8 @@
 #'
 #' @param x Object of type `ofit`
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 print.ofit <- function (x, ...) {
   summary(x, ...)
 }
@@ -10,6 +12,8 @@ print.ofit <- function (x, ...) {
 #'
 #' @param object Object of type `ofit`
 #' @param ... Generic parameters to pass on.
+#'
+#' @export
 summary.ofit <- function (object, ...) {
   fit <- object
   kappa <- fit$kappa

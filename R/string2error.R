@@ -13,6 +13,7 @@
 #' @details
 #' can be used in combination with \link{apply}
 #' 
+#' @export
 #' @examples
 #' string2error("0.35667(25)")
 #'

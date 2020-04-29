@@ -12,5 +12,9 @@ docs/
 functions_with_boot_R.txt
 hadron.Rcheck
 hadron_*.tar.gz
+man/*.Rd
 man/.Rhistory
 src/symbols.rds
+NAMESPACE
+R/RcppExports.R
+src/RcppExports.cpp

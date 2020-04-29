@@ -86,7 +86,78 @@ errorpos <- function(dx,errsum.method="linear") {
   rval
 }
 
-plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
+#' Plot Command For XY Plots With Error Bars
+#' 
+#' Plot command for XY scatterplots based on plot and points which provides
+#' support for multiple, non-symmetric error bars. Error bars are drawn as
+#' vertical or horizontal lines originating from the point with narrow,
+#' perpendicular lines at the end of the error bar (end caps). When multiple
+#' errors are drawn, the width of the perpendicular line increases from the
+#' innermost error bar to the outermost one. Different summation methods for
+#' the individual errors are supported.
+#' 
+#' 
+#' @param x vector of x coordinates
+#' @param xlim limits for x-axis
+#' @param y vector of y coordinates
+#' @param ylim limits for y-axis
+#' @param col colour of plotted data
+#' @param dy one of: \itemize{ \item Vector of errors on y coordinates.
+#' \item Array, matrix or data frame if multiple error bars are to be drawn,
+#' such that each column refers to one error. The individual errors should be
+#' provided as is, because they are summed internally to draw the final error
+#' bars.  A given column can also be provided with 0 entries, in which case the
+#' error bar will be drawn, but it will have zero length, such that only the
+#' end caps for this error will be visible.  }
+#' @param dx Same as \code{dy}, but for the x coordinate.
+#' @param mdx Support for non-symmetric error bars. Same as \code{dx}, but for
+#' errors in the negative x-direction. Errors should be provided as positive
+#' numbers, the correct sign will be added internally. If not provided,
+#' \code{dx} is used as a symmetric error.
+#' @param mdy Same as \code{mdx} but for the y coordinate.
+#' @param errsum.method Determines how the invidual errors should be summed for
+#' display purposes. Valid argument values are: \itemize{ \item "linear"
+#' \itemize{ \item Individual errors are summed linearly, such that the distance
+#' from the point to the \eqn{i}'th error bar, \eqn{l_i}, is \deqn{ l_i =
+#' \sum_{j=1}^i e_j } Hence, the third error bar, for example, would be located
+#' at \deqn{ l_3 = e_1 + e_2 + e_3 } while the second error bar is at \deqn{
+#' l_2 = e_1 + e_2 }
+#' 
+#' }
+#' 
+#' \item "quadrature" \itemize{ \item Individual errors are summed in quadrature
+#' and error bars are drawn at the fractional position according to the
+#' following formula: \deqn{ l_{max} = \sqrt{ \sum_{j=1}^{max} e_j^2 } } \deqn{
+#' l_i = \sum_{j=1}^i e_j^2 / l_{max} }
+#' 
+#' }
+#' 
+#' \item "linear.quadrature" \itemize{ \item Errors are summed as for "linear",
+#' but the total error summed in quadrature is also indicated as an end cap of
+#' triple line width }
+#' 
+#' }
+#' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
+#' adding points with error bars to the current plot. Switches the underlying
+#' plotting routine from \code{\link[graphics]{plot}} to
+#' \code{\link[graphics]{points}}.
+#' @param ...  any graphic options passed over to \code{\link[graphics]{plot}}
+#' @return a plot with error bars is drawn on the current device
+#' @author Carsten Urbach, \email{urbach@@hiskp.uni-bonn.de} \cr Bartosz
+#' Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
+#' @seealso \code{\link[graphics]{plot}}, \code{\link[graphics]{points}}
+#' @examples
+#' 
+#' # Create some random data, set one error to zero.
+#' x <- 1:50
+#' y <- runif(50, 0, 1)
+#' dy <- runif(50, 0.1, 0.2)
+#' dy[4] <- 0
+#' 
+#' plotwitherror(x, y, dy)
+#' 
+#' @export plotwitherror
+plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errsum.method="linear.quadrature", rep=FALSE, col="black", ...) {
   if(!missing(mdy) && missing(dy)){
     stop("plotwitherror: if 'mdy' is provided, 'dy' must be too (it can be 0)")
   }
@@ -154,13 +225,13 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
     }  
   }
 
-  if(missing(xlim)) {
+  if( is.null(xlim) ){
     my.xlim <- compute.plotlims(val=x, logscale=xlog, cumul.dval=cumul.dx, cumul.mdval=cumul.mdx)
   } else {
     my.xlim <- xlim
   }
 
-  if(missing(ylim)) {
+  if( is.null(ylim) ){
     my.ylim <- compute.plotlims(val=y, logscale=ylog, cumul.dval=cumul.dy, cumul.mdval=cumul.mdy)
   } else {
     my.ylim <- ylim
@@ -302,6 +373,8 @@ plotwitherror <- function(x, y, dy, ylim, dx, xlim, mdx, mdy, errsum.method="lin
 #' @param col String. Colour.
 #' @param x0 Numeric. Left value of the range of the horizontal line.
 #' @param x1 Numeric. Right value of the range of the horizontal line.
+#'
+#' @export
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
     dm <- dp
@@ -320,6 +393,8 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #' @param xlab String. Label for x-axis
 #' @param ylab String. Lable for y-axis
+#'
+#' @export
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
   plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
@@ -331,6 +406,8 @@ plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
 #'
 #' @param x Object of type `pionfit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.pionfit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -342,6 +419,8 @@ plot.pionfit <- function(x, ...) {
 #'
 #' @param x Object of type `rhofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.rhofit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -353,6 +432,8 @@ plot.rhofit <- function(x, ...) {
 #'
 #' @param x Object of type `b1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.b1fit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -364,6 +445,8 @@ plot.b1fit <- function(x, ...) {
 #'
 #' @param x Object of type `ofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.ofit <- function(x, ...) {
   plot.cfit(x)
 }
@@ -375,6 +458,8 @@ plot.ofit <- function(x, ...) {
 #'
 #' @param x Object of type `c1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.cfit <- function(x, ...) {
   fit <- x
   fit.mass <- abs(fit$fitresult$par[fit$matrix.size+1])
@@ -446,6 +531,8 @@ plot.cfit <- function(x, ...) {
 #' @param ll local-local effective mass object
 #' @param lf local-fuzzed effective mass object
 #' @param ff fuzzed-fuzzed effective mass object
+#'
+#' @export
 plot.effmass <- function (x, ..., ll, lf, ff) {
   m <- x
 
@@ -478,6 +565,8 @@ plot.effmass <- function (x, ..., ll, lf, ff) {
 #'
 #' @param x `averx` object
 #' @param ... ignored
+#'
+#' @export
 plot.averx <- function(x, ...) {
   averx <- x
   Thalfp1 <- averx$Cf2pt$Time/2+1
@@ -510,6 +599,8 @@ plot.averx <- function(x, ...) {
 #'
 #' @param x Object of type `pionff`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @export
 plot.pionff <- function (x, ...) {
   ff <- x
   T <- ff$Cf2ptp0$Time
@@ -525,6 +616,34 @@ plot.pionff <- function (x, ...) {
 }
 
 
+
+
+#' Plot Command For Class Ouputdata
+#' 
+#' Generic plot routine for class \dQuote{ouputdata}. Currently it plots the
+#' plaquette history and the history of \eqn{\Delta H}{Delta H}
+#' 
+#' 
+#' @param x object of class \dQuote{outputdata} obtained from a read with
+#' \code{readoutputdata}
+#' @param skip number of trajectories to be skipped in analysis for plaquette
+#' and \eqn{\exp(-\Delta H)}{exp(-Delta H)}.
+#' @param ...  additional arguments passed to the generic plot function.
+#' @return list containing the \dQuote{data}, an object of class \dQuote{uwerr}
+#' called \dQuote{plaq.res} containing the statisical analysis for the
+#' plaquette and a second object of type \dQuote{uwerr} called \dQuote{dH.res}
+#' with the statisical analysis for \eqn{\exp(-\Delta }{exp(-Delta H)}\eqn{
+#' H)}{exp(-Delta H)}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
+#' @keywords methods hplot
+#' @export 
+#' @examples
+#' 
+#' \dontrun{plaq <- readoutputdata("output.data")}
+#' \dontrun{plaq.plot <- plot(plaq, skip=100)}
+#' \dontrun{summary(plaq.plot$plaq.res)}
+#' 
 plot.outputdata <- function (x, skip = 0, ...) {
   data <- x
   plaq.res <- uwerrprimary( data$V2[skip:length(data$V2)])

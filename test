@@ -1,7 +1,8 @@
 #!/bin/bash
-# Copyright © 2019 Martin Ueding <dev@martin-ueding.de>
+# Copyright © 2019 Martin Ueding <mu@martin-ueding.de>
 
 set -e
 set -u
 
-Rscript -e 'devtools::document(); devtools::test();'
+./document
+Rscript -e 'devtools::test();'
