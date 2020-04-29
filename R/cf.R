@@ -818,7 +818,6 @@ addConfIndex2cf <- function(cf, conf.index) {
   return(cf)
 }
 
-<<<<<<< HEAD
 #' Combine correlation function from different replicas
 #' 
 #' @param cf1 `cf` object: correlation function for replicum A
