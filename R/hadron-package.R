@@ -53,9 +53,9 @@ NULL
 #' @importFrom stats acf approx complete.cases cor cov
 #'                na.omit optim pchisq pgamma qchisq qqplot
 #'                quantile rchisq rgeom rnorm sd spec.pgram
-#'                spline uniroot var weighted.mean
+#'                spline uniroot var weighted.mean median density
 #' @importFrom utils combn count.fields head read.table
-#'                setTxtProgressBar txtProgressBar
+#'                setTxtProgressBar txtProgressBar tail
 #' @keywords package
 NULL
 
