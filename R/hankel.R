@@ -341,11 +341,11 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   tmp[Re(tmp) > 1] <- NA
   tmp <- Re(-log(tmp[, tt, ])/deltat)
   tmp[tmp > 1]  <- NA
-  hadron:::new_window_if_appropriate()
+  new_window_if_appropriate()
   hist(tmp, xlim=c(0, 1), main="Histogram of Samples",
        xlab="E", breaks=seq(0, 1, 0.02))
   mode<-density(tmp, na.rm=TRUE)$x[which.max(density(tmp, na.rm=TRUE)$y)]
-  hadron:::new_window_if_appropriate()
+  new_window_if_appropriate()
   plot(density(tmp, na.rm=TRUE))
   cat("Mode of this density:", mode, "deltat:", deltat, "\n")
 }
@@ -429,7 +429,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
       return(which(abs(Im(evs)) <= eps & Re(evs) > range[1]
                 & Re(evs) < range[2]))
     }
-    .fn <- function(evs, ii, id, n,
+    .fn3 <- function(evs, ii, id, n,
                     vectors, v0) {
       if(length(ii) == 0) {
         return(NA)
@@ -453,7 +453,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     ## orthogonality is for <v_i, H(t0) v0_j>
     if(length(ii) != 0) v0 <- hankel.matrix(n=n, z=hankel$cf$cf0[reftime+1]) %*%
                           hankel$vectors[reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
-    cf.tsboot$t0[reftime+1] <- .fn(evs=hankel$t0[1+reftime, , drop = FALSE],
+    cf.tsboot$t0[reftime+1] <- .fn3(evs=hankel$t0[1+reftime, , drop = FALSE],
                                    ii=ii, id=id, n=n,
                                    vectors=NA, v0=NA)
     v0.tsboot <- array(NA, dim=c(hankel$boot.R, n))
@@ -465,7 +465,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
         v0.tsboot[rr,] <- hankel.matrix(n=n, z=hankel$cf$cf.tsboot$t[rr, reftime+1]) %*%
           hankel$vectors.tsboot[rr, reftime+1, c(((ii[id]-1)*n+1) : (ii[id]*n))]
       }
-      cf.tsboot$t[rr, reftime+1] <- .fn(evs=hankel$t[rr, 1+reftime, , drop = FALSE],
+      cf.tsboot$t[rr, reftime+1] <- .fn3(evs=hankel$t[rr, 1+reftime, , drop = FALSE],
                                         ii=ii, id=id, n=n,
                                         vectors=NA, v0=NA)
     }
@@ -473,7 +473,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
     for(deltat in c(2:(N-2-reftime-2*n))) {
       ii <- .fnii(evs=hankel$t0[reftime+deltat, , drop = FALSE],
                   range=range, eps=eps)
-      cf.tsboot$t0[reftime+deltat] <- .fn(evs=hankel$t0[reftime+deltat, , drop = FALSE],
+      cf.tsboot$t0[reftime+deltat] <- .fn3(evs=hankel$t0[reftime+deltat, , drop = FALSE],
                                           ii=ii, id=id, n=n,
                                           vectors=hankel$vectors[reftime+deltat,],
                                           v0=v0)
@@ -485,7 +485,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
       for(rr in c(1:hankel$boot.R)) {
         ii <- .fnii(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
                     range=range, eps=eps)
-        cf.tsboot$t[rr, reftime+deltat] <- .fn(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
+        cf.tsboot$t[rr, reftime+deltat] <- .fn3(evs=hankel$t[rr, reftime+deltat, , drop = FALSE],
                                                ii=ii, id=id, n=n,
                                                vectors=hankel$vectors.tsboot[rr, reftime+deltat,],
                                                v0=v0.tsboot[rr,])
@@ -576,7 +576,7 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
   return(ret)
 }
 
-#' hankeldensity2effectivemass
+#' @title hankeldensity2effectivemass
 #'
 #' @param hankel object as returned from \link{bootstrap.hankel}
 #' @param range Numeric vector. Value-range for the real part of the eigenvalues.
@@ -584,7 +584,9 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
 #' @param method Character vector. Method to be used to determine the central value
 #' of the effective mass. Must be "median" (default) or "density"
 #' @description
-#' 
+#'
+#' computes the density of all bootstrap replicates of effective masses
+#'
 #' @export
 hankeldensity2effectivemass <- function(hankel, range=c(0,1),
                                         method="median") {
