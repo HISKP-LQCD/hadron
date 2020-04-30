@@ -17,13 +17,15 @@ notifications:
     on_failure: change
           
 r:
-  - release 
+  - oldrel
+#- release 
 
 r_packages:
   - tikzDevice
   - minpack.lm
   - boot
   - Rcpp
+  - xfun
   - rmarkdown
 
 r_binary_packages:
