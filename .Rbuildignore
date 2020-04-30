@@ -17,7 +17,12 @@ vignettes/*pdf
 CONTRIBUTING.md
 Weighted_Model.nb
 install
+document
+check
+test
+test_readbinarysamples.Rmd
 notes/
-test/
+test
+hooks/
 test_bootstrap_nlsfit.Rmd
 verify-exports
