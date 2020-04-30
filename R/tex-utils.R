@@ -74,7 +74,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   ## In case the number is very small, printing it with fixed point (`%f`) will
   ## not work. For this case we divide out the exponent from both value and
   ## error and attach it at the end.
-  if (is.infinite(x[1]) || is.na(x[1]) || x == 0) {
+  if (is.infinite(x[1]) || is.na(x[1]) || x[1] == 0) {
     base <- 0
   } else {
     base <- floor(log10(abs(x[1])))
