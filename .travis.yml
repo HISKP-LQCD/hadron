@@ -25,7 +25,6 @@ r_packages:
   - minpack.lm
   - boot
   - Rcpp
-  - xfun
   - rmarkdown
 
 r_binary_packages:
