@@ -3,8 +3,9 @@ title: "Multi-Particle Fit Test"
 author: "Martin Ueding"
 date: \today
 output:
-  pdf_document:
-    fig_crop: false
+  rmarkdown::html_vignette
+#pdf_document:
+#    fig_crop: false
 vignette: >
   %\VignetteIndexEntry{Multi-Particle Fit Test}
   %\VignetteEngine{knitr::rmarkdown}
@@ -24,7 +25,7 @@ time_extent <- 96
 e0_val <- 0.12
 e1_val <- 0.0
 rel_amplitude <- 0.4
-boot_R <- 300
+boot_R <- 99
 n_meas <- 100
 ```
 

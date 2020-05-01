@@ -82,7 +82,7 @@ gevp.hankel_summed <- function(cf, t0values=c(1), deltat = 1, n, N) {
 #' @examples
 #'
 #' data(correlatormatrix)
-#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
 #' t0 <- 4
 #' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
 #' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
@@ -258,7 +258,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' @examples
 #'
 #' data(correlatormatrix)
-#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
 #' t0 <- 4
 #' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
 #' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
