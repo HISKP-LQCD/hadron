@@ -206,7 +206,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
 #' effmass <- bootstrap.effectivemass(cf=samplecf)
 #' summary(effmass)
 #' plot(effmass, ylim=c(0.14,0.15))
@@ -335,7 +335,7 @@ fit.constant <- function(M, y) {
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
 #' effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
 #' summary(effmass)
 #' plot(effmass, ylim=c(0.14,0.15))

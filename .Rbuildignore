@@ -9,7 +9,7 @@
 ^\.Rhistory$
 ^\.Rproj\.user$
 ^\.travis\.yml$
-^\.travis\.yml$
+^\.travis_install_texlive\.R$
 ^\.vimrc$
 vignettes/*RData
 vignettes/*log
@@ -17,7 +17,12 @@ vignettes/*pdf
 CONTRIBUTING.md
 Weighted_Model.nb
 install
+document
+check
+test
+test_readbinarysamples.Rmd
 notes/
-test/
+test
+hooks/
 test_bootstrap_nlsfit.Rmd
 verify-exports
