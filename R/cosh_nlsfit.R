@@ -84,7 +84,7 @@ cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
 #' effmass <- fit.cosh(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
 #' summary(effmass)
 #' plot(effmass, ylim=c(0.14,0.15))
