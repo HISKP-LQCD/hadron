@@ -494,6 +494,12 @@ simple.nlsfit <- function(fn,
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   useCov <- !missing(CovMatrix)
   if (useCov && !(missing(dx) && missing(dy))) {
     stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
@@ -846,6 +852,12 @@ bootstrap.nlsfit <- function(fn,
   stopifnot(length(priors$p) == ncolps)
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
+
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
 
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
