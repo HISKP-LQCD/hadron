@@ -26,3 +26,9 @@ test
 hooks/
 test_bootstrap_nlsfit.Rmd
 verify-exports
+exec/scatteringlength
+exec/old
+exec/phaseshift
+exec/rho-phaseshift
+exec/averx
+exec/put*

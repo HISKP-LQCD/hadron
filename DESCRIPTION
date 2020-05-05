@@ -1,15 +1,24 @@
 Package: hadron
-Version: 3.0.1
-Date: 2020-01-16
+Version: 3.1.0
+Date: 2020-05-05
 Title: Package to Extract Hadronic Quantities
-Authors@R: c(person("Carsten", "Urbach", email = "urbach@hiskp.uni-bonn.de",
-                  role = c("aut", "cre")),
-            person("Bartosz", "Kostrzewa", email = "bartosz.kostrzewa@desy.de",
-                  role = c("aut")),
-            person("Johann", "Ostmeyer", email = "ostmeyer@hiskp.uni-bonn.de",
-                  role = c("aut")),
-            person("Martin", "Ueding", email = "mu@martin-ueding.de",
-                  role = c("aut")))
+Authors@R: 
+    c(person(given = "Carsten",
+             family = "Urbach",
+             role = c("aut", "cre"),
+             email = "urbach@hiskp.uni-bonn.de"),
+      person(given = "Bartosz",
+             family = "Kostrzewa",
+             role = "aut",
+             email = "bartosz.kostrzewa@desy.de"),
+      person(given = "Johann",
+             family = "Ostmeyer",
+             role = "aut",
+             email = "ostmeyer@hiskp.uni-bonn.de"),
+      person(given = "Martin",
+             family = "Ueding",
+             role = "aut",
+             email = "mu@martin-ueding.de"))
 Author: Carsten Urbach [aut, cre], Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut] 
 Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
 SystemRequirements: Gnu Scientific Library version >= 1.8
