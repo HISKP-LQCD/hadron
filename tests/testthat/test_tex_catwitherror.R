@@ -36,8 +36,8 @@ test_that('intermediate_error', {
 })
 
 test_that('large_error', {
-    expect_equal(tex.catwitherror(0.00123, 0.45, digits = 4, with.dollar = FALSE), '0.0012(0.45)')
-    expect_equal(tex.catwitherror(1.12345, 12.3, digits = 4, with.dollar = FALSE), '1.12(12.3)')
+    expect_equal(tex.catwitherror(0.00123, 0.45, digits = 4, with.dollar = FALSE), '0.0012(0.4500)')
+    expect_equal(tex.catwitherror(1.12345, 12.3, digits = 4, with.dollar = FALSE), '1.12(12.30)')
 })
 
 test_that('similar_error', {

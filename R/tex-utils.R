@@ -119,7 +119,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
          nchar(displayerr) > digits |
          ( ceiling(log10(abs(err)/abs(x))) >= 0 && ( abs(err) >= 1.0 ) ) |
          ( abs(err) >= abs(10*x) ) ){
-        displayerr <- paste(format(round(err, digits=N)))
+        displayerr <- paste(format(round(err, digits=N), nsmall=N))
       }
 
       if(human.readable){
