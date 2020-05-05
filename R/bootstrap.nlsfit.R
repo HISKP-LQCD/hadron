@@ -494,6 +494,12 @@ simple.nlsfit <- function(fn,
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   useCov <- !missing(CovMatrix)
   if (useCov && !(missing(dx) && missing(dy))) {
     stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
@@ -847,6 +853,12 @@ bootstrap.nlsfit <- function(fn,
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
   if (useCov && !(missing(dx) && missing(dy))) {
@@ -1194,7 +1206,7 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1261,7 +1273,7 @@ residual_plot <- function (x, ...) {
 }
 
 #' @export
-residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, operation = `/`) {
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
   }

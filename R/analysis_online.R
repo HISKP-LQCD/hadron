@@ -256,8 +256,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                              plotsize=plotsize,
                                              filelabel=filelabel,
                                              titletext=titletext,
-                                             errorband_color=errorband_color)
-                                             #ist.by=0.0002))
+                                             errorband_color=errorband_color,
+                                             smooth_density = TRUE)
       
       # adjust autocorrelation times to be in terms of trajectories
       result$obs$mpcac_mc[3:5] <- result$obs$mpcac_mc[3:5]*omeas.stepsize
@@ -439,7 +439,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                     plotsize=plotsize,
                                     filelabel=filelabel,
                                     titletext=titletext,
-                                    errorband_color=errorband_color)
+                                    errorband_color=errorband_color,
+                                    smooth_density = TRUE)
   }
   if(dH) {
     plotcounter <- plotcounter+1
@@ -457,7 +458,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                      filelabel=filelabel,
                                      titletext=titletext,
                                      errorband_color=errorband_color,
-                                     ylim=c(-2,3))
+                                     smooth_density = TRUE,
+                                     ylim=c(-2,3),
+                                     hist.probs=c(0.01,0.99))
 
     plotcounter <- plotcounter+1
     expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
@@ -475,7 +478,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                         titletext=titletext,
                                         errorband_color=errorband_color,
                                         hist.xlim=c(-2,4),
-                                        ylim=c(-0,6))
+                                        smooth_density = TRUE,
+                                        ylim=c(0,6),
+                                        hist.probs=c(0.01,0.99))
   }
   if( !missing("cg_col") ) {
     plotcounter <- plotcounter+1
@@ -492,7 +497,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                           plotsize=plotsize,
                                           filelabel=filelabel,
                                           titletext=titletext,
-                                          errorband_color=errorband_color)
+                                          errorband_color=errorband_color,
+                                          smooth_density = TRUE
+                                          )
   }
   if( !missing("evals_id") ) {
     plotcounter <- plotcounter+1
@@ -538,7 +545,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                           filelabel=filelabel,
                                           titletext=titletext,
                                           errorband_color=errorband_color,
-                                          hist.by=0.5)
+                                          hist.by=0.5,
+                                          smooth_density = FALSE)
   }
   if( trajtime == TRUE ){
     plotcounter <- plotcounter+1
@@ -556,7 +564,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                            plotsize=plotsize,
                                            filelabel=filelabel,
                                            titletext=titletext,
-                                           errorband_color=errorband_color)
+                                           errorband_color=errorband_color,
+                                           smooth_density = TRUE,
+                                           hist.probs = c(0.01,0.99))
   }
 
   print(result$params)

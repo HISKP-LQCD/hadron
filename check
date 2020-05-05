@@ -1,13 +1,11 @@
 #!/bin/bash
-# Copyright © 2019 Martin Ueding <dev@martin-ueding.de>
+# Copyright © 2019 Martin Ueding <mu@martin-ueding.de>
 
 set -e
 set -u
 
 version=$(grep Version: DESCRIPTION | cut -d ' ' -f 2)
 
-Rscript -e 'devtools::document()'
-Rscript -e 'Rcpp::compileAttributes()'
-
+./document
 R CMD build .
 R CMD check hadron_$version.tar.gz

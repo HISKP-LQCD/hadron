@@ -23,7 +23,7 @@ test_that('y errors', {
     y = y,
     bsamples = bsamples_y,
     mask = mask)
-  
+  skip_on_os(os="windows")
   expect_true(TRUE)
 })
 
@@ -36,7 +36,7 @@ test_that('y errors cov', {
     bsamples = bsamples_y,
     CovMatrix = cov_y,
     mask = mask)
-  
+  skip_on_os(os="windows")
   expect_true(TRUE)
 })
 
@@ -48,7 +48,7 @@ test_that('xy errors', {
     y = y,
     bsamples = bsamples_yx,
     mask = mask)
-  
+  skip_on_os(os="windows")
   expect_true(TRUE)
 })
 
@@ -61,7 +61,7 @@ test_that('xy errors cov', {
     bsamples = bsamples_yx,
     CovMatrix = cov_yx,
     mask = mask)
-  
+  skip_on_os(os="windows")
   expect_true(TRUE)
 })
 
@@ -116,6 +116,6 @@ test_that('xy errors cov with priors', {
     CovMatrix = cov_yx,
     priors = list(param = 1, p = 0.1, psamples = psamples),
     mask = mask)
-  
+  skip_on_os(os="windows")  
   expect_true(TRUE)
 })

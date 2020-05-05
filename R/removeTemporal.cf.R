@@ -184,7 +184,6 @@ old_removeTemporal.cf <- function(cf,
 #' @export
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_orig'))
 
   ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
   ## and units of the time extent if it has not
@@ -221,9 +220,11 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
     trhs2 <- tt0
   }
 
-  # take the differences, set the remaining points to NA. Apparently we don't care about the imaginary part here.
-  cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
-  cf$cf[,-tlhs] <- NA
+  ## take the differences, set the remaining points to NA. Apparently we don't care about the imaginary part here.
+  if( inherits(cf, 'cf_orig') ) {
+    cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
+    cf$cf[,-tlhs] <- NA
+  }
 
   # now the bootstrap samples
   if (inherits(cf, 'cf_boot')) {

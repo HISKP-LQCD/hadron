@@ -7,8 +7,16 @@ test_that('small_error', {
     expect_equal(tex.catwitherror(123, 1, digits = 1, with.dollar = FALSE), '123(1)')
 })
 
+test_that('borderline_error', {
+    expect_equal(tex.catwitherror(1.330563782105, 0.000966674080, digits = 1, with.dollar = FALSE), '1.331(1)')
+})
+
 test_that('another_borderline_error', {
     expect_equal(tex.catwitherror(0.031921636680, 0.000098, digits = 1, with.dollar=FALSE), '0.0319(1)')
+})
+
+test_that('even_nastier_borderline_error', {
+    expect_equal(tex.catwitherror(1.330563782105, 0.996674080, digits = 2, with.dollar = FALSE), '1.3(1.0)')
 })
 
 test_that('very_small_number', {
@@ -20,7 +28,7 @@ test_that('very_small_number', {
 
 test_that('same_error', {
     expect_equal(tex.catwitherror(0.00123, 0.00123, digits = 4, with.dollar = FALSE), '0.001230(1230)')
-    expect_equal(tex.catwitherror(12.345, 12.345, digits = 4, with.dollar = FALSE), '12.35(12.35)')
+    expect_equal(tex.catwitherror(12.346, 12.346, digits = 4, with.dollar = FALSE), '12.35(12.35)')
 })
 
 test_that('intermediate_error', {
