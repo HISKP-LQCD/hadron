@@ -20,7 +20,7 @@ test_that('very_small_number', {
 
 test_that('same_error', {
     expect_equal(tex.catwitherror(0.00123, 0.00123, digits = 4, with.dollar = FALSE), '0.001230(1230)')
-    expect_equal(tex.catwitherror(12.345, 12.345, digits = 4, with.dollar = FALSE), '12.35(12.35)')
+    expect_equal(tex.catwitherror(12.346, 12.346, digits = 4, with.dollar = FALSE), '12.35(12.35)')
 })
 
 test_that('intermediate_error', {
