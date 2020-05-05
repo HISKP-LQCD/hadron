@@ -544,7 +544,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 #' 
 #' S.N. Lahiri, "On the jackknife-after-bootstrap method for dependent data and
 #' its consistency properties", Econometric Theory, 2002, Vol. 18, 79-98
-#' @keywords bootstrap, time series,
+#' @keywords jackknife timeseries
 #' @export jackknife.cf
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))

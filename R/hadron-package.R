@@ -95,7 +95,7 @@ NULL
 #' @references S.N. Lahiri, "On the jackknife-after-bootstrap method for
 #' dependent data and its consistency properties", Econometric Theory, 2002,
 #' Vol. 18, 79-98
-#' @keywords bootstrap, jackknife, boostrap-after-jackknife, error of error
+#' @keywords bootstrap jackknife boostrap-after-jackknife error-of-error
 NULL
 
 #' Sample plaquette time series

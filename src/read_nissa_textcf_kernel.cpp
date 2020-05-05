@@ -144,7 +144,6 @@ NumericMatrix read_nissa_textcf_kernel(
     const unsigned int nts,
     DataFrame combs_to_read)
 {
-  typedef NumericVector::iterator num_vec_iter;
   typedef CharacterVector::iterator char_vec_iter;
 
   const unsigned int n_correls = combs_to_read.nrows();
@@ -206,7 +205,7 @@ NumericMatrix read_nissa_textcf_kernel(
         // read the single correlator at the key position
         read_correl(ifs, nts, realbuf, imagbuf);
         // and copy it to the output
-        for(int t=0; t<nts; ++t){
+        for(unsigned int t=0; t<nts; ++t){
           cf_data(ifile,out_idx  ) = realbuf[t];
           cf_data(ifile,out_idx+1) = imagbuf[t];
           out_idx += 2;

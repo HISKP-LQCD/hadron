@@ -29,7 +29,7 @@
 #' Luescher, http://arxiv.org/abs/hep-lat/0409106hep-lat/0409106
 #' 
 #' N. Madras, A. D. Sokal, J. Stat. Phys. 50 (1988) 109
-#' @keywords ts, acf, autocorrelationtime
+#' @keywords autocorrelationfunction autocorrelationtime timeseries
 #' @examples
 #' 
 #' data(plaq.sample)
