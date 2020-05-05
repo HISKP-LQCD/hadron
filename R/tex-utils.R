@@ -108,6 +108,8 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
 
     if(!is.na(err) && err > 0) {
       N <- absolute.number.digits(err, digits)
+      err <- round(10^N*err)/10^N
+      N <- absolute.number.digits(err, digits)
       # if the error is large it may exceed the number of digits that one actually desires
       # also, the error may be larger or similar in size to the value itself
       # in these cases, we display it in the same format as the value, rounded to the
