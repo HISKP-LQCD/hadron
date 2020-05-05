@@ -927,22 +927,22 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
       # convert it to a two-dimensional format, in such a way
       # that the first index corresponds to the gauge configuration (and source position)
       # and the second index corresponds to everything else
-      res <- matrix(data_corr, 1, prod(dim(data_corr)[1:5]))
+      #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
+      dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/128,Time) 
 
 
 
       #looking for the momentum combinations
       #filtering out the momentum
-      final_indices_real <- NULL
-      final_indices_imag <- NULL
-      for (differentcombinations in 1: length(selection[[avail_baryon_types]]$interp)){
+      final_indices <- NULL
+      for (differentcombinations in 1: length(selections[[avail_baryon_types]]$interp)){
 
         #determining the indices of momentum
         for(mom in 1:ncol(data_mom)){ 
           if (all.equal(data_mom[,mom], 
-                              c(selection[[selected_baryon_types]]$px[differentcombinations],
-                                selection[[selected_baryon_types]]$py[differentcombinations],
-                                selection[[selected_baryon_types]]$pz[differentcombinations]))==TRUE){
+                              c(selections[[selected_baryon_types]]$px[differentcombinations],
+                                selections[[selected_baryon_types]]$py[differentcombinations],
+                                selections[[selected_baryon_types]]$pz[differentcombinations]))==TRUE){
             momindex <- mom
             break;
           } 
@@ -953,7 +953,7 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
         tmp1<- strsplit(tmp[[1]][[4]],"}")
         tmp2 <- gsub(",\\{","",tmp1[[1]][[3]])
         gamma_source_list <- strsplit(tmp2,",")[[1]]
-        gammalist <- strsplit(as.character(selection[[selected_baryon_types]]$interp[differentcombinations]),",")[[1]]
+        gammalist <- strsplit(as.character(selections[[selected_baryon_types]]$interp[differentcombinations]),",")[[1]]
 
         #Determining the indices of the gamma structures
         indices <- NULL
@@ -988,28 +988,31 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
 
         for (line1 in 1:length(indices)){
           for (line2 in 1:length(indices)){
-            for (spin in 1:16){
-              for ( timeindex in 1:Time){
-                final_indices_real <- c(final_indices_real, (timeindex-1)*ncol(data_mom)*length(gamma_source_list)*length(gamma_source_list)*32+(momindex-1)*length(gamma_source_list)*length(gamma_source_list)*32+(indices[line1]-1)*length(gamma_source_list)*32+(indices[line2]-1)*32+(spin-1)*2+1)
-                final_indices_imag <- c(final_indices_imag, (timeindex-1)*ncol(data_mom)*length(gamma_source_list)*length(gamma_source_list)*32+(momindex-1)*length(gamma_source_list)*length(gamma_source_list)*32+(indices[line1]-1)*length(gamma_source_list)*32+(indices[line2]-1)*32+(spin-1)*2+2)
-
-              }
-            }
+            final_indices <- c(final_indices, (momindex-1)*length(gamma_source_list)*length(gamma_source_list)+(indices[line1]-1)*length(gamma_source_list)+(indices[line2]))
           }
         }        
       }
-      data_pp<- res[final_indices_real]
-      data_final_real <- rbind(data_final_real,data_pp)
-      data_pp<- res[final_indices_imag]
-      data_final_imag <- rbind(data_final_imag,data_pp)
+      data_pp<- data_corr[,,final_indices,]
+
+      tmpprod <- prod(dim(data_pp))
+      dim(data_pp) <- c(2,tmpprod/(2*Time),Time)
+      tmp<- array(0,dim=c(2,Time,tmpprod/(2*Time)))
+      for (i in 1:Time){
+        tmp[,i,]=data_pp[,,i]
+      }
+      dim(tmp) <- c(2, tmpprod/2)
+      data_final_real <- rbind(data_final_real,tmp[1,])
+      data_final_imag <- rbind(data_final_imag,tmp[2,])
 
     }
+    rhdf5::H5Fclose(h5f)
+
   }
   attr(data_final_real,"dimnames") <- NULL
   attr(data_final_imag,"dimnames") <- NULL
 
 
-  cf <- cf_meta(nrObs=2*length(indices)*length(indices)*16*length(selection[[avail_baryon_types]]$interp),Time=Time,nrStypes=1,symmetrised=FALSE)
+  cf <- cf_meta(nrObs=2*length(indices)*length(indices)*16*length(selections[[avail_baryon_types]]$interp),Time=Time,nrStypes=1,symmetrised=FALSE)
   cf$symmetrised=FALSE
   cf <- cf_orig(cf, cf=data_final_real,icf=data_final_imag)
   return(invisible(cf))
