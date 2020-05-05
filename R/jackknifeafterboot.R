@@ -29,6 +29,15 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
   return(jack.boot.se)
 }
 
+#' jab.cf
+#'
+#' apply jackknife after bootstrap to an cf object
+#' and compute errors accordingly
+#' 
+#' @param cf object of type \link{cf}
+#' @param m integer. block length
+#' 
+#' @export
 jab.cf <- function(cf, m = 1) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -50,7 +59,15 @@ jab.cf <- function(cf, m = 1) {
   return(invisible(cf))
 }
 
-
+#' jab.cf.derived
+#'
+#' apply jackknife after bootstrap to an derived cf object
+#' and compute errors accordingly
+#'
+#' @param cf object of type \link{cf}
+#' @param m integer. block length
+#' 
+#' @export
 jab.cf.derived <- function(cf, m=1) {
   if(cf$cf$cf.tsboot$sim != "fixed") {
     stop("JAB only implemented for 'sim=fixed' at the moment")

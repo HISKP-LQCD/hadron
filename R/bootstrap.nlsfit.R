@@ -179,10 +179,6 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
 get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error) {
   ## invert covariance matrix, if applicable
   if (useCov) {
-    if (!missing(dx) || !missing(dy)) {
-      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
-    }
-
     inversion.worked <- function(InvCovMatrix) {
       if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
@@ -198,8 +194,8 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
       inversion.worked(InvCovMatrix)
       W <- chol(InvCovMatrix)
     } else {
-      # a (potentially hand-crafted) covariance matrix was passeed
-      # we asumme that it's cleanly invertible at this stage and simply use `solve`
+      # a (potentially hand-crafted) covariance matrix was passed
+      # we assume that it's cleanly invertible at this stage and simply use `solve`
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
@@ -250,10 +246,6 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
 get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
   ## invert covariance matrix, if applicable
   if (useCov) {
-    if (!missing(dx) || !missing(dy)) {
-      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
-    }
-
     inversion.worked <- function(InvCovMatrix) {
       if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
@@ -304,9 +296,9 @@ set.fitchi <- function (fn, errormodel, useCov, W, x, ipx, na.rm, priors) {
     }
   }else{
     if(useCov){
-      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx], par[priors$param])) }
     }else{
-      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx], par[priors$param])) }
     }
   }
 
@@ -502,7 +494,16 @@ simple.nlsfit <- function(fn,
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   useCov <- !missing(CovMatrix)
+  if (useCov && !(missing(dx) && missing(dy))) {
+    stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
+  }
 
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
@@ -512,8 +513,12 @@ simple.nlsfit <- function(fn,
 
   ## Apply the mask as in bootstrap.nlsfit.
   if (!missing(mask)) {
-    if(errormodel != "xyerrors") {
-      dx <- NA
+    if(errormodel == "xyerrors") {
+      ## CovMatrix has twice the length for xy-errors, therefore
+      ## need to apply mask twice.
+      mask.twice <- c(mask, length(y)+mask)
+    }else{
+      dx <- NULL
     }
 
     full <- list(x=x, y=y,
@@ -526,7 +531,11 @@ simple.nlsfit <- function(fn,
 
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
-      CovMatrix <- CovMatrix[mask, mask]
+      if(errormodel == "yerrors"){
+        CovMatrix <- CovMatrix[mask, mask]
+      }else{
+        CovMatrix <- CovMatrix[mask.twice, mask.twice]
+      }
     }
   }
 
@@ -621,6 +630,7 @@ simple.nlsfit <- function(fn,
   }
 
   cov <- solve(t(jac) %*% jac)
+  cov <- 0.5*(cov + t(cov))
   if(relative.weights){
       cov <- cov * chisq/dof
   }
@@ -837,14 +847,23 @@ bootstrap.nlsfit <- function(fn,
   if(!is.null(priors$param)){
     stopifnot(is.vector(priors$param))
   }
-  stopifnot(length(priors$param) == length(priors$p) &&
-              length(priors$param) == ncolps &&
-              length(priors$p) == ncolps )
+  stopifnot(length(priors$param) == length(priors$p))
+  stopifnot(length(priors$param) == ncolps)
+  stopifnot(length(priors$p) == ncolps)
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
+  if (useCov && !(missing(dx) && missing(dy))) {
+    stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
+  }
   
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
@@ -865,18 +884,21 @@ bootstrap.nlsfit <- function(fn,
     stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
 
-  # Apply the mask. The user might have specified a mask that is used to
-  # restrict the selection of the points that are to be used in the fit. In
-  # order to make this additional feature a minimal change to the following code
-  # we will *change* the input parameters here and store them with new names.
-  # Then at the very end we switch them back.
+  ## Apply the mask. The user might have specified a mask that is used to
+  ## restrict the selection of the points that are to be used in the fit. In
+  ## order to make this additional feature a minimal change to the following code
+  ## we will *change* the input parameters here and store them with new names.
+  ## Then at the very end we switch them back.
   if (!missing(mask)) {
     if(errormodel == "xyerrors") {
       if(missing(dx)) {
         dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
       }
+      ## bsamples and CovMatrix have twice the length for xy-errors, therefore
+      ## need to apply mask twice.
+      mask.twice <- c(mask, length(y)+mask)
     }else{
-      dx <- NA
+      dx <- NULL
     }
 
     if(missing(dy)) {
@@ -889,13 +911,21 @@ bootstrap.nlsfit <- function(fn,
 
     x <- x[mask]
     y <- y[mask]
-    if(errormodel == "xyerrors") dx <- dx[mask]
     dy <- dy[mask]
-    bsamples <- bsamples[, mask]
+    if(errormodel == "yerrors"){
+      bsamples <- bsamples[, mask]
+    }else{
+      bsamples <- bsamples[, mask.twice]
+      dx <- dx[mask]
+    }
     
     if (!missing(CovMatrix)) {
       full$CovMatrix <- CovMatrix
-      CovMatrix <- CovMatrix[mask, mask]
+      if(errormodel == "yerrors"){
+        CovMatrix <- CovMatrix[mask, mask]
+      }else{
+        CovMatrix <- CovMatrix[mask.twice, mask.twice]
+      }
     }
   }
 
@@ -920,6 +950,11 @@ bootstrap.nlsfit <- function(fn,
   if(priors.avail) {
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
+    if(errormodel == "yerrors"){
+      dy <- c(dy, apply(matrix(priors$psamples, boot.R), 2, error))
+    }else{
+      dx <- c(dx, apply(matrix(priors$psamples, boot.R), 2, error))
+    }
     bsamples <- cbind(bsamples, priors$psamples)
     CovMatrix <- cov_fn(bsamples)
   }
@@ -930,9 +965,15 @@ bootstrap.nlsfit <- function(fn,
     dy <- all.errors$dy
     dx <- all.errors$dx
   } else {
-    dy <- head(all.errors$dy, -length(priors$p))
-    dydp <- all.errors$dy
-    dx <- all.errors$dx
+    if(errormodel == "yerrors"){
+      dydp <- all.errors$dy
+      dy <- head(dydp, -length(priors$p))
+      dx <- all.errors$dx
+    }else{
+      dy <- all.errors$dy
+      dydp <- c(dy, tail(all.errors$dx, length(priors$p)))
+      dx <- head(all.errors$dx, -length(priors$p))
+    }
   }
   W <- all.errors$W
   
@@ -1139,6 +1180,8 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
 #' @param digits number of significant digits to print in summary or print.
 #'
 #' @family NLS fit functions
+#'
+#' @export
 print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
@@ -1163,7 +1206,7 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1217,11 +1260,20 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
 }
 
+#' residual_plot
+#'
+#' generic residual_plot method
+#'
+#' @param x the object to plot
+#' @param ... additional parameters to be passed on to specialised functions
+#' 
+#' @export
 residual_plot <- function (x, ...) {
   UseMethod("residual_plot", x)
 }
 
-residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+#' @export
+residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, operation = `/`) {
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
   }

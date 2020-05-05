@@ -6,6 +6,38 @@ sd.index <- function(data, indexvector) {
   return(invisible(sd(data[indexvector])))
 }
 
+
+
+#' Performs a Bootstrap with Blocking Analysis of a Timeseries
+#' 
+#' Performs a Bootstrap with Blocking Analysis of a Timeseries
+#' 
+#' the routine will compute the error, the error of the error and the
+#' integrated autocorrelation time for different block size using a bootstrap
+#' analysis. The blocksize is systematically increased starting from \code{1}
+#' until \code{(length(data)-skip)/blocksize < 20}. Note that only data is kept
+#' in exact multiples of the block length.
+#' 
+#' @param data a numerical vector containing the time series
+#' @param skip integer value providing the warm up phase length.
+#' @param boot.R number of bootstrap samples. See also \link[boot]{boot}, and
+#' \link[boot]{tsboot}.
+#' @param boot.l block length for blocked bootstrap.
+#' @param tsboot.sim the \code{sim} parameter of \link[boot]{tsboot}.
+#' @param pl logical, indicating whether or not to plot the result.
+#' @return returns a data frame containing the mean value, the error
+#' approximation, the estimate of the error of the error, the value of tau int
+#' and the bias for all block sizes.
+#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @seealso for an alternative way to analyse such time series see
+#' \code{\link{uwerr}} and \code{\link{computeacf}}
+#' @keywords ts
+#' @examples
+#' 
+#' data(plaq.sample)
+#' plaq.boot <- bootstrap.analysis(plaq.sample, pl=TRUE)
+#' 
+#' @export bootstrap.analysis
 bootstrap.analysis <- function(data, skip=0, boot.R=100,
                                tsboot.sim="geom", pl=FALSE, boot.l=2) {
   data <- data[skip:length(data)]

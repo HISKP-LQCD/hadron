@@ -18,6 +18,65 @@ permutations <- function(n){
 ## order c(1,2,3,4) goes to 
 ##                           ( 3 , 4 )
 
+
+
+#' solve GEVP for correlator matrix
+#' 
+#' solve GEVP for a real, symmetric correlator matrix
+#' 
+#' The generalised eigenvalue problem\cr \eqn{ }{ C(t) v(t,t0) =
+#' C(t0)lambda(t,t0) v(t,t0)}\eqn{ C(t) v(t,t_0) = C(t_0) \lambda(t,t_0)
+#' v(t,t_0) }{ C(t) v(t,t0) = C(t0)lambda(t,t0) v(t,t0)}\eqn{ }{ C(t) v(t,t0) =
+#' C(t0)lambda(t,t0) v(t,t0)}\cr is solved by performing a Cholesky
+#' decomposition of \eqn{C(t_0)=L^t }{C(t0)=t(L) L}\eqn{ L}{C(t0)=t(L) L} and
+#' transforming the GEVP into a standard eigenvalue problem for all values of
+#' \eqn{t}. The matrices \eqn{C} are symmetrised for all \eqn{t}. So we solve
+#' for \eqn{\lambda}{lambda}\cr \eqn{(L^t)^{-1} C(t) L^{-1} w = \lambda
+#' w}{solve(t(L)) C(t) solve(L) w = lambda w}\cr with\cr \eqn{w = L v} or the
+#' wanted \eqn{v = L^{-1} w}.
+#' 
+#' The amplitudes can be computed from\cr \eqn{ A_i^{(n)}(t) =
+#' \sum_{j}C_{ij}(t) v_j^{(n)}(t,t_0)/(\sqrt{(v^{(n)}, Cv^{(n)})(\exp(-mt)\pm
+#' \exp(-m(t-t)))}) } and this is what the code returns up to the factor\cr
+#' \eqn{ 1/\sqrt{\exp(-mt)\pm \exp(-m(t-t))} } The states are sorted by their
+#' eigenvalues when "values" is chosen. If "vectors" is chosen, we take \eqn{
+#' \max( \sum_i \langle v(t_0,i), v(t, j)\rangle) } with \eqn{v} the
+#' eigenvectors. For sort type "det" we compute \eqn{ \max(...)  }
+#' 
+#' @param cf correlation matrix preferably obtained with a call to
+#' \code{extrac.obs} (or at leas with the same structure) or an already
+#' averaged one.
+#' 
+#' cf is supposed to be an array of \code{dim=c(N, n*(Time/2+1))}, where
+#' \code{N} is the number of observations and \code{n} is the number of single
+#' correlators in the matrix. E.g. for a 2x2 matrix \code{n} would be 4.
+#' @param Time time extent of the lattice.
+#' @param t0 initial time value of the GEVP, must be in between 0 and
+#' \code{Time/2-2}. Default is 1.
+#' @param element.order specifies how to fit the \code{n} linearly ordered
+#' single correlators into the correlator matrix.
+#' \code{element.order=c(1,2,3,4)} leads to a matrix
+#' \code{matrix(cf[element.order], nrow=2)}.
+#' @param sort.type Sort the eigenvalues either in descending order, or by
+#' using the scalar product of the eigenvectors with the eigenvectors at
+#' \eqn{t=t_0+1}{t=t0+1}. Possible values are "values", "vectors" or "det".
+#' @param for.tsboot for internal use of \code{\link{bootstrap.gevp}}. Alters
+#' the returned values, see details.
+#' @param sort.t0 if true (default), sort with respect to data at t0, otherwise
+#' with respect to t-1.
+#' @return Returns a list with the sorted eigenvalues, sorted eigenvectors and
+#' sorted (reduced) amplitudes for all t > t0.
+#' 
+#' In case \code{for.tsboot=TRUE} the same is returned as one long vector with
+#' first all eigenvalues concatenated, then all eigenvectors and then all
+#' (reduced) amplitudes concatenated.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{boostrap.gevp}, \code{extract.obs}
+#' @references Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983)
+#' 433, DOI: 10.1016/0550-3213(83)90674-0\cr Blossier, B. et al., JHEP 0904
+#' (2009) 094, DOI: 10.1088/1126-6708/2009/04/094, arXiv:0902.1265
+#' @keywords GEVP
+#' @export gevp
 gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
                  for.tsboot=TRUE, sort.type="vectors", sort.t0=TRUE) {
   if(t0 < 0 || t0 > (Time/2-2)) {
@@ -162,6 +221,81 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 }
 
 
+
+
+#' perform a bootstrap analysis of a GEVP
+#' 
+#' perform a bootstrap analysis of a GEVP for a real, symmetric correlator
+#' matrix
+#' 
+#' Say something on "det" sorting method.
+#' 
+#' @param cf correlation matrix obtained with a call to \code{extrac.obs}.
+#' @param t0 initial time value of the GEVP, must be in between 0 and
+#' \code{Time/2-2}. Default is 1.
+#' @param element.order specifies how to fit the \code{n} linearly ordered
+#' single correlators into the correlator matrix.
+#' \code{element.order=c(1,2,3,4)} leads to a matrix
+#' \code{matrix(cf[element.order], nrow=2)}.  Double indexing is allowed.
+#' @param sort.type Sort the eigenvalues either in descending order, or by
+#' using the scalar product of the eigenvectors with the eigenvectors at
+#' \eqn{t=t_0+1}{t=t0+1}. Possible values are "values", "vectors" and "det".
+#' The last one represents a time consuming, but in principle better version of
+#' sorting by vectors.
+#' @param sort.t0 for \code{sort.type} "vectors" use \eqn{t_0}{t0} as reference
+#' or \eqn{t-1}{t-1}.
+#' @return Returns an object of class \code{gevp} with member objects:
+#' 
+#' \code{cf}:\cr The input data, if needed bootstrapped with
+#' \code{\link{bootstrap.cf}}.
+#' 
+#' \code{res.gevp}:\cr The object returned from the call to \code{\link{gevp}}.
+#' For the format see \code{\link{gevp}}.
+#' 
+#' \code{gevp.tsboot}:\cr The bootstrap samples of the GEVP. For the format see
+#' \code{\link{gevp}}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{gevp}, \code{extract.obs}, \code{bootstrap.cf}
+#' @references Michael, Christopher and Teasdale, I., Nucl.Phys.B215 (1983)
+#' 433, DOI: 10.1016/0550-3213(83)90674-0\cr Blossier, B. et al., JHEP 0904
+#' (2009) 094, DOI: 10.1088/1126-6708/2009/04/094, arXiv:0902.1265
+#' @keywords GEVP
+#' @examples
+#' 
+#' data(correlatormatrix)
+#' ## bootstrap the correlator matrix
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
+#' ## solve the GEVP
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' ## extract the ground state and plot
+#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' plot(pc1, log="y")
+#' ## determine the corresponding effective masses
+#' pc1.effectivemass <- bootstrap.effectivemass(cf=pc1)
+#' pc1.effectivemass <- fit.effectivemass(cf=pc1.effectivemass, t1=5, t2=20)
+#' ## summary and plot
+#' summary(pc1.effectivemass)
+#' plot(pc1.effectivemass)
+#' 
+#' ## we can also use matrixfit with a special model for a principal
+#' ## correlators
+#' pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE)
+#' summary(pc1.matrixfit)
+#' plot(pc1.matrixfit)
+#' 
+#' ## the same can be achieved using bootstrap.nlsfit
+#' model <- function(par, x, t0, ...) {
+#'   return(exp(-par[1]*(x-t0))*(par[3]+(1-par[3])*exp(-par[2]*(x-t0))))
+#' }
+#' ii <- c(2:4, 6:25)
+#' fitres <- parametric.nlsfit(fn=model, par.guess=c(0.5, 1, .9),
+#'                             y=pc1$cf0[ii], dy=pc1$tsboot.se[ii],
+#'                             x=ii-1, boot.R=pc1$boot.R, t0=t0)
+#' summary(fitres)
+#' plot(fitres, log="y")
+#' 
+#' @export bootstrap.gevp
 bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
                            sort.type = "vectors", sort.t0 = TRUE) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -197,6 +331,32 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
   return(invisible(ret))
 }
 
+
+
+#' Extracts a principle correlator from a GEVEP
+#' 
+#' Extracts a principle correlator from a GEVP and converts it into an object
+#' of class \code{cf}
+#' 
+#' 
+#' @param gevp An object returned by \code{\link{bootstrap.gevp}}.
+#' @param id The index of the principal correlator to extract.
+#' @return An object of class \code{cf}, which contains bootstrap samples
+#' already. So a call to \code{bootstrap.cf} is neither needed nor possible. It
+#' can be treated further by \code{\link{bootstrap.effectivemass}} or
+#' \code{\link{matrixfit}} to extract a mass value.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{gevp}}, \code{\link{matrixfit}},
+#' \code{\link{bootstrap.effectivemass}}
+#' @keywords GEVP
+#' @examples
+#' 
+#' \dontrun{## apply a GEVP analysis}
+#' \dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
+#' \dontrun{## extract the first principal correlator}
+#' \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
+#' 
+#' @export gevp2cf
 gevp2cf <- function(gevp, id=1) {
   stopifnot(inherits(gevp, "gevp"))
   stopifnot(!(id > gevp$matrix.size || id < 1))
@@ -243,6 +403,59 @@ gevp2cf <- function(gevp, id=1) {
   return (invisible(cf))
 }
 
+
+
+#' Extracts physical amplitudes from a GEVP
+#' 
+#' Given a GEVP generated with \code{bootstrap.gevp} and masses determined from
+#' the principle correlator with given \code{id}, the physical amplitudes are
+#' extracted and bootstraped. The man amplitude is determined from a constant
+#' fit to the data in the specified time range.
+#' 
+#' 
+#' @param gevp An object of class \code{gevp} as generated with a call to
+#' \code{bootstrap.gevp}.
+#' @param mass Optimally, this is an object either of class
+#' \code{effectivemassfit} generated using \code{\link{fit.effectivemass}} or
+#' of class \code{matrixfit} generated with \code{\link{matrixfit}} to the
+#' principal correlator extracted using \code{\link{gevp2cf}} applied to
+#' \code{gevp} using the same value of \code{id}.
+#' 
+#' It can also be given as a numerical vector with the bootstrap samples as
+#' entries. The mean will then be computed as the bootstrap mean over this
+#' vector. The number of samples must agree with the number of bootstrap
+#' samples in \code{gevp}.
+#' @param id The index of the principal correlator to extract, i.e. the
+#' physical state to extract.
+#' @param op.id The index of the operator for which to extract the amplitude.
+#' @param type The symmetry of the pricipal correlator in time, can be either
+#' "cosh" or "sinh".
+#' @param t1,t2 The time range in which to fit the amplitude starting with 0.
+#' If not given it will be tried to infer these from the \code{mass} object.
+#' @param useCov Use the covariance matrix for fitting the constant to the
+#' amplitude data.
+#' @param fit perform a fit to the data.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{matrixfit}}, \code{\link{fit.effectivemass}},
+#' \code{\link{gevp}}, \code{\link{gevp2cf}}, \code{\link{computefps}}
+#' @keywords GEVP
+#' @examples
+#' 
+#' \dontrun{## apply a GEVP analysis}
+#' \dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
+#' \dontrun{## extract the first principal correlator}
+#' \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
+#' \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
+#' \dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12,}
+#' \dontrun{  t2=23, useCov=TRUE)}
+#' \dontrun{## now determine the amplitude}
+#' \dontrun{pion.pc1.amplitude <- gevp2amplitude(pion.cor.gevp, pion.pc1.effectivemass)}
+#' \dontrun{## compute also the pion decay constant}
+#' \dontrun{pion.pc1.amplitude <- computefps(pion.pc1.amplitude, Kappa=0.125, mu1=0.003)}
+#' \dontrun{summary(pion.pc1.amplitude)}
+#' \dontrun{plot(pion.pc1.amplitude)}
+#' 
+#' @export gevp2amplitude
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
   if(id > gevp$matrix.size || id < 1 || op.id > gevp$matrix.size || op.id < 1) {
     stop("gevp2cf: id and op.id must be <= matrix.size and > 0. Aborting...\n")
@@ -352,6 +565,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
 #'
 #' @param object Object of type `gevp.amplitude`.
 #' @param ... Generic Parameters to be passed on.
+#' @export
 summary.gevp.amplitude <- function (object, ...) {
   amp <- object
   cat("\n ** Result of a GEVP analysis for the amplitude **\n\n")
@@ -385,6 +599,8 @@ summary.gevp.amplitude <- function (object, ...) {
 #'
 #' @param x Object of type `gevp.amplitude`.
 #' @param ... Graphical parameters to be passed on.
+#'
+#' @export
 plot.gevp.amplitude <- function (x, ...) {
   amp <- x
   plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)

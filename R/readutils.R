@@ -1,3 +1,4 @@
+#' @export
 readcmicor <- function(filename, colClasses=c("integer","integer","integer","numeric","numeric","integer"),
                        skip=0) {
   data <- read.table(filename, header=F, skip=skip,
@@ -6,6 +7,30 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
   return(invisible(data))
 }
 
+
+
+#' Creates an ordered filelist from a basename and a path
+#' 
+#' These functions generate an ordered filelist and an order list of config
+#' numbers by using a path and a basename and '*'.
+#' 
+#' All filenames are assumend to have equal length.
+#' 
+#' @aliases getorderedfilelist getorderedconfignumbers
+#' @param path the path to be searched
+#' @param basename the basename of the files
+#' @param last.digits the number of last characters in each filename to be used
+#' for ordering the list.
+#' @param ending the file extension after the digits.
+#' @return returns the ordered list of strings.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{extract.obs}}
+#' @keywords file
+#' @export
+#' @examples
+#' 
+#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
+#' 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
   ii <- getorderedconfigindices(path=path, basename=basename, last.digits=last.digits, ending=ending)
@@ -40,6 +65,7 @@ getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digit
   return(invisible(order(gaugeno)))
 }
 
+#' @export
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
   if(any(nchar(ofiles) != nchar(ofiles[1]))) {
@@ -55,6 +81,106 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
   return(invisible(sort(gaugeno)))
 }
 
+
+
+#' Read Single Data Files in Chris Michael Format
+#' 
+#' reads data from single files in Chris Michael format
+#' 
+#' These functions reads data from single data files. It is assumed that every
+#' file has the same number of columns.
+#' 
+#' The cmi (Chris Michael) format for connected correlators comprises 6 colums
+#' per file: 1) the observable type number (itype); 2) the operator type number
+#' (iobs); 3) the time difference from source going from 0 to \eqn{T/2} for
+#' each operator type; 4) \eqn{c_1}{c1} correlator value at time value forward
+#' in time; 5) \eqn{c_2}{c2} correlator value at time value backward in time;
+#' 6) number of gauge configuration.
+#' 
+#' There are scripts shipped with the package converting the output written
+#' into seperate files for each gauge configuration into the expected format.
+#' They are called \code{puttogether.sh} and \code{puttogether_reverse.sh}
+#' which will sort with increasing and with decreasing gauge configuration
+#' number, respectively.
+#' 
+#' Note, that the normalisation of correlators needs multiplication by factor
+#' of \eqn{0.5} (and possible \eqn{(2*\kappa)^2}{(2*k)^2} and \eqn{L^3} factors
+#' dependent on your conventions).
+#' 
+#' The values of \code{itype} run from \code{1} to the total number of gamma
+#' matrix combinations available. \code{iobs} equals \code{1} for local-local
+#' correlators, \code{3} for local-smeared, \code{5} for smeared-local and
+#' \code{7} for smeared-smeared
+#' 
+#' For charged mesons the order of gamma-matrix combinations is as follows:\cr
+#' order PP PA AP AA 44 P4 4P A4 4A for pion like \eqn{P=\gamma_5}{P=g5}
+#' \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{4=\gamma_4}{4=g4}\cr order 44 VV AA 4V
+#' V4 4A A4 VA AV for rho-a1 like \eqn{4=\gamma_i\gamma_4}{4=gig4}
+#' \eqn{V=\gamma_i}{V=gi} \eqn{A=\gamma_i\gamma_5}{A=gig5}\cr order BB SS -
+#' total 20 \eqn{\gamma_i\gamma_4\gamma_5}{B=gig4g5} \eqn{S=I}\cr itype=21 is
+#' conserved vector current at sink, \eqn{\gamma_5}{g5} at source
+#' 
+#' For neutral mesons the order of gamma-matrix combinations is as follows:\cr
+#' order PP PA AP AA II PI IP AI IA for pion like \eqn{P=\gamma_5}{P=g5}
+#' \eqn{A=\gamma_4\gamma_5}{A=g4g5} \eqn{I=1}{1=1}\cr order 44 VV BB 4V V4 4B
+#' B4 VB BV for rho-b1 like \eqn{4=\gamma_i\gamma_4}{4=gig4}
+#' \eqn{V=\gamma_i}{V=gi} \eqn{B=\gamma_i\gamma_4\gamma_5}{B=gig4g5}\cr order
+#' XX AA - total 20 for a0-X like \eqn{A=\gamma_i\gamma_5}{A=gig5}
+#' \eqn{X=\gamma_4}{X=g4}
+#' 
+#' For loops (disconnected contributions to neutral mesons) the convention is
+#' as follows: files are assumed to have eight columns with gauge, gamma, t,
+#' sample, ReTL, ImTL, ReTF, ImTF, where gamma is 1 to 16 as list of
+#' (hermitian) gamma matrices: order g_5 g_1 g_2 g_3\cr -ig_4* g_5 g_1 g_2
+#' g_3\cr -ig_5* i*g_5 g_1 g_2 g_3 ie 1,..\cr -ig_5g_4* -i*g_5 g_1 g_2 g_3 ie
+#' g_4, g_5*row 2\cr (so P is 1; A4 is 5; S is 9; A_i is 10,11,12 etc)
+#' 
+#' t is t-value of trace (here spatial momentum is zero) sample is sample
+#' number 1,...24 (or 96) ReTL is real part of trace at time t, with gamma
+#' combination given and Local operator (F is Fuzzed == non-local) operator).
+#' 
+#' Normalisation is trace M^-1 with M=1+...
+#' 
+#' To make a disconnected correlator, one combines these traces for different t
+#' (and different sample number) as a product. Note only Re Gamma=1 and Im
+#' Gamma=gamma_5 have VEV's, see \code{\link{computeDisc}}
+#' 
+#' @aliases readcmicor readcmifiles readcmidatafiles readcmiloopfiles
+#' @param files list of filenames to be read. Can be created using
+#' \code{getorderedfilelist}.
+#' @param skip Number of lines to be skipped at the beginning of each file
+#' @param excludelist files to exclude from reading.
+#' @param verbose Increases verbosity of the function.
+#' @param colClasses The column data type classes, the \code{read.table}.
+#' @param obs To reduce memory consumption it is possible to extract only one
+#' of the observales. The column in which to match \code{obs} is to be given
+#' with \code{obs.index}. This will only be affective if \code{obs} is not
+#' \code{NULL}.
+#' @param obs.index The column in which to match \code{obs} is to be given with
+#' \code{obs.index}.
+#' @param avg Integer. Average over successive number samples
+#' @param stride Integer. Read only subset of files with corresponding stride.
+#' @return \code{readcmicor} returns an object of class \code{cmicor}, read
+#' from a single file.
+#' 
+#' \code{readcmidatafiles} returns an object of class \code{cmicor}, which is
+#' an \code{rbind} of all \code{data.frame}s read from the single files in the
+#' filelist.
+#' 
+#' \code{readcmiloopfiles} returns an object of class \code{cmiloop}, which is
+#' an \code{rbind} of all \code{data.frame}s read from the single files in the
+#' filelist.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{getorderedfilelist}}, \code{\link{extract.obs}},
+#' \code{\link{readcmidisc}}
+#' @keywords file
+#' @examples
+#' 
+#' library(hadron)
+#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
+#' \dontrun{cmicor <- readcmidatafiles(filelist, skip=1)}
+#' 
+#' @export readcmifiles
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
                          colClasses, obs=NULL, obs.index, avg=1, stride=1) {
   if(missing(files)) {
@@ -147,6 +273,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   return(invisible(ldata))
 }
 
+#' @export
 readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","numeric","numeric"),
                              obs=NULL, obs.index=1, avg=1, stride=1) {
@@ -157,6 +284,7 @@ readcmidatafiles <- function(files, excludelist=c(""), skip=1, verbose=FALSE,
   return(invisible(data))
 }
 
+#' @export
 readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
                              colClasses=c("integer", "integer","integer","integer",
                                "numeric","numeric","numeric","numeric"),
@@ -167,6 +295,41 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
   return(invisible(data))
 }
 
+
+
+#' Extract a single loop from an object of class \code{cmiloop}
+#' 
+#' Extracts all loop values from an object of class \code{cmiloop} for all
+#' available times, samples and configurations.
+#' 
+#' 
+#' @param cmiloop input object of class \code{cmiloop} generated for instance
+#' with \code{readcmiloopfiles}.
+#' @param obs the observable to extract
+#' @param ind.vec index vector to be used during extraction with
+#' \code{ind.vec[1]} the column with the observable number, \code{ind.vec[2]}
+#' the time values, \code{ind.vec[3]} the sample numbers, \code{ind.vec[4]} the
+#' real part of the local loop, \code{ind.vec[5]} the imaginary part of the
+#' local loop, \code{ind.vec[6]} and \code{ind.vec[7]} the same for fuzzed (or
+#' smeared) loops and \code{ind.vec[8]} for the configuraton number.
+#' @param L The spatial lattice extend needed for normalisation. If not given
+#' set to \code{T/2}.
+#' @return a list with elements as follows:
+#' 
+#' \code{cf}: real part of the local loop
+#' 
+#' \code{icf}: imaginary part of the local loop
+#' 
+#' \code{scf}: real part of the smeared loop
+#' 
+#' \code{iscf}: imaginary part of the smeared loop
+#' 
+#' \code{Time=T}, \code{nrSamples}, \code{nrObs=1}, \code{nrStypes=2},
+#' \code{obs=obs} and \code{conf.index}. The last is the list of configurations
+#' corresponding to the loops.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmiloopfiles}}
+#' @export extract.loop
 extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   ldata <- cmiloop[cmiloop[,ind.vec[1]] == obs,] 
   T <- max(ldata[,ind.vec[2]])
@@ -191,6 +354,58 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   return (invisible(cf))
 }
 
+
+
+#' Extract One or More Gamma Combinations from am CMI Correlator
+#' 
+#' Extracts one or more gamma matrix combinations (observables) from a
+#' correlator stored in cmi format
+#' 
+#' C(t) and C(-t) are averaged as indicated by \code{sym.vec}.
+#' 
+#' @param cmicor an correlator object in cmi format
+#' @param vec.obs vector containing the numbers of observables to be extracted.
+#' @param ind.vec Index vector indexing the column numbers in cmicor to be
+#' used. The first must be the observable index, the second the smearing type
+#' index, the third the time, the fourth C(+t) and the fifth C(-t).
+#' 
+#' Index vector indexing the column numbers in cmiloop to be used. The first
+#' must be the observable index, the second the smearing type index, the third
+#' the time, the fourth ReTL, the fifth ImTL, the sixth ReTF and the seventh
+#' ImTF.
+#' @param verbose Increases verbosity of the function.
+#' @param sym.vec a vector of bools of length equal to the number of
+#' observables indicating whether C(t) is symmetric in t, i.e. whether C(+t)
+#' and C(-t) should be added or subtracted. If not given C(+t) and C(-t) will
+#' be assumed to be symmetric.
+#' @param sign.vec a sign vector of length equal to the number of observables
+#' indicating whether the corresponding correlation function should be
+#' multiplied by +-1.
+#' @param symmetrise if set to \code{TRUE}, the correlation function will be
+#' averaged for \code{t} and \code{T-t}, with the sign depending on the value
+#' of \code{sym}.  Note that currently the correlator with t-values larger than
+#' \code{T/2} will be discarded.
+#' @return returns a list containing \item{cf}{ for \code{extract.obs}: array
+#' containing the correlation function with dimension number of files times
+#' (nrObs*nrStypes*(T/2+1)). C(t) and C(-t) are averaged according to
+#' \code{sym.vec}.
+#' 
+#' for \code{extract.loop}: ReTL } \item{icf}{ for \code{extract.loop} only:
+#' ImTL } \item{scf}{ for \code{extract.loop} only: ReTF } \item{sicf}{ for
+#' \code{extract.loop} only: ImTF } \item{Time}{ The time extend of the
+#' correlation functions.  } \item{nrStypes}{ The number of smearing
+#' combinations.  } \item{nrObs}{ The number of observables.  }
+#' \item{nrSamples}{ for \code{extrac.loop} only: the number of samples found
+#' in the files.  }
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmicor}}, \code{\link{readcmidatafiles}},
+#' @keywords ts
+#' @examples
+#' 
+#' \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}
+#' \dontrun{cf <- extract.obs(cmicor, vec.obs=c(1,3))}
+#' 
+#' @export extract.obs
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
                         sym.vec, sign.vec, verbose=FALSE, symmetrise=TRUE) {
   if(missing(cmicor)) {
@@ -271,17 +486,80 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
 #'
 #' @param filename String. Filename of the heavy light correlator data file.
 #' 
+#' @export
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=FALSE,
                               colClasses=c("integer", "integer","integer","integer","numeric","numeric","numeric","numeric","integer"))))
 }
 
+
+
+#' Read Data In output.data Format of tmLQCD
+#' 
+#' reads data from an output.data file written by tmLQCD
+#' 
+#' The data can be plotted directly using \dQuote{plot}.
+#' 
+#' @param filename filename of the data file
+#' @return returns a data frame of class \dQuote{outputdata} containing the
+#' data.
+#' @author Carsten Urbach \email{curbach@@gmx.de}
+#' @keywords file
+#' @examples
+#' 
+#' library(hadron)
+#' \dontrun{plaq <- readcmicor("output.data")}
+#' \dontrun{plot(plaq)}
+#' 
+#' @export readoutputdata
 readoutputdata <- function(filename) {
   data <- read.table(filename, header=FALSE)
   attr(data, "class") <- c("outputdata", "data.frame")  
   return(invisible(data))
 }
 
+
+
+#' Read correlator data from single file
+#' 
+#' Reads arbitrary number of samples for a complex correlation function from a
+#' text file.
+#' 
+#' 
+#' @param file filename of file to read from.
+#' @param T time extend of the correlation function
+#' @param sym if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
+#' -C(-t). Averaging can be switched off using the \code{symmetrise} option.
+#' @param skip number of lines to skip at beginning of file
+#' @param check.t if set to an integer value larger than zero the function will
+#' assume that in the corresponding column of the file the Euclidean time is
+#' counted and it will check whether the maximum in this column is identical to
+#' T-1.
+#' @param ind.vector index vector of length 2 with the indices of real and
+#' imaginary values of correlator, respectivley.
+#' @param symmetrise if set to \code{TRUE}, the correlation function will be
+#' averaged for \code{t} and \code{T-t}, with the sign depending on the value
+#' of \code{sym}. Note that currently the correlator with t-values larger than
+#' \code{T/2} will be discarded.
+#' @param path the path to the files.
+#' @param autotruncate Boolean. Whether to autotruncate or not
+#' @param avg Integer. Average over successive number samples
+#' @param stride Integer. Read only subset of files with corresponding stride.
+#' @param Nmin Integer. Minimal number of measurements that must remain after
+#' sparsification and averaging. Default equals to 4.
+#' @return returns a list with two arrays \code{cf} and \code{icf} with real
+#' and imaginary parts of the correlator, and integers \code{Time},
+#' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
+#' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
+#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' smearing levels and \code{nrObs} the number of operators, both of which are
+#' currently fixed to 1.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarydisc}},
+#' \code{\link{readcmidisc}}, \code{\link{readcmicor}},
+#' \code{\link{readbinarycf}}
+#' @keywords file
+#' @export readtextcf
 readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
                        stride=1, avg=1, Nmin=4, autotruncate=TRUE) {
   stopifnot(!missing(file))
@@ -375,6 +653,8 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #' @param symmetrise Boolean, specifies whether averaging over backward and forward
 #'                   correlators should be done after the correlator has been read in.
 #' @param nts Integer, number of time slices to be read from the correlator files.
+#'
+#' @export
 readnissatextcf <- function(file_basenames_to_read,
                             smear_combs_to_read,
                             Time,
@@ -409,6 +689,59 @@ readnissatextcf <- function(file_basenames_to_read,
 }
 
 
+
+
+#' read correlation function from binary files
+#' 
+#' Reads a correlation function from binary files, including hdf5 formatted
+#' files.
+#' 
+#' It is assumend that each file contains at least \code{(obs+N)*T} complex
+#' doubles, where \code{T} is the time extend, \code{obs} is the number of the
+#' observable to read in and \code{Nop} the number of replicas for this
+#' observable. It is assumed that complex is the fastest running index, next
+#' time and then obs. The filelist is assumed to be ordered according to the
+#' gauge configuration MC history.
+#' 
+#' @param files list of filenames to be read. Can be created using
+#' \code{getorderedfilelist}. The filelist is assumed to be order according to
+#' ascending gauge fields.
+#' @param T time extend of correlation functions.
+#' @param obs each file may contain many correlation functions. With 'obs'
+#' one choses which observable to read in. To be precise, in each file the
+#' reading will start at point T*obs*sizeof(complex\code{<double>}) and read
+#' Nop*T*sizeof(complex\code{<double>}).
+#' @param symmetrise symmetrise the correlation function or not
+#' @param Nop number of replicas for the correlator to read in.
+#' @param endian the endianess of the binary file.
+#' @param excludelist files to exclude from reading.
+#' @param sym if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
+#' -C(-t).
+#' @param op the N replicas can be either averaged (\code{op="aver"}) or summed
+#' (\code{op="sum"}).
+#' @param path path to be prepended to every filename.
+#' @param hdf5format if \code{TRUE}, try to read from an hdf5 file.
+#' @param hdf5name Name of the data set as a string.
+#' @param hdf5index The data might be an array of size n x T. \code{hdf5index}
+#' is used to convert two columns of the data to a complex valued vector using
+#' the first and second index for real and imaginary part, respectively. If
+#' \code{hdf5index} has length smaller than 2 the first index is reused.
+#' @return returns a list with two arrays \code{cf} and \code{icf} with real
+#' and imaginary parts of the correlator, and integers \code{Time},
+#' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
+#' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
+#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' smearing levels and \code{nrObs} the number of operators, both of which are
+#' currently fixed to 1.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarydisc}},
+#' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
+#' @keywords file
+#' @examples
+#' 
+#' \dontrun{cf <- readbinarycf(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
+#' 
+#' @export readbinarycf
 readbinarycf <- function(files, 
                          T, 
                          obs=5, 
@@ -577,6 +910,48 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 }
 
 
+
+
+#' read disconnected loops from binary files
+#' 
+#' Reads disconnected loops from binary files.
+#' 
+#' It is assumend that each file contains O*T complex doubles, where T is the
+#' time extend and O the number of observables in the file. It is assumed that
+#' complex is the fastest running index, next time and then observables. The
+#' different samples are assumend to be in different files. The file list is
+#' assumed to be ordered with number of samples running fastest, and then
+#' number of gauges.
+#' 
+#' @param files list of filenames to be read. Can be created for instance using
+#' \code{getorderedfilelist}. The filelist is assumed to be ordered with number
+#' of samples running fastest, and the next to fastest nubmer of gauges.
+#' @param T time extend of correlation functions.
+#' @param obs each file may contain T*obs correlation functions. With
+#' \code{obs} one choses which observable to read in.
+#' @param endian the endianess of the binary file.
+#' @param excludelist files to exclude from reading.
+#' @param nrSamples the number of samples
+#' @param path path to be prepended to every filename.
+#' @return returns a list with two arrays \code{cf} and \code{icf} with real
+#' and imaginary parts of the loops, and integers \code{Time},
+#' \code{nrStypes=1}, \code{nrSamples} and \code{nrObs=1}. Both of the arrays
+#' have dimension \code{c(T, N)}, where \code{N} is the number of measurements
+#' (gauges) and \code{T} the time extend.  \code{Time} is the time extend,
+#' \code{nrStypes} the number of smearing levels and \code{nrObs} the number of
+#' operators, both of which are currently fixed to 1.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
+#' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
+#' @keywords file
+#' @examples
+#' 
+#' \dontrun{files <- character()}
+#' \dontrun{for(i in seq(600,1744,8)) }
+#' \dontrun{  files <- c(files, "C2_dis_u_conf", sprintf("%.04d", i), ".dat", sep=""))}
+#' \dontrun{cf <- readbinarydisc(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
+#' 
+#' @export readbinarydisc
 readbinarydisc <- function(files, T=48, obs=5, endian="little",
                            excludelist=c(""), nrSamples=1, path="") {
   Cf <- complex()
@@ -603,6 +978,52 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
   return (invisible(cf))
 }
 
+
+
+#' reads disconnected loops in cmi format
+#' 
+#' reads disconnected loops in cmi (Chris Michael) format from a list of files.
+#' 
+#' 
+#' @param files list of filenames to be read. Can be created using
+#' \code{getorderedfilelist}.
+#' @param obs index of operator to parse from files
+#' @param ind.vec vector containing the index (column in file) of obs, t,
+#' samples, Re(local), Im(local, Re(smeared), Im(smeared).
+#' @param excludelist files to exclude from reading.
+#' @param skip lines to skip at beginning of each file.
+#' @param colClasses The column data type classes, the \code{read.table}.
+#' @param L the spatial lattice extend, set to \code{Time/2} if missing.
+#' @param debug setting debug to TRUE makes the routine more verbose by
+#' spilling out separate filenames.
+#' @return returns a list with four arrays \code{cf}, \code{icf} \code{scf} and
+#' \code{sicf} containing real and imaginary parts of the local and smeared
+#' loops, respectively, and integers \code{Time}, \code{nrStypes=2},
+#' \code{nrSamples} and \code{nrObs=1}. The four arrays have dimension
+#' \code{c(T, S, N)}, where \code{S} is the nubmer of samples, \code{T} is the
+#' time extend and \code{N} is the number of measurements (gauges).
+#' \code{Time} is the time extend, \code{nrStypes} the number of smearing
+#' levels and \code{nrObs} the number of operators, which are currently fixed
+#' to 1 and 2, respectively. \code{nrSamples} is the number of samples.
+#' 
+#' Note that the arrays are normalised by \code{1/sqrt(L^2)}.
+#' 
+#' The routine expects that all files have identical content. Otherwise the
+#' routine will stop.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
+#' \code{\link{readbinarydisc}}, \code{\link{readcmicor}}
+#' @keywords file
+#' @examples
+#' 
+#' \dontrun{v4files <- character()}
+#' \dontrun{for(i in seq(600,1744,8))}
+#' \dontrun{  v4files <- }
+#' \dontrun{   c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("%.04d", i), sep=""))}
+#' \dontrun{v4data <- readcmidisc(v4files)}
+#' 
+#' 
+#' @export readcmidisc
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                         excludelist=c(""), skip=0, L,
                         colClasses=c("integer", "integer","integer","integer",
@@ -655,6 +1076,42 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
   return (invisible(cf))
 }
 
+
+
+#' Read Gradient Flow Output Files in tmLQCD format
+#' 
+#' given a pathname, reads all gradient flow output files in that directory
+#' 
+#' This function reads all tmLQCD gradient flow files in the given path and
+#' returns a data frame which concatenates them all.
+#' 
+#' The single files are expected to be in the tmLQCD format which consists of a
+#' header with the column names "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym" and
+#' the measurement for each flow time in rows. The columns can be ordered
+#' arbitrarily as long as the header and the data are consistent.
+#' 
+#' @param path the path into which the function should descend
+#' @param skip number of measurements to skip.
+#' @param basename basename of the files to be read.
+#' @param col.names column names of the columns in the files to be read. If not
+#' given it will be infered from the files, if possible.
+#' @return The function returns a data frame ordered first by the flow time and
+#' then by the the trajectory number (so the trajectory number is the index
+#' which runs fastest). The data frame has column names \itemize{ \item t -
+#' flow time \item traj - trajectory number \item P - plaquette expectation
+#' value (at flow time t) \item Eplaq - energy density from plaquette
+#' definition (at flow time t) \item Esym - energy density from clover
+#' definition (at flow time t) \item tsqEplaq - flow time squared multiplied by
+#' plaquette energy density \item tsqEsym - flow time squared multiplied by
+#' clover energy density \item Wsym - BMW 'w(t)' observable }.
+#' @author Bartosz Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
+#' @keywords file
+#' @examples
+#' 
+#' library(hadron)
+#' \dontrun{raw.gf <- readgradflow(path)}
+#' 
+#' @export readgradflow
 readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
   files <- getorderedfilelist(path=path, basename=basename, last.digits=6)
   # the trajectory numbers deduced from the filename

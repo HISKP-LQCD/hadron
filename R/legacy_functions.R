@@ -3,17 +3,43 @@
 ## around
 
 
-# this was originally in pp.R
+#' effmass
+#'
+#' computes the effective mass via the inverse cosh
+#'
+#' @param data numeric vector. data vector of length 4
+#' @param timeextent integer. time extent of the lattice
+#' @param t integer. physical time at which to evaluate the cosh
+#' 
 effmass <- function(data, timeextent, t) {
   mass <- invcosh((data[1]+data[4])/(data[2]+data[3]), timeextent=timeextent, t=t)
   return(invisible(mass))
 }
 
+#' effmass2
+#'
+#' computes the effective mass via the inverse cosh
+#'
+#' @param data numeric vector. data vector of length 4
+#' @param timeextent integer. time extent of the lattice
+#' @param t integer. physical time at which to evaluate the cosh
+#' 
 effmass2 <- function(data, timeextent, t) {
   mass <- invcosh(ratio=(data[1])/(data[2]), timeextent=timeextent, t=t)
   return(invisible(mass))
 }
 
+#' effectivemass
+#'
+#' computes the effective mass with error analysis using UWerr
+#'
+#' @param from integer. Fit in fitrange (from, to)
+#' @param to integer. see from.
+#' @param Time integer. time extend of the lattice
+#' @param Z data
+#' @param pl boolean. plot
+#' @param S numeric. see \link{uwerr}
+#' @param ... additional parameters passed to \link{uwerr}
 effectivemass <- function(from, to, Time, Z, pl=TRUE, S,...) {
   L <- (to-from+1)
   i <- 1

@@ -28,6 +28,11 @@ test_that('large_error', {
     expect_equal(tex.catwitherror(1.12345, 12.3, digits = 4, with.dollar = FALSE), '1.12(12.3)')
 })
 
+test_that('similar_error', {
+    expect_equal(tex.catwitherror(7492.8291130334482659, 1759.0859320695926726,
+                                  digits = 3, with.dollar = FALSE), '7493(1759)')
+})
+
 test_that('no_error', {
     expect_equal(tex.catwitherror(0.00123, digits = 4, with.dollar = FALSE), '0.001230')
 })
@@ -35,6 +40,14 @@ test_that('no_error', {
 test_that('zero_error', {
     expect_equal(tex.catwitherror(0.00123, 0, digits = 4, with.dollar = FALSE), '0.001230(0)')
     expect_equal(tex.catwitherror(12.345, 0, digits = 3, with.dollar = FALSE), '12.3(0)')
+})
+
+test_that('zero_val_zero_err', {
+    expect_equal(tex.catwitherror(0., 0., digits = 4, with.dollar = FALSE), '0.000(0)')
+})
+
+test_that('NA', {
+    expect_equal(tex.catwitherror(NA, NA, digits = 4, with.dollar = FALSE), 'NA(NA)')
 })
 
 test_that('vector', {

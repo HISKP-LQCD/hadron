@@ -105,7 +105,7 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
         memcpy( lbcopy.data(), linebuf.c_str(), linebuf.size() );
         unsigned int key_components_counter = 0;
         char * token = strtok(lbcopy.data(), "_");
-        while( key_components_counter != 4 | token != NULL ){
+        while( key_components_counter != 4 || token != NULL ){
           if( token[0] == 'm' || token[0] == 'r'){
             key_components[key_components_counter] = atoi(token+1);
             key_components_counter++;

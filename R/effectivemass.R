@@ -1,3 +1,66 @@
+#' Computes effective mass values for a correlation function
+#' 
+#' Computes effective mass values for a correlation function using different
+#' type of definitions for the effective mass. This function is mainly indented
+#' for internal usage by \code{\link{bootstrap.effectivemass}}.
+#' 
+#' A number of types is implemented to compute effective mass values from the
+#' correlation function:
+#' 
+#' "solve": the ratio\cr \eqn{C(t+1) / C(t) = \cosh(-m*(t+1)) / \cosh(-m*t)}\cr
+#' is numerically solved for \eqn{m(t)}.
+#' 
+#' "acosh": the effective mass is computed from\cr
+#' \eqn{m(t)=acosh((C(t-1)+C(t+1)) / (2C(t)))}\cr Note that this definition is
+#' less tolerant against noise.
+#' 
+#' "log": the effective mass is defined via\cr \eqn{m(t)=\log(C(t) /
+#' C(t+1))}\cr which has artifacts of the periodicity at large t-values.
+#' 
+#' "temporal": the ratio\cr \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] =
+#' [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr is
+#' numerically solved for \eqn{m(t)}.
+#' 
+#' "subtracted": like "temporal", but the differences \eqn{C(t)-C(t+1)} are
+#' assumed to be taken already at the correlator matrix level using
+#' \code{removeTemporal.cf} and hence the ratio\cr \eqn{[C(t+1)] / [C(t)] =
+#' [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr is
+#' numerically solved for \eqn{m(t)}.
+#' 
+#' "weighted": like "subtracted", but now there is an additional weight factor
+#' \eqn{w} from \code{removeTemporal.cf} to be taken into account, such that
+#' the ratio\cr \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-w*\cosh(-m*(t+1))] /
+#' [\cosh(-m*(t-1))-w*\cosh(-m(t))]}\cr is numerically solved for \eqn{m(t)}
+#' with \eqn{w} as input.
+#' 
+#' @param cf The correlation function either as a vector of length
+#' \code{nrObs*(Thalf+1)} or as an array of dimension Nx\code{nrObs*(Thalf+1)},
+#' where N is the number of observations. N will be averaged over.
+#' @param Thalf The half time extend of the lattice
+#' @param type The function to be used to compute the effective mass values.
+#' Possibilities are "acosh", "solve", "log", "temporal", "shifted" and
+#' "weighted". While the first three assume normal cosh behaviour of the
+#' correlation function, "temporal" is desigend to remove an additional
+#' constant stemming from temporal states in two particle correlation
+#' functions. The same for "subtracted" and "weighted", the latter for the case
+#' of two particle energies with the two particle having different energies. In
+#' the latter case only the leading polution is removed by
+#' \code{removeTemporal.cf} and taken into account here.
+#' @param nrObs The number of "observables" included in the correlator
+#' @param replace.inf If set to \code{TRUE}, all \code{\link{Inf}} values will
+#' be replaced by \code{\link{NA}}. This is needed for instance for
+#' \code{\link{bootstrap.effectivemass}}.
+#' @param interval initial interval for the \code{\link{uniroot}} function when
+#' numerically solving for the effective mass.
+#' @param weight.factor relative weight for type "weighted" only, see details
+#' @param deltat time shift for shifted correlation functions
+#' @param tmax t-value up to which the effectivemass is to be computed
+#' @return Returns a vector of length \code{Thalf} with the effective mass
+#' values for t-values running from 0 to \code{Thalf-1}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{bootstrap.effectivemass}}
+#' @references arXiv:1203.6041
+#' @export effectivemass.cf
 effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
                              weight.factor = NULL, deltat=1, tmax=Thalf) {
   if(missing(cf)) {
@@ -76,6 +139,79 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   return(invisible(effMass[t2]))
 }
 
+
+
+#' Computes effective masses with bootstrapping errors
+#' 
+#' Generates bootstrap samples for effective mass values computed from an
+#' object of class \code{cf} (a correlation function)
+#' 
+#' A number of types is implemented to compute effective mass values from the
+#' correlation function:
+#' 
+#' "solve": the ratio\cr \eqn{C(t+1) / C(t) = \cosh(-m*(t+1)) / \cosh(-m*t)}\cr
+#' is numerically solved for m.
+#' 
+#' "acosh": the effective mass is computed from\cr \eqn{m=acosh((C(t-1)+C(t+1))
+#' / (2C(t)))}\cr Note that this definition is less tolerant against noise.
+#' 
+#' "log": the effective mass is defined via\cr \eqn{m=\log(C(t) / C(t+1))}\cr
+#' which has artifacts of the periodicity at large t-values.
+#' 
+#' "temporal": the ratio\cr \eqn{[C(t)-C(t+1)] / [C(t-1)-C(t)] =
+#' [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr is
+#' numerically solved for \eqn{m(t)}.
+#' 
+#' "shifted": like "temporal", but the differences \eqn{C(t)-C(t+1)} are
+#' assumed to be taken already at the correlator matrix level using
+#' \code{removeTemporal.cf} and hence the ratio\cr \eqn{[C(t+1)] / [C(t)] =
+#' [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr is
+#' numerically solved for \eqn{m(t)}.
+#' 
+#' "weighted": like "shifted", but now there is an additional weight factor
+#' \eqn{w} from \code{removeTemporal.cf} to be taken into account, such that
+#' the ratio\cr \eqn{[C(t+1)] / [C(t)] = [\cosh(-m*(t))-w*\cosh(-m*(t+1))] /
+#' [\cosh(-m*(t-1))-w*\cosh(-m(t))]}\cr is numerically solved for \eqn{m(t)}
+#' with \eqn{w} as input.
+#' 
+#' @param cf a correlation function as an object of type \code{cf}, preferably
+#' after a call to \code{\link{bootstrap.cf}}. If the latter has not been
+#' called yet, it will be called in this function.
+#' @param type The function to be used to compute the effective mass values.
+#' Possibilities are "acosh", "solve", "log", "temporal", "shifted" and
+#' "weighted". While the first three assume normal cosh behaviour of the
+#' correlation function, "temporal" is desigend to remove an additional
+#' constant stemming from temporal states in two particle correlation
+#' functions. The same for "shifted" and "weighted", the latter for the case of
+#' two particle energies with the two particle having different energies. In
+#' the latter case only the leading polution is removed by
+#' \code{removeTemporal.cf} and taken into account here.
+#' @return An object of class \code{effectivemass} is invisibly returned. It
+#' has objects: \code{effMass}:\cr The computed effective mass values as a
+#' vector of length \code{Time/2}. For \code{type="acosh"} also the first value
+#' is \code{NA}, because this definition requires three time slices.
+#' 
+#' \code{deffMass}:\cr The computed bootstrap errors for the effective masses
+#' of the same length as \code{effMass}.
+#' 
+#' \code{effMass.tsboot}:\cr The boostrap samples of the effective masses as an
+#' array of dimension RxN, where \code{R=boot.R} is the number of bootstrap
+#' samples and \code{N=(Time/2+1)}.
+#' 
+#' and \code{boot.R}, \code{boot.l}, \code{Time}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{fit.effectivemass}}, \code{\link{bootstrap.cf}},
+#' \code{removeTemporal.cf}
+#' @references arXiv:1203.6041
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
+#' effmass <- bootstrap.effectivemass(cf=samplecf)
+#' summary(effmass)
+#' plot(effmass, ylim=c(0.14,0.15))
+#' 
+#' @export bootstrap.effectivemass
 bootstrap.effectivemass <- function(cf, type="solve") {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -132,6 +268,79 @@ fit.constant <- function(M, y) {
 	return(res)
 }
 
+
+
+#' Fits a constant to effective mass data
+#' 
+#' Performs a correlated fit of a constant to data generated with
+#' \code{bootstrap.effectivemass}.
+#' 
+#' A correlated chisquare minimisation is performed on the original data as
+#' well as on all bootstrap samples generated by
+#' \code{bootstrap.effectivemass}. The inverse covariance matrix is generated
+#' as described in hep-lat/9412087 in case of too little data to relibably
+#' estimate it.
+#' 
+#' @param cf An object of class \code{effectivemass} generated by a call to
+#' \code{bootstrap.effectivemass}.
+#' @param t1,t2 The fit range. If several correlators are fitted, this is
+#' automatically replicated accordingly. The fit range is adjusted such that
+#' \code{NA}s are removed from the fit. They must fulfill \eqn{t_1<t_2}{t1<t2}.
+#' For symmetric correlators, they must both run from 0 to \code{T/2-1},
+#' otherwise from 0 to \code{T-1}.
+#' @param useCov Use the correlated chisquare. This works only for not too
+#' noisy data.
+#' @param replace.na The functions inverted to determine the effective mass
+#' values might, due to fluctuations, return \code{NA}. If
+#' \code{replace.na=TRUE}, these are reaplaced in the bootstrap samples by
+#' randomly chosen values from the distribution that are not \code{NA}.
+#' Otherwise the fits in which the \code{NA} values occur will fail.
+#' @param boot.fit If set to \code{FALSE}, the effective mass fit is not
+#' bootstrapped, even though bootstrap samples are still used to estimate the
+#' variance-covariance matrix for the correlated fit. This is a useful
+#' time-saver if error information is not strictly necessary. Of course, this
+#' affects the return values related to the bootstrap, which are set to
+#' \code{NA}.
+#' @param autoproceed When the inversion of the variance-covariance matrix
+#' fails, the default behaviour is to abort the fit. Setting this to
+#' \code{TRUE} means that the fit is instead continued with a diagonal inverse
+#' of the variance-covariance matrix.
+#' @param every Fit only a part of the data points. Indices that are not
+#' multiples of \code{every} are skipped. If no value is provided, all points
+#' are taken into account.
+#' @return An object with class \code{effectivemassfit} is returned. It
+#' contains all the data of the input object \code{effMass} with the following
+#' additional member objects:
+#' 
+#' \code{opt.res}: the object returned by the \code{optim} on the original
+#' data.
+#' 
+#' \code{massfit.tsboot}: the bootstrap values of the mass and the chisquare
+#' function.
+#' 
+#' \code{ii}: the index array of data used in the fit.
+#' 
+#' \code{invCovMatrix}: the inverse covariance matrix.
+#' 
+#' \code{dof}: the degrees of freedom of the fit.
+#' 
+#' \code{t1,t2}: the fit range.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{bootstrap.effectivemass}},
+#' \code{\link{bootstrap.gevp}}, \code{\link{gevp2cf}},
+#' \code{\link{invertCovMatrix}}
+#' @references C.Michael, A.McKerrell, Phys.Rev. D51 (1995) 3745-3750,
+#' hep-lat/9412087
+#' @keywords optim
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
+#' effmass <- fit.effectivemass(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
+#' summary(effmass)
+#' plot(effmass, ylim=c(0.14,0.15))
+#' 
+#' @export fit.effectivemass
 fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fit=TRUE, autoproceed=FALSE, every) {
   ## If it wasn't clear from the name, the `cf` argument is of type
   ## `effectivemass`.
@@ -281,8 +490,9 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
 
 #' summary.effectivemass
 #'
-#' @param object Object of type \link{effectivemass}
+#' @param object Object of type \code{effectivemass} generated by \link{fit.effectivemass}
 #' @param ... Generic parameters to pass on.
+#' @export
 summary.effectivemass <- function (object, ...) {
   effMass <- object
   cat("\n ** effective mass values **\n\n")
@@ -300,6 +510,7 @@ summary.effectivemass <- function (object, ...) {
 #' @param object Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
 #' @param verbose More verbose output.
+#' @export
 summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
   effMass <- object
   cat("\n ** Result of effective mass analysis **\n\n")
@@ -333,6 +544,8 @@ summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
 #' @param x Object of class `effectivemass`
 #' @param ... Additional parameters to be passed on.
 #' @param verbose Boolean. More verbose output.
+#'
+#' @export
 print.effectivemassfit <- function (x, ..., verbose = FALSE) {
   effMass <- x
   summary(effMass, verbose = verbose, ...)
@@ -345,6 +558,8 @@ print.effectivemassfit <- function (x, ..., verbose = FALSE) {
 #' @param ref.value Numeric. A reference value to be plotted as a horizontal line
 #' @param col String. Colour of the data points.
 #' @param col.fitline String. Colour of the fitted line.
+#'
+#' @export
 plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
   effMass <- x
   if(missing(col)) {

@@ -122,6 +122,8 @@ raw_cf_to_cf <- function(x, component){
 #'         }
 #'         Each of these is in turn an array of dimension \code{ c( cf$nts, cf$dim ) } and
 #'         hance lacks the first dimension index compared for \code{cf$data}.
+#'
+#' @export
 uwerr.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_data'))
   
@@ -191,7 +193,7 @@ uwerr.raw_cf <- function(cf){
 #'              function together. This occurs, for example, when multiple
 #'              stochastic noise vectors are used per measurement or multiple
 #'              source locations. Alternatively, it can also be used to
-#'              account for auto-correlations in the data. If the total numbers
+#'              account for auto-correlations in the data. If the total number
 #'              of measurements is not divisible by `block_length`, the last
 #'              measurements are discarded.
 #'
@@ -200,6 +202,8 @@ uwerr.raw_cf <- function(cf){
 #' @return cf `raw_cf` object with the data member reduced in its first dimension
 #'        by a factor of `block_length` and restricted (at the end) to the number
 #'        of measurements divisible by `block_length`.
+#'
+#' @export
 block.raw_cf <- function(cf, block_length){
   stopifnot(inherits(cf, 'raw_cf'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -253,6 +257,8 @@ block.raw_cf <- function(cf, block_length){
 #' the other object is returned. (allows empty `raw_cf` to be extended).
 #' If the dimensions (except for the measurements) of the `data` fields of the
 #' two containers match, they are concatenated along the measurement dimension.
+#'
+#' @export
 addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -289,6 +295,8 @@ addStat.raw_cf <- function(cf1, cf2) {
 #' @param a Numeric or complex, scaling factor applied to \code{cf1}.
 #' @param b Numeric or complex, scaling factor applied to \code{cf2}.
 #' @return \code{a*cf1$data + b*cf2$data}
+#'
+#' @export
 add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   stopifnot(inherits(cf1, 'raw_cf'))
   stopifnot(inherits(cf2, 'raw_cf'))
@@ -310,6 +318,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container to be added
 #' @param cf2 second 'raw_cf' container to be added
 #' @return `raw_cf` object with \code{cf$data == cf1$data + cf2$data}
+#'
+#' @export
 '+.raw_cf' <- function (cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = 1.0)
 }
@@ -318,6 +328,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container to be subtracted
 #' @param cf2 second 'raw_cf' container to be subtracted
 #' @return `raw_cf` object with \code{cf$data == cf1$data - cf2$data}
+#'
+#' @export
 '-.raw_cf' <- function(cf1, cf2) {
   add.raw_cf(cf1, cf2, a = 1.0, b = -1.0)
 }
@@ -326,6 +338,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 'raw_cf' container with data and meta-data to be the dividend
 #' @param cf2 'raw_cf' container with data and meta-data to be the divisor
 #' @return `raw_cf` object with \code{cf$data == cf1$data / cf2$data}
+#'
+#' @export
 '/.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
@@ -344,6 +358,8 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
 #' @param cf1 first 'raw_cf' container with data and meta-data to be multiplied
 #' @param cf2 second 'raw_cf' container with data and meta-data to be multiplied
 #' @return `raw_cf` object with \code{cf$data == cf1$data * cf2$data}
+#'
+#' @export
 '*.raw_cf' <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf_meta'))
   stopifnot(inherits(cf2, 'raw_cf_meta'))
@@ -358,11 +374,22 @@ add.raw_cf <- function(cf1, cf2, a=1.0, b=1.0) {
   return(cf)
 }
 
+#' @title Take the complex conjugate of a `raw_cf` object
+#' @param cf `raw_cf` cotnainer with data
+#' @return `raw_cf`
+conj_raw_cf <- function(cf){
+  stopifnot(inherits(cf, 'raw_cf_data'))
+  cf$data <- Conj(cf$data)
+  return(cf)
+}
+
 #' @title scale `raw_cf` data
 #' @param cf 'raw_cf' container with data to be scaled by the factor \code{a}
 #' @param a Numeric or complex scaling factor, although it could also be
 #'          an array of dimensions compatible with \code{cf$data}
 #' @return `raw_cf` object with \code{res$data == a*cf$data}
+#'
+#' @export
 mul.raw_cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'raw_cf_data'))
   stopifnot(is.numeric(a) | is.complex(a))
@@ -373,12 +400,16 @@ mul.raw_cf <- function(cf, a=1.) {
 
 #' @title check if an object is of class `raw_cf`
 #' @param x object to be checked 
+#'
+#' @export
 is.raw_cf <- function(x){
   inherits(x, "raw_cf")
 }
 
 #' @title check if an obect is of class `raw_cf` and empty otherwise
 #' @param x object to be checked
+#'
+#' @export
 is_empty.raw_cf <- function(x){
   .raw_cf <- x
   setequal(class(.raw_cf), class(raw_cf())) & is.null(names(.raw_cf))
@@ -388,6 +419,8 @@ is_empty.raw_cf <- function(x){
 #' @title Concatenate `raw_cf` correlation function objects
 #'
 #' @param ... Zero or multiple objects of type `raw_cf`.
+#'
+#' @export
 c.raw_cf <- function (...) {
   rval <- Reduce(concat.raw_cf, list(...), raw_cf())
   return (rval)
@@ -400,6 +433,8 @@ c.raw_cf <- function (...) {
 #'              after the slices of \code{left}
 #' @param left `raw_cf` object to be concatenated with \code{right}
 #' @param right `raw_cf` object to be concatenated with \code{left}
+#'
+#' @export
 concat.raw_cf <- function (left, right) {
   stopifnot(inherits(left, 'raw_cf'))
   stopifnot(inherits(right, 'raw_cf'))
@@ -465,6 +500,8 @@ concat.raw_cf <- function (left, right) {
 #'         \code{dval} members of these list elements are arrays of dimension
 #'         \code{ c( cf$nts, cf$dim ) } and thus lack the first index compared
 #'         to \code{cf$data}.
+#'
+#' @export
 get_plotdata_raw_cf <- function(cf,
                                 reim,
                                 tauint,
@@ -559,6 +596,8 @@ get_plotdata_raw_cf <- function(cf,
 #'                  are to be plotted, will be plotted in the same plot.
 #' @param ... Further parameters passed to \link{plotwitherror}.
 #' @return Invisibly returns the plotdata, see \link{get_plotdata_raw_cf}.
+#'
+#' @export
 plot.raw_cf <- function(x,
                         ...,
                         reim = 'real', 
@@ -649,6 +688,7 @@ overview_plot_raw_cf <- function(cf,
     if( prod(grid) != prod(cf$dim) ){
       stop("'prod(grid)' must be equal to 'prod(cf$dim)'")
     }
+    par_save <- par()
     par(mfrow=grid)
   }
 
@@ -743,6 +783,10 @@ overview_plot_raw_cf <- function(cf,
       do.call(plotwitherror, args)
     }
   }
+  # reset par which was modified above
+  if(!missing(grid)){
+    par(par_save)
+  }
 }
 
 #' @title shift a \code{raw_cf} correlation function by 'places' time-slices
@@ -768,8 +812,10 @@ shift.raw_cf <- function(cf, places) {
   if( (length(places) != 1) & (length(places) != dim(cf$data)[1]) ){
     stop("'places' should be either of length '1' or of a length equalling the number of measurements in 'cf'")
   }
-  if(length(places) == 1 & places == 0){
-    return(cf)
+  if(length(places) == 1){
+    if(places == 0){
+      return(cf)
+    }
   }
 
   dims <- dim(cf$data)
@@ -802,8 +848,8 @@ shift.raw_cf <- function(cf, places) {
         out_dof <- as.matrix(do.call(expand.grid, args))
         
         if( places[imeas] < 0 ){
-          ishift <- c( (iend - abs(places[imeas])):iend,
-                       (istart:(iend-abs(places[imeas])-1)) )
+          ishift <- c( (iend - abs(places[imeas]) + 1):iend,
+                       (istart:(iend-abs(places[imeas]))) )
         } else {
           ishift <- c( (istart+places[imeas]):iend,
                         istart:(istart+places[imeas]-1))
@@ -825,6 +871,8 @@ shift.raw_cf <- function(cf, places) {
 #' @param component Integer vector. Optional argument to obtain a subset of the
 #'                  index matrix to access a particular element of the interior
 #'                  dimensions. Must of the the same length as cf$dim.
+#'
+#' @export
 idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   stopifnot(inherits(cf, 'raw_cf_data'))
@@ -850,6 +898,8 @@ idx_matrix.raw_cf <- function(cf, component){
 
 #' @title Construct tensor index set for the internal degrees of freedom
 #' @param cf `raw_cf` container
+#'
+#' @export
 int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
   args <- list()
@@ -866,6 +916,8 @@ int_idx_matrix.raw_cf <- function(cf){
 #' @param statistics Boolean, return central value and error
 #'                   for all components of the 'raw_cf'. This can
 #'                   be slow so the default is \code{FALSE}.
+#'
+#' @export
 summary.raw_cf <- function(object, ..., statistics = FALSE) {
   cf <- object
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -902,7 +954,43 @@ summary.raw_cf <- function(object, ..., statistics = FALSE) {
 #' @title Print summary of data contained in `raw_cf` container
 #' @param x `raw_cf` container with data and meta-data
 #' @param ... ignored
+#'
+#' @export
 print.raw_cf <- function(x, ...) {
   cf <- x
   summary(cf, ...)
+}
+
+#' @title Store a 'raw_cf' correlator in an associative array together with a description
+#' The object \code{cf} will be stored as an element of \code{cmap} under key \code{out_key}
+#' in the member \code{obj} of \code{cmap}. The data frame passed via \code{desc} will be
+#' appended as a row to \code{cmap[[out_key]]$map}. If \code{out_key} does not exist
+#' as a key in \code{cmap}, a new element will be created. If it already exists,
+#' \code{addStat.raw_cf} is called to add statistics to the existing \code{raw_cf}. Requires
+#' the 'hash' package.
+#' @return Since objects of class \code{hash} are passed and modified by reference, there
+#'         is no explicit return value. Instead, the passed \code{cmap} is modified.
+#' @param cmap Object of class \code{hash} to act as storage for 'raw_cf' correlators.
+#' @param cf Object of class \code{raw_cf} to be stored in \code{cmap}.
+#' @param out_key String, key associated with \code{cf} object to be stored in \code{cmap}.
+#' @param desc Single row data frame containing some descriptive parameters for \code{cf}.
+store_correl <- function(cmap, cf, out_key, desc)
+{
+  hash_avail <- requireNamespace("hash")
+  if( !hash_avail ){
+    stop("The 'hash' package is required to use this function!\n")
+  }
+  stopifnot( "hash" %in% class(cmap) )
+  stopifnot( "raw_cf" %in% class(cf) )
+  stopifnot( "raw_cf_meta" %in% class(cf) )
+  stopifnot( "raw_cf_data" %in% class(cf) )
+
+  if( hash::has.key(out_key, cmap) ){
+    cmap[[out_key]]$obj <- addStat.raw_cf(cmap[[out_key]]$obj, cf)
+    cmap[[out_key]]$map <- rbind(cmap[[out_key]]$map, desc)
+  } else {
+    cmap[[out_key]] <- list()
+    cmap[[out_key]]$obj <- cf
+    cmap[[out_key]]$map <- desc
+  }
 }

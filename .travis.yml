@@ -5,10 +5,20 @@
 #   https://docs.travis-ci.com/user/languages/r/
 
 language: r
+dist: trusty
+sudo: required
 cache: packages
+warnings_are_errors: true
+use_bioc: true
 
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+          
 r:
-  - release 
+  - oldrel
+#- release 
 
 r_packages:
   - tikzDevice
@@ -17,20 +27,14 @@ r_packages:
   - Rcpp
   - rmarkdown
 
+r_binary_packages:
+  - devtools
+  - roxygen2
+
 apt_packages:
   - libgsl-dev  
+  - texlive-extra-utils
 
-sudo: required
-dist: trusty
-
-warnings_are_errors: false
-use_bioc: true
-
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-          
 env:
   global:
     - R_CHECK_ARGS="--no-build-vignettes --no-manual --timings"
@@ -38,9 +42,8 @@ env:
     - R_CHECK_TESTS="TRUE"
     - _R_CHECK_TIMINGS_="0"
 
-r_binary_packages:
-  - devtools
-  - roxygen2
+script:
+  - ./check
 
 after_success:
   - Rscript -e 'devtools::install(); devtools::test()'
