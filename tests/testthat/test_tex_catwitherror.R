@@ -7,6 +7,10 @@ test_that('small_error', {
     expect_equal(tex.catwitherror(123, 1, digits = 1, with.dollar = FALSE), '123(1)')
 })
 
+test_that('borderline_error', {
+    expect_equal(tex.catwitherror(1.330563782105, 0.000966674080, digits = 1, with.dollar = FALSE), '1.331(1)')
+})
+
 test_that('very_small_number', {
     expect_equal(tex.catwitherror(1.23e-20, 0.45e-20, digits = 2, with.dollar = FALSE), '1.23(45)e-20')
     expect_equal(tex.catwitherror(1.23e-40, 0.45e-40, digits = 2, with.dollar = TRUE), '$1.23(45)\\cdot 10^{-40}$')
@@ -16,7 +20,7 @@ test_that('very_small_number', {
 
 test_that('same_error', {
     expect_equal(tex.catwitherror(0.00123, 0.00123, digits = 4, with.dollar = FALSE), '0.001230(1230)')
-    expect_equal(tex.catwitherror(12.345, 12.345, digits = 4, with.dollar = FALSE), '12.35(12.35)')
+    expect_equal(tex.catwitherror(12.346, 12.346, digits = 4, with.dollar = FALSE), '12.35(12.35)')
 })
 
 test_that('intermediate_error', {
