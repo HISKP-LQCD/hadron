@@ -1128,6 +1128,7 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
 
     #open the file with read only argument
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
+    print(f)
 
     #checking whether the wanted diagramm type is available in the file
 
@@ -1165,21 +1166,19 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
       }
     }
 
-    tmpprod=prod(length(selections[[selected_diagramm_types]]$pi2x))
-    gammalist <- strsplit(as.character(selections[[selected_diagramm_types]]$interp[differentcombinations]),",")[[1]]
-    print(tmpprod)
-
-    partial_array<- array(0,dim=c(2,Time,length(all_pi2_momentum$pi2x),tmpprod/length(all_pi2_momentum$pi2x)))
+    tmpprod=length(selections[[selected_diagramm_types]]$pi2x)
+    gammalist <- strsplit(as.character(selections[[selected_diagramm_types]]$interp[1]),",")[[1]]
+    partial_array<- array(0,dim=c(2,Time/2+1,length(all_pi2_momentum$pi2x),length(gammalist)*length(gammalist)*tmpprod/length(all_pi2_momentum$pi2x)))
     #loop over all the sequential source momentum in the file
     
     for (indexmom in 1:length(all_pi2_momentum$pi2x)){
 
-      print(indexmom)
       seq_source_momenta <- c(all_pi2_momentum$pi2x[indexmom],
                               all_pi2_momentum$pi2y[indexmom],
                               all_pi2_momentum$pi2z[indexmom])
-      print(seq_source_momenta)
-
+      filtered_selection <- filter(selections[[selected_diagramm_types]],pi2x==all_pi2_momentum$pi2x[indexmom],
+                                                                         pi2y==all_pi2_momentum$pi2x[indexmom],
+                                                                         pi2z==all_pi2_momentum$pi2z[indexmom])
       key <- cyprus_make_key_scattering4pt( h5filedatasetcontent$group[2], seq_source_momenta, "mvec" )
 
       # read the available momenta
@@ -1210,21 +1209,20 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
         #looking for the momentum combinations
         #filtering out the momentum
         final_indices <- NULL
-        print(diaindex)
-        for (differentcombinations in 1: length(selections[[avail_baryon_types]]$interp)){
+        for (differentcombinations in 1: length(filtered_selection$interp)){
 
           #determining the indices of momentum
           for(mom in 1:ncol(data_mom)){
             if ((all.equal(data_mom[,mom],
-                              c(selections[[selected_diagramm_types]]$pi2x[differentcombinations],
-                                selections[[selected_diagramm_types]]$pi2y[differentcombinations],
-                                selections[[selected_diagramm_types]]$pi2z[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf1x[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf1y[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf1z[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf2x[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf2y[differentcombinations],
-                                selections[[selected_diagramm_types]]$pf2z[differentcombinations])
+                              c(filtered_selection$pi2x[differentcombinations],
+                                filtered_selection$pi2y[differentcombinations],
+                                filtered_selection$pi2z[differentcombinations],
+                                filtered_selection$pf1x[differentcombinations],
+                                filtered_selection$pf1y[differentcombinations],
+                                filtered_selection$pf1z[differentcombinations],
+                                filtered_selection$pf2x[differentcombinations],
+                                filtered_selection$pf2y[differentcombinations],
+                                filtered_selection$pf2z[differentcombinations])
                ))==TRUE){
               momindex <- mom
               break;
@@ -1236,7 +1234,7 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
           tmp1<- strsplit(tmp[[1]][[4]],"}")
           tmp2 <- gsub(",\\{","",tmp1[[1]][[3]])
           gamma_source_list <- strsplit(tmp2,",")[[1]]
-          gammalist <- strsplit(as.character(selections[[selected_diagramm_types]]$interp[differentcombinations]),",")[[1]]
+          gammalist <- strsplit(as.character(filtered_selection$interp[differentcombinations]),",")[[1]]
 
           #Determining the indices of the gamma structures
           indices <- NULL
@@ -1288,8 +1286,8 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
         #Csymmetried=C+B(t)-C-B(T-t)
 
         #Obtaining C(T-t)
-        if (length(final_indices==1)){
-          reversed <- data_projection[,,Time:1]
+        if (length(final_indices)==1){
+          reversed <- data_projection[,,Time:1]          
           partial_array[,1,indexmom,] <- partial_array[,1,indexmom,]+0.25*(data_projection[,1,1]+data_projection[,6,1])
           for (line in 2:(Time/2+1)){
             partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] + 0.25*(data_projection[,1,line]+data_projection[,6,line])
@@ -1311,7 +1309,6 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
     } #end of loop for sequential momenta
 
     tmpprod <- prod(dim(partial_array))
-    str(partial_array)
     dim(partial_array) <- c(2, tmpprod/2)
     data_final_real <- rbind(data_final_real,partial_array[1,])
     data_final_imag <- rbind(data_final_imag,partial_array[2,])
@@ -1323,7 +1320,7 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
   attr(data_final_imag,"dimnames") <- NULL
 
 
-  cf <- cf_meta(nrObs=length(indices)*length(indices)*length(selections[[avail_diagramm_types]]$interp),Time=Time,nrStypes=1,symmetrised=FALSE)
+  cf <- cf_meta(nrObs=length(indices)*length(indices)*length(selections[[avail_diagramm_types]]$interp),Time=Time,nrStypes=1)
   cf$symmetrized <- TRUE
   cf <- cf_orig(cf, cf=data_final_real,icf=data_final_imag)
   return(invisible(cf))
