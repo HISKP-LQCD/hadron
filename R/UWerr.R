@@ -1,31 +1,3 @@
-# this is a more or less line by line translation of
-# U. Wolffs UWerr.m for R: The R Project for Statistical Computing
-#
-# See
-# ``Monte Carlo errors with less errors''
-#   by Ulli Wolff, hep-lat/0306017
-#   for details about the method
-#
-# R is free software and can be obtained at
-# http://www.r-project.org/
-#
-# a typical call would be like (plaq is a vector with plaquette values)
-#  source("UWerr.R")
-#  plaq.res <- uwerr(data=plaq)
-# or
-#  nrep <- c(1234,878)
-#  plaq.res <- uwerr(data=plaq, nrep=nrep, S=2.)
-# then try
-#  summary(plaq.res)
-# and
-#  source("plotutils.R")
-#  plot(plaq.res)
-# try help(read.table) for how to read data from a file
-#
-# 
-
-
-
 #' Time Series Analysis With Gamma Method
 #' 
 #' Analyse time series data with the so called gamma method
@@ -77,6 +49,7 @@
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{plot.uwerr}}
 #' @references ``Monte Carlo errors with less errors'', Ulli Wolff,
+#'  Comput.Phys.Commun. 156 (2004) 143-153, Comput.Phys.Commun. 176 (2007) 383 (erratum),
 #' hep-lat/0306017
 #' @keywords optimize ts
 #' @examples

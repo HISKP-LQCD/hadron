@@ -7,6 +7,10 @@
 #' @param R Number of bootstrap replicates.
 #' @param l Block length.
 #'
+#' @return
+#' Returns a numeric vector with the estimated standard error
+#' of the mean.
+#' 
 #' @export
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
@@ -25,6 +29,10 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
 #'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
 #' @param ov.sign.vec Numeric vector: Overal sign.
 #' @param deltat Numeric: time shift.
+#'
+#' @return
+#' Returns a numeric vector with the same length as the input vector `t`
+#' containing the model evaluation for these t-values.
 #' 
 #' @seealso \code{\link{matrixfit}}
 matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
@@ -42,6 +50,10 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #' @param T Numeric: Time extent of the lattice.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
 #' @param delta1 dummy parameter for compatibility
+#' 
+#' @return
+#' Returns a numeric vector with the same length as the input vector `t`
+#' containing the model evaluation for these t-values.
 #' 
 #' @seealso \code{\link{matrixfit}}
 pcModel <- function(par, t, T, delta1=1, reference_time) {
@@ -627,6 +639,9 @@ matrixfit <- function(cf, t1, t2,
 #' 
 #' @seealso \code{\link{matrixfit}}
 #'
+#' @return
+#' Returns no value, generated only plots.
+#' 
 #' @export
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
                             do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
@@ -755,6 +770,10 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
 #'
 #' @param object Object of type \link{matrixfit}
 #' @param ... Generic parameters to pass on.
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.matrixfit <- function (object, ...) {
   mfit <- object

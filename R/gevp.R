@@ -355,7 +355,7 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
 #' \dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
 #' \dontrun{## extract the first principal correlator}
 #' \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
-#' 
+#'
 #' @export gevp2cf
 gevp2cf <- function(gevp, id=1) {
   stopifnot(inherits(gevp, "gevp"))
@@ -439,6 +439,17 @@ gevp2cf <- function(gevp, id=1) {
 #' @seealso \code{\link{matrixfit}}, \code{\link{fit.effectivemass}},
 #' \code{\link{gevp}}, \code{\link{gevp2cf}}, \code{\link{computefps}}
 #' @keywords GEVP
+#'
+#' @return
+#' Returns an object of S3 class `gevp.amplitude`, generated as a list with named
+#' elements `amplitude` the numeric vector of amplitudes, `amplitude.tsboot`
+#' the corresponding bootstrap samples, `damplitude` the estimates for the
+#' standard errors, `fit` the object returned by the fit routine,
+#' `meanAmplitude` and `meanAmplitude.tsboot` mean amplitude and its
+#' bootstrap samples, `chisqr` the residual sum of squares, `dof` the numberi of
+#' degrees of freedom, `t1` and `t2` the fit range, and then all the input
+#' objects.
+#' 
 #' @examples
 #' 
 #' \dontrun{## apply a GEVP analysis}
@@ -454,7 +465,7 @@ gevp2cf <- function(gevp, id=1) {
 #' \dontrun{pion.pc1.amplitude <- computefps(pion.pc1.amplitude, Kappa=0.125, mu1=0.003)}
 #' \dontrun{summary(pion.pc1.amplitude)}
 #' \dontrun{plot(pion.pc1.amplitude)}
-#' 
+#'
 #' @export gevp2amplitude
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
   if(id > gevp$matrix.size || id < 1 || op.id > gevp$matrix.size || op.id < 1) {
@@ -565,6 +576,10 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
 #'
 #' @param object Object of type `gevp.amplitude`.
 #' @param ... Generic Parameters to be passed on.
+#'
+#' @return
+#' No return values.
+#' 
 #' @export
 summary.gevp.amplitude <- function (object, ...) {
   amp <- object
@@ -600,6 +615,9 @@ summary.gevp.amplitude <- function (object, ...) {
 #' @param x Object of type `gevp.amplitude`.
 #' @param ... Graphical parameters to be passed on.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 plot.gevp.amplitude <- function (x, ...) {
   amp <- x

@@ -67,6 +67,10 @@ tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
 #' @keywords file
 #'
 #' @family tikzutils
+#'
+#' @return
+#' No return value.
+#' 
 #' @examples
 #' 
 #' library(hadron)

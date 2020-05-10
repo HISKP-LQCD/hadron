@@ -10,6 +10,9 @@
 #' @useDynLib hadron
 #' @importFrom Rcpp evalCpp
 #'
+#' @return
+#' A single numeric value is returned corresponding to the mass.
+#' 
 #' @export
 invcosh <- function(ratio, timeextent, t, eps=1.e-9, maxiterations=1000) {
 

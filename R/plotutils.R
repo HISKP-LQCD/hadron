@@ -7,6 +7,10 @@
 #' @param logscale Boolean.
 #' @param cumul.dval Numeric. Cumulative error.
 #' @param cumul.mdval Numeric. Cumulative error.
+#'
+#' @return
+#' The computed plot limits are returned as a two component
+#' numeric vector.
 compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   tmp <- val - 0.1*abs(val)
   tmpp <- val + 0.1*abs(val)
@@ -146,6 +150,11 @@ errorpos <- function(dx,errsum.method="linear") {
 #' @author Carsten Urbach, \email{urbach@@hiskp.uni-bonn.de} \cr Bartosz
 #' Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
 #' @seealso \code{\link[graphics]{plot}}, \code{\link[graphics]{points}}
+#'
+#' @return
+#' Returns for convenience a list with elements `xlim` and `ylim` representing the
+#' x- and y-limits chosen by the routine.
+#' 
 #' @examples
 #' 
 #' # Create some random data, set one error to zero.
@@ -374,6 +383,9 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
 #' @param x0 Numeric. Left value of the range of the horizontal line.
 #' @param x1 Numeric. Right value of the range of the horizontal line.
 #'
+#' @return
+#' No return value, only graphics is generated.
+#' 
 #' @export
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
@@ -394,6 +406,9 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
 #' @param xlab String. Label for x-axis
 #' @param ylab String. Lable for y-axis
 #'
+#' @return
+#' See \link{plotwitherror}.
+#'
 #' @export
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
   plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
@@ -405,8 +420,11 @@ plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
 #' Generic function to plot an object of type `pionfit`
 #'
 #' @param x Object of type `pionfit`
-#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#' @param ... Generic graphical parameter, ignored.
 #'
+#' @return
+#' See \link{plot.cfit}
+#' 
 #' @export
 plot.pionfit <- function(x, ...) {
   plot.cfit(x)
@@ -420,6 +438,9 @@ plot.pionfit <- function(x, ...) {
 #' @param x Object of type `rhofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' See \link{plot.cfit}
+#' 
 #' @export
 plot.rhofit <- function(x, ...) {
   plot.cfit(x)
@@ -433,6 +454,9 @@ plot.rhofit <- function(x, ...) {
 #' @param x Object of type `b1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' See \link{plot.cfit}
+#' 
 #' @export
 plot.b1fit <- function(x, ...) {
   plot.cfit(x)
@@ -446,6 +470,9 @@ plot.b1fit <- function(x, ...) {
 #' @param x Object of type `ofit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' See \link{plot.cfit}
+#' 
 #' @export
 plot.ofit <- function(x, ...) {
   plot.cfit(x)
@@ -459,6 +486,9 @@ plot.ofit <- function(x, ...) {
 #' @param x Object of type `c1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' No return value, only plots are generated.
+#' 
 #' @export
 plot.cfit <- function(x, ...) {
   fit <- x
@@ -532,6 +562,9 @@ plot.cfit <- function(x, ...) {
 #' @param lf local-fuzzed effective mass object
 #' @param ff fuzzed-fuzzed effective mass object
 #'
+#' @return
+#' No value returned, only plots are generated.
+#' 
 #' @export
 plot.effmass <- function (x, ..., ll, lf, ff) {
   m <- x
@@ -566,6 +599,11 @@ plot.effmass <- function (x, ..., ll, lf, ff) {
 #' @param x `averx` object
 #' @param ... ignored
 #'
+#' @return
+#' Returns the plotted data in from of a \link{data.frame} with named
+#' columns `t` (the time index), `averx` the values of average x and
+#' `daverx` the statistical error estimate.
+#' 
 #' @export
 plot.averx <- function(x, ...) {
   averx <- x
@@ -600,6 +638,9 @@ plot.averx <- function(x, ...) {
 #' @param x Object of type `pionff`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' No return value, only plots are generated.
+#' 
 #' @export
 plot.pionff <- function (x, ...) {
   ff <- x
@@ -637,6 +678,12 @@ plot.pionff <- function (x, ...) {
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
 #' @keywords methods hplot
+#' @return
+#' The plotted data is return in form of a \link{list} with named elements `data`
+#' containing the input data, plaq.res an object returned by \link{uwerrprimary}
+#' for the plaquette data dn `dH.res` an object returned by \link{uwerrprimary}
+#' for \eqn{\Delta H}{Delta H}.
+#' 
 #' @export 
 #' @examples
 #' 
