@@ -32,6 +32,9 @@ pcacsym <- function(data, t, T2, pa=FALSE) {
 #' @param T2 Time extend
 #' @param pa Boolean. 
 #'
+#' @return
+#' Single numeric value, the mass.
+#' 
 #' @export
 pcacfit <- function(data, from, to, T2, pa=FALSE) {
   mass <- 0.

@@ -26,6 +26,10 @@ swap_seed <- function (new_seed) {
 
 #' Restore random number generator state
 #'
+#' @return
+#' No return value, but the random seed is reset to
+#' `old_seed`.
+#' 
 #' @param old_seed integer. Previous seed that should be restored globally.
 restore_seed <- function (old_seed) {
   if (!is.null(old_seed))

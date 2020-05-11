@@ -241,6 +241,10 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
 #' (\code{plot.corr}) as well as the corresponding effective mass
 #' (\code{plot.mass}, if fitted with effMass).
 #' @param ... graphical parameters to be passed on to \link{plotwitherror}
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr = FALSE, ...) {
   effMass <- x
@@ -306,6 +310,10 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
 #' correlation matrix of the fit parameters are showed. Otherwise only the
 #' effective mass with error is given.
 #' @param ... additional parameters to match generic \link{summary} arguments
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.coshfit <- function (object, verbose = FALSE, ...) {
   effMass <- object

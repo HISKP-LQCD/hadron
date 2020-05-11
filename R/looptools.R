@@ -225,6 +225,10 @@ loop_2pt <- function(loop_snk,
 #'                      If an integer is supplied, it must be at least '1'
 #'                      and at most consistent with the number of stochastic
 #'                      samples in \code{loop}.
+#' @return
+#' Returns the input `loop` object with named elemens `data` and
+#' `dim` added.
+#' 
 #' @export
 loop_stochav <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
@@ -262,6 +266,9 @@ loop_stochav <- function(loop, nstoch_to_avg = 'all'){
 #'                      integer is provided it must be at least '1' and at most
 #'                      consistent with the number of stochastic samples in \code{loop}.
 #'
+#' @return
+#' Returns the input `loop` object with added data.
+#' 
 #' @export
 loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
@@ -311,6 +318,10 @@ loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
 #' @param scale_factor Complex scaling factor to be applied.
 #' @param herm_conj Boolean, optionally the loop matrix \eqn{M} can be hermitian
 #'                  conjugated before the spin projection is performed.
+#'
+#' @return
+#' Returns an object of class \link{raw_cf}.
+#' 
 #' @export
 loop_spin_project <- function(loop,
                               gamma,

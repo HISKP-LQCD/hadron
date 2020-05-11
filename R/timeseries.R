@@ -27,6 +27,10 @@
 #' @param uw.summary Boolean. Generate an \link{uwerr} summary plot.
 #' @param ... Generic graphical parameters to be passed on.
 #'
+#' @return
+#' Returns a \link{data.frame} with named columns `val`, `dval`, `tauint`, `dtauint`, `Wopt`
+#' and `stringsAsFactors`, see \link{uwerr}.
+#' 
 #' @export
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
@@ -170,6 +174,10 @@ plot_timeseries <- function(dat,
 #' @param errorband_color String. Colour of the error band.
 #' @param debug Boolean. Generate debug output.
 #'
+#' @return
+#' Returns a list with two named elements `mineval` and `maxeval` for the minimal
+#' and the maximal eigenvalue, see \link{plot_timeseries}.
+#' 
 #' @export
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,

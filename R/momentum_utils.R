@@ -1,5 +1,9 @@
 #' @title Generate table of momentum component combinations
 #' @param psqmax Integer, maximum p^2 = px^2 + py^2 + pz^2 to be included in momentum list
+#'
+#' @return
+#' Returns a \link{data.frame} with all possible momentum combinations.
+#' 
 #' @export
 mom_combinations <- function(psqmax){
   pmax <- ceiling(sqrt(psqmax))+1

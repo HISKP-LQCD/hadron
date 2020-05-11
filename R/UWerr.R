@@ -405,6 +405,9 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 #' @param object Object of type \link{uwerr}
 #' @param ... Generic parameters to pass on.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.uwerr <- function (object, ...) {
   uwerr <- object
@@ -450,13 +453,17 @@ summary.uwerr <- function (object, ...) {
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
 #' @seealso \code{\link{uwerr}}, \code{\link{pion}}
 #' @keywords methods hplot
-#' @export 
+#'
+#' @return
+#' No return value.
+#' 
 #' @examples
 #' 
 #' data(plaq.sample)
 #' plaq.res <- uwerrprimary(plaq.sample)
 #' plot(plaq.res)
 #' 
+#' @export 
 plot.uwerr <- function(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100) {
 
   if(x$primary && plot.hist) {

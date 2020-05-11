@@ -26,6 +26,9 @@
 #'   they are removed simultaneously.
 #' @param deltat Integer. Time shift value.
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 old_removeTemporal.cf <- function(cf, 
                               single.cf1, 
@@ -357,6 +360,9 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 #'   after a shift.
 #' @param inverse boolean. If `TRUE` apply inverse weight.
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
@@ -388,6 +394,9 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 #'
 #' @inheritParams weight.cf
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,

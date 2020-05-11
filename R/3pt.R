@@ -85,6 +85,9 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
 #' @param object Object of type `pionff`
 #' @param ... Generic parameters to pass on.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.pionff <- function (object, ...) {
   ff <- object
@@ -261,8 +264,11 @@ averx <- function(data3pt, data2pt, pionfit,
 #' summary.averx
 #'
 #' @param object Object of type `averx`
-#' @param ... Generic parameters to pass on.
+#' @param ... Generic parameters, ignored here.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.averx <- function(object, ...) {
   averx <- object
@@ -297,6 +303,9 @@ summary.averx <- function(object, ...) {
 #' @param x Object of type `averx`
 #' @param ... Generic parameters to pass on.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 print.averx <- function(x, ...) {
   summary.averx(x, ...)
