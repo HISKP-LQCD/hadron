@@ -37,11 +37,24 @@ NULL
 #' 
 #' An R implementation of fitting routines used in lattice QCD. It provides
 #' useful functions for extraction hadronic quantities and such like.
-#' 
-#' An R implementation of fitting routines used in lattice QCD. It provides
-#' useful functions for extraction hadronic quantities and such like.
-#' 
-#' More to come.
+#'
+#' Toolkit to perform statistical analyses of correlation
+#' functions generated from Lattice Monte Carlo simulations. In
+#' particular, a class `cf` for correlation functions and
+#' methods to analyse those are defined. This includes (blocked)
+#' bootstrap and jackknife, but also an automatic determination of
+#' integrated autocorrelation times. `hadron` also provides a very
+#' general function to bootstrap a non-linear least squares fit.
+#' More specific functions are provided to extract hadronic quantities
+#' from Lattice Quantum Chromodynamics simulations, a particular Monte
+#' Carlo simulation,(see e.g. ETM Collaboration, P. Boucaud et
+#' al. (2008) <doi:10.1016/j.cpc.2008.06.013>). Here, to determine
+#' energy eigenvalues of hadronic states, specific fitting routines
+#' and in particular the generalised eigenvalue method (see
+#' e.g. B. Blossier et al. (2009) <doi:10.1088/1126-6708/2009/04/094>
+#' and M. Fischer et al. (2020)
+#' <https://inspirehep.net/literature/1792113>) are implemented.
+#' In addition, input/output and plotting routines are available.
 #' 
 #' @name hadron
 #' @docType package

@@ -19,9 +19,19 @@ Authors@R:
       person(given = "Martin",
              family = "Ueding",
              role = "aut",
-             email = "mu@martin-ueding.de"))
-Author: Carsten Urbach [aut, cre], Bartosz Kostrzewa [aut], Johann Ostmeyer [aut], Martin Ueding [aut] 
-Maintainer: Carsten Urbach <urbach@hiskp.uni-bonn.de>
+             email = "mu@martin-ueding.de"),
+      person(given = "Nikolas",
+             family = "Schlage",
+             role = "ctb"),
+      person(given = "Markus",
+             family = "Werner",
+             role = "ctb"),
+      person(given = "Ferenc",
+             family = "Pittler",
+             role = "ctb"),
+      person(given = "Matthias",
+             family = "Fischer",
+             role = "ctb"))
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: Toolkit to perform statistical analyses of correlation
    functions generated from Lattice Monte Carlo simulations. In
