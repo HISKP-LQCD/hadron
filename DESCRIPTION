@@ -31,6 +31,9 @@ Authors@R:
              role = "ctb"),
       person(given = "Matthias",
              family = "Fischer",
+             role = "ctb"),
+      person(given = "Vittorio",
+             family = "Lubicz",
              role = "ctb"))
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: Toolkit to perform statistical analyses of correlation
