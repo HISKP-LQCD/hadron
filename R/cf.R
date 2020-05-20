@@ -866,7 +866,7 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   apply_elementwise.cf(cf1, cf2, `/`)
 }
 
-apply_elementwise.cf <- function(cf1, cf2, %op% = `/`) {
+apply_elementwise.cf <- function(cf1, cf2, `%op%` = `/`) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
   cf <- cf1
