@@ -217,10 +217,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   stopifnot(inherits(cf, 'cf_boot'))
 
   ## number of measurements
-  N <- length(cf$cf[,1])
-  if(is.null(cf$cf)) {
-    N <- cf$N
-  }
+  N <- length(cf$cf0)
   deltat <- 1
   if(type == "shifted" && any(names(cf) == "deltat")) {
     deltat <- cf$deltat
