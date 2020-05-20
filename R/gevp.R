@@ -264,7 +264,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 #' 
 #' data(correlatormatrix)
 #' ## bootstrap the correlator matrix
-#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=400, boot.l=1, seed=132435)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
 #' ## solve the GEVP
 #' t0 <- 4
 #' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))

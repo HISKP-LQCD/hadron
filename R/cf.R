@@ -476,7 +476,7 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
 #' plot(samplecf, log=c("y"))
 #' 
 #' @export bootstrap.cf

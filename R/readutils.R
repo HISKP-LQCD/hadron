@@ -477,7 +477,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   }
   
   ret <- cf_meta(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrise)
-  ret <- cf_orig(ret, cf = cf, icf = NA)
+  ret <- cf_orig(ret, cf = cf, icf = NULL)
 
   return (invisible(ret))
 }
