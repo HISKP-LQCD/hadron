@@ -842,6 +842,12 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
+#' @rdname slash-.cf
+#' @export
+'*.cf' <- function(cf1, cf2) {
+  apply_elementwise.cf(cf1, cf2, `*`)
+}
+
 #' Divide two cf objects by each other measurement by measurement
 #'
 #' Note that no complex arithmetic is used, real and imaginary parts are 
@@ -857,6 +863,10 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 #'
 #' @export
 '/.cf' <- function(cf1, cf2) {
+  apply_elementwise.cf(cf1, cf2, `/`)
+}
+
+apply_elementwise.cf <- function(cf1, cf2, %op% = `/`) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
   cf <- cf1
@@ -864,11 +874,11 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
     stopifnot(all(dim(cf1$cf) == dim(cf2$cf)))
     stopifnot(cf1$Time == cf2$Time)
 
-    cf$cf <- cf1$cf / cf2$cf
+    cf$cf <- cf1$cf %op% cf2$cf
 
     if( has_icf(cf1) | has_icf(cf2) ){
       stopifnot(has_icf(cf1) & has_icf(cf2))
-      cf$icf <- cf1$icf / cf2$icf
+      cf$icf <- cf1$icf %op% cf2$icf
     }
   }
   ## the following is a bit dangerous, however, for
@@ -878,8 +888,8 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
      all(dim(cf1$cf.tsboot$t) == dim(cf2$cf.tsboot$t)) &&
      cf1$seed == cf2$seed && cf1$boot.l == cf2$boot.l) {
     
-    cf$cf.tsboot$t  <- cf1$cf.tsboot$t / cf2$cf.tsboot$t
-    cf$cf.tsboot$t0 <- cf1$cf.tsboot$t0 / cf2$cf.tsboot$t0
+    cf$cf.tsboot$t  <- cf1$cf.tsboot$t %op% cf2$cf.tsboot$t
+    cf$cf.tsboot$t0 <- cf1$cf.tsboot$t0 %op% cf2$cf.tsboot$t0
     cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = cf$error_fn)
     cf$cf0 <- cf$cf.tsboot$t0
   }
