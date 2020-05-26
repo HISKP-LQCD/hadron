@@ -3,6 +3,10 @@ title: "Two Amplitudes Model"
 author: "Martin Ueding"
 date: "31 3 2020"
 output: pdf_document
+vignette: >
+  %\VignetteIndexEntry{Two Amplitudes Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
