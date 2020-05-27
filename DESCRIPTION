@@ -4,11 +4,7 @@ Date: 2020-05-05
 Title: Statistical Methods to Extract (Hadronic) Quantities from
     Correlation Functions in Mote Carlo Simulations
 Authors@R: 
-    c(person(given = "Carsten",
-             family = "Urbach",
-             role = c("aut", "cre"),
-             email = "urbach@hiskp.uni-bonn.de"),
-      person(given = "Bartosz",
+    c(person(given = "Bartosz",
              family = "Kostrzewa",
              role = "aut",
              email = "bartosz.kostrzewa@desy.de"),
@@ -20,6 +16,10 @@ Authors@R:
              family = "Ueding",
              role = "aut",
              email = "mu@martin-ueding.de"),
+      person(given = "Carsten",
+             family = "Urbach",
+             role = c("aut", "cre"),
+             email = "urbach@hiskp.uni-bonn.de"),
       person(given = "Nikolas",
              family = "Schlage",
              role = "ctb"),
@@ -41,12 +41,12 @@ Description: Toolkit to perform statistical analyses of correlation
    particular, a class `cf` for correlation functions and
    methods to analyse those are defined. This includes (blocked)
    bootstrap (based on the `boot` package) and jackknife, but also an
-   automatic determination of 
-   integrated autocorrelation times. `hadron` also provides a very
-   general function to bootstrap a non-linear least squares fit.
+   automatic determination of integrated autocorrelation
+   times. `hadron` also provides a very  general function
+   `bootstrap.nlsfit` to bootstrap a non-linear least squares fit.
    More specific functions are provided to extract hadronic quantities
    from Lattice Quantum Chromodynamics simulations, a particular Monte
-   Carlo simulation,(see e.g. ETM Collaboration, P. Boucaud et
+   Carlo simulation,(see e.g. European Twisted Mass Collaboration, P. Boucaud et
    al. (2008) <doi:10.1016/j.cpc.2008.06.013>). Here, to determine
    energy eigenvalues of hadronic states, specific fitting routines
    and in particular the generalised eigenvalue method (see

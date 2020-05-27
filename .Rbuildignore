@@ -25,6 +25,7 @@ test_readbinarysamples.Rmd
 notes/
 test
 hooks/
+inst/*.Rmd
 test_bootstrap_nlsfit.Rmd
 verify-exports
 exec/scatteringlength
@@ -33,3 +34,5 @@ exec/phaseshift
 exec/rho-phaseshift
 exec/averx
 exec/put*
+R/jackknifeafterboot.R
+R/boot_ts_array.R
