@@ -11,7 +11,6 @@
 #include <complex.h>
 #include <math.h>
 
-gsl_error_handler_t *old_handler;
 const double N = 16. * M_PI * M_PI;
 const double fmGeV = 0.1973269631;
 
