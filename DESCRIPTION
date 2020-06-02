@@ -38,12 +38,12 @@ Authors@R:
 SystemRequirements: Gnu Scientific Library version >= 1.8
 Description: Toolkit to perform statistical analyses of correlation
    functions generated from Lattice Monte Carlo simulations. In
-   particular, a class `cf` for correlation functions and
+   particular, a class 'cf' for correlation functions and
    methods to analyse those are defined. This includes (blocked)
-   bootstrap (based on the `boot` package) and jackknife, but also an
+   bootstrap (based on the 'boot' package) and jackknife, but also an
    automatic determination of integrated autocorrelation
-   times. `hadron` also provides a very  general function
-   `bootstrap.nlsfit` to bootstrap a non-linear least squares fit.
+   times. 'hadron' also provides a very  general function
+   bootstrap.nlsfit() to bootstrap a non-linear least squares fit.
    More specific functions are provided to extract hadronic quantities
    from Lattice Quantum Chromodynamics simulations, a particular Monte
    Carlo simulation,(see e.g. European Twisted Mass Collaboration, P. Boucaud et
