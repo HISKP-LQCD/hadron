@@ -152,7 +152,6 @@ onlinemeas <- function(data, t1, t2,
 
   # some effective pion masses
   eff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
-  options(show.error.messages = TRUE)
 
   mass.eff <- data.frame(t=eff$t, m=eff$mass, dm=eff$dmass)
 
