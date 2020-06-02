@@ -132,9 +132,9 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
       masses = c(m.init, acosh(C1/CMiddle))
       amplitudes = c(a0, C1/cosh(masses[[2]]*(t1-Thalf)))
       if(any(is.na(masses)) || any(is.na(amplitudes))){
-        cat("The higher cosh-term cannot be resolved properly.\nA plateau fit is recommended.\n")
+        warning("The higher cosh-term cannot be resolved properly.\nA plateau fit is recommended.\n")
         if(adjust.n.cosh){
-          cat("Changing number of cosh-terms. Now n.cosh=1.\n")
+          message("Changing number of cosh-terms. Now n.cosh=1.\n")
           n.cosh = 1
           masses = c(m.init)
           amplitudes = c(a0)

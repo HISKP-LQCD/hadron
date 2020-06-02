@@ -423,7 +423,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   if( length( ii.remove ) > 0 ) {
     ## remove the columns that should be excluded from the fit below
     ii <- ii[ -ii.remove ]
-    cat("Due to NAs we have removed the time slices", ii.remove-1, " from the fit\n")
+    message("Due to NAs we have removed the time slices ", ii.remove-1, " from the fit\n")
   }
   cf$ii <- ii
   cf$dof <-  length(ii)-1

@@ -533,7 +533,7 @@ new_matrixfit <- function(cf,
   }
   
   if (dim(parlist)[2] != mSize) {
-    cat(mSize, dim(parlist)[2], "\n")
+    warning(mSize, " ", dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
   }
   if (length(sym.vec) != mSize) {

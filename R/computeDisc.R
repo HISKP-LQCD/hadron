@@ -105,7 +105,7 @@ computeDisc <- function(cf, cf2,
   ## mean over all gauges and times
   if(nrSamples == 1) vev <- mean(tcf)
   else vev <- mean(tcf[,sindex,])
-  if(verbose) cat("vev1 = ", vev, "\n")
+  if(verbose) message("vev1 = ", vev, "\n")
 
   if(!subtract.vev) vev <- 0.
 
@@ -167,7 +167,7 @@ computeDisc <- function(cf, cf2,
     vev2 <- 0.
     if(nrSamples2 == 1) vev2 <- mean(tcf2)
     else vev2 <- mean(tcf2[,sindex2,])
-    if(verbose) cat("vev2 = ", vev2, "\n")
+    if(verbose) message("vev2 = ", vev2, "\n")
     if(!subtract.vev2) vev2 <- 0.
 
     ## now we check using conf.index whether the data sets are matched

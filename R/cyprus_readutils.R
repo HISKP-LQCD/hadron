@@ -165,7 +165,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                                    )
                            )
   if( any( files_not_exist ) ){
-    cat("The files: ", files[files_not_exist], " do not exist! \n")
+    warning("The files: ", files[files_not_exist], " do not exist! \n")
     stop("There were missing files!")
   }
  
@@ -228,7 +228,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     FUN = function(ifile){
       f <- files[ifile]
       if(verbose){
-        cat(sprintf("Opening %s\n",f))
+        message(sprintf("Opening %s\n",f))
         tictoc::tic("Loop extraction")
       }
 

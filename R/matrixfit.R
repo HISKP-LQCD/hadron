@@ -445,7 +445,7 @@ matrixfit <- function(cf, t1, t2,
   }
   
   if(dim(parlist)[2] != mSize) {
-    cat(mSize, dim(parlist)[2], "\n")
+    warning(mSize, " ", dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
   }
   if(length(sym.vec) != mSize) {
@@ -580,7 +580,7 @@ matrixfit <- function(cf, t1, t2,
                       parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], reference_time=reference_time,
                       control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
+      warning(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
@@ -844,7 +844,7 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
                       deltat=deltat, ov.sign.vec=ov.sign.vec, reference_time=reference_time,
                       control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
+      warning(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
     opt.res$value <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }

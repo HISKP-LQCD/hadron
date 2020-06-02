@@ -232,7 +232,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
     if( !(files[i] %in% excludelist) && file.exists(files[i]) && (i-1) %% stride == 0) {
       
       if(verbose) {
-        cat("Reading from file", files[i], "\n")
+        message("Reading from file ", files[i], "\n")
       }
       ## read the data
       tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
@@ -437,7 +437,7 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
     stop("extract.obs: data inconsistent, T not equal to what was found in the input data\n")
   }
-  if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
+  if(verbose) message("extract.obs: nrObs=",nrObs, " nrStypes=",nrStypes, " T=", Time, "\n")
 
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
   cf <- NULL
@@ -604,14 +604,14 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
   if( (stride > 1 | avg > 1) & (ncol(tmp) %% (stride*avg) != 0) ){
     if(autotruncate){
-      cat(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
-      cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
-      cat("readtextcf: Reducing the number of total measurements to fit!\n")
+      warning(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
+      warning("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      warning("readtextcf: Reducing the number of total measurements to fit!\n")
       nmeas <- as.integer( (stride*avg)*floor( ncol(tmp)/(stride*avg) ))
       if( nmeas/(stride*avg) >= Nmin ){
         tmp <- tmp[,1:nmeas]
       } else {
-        cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        warning(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
         stride <- 1
         avg <- 1
       }
@@ -843,7 +843,7 @@ readbinarycf <- function(files,
       }
     }
     else if(!file.exists(ifs)) {
-      cat("file ", ifs, "does not exist...\n")
+      warning("file ", ifs, " does not exist...\n")
     }
   }
 
@@ -921,7 +921,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
         Cf[[i]] <- cbind(Cf[[i]], tmp2)
       }
     } else if(!file.exists(ifs)) {
-      cat("file ", ifs, "does not exist...\n")
+      warning("file ", ifs, " does not exist...\n")
     }
   }
 

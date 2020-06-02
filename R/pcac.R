@@ -125,7 +125,7 @@ pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0
   Zap <- array(axps$ap, dim=c(T2, length(axps$ap)/T2))
   if(pa) Zpa <- array(psax$pa, dim=c(T2, length(psax$pa)/T2))
 
-  cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
+  message("Found ", length(psscar$ps)/T2, " measurements, skipping ", skip, " \n")
 
   rm(psscar)
   rm(axps)

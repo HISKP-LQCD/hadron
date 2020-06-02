@@ -44,14 +44,14 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   data.mean = mean(data)
   error.naive = sd(data)/sqrt(length(data))
 
-  cat("mean value = ", data.mean, "\n")
-  cat("naive error = ", error.naive, "\n")
+  message("mean value = ", data.mean, "\n")
+  message("naive error = ", error.naive, "\n")
   
   data.boot <- boot::boot(data=data, statistic=meanindexed, R=boot.R, stype="i")
   data.boot.ci <- boot::boot.ci(data.boot, type = c("norm", "basic", "perc"))
 
-  cat("                  mean        -err           +err            stderr        bias\n")
-  cat("bootstrap      = ", data.boot$t0[1], "(", (data.boot.ci$normal[1,2]-data.boot$t0[1])/1.96
+  message("                  mean        -err           +err            stderr        bias\n")
+  message("bootstrap      = ", data.boot$t0[1], "(", (data.boot.ci$normal[1,2]-data.boot$t0[1])/1.96
 	, ",", -(data.boot$t0[1]-data.boot.ci$normal[1,3])/1.96, ")", sd(data.boot$t[,1]),
 	mean(data.boot$t[,1])-data.boot$t0[1],"\n")
   Blocksize <-  numeric()
@@ -67,8 +67,8 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
   Tauint[1] <- 0.
   Bias[1] <- 0.
 
-  cat("blocking analysis:\n")
-  cat("\t\t\t mean   \t stderr \t dstderr\t tau_int\t bias\n")
+  message("blocking analysis:\n")
+  message("\t\t\t mean   \t stderr \t dstderr\t tau_int\t bias\n")
   j <- 1
   while((length(data))/boot.l > 20) {
     ndata <- block.ts(data, l=boot.l)
@@ -85,8 +85,8 @@ bootstrap.analysis <- function(data, skip=0, boot.R=100,
     Tauint[j] <- sd(data.tsboot$t[,1])^2/error.naive^2/2
     Bias[j] <- data.tsboot$t0[1] - mean(data.tsboot$t[,1])
 
-    cat("blocklength =", boot.l, "\t", Mean[j], "\t", Error[j], "\t",
-        DError[j], "\t", Error[j]^2/error.naive^2/2, "\t", Bias[j], "\n")
+    message("blocklength =", boot.l, "\t", Mean[j], "\t", Error[j], "\t",
+            DError[j], "\t", Error[j]^2/error.naive^2/2, "\t", Bias[j], "\n")
     if(boot.l < 32) {
       boot.l <- boot.l*2
     }

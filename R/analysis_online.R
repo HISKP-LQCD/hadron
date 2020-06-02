@@ -137,7 +137,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   
   resultsum <- list()
   if(file.exists(resultsfile)){
-    cat("Loading analysis result database from ", resultsfile, "\n")
+    message("Loading analysis result database from ", resultsfile, "\n")
     load(resultsfile)
   }
 
@@ -240,7 +240,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       if(trajlabel){
         filelabel <- sprintf("%s_traj%06d-%06d",filelabel,min(omeas.cnums),max(omeas.cnums))
       }
-      cat("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
+      message("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
       save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
 
       plotcounter <- plotcounter+1
@@ -579,7 +579,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   system(command=sprintf("rm -f ??_*_%s.pdf", filelabel))
 
   resultsum[[rundir]] <- result
-  cat("Storing analysis result database in ", resultsfile, "\n")
+  message("Storing analysis result database in ", resultsfile, "\n")
   save(resultsum,file=resultsfile)
 
   return(invisible(result))
@@ -637,7 +637,7 @@ construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigm
   }
 
   if(debug) {
-    cat("Trying to read from directory:", rundir,"\n")
+    message("Trying to read from directory:", rundir,"\n")
   }
 
   return(rundir)
