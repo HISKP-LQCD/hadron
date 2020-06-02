@@ -582,15 +582,13 @@ plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
 	col.fitline <- col[1]
   }
   # BaKo: is this also valid for acosh type effective masses?
-  suppressWarnings(
-      t <- effMass$t.idx
-      plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...)
-      if(effMass$nrObs > 1) {
-        for(i in 1:(effMass$nrObs-1)) {
-          plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...)
-        }
-      }
-  )
+  t <- effMass$t.idx
+  suppressWarnings(plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...))
+  if(effMass$nrObs > 1) {
+    for(i in 1:(effMass$nrObs-1)) {
+      suppressWarnings(plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...))
+    }
+  }
   if(!missing(ref.value)) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }
