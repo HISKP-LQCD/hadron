@@ -266,10 +266,7 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
 
   if(plot.mass){
     t.all <- effMass$t.idx
-    op <- options()
-    options(warn=-1)
-    plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...)
-    options(op)
+    suppressWarnings(plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...))
 
     if(!is.null(effMass$coshfit)){
       Y <- cosh.to.effmass(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)
