@@ -1,13 +1,3 @@
-## Convert the number of significant digits to the absolute number of digits, 
-## given a value.
-absolute.number.digits <- function(x, digits){
-  if(x == 0 || is.na(x)){
-    return(max(digits-1, 0))
-  }else{
-    return(max(ceiling(digits-1-log10(abs(x))), 0))
-  }
-}
-
 #' paste a number with error in tex-ready format
 #' 
 #' A number with error is converted to a string in tex-ready format like xx(yy)
