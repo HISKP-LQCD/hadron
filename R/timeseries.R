@@ -62,6 +62,7 @@ plot_timeseries <- function(dat,
   }
 
   op <- par(family="Palatino",cex.main=0.8,font.main=1)
+  on.exti(par(op))
   par(mgp=c(2,1.0,0))
 
   # plot the timeseries
@@ -205,7 +206,8 @@ plot_eigenvalue_timeseries <- function(dat,
   if(!missing(pdf.filename)){
     tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
   }
-  par(mgp=c(2,1,0))
+  par_save <- par(mgp=c(2,1,0))
+  on.exit(par(par.save))
 
   # plot the timeseries
   plot(x=dat$traj, xlim=range(dat$traj), 

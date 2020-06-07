@@ -280,6 +280,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       tikzfiles <- tikz.init(basename=dpaopp_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
+      on.exit(par(op))
       par(mgp=c(2,1,0))
       plotwitherror(x=onlineout$dpaopp$t,
                     y=onlineout$dpaopp$mass,dy=onlineout$dpaopp$dmass,t='p',
@@ -309,6 +310,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       tikzfiles <- tikz.init(mpi_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
+      on.exit(par(op))
       par(mgp=c(2,1,0))
 
       # sometimes the error computation for the effective mass fails
