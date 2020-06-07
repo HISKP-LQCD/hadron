@@ -16,7 +16,7 @@ swap_seed <- function (new_seed) {
     return (NULL)
   }
 
-  temp <- sample.int(siez=1, n=seed_range)
+  temp <- sample.int(size=1, n=seed_range)
   set.seed(new_seed)
 
   return (temp)
