@@ -207,7 +207,7 @@ plot_eigenvalue_timeseries <- function(dat,
     tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
   }
   par_save <- par(mgp=c(2,1,0))
-  on.exit(par(par.save))
+  on.exit(par(par_save))
 
   # plot the timeseries
   plot(x=dat$traj, xlim=range(dat$traj), 
