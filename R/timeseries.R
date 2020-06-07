@@ -62,7 +62,7 @@ plot_timeseries <- function(dat,
   }
 
   op <- par(family="Palatino",cex.main=0.8,font.main=1)
-  on.exti(par(op))
+  on.exit(par(op))
   par(mgp=c(2,1.0,0))
 
   # plot the timeseries
