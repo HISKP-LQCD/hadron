@@ -42,7 +42,8 @@ Suggests:
     tikzDevice,
     hash,
     numDeriv,
-    staplr
+    staplr,
+    errors
 License: GPL-3
 URL: https://github.com/urbach/hadron
 BugReports: https://github.com/urbach/hadron/issues
