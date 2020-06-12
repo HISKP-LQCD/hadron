@@ -945,7 +945,7 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
       # that the first index corresponds to the gauge configuration (and source position)
       # and the second index corresponds to everything else
       #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
-      dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/128,Time) 
+      dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/Time,Time) 
 
 
 
@@ -1104,7 +1104,7 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
 #'         Find it useful temporary for using the gevp
 
 #' @export
-cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verbose = FALSE){
+cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, use_parallel=TRUE, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
   if( verbose ){
@@ -1121,99 +1121,112 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
   data_final_real <- NULL
   data_final_imag <- NULL
 
-  #loop on the list of files provided in the input
-  for( ifile in 1:length(files) ){
-    f <- files[ifile]
-    if(verbose) tictoc::tic(sprintf("Reading %s",f))
-
-    #open the file with read only argument
-    h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
-    print(f)
-
-    #checking whether the wanted diagramm type is available in the file
-
-    h5filedatasetcontent <- rhdf5::h5ls(h5f)
-    avail_diagramm_types <- FALSE
-    for (line in h5filedatasetcontent$name){
-      if( grepl(selected_diagramm_types, line) ){
-        avail_diagramm_types <- TRUE
-        break;
-      }
+  if( use_parallel ){
+    parallel_avail <- requireNamespace("parallel")
+    if( !parallel_avail ){
+      stop("Running in parallel requires the 'parallel' package!")
     }
-    if( !avail_diagramm_types  ){
+    lapply_fn <- parallel::mclapply
+  } else {
+    lapply_fn <- lapply
+  }
+
+
+  #loop on the list of files provided in the input
+  loops_per_file <- parallel::mclapply(
+    X = 1:length(files),
+    FUN = function(ifile){
+      f <- files[ifile]
+      tictoc::tic(sprintf("Reading %s",f))
+
+      #open the file with read only argument
+      h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
+
+      #checking whether the wanted diagramm type is available in the file
+
+      h5filedatasetcontent <- rhdf5::h5ls(h5f)
+      avail_diagramm_types <- FALSE
+      for (line in h5filedatasetcontent$name){
+        if( grepl(selected_diagramm_types, line) ){
+         avail_diagramm_types <- TRUE
+         break;
+        }
+      }
+      if( !avail_diagramm_types  ){
         msg <- sprintf("Some selected diagramm types could not be found in %s:\n %s",
                        f,
                        do.call(paste, as.list( selected_diagramm_types[!avail_baryon_types] ) )
                      )
         stop(msg)
-    }
-    #determining a unique set of sequential momentum and check if they are all available
-    all_pi2_momentum <- unique(data.frame(pi2x=selections[[selected_diagramm_types]]$pi2x,
+      }
+      #determining a unique set of sequential momentum and check if they are all available
+      all_pi2_momentum <- unique(data.frame(pi2x=selections[[selected_diagramm_types]]$pi2x,
                                           pi2y=selections[[selected_diagramm_types]]$pi2y,
                                           pi2z=selections[[selected_diagramm_types]]$pi2z))
 
-    #First we extract the source positions contained in the file
+
+      #First we extract the source positions contained in the file
     
-    for (indexmom in 1:length(all_pi2_momentum$pi2x)){
-      momstring <- sprintf("pi2=%d_%d_%d",all_pi2_momentum$pi2x[indexmom],
+      for (indexmom in 1:length(all_pi2_momentum$pi2x)){
+        momstring <- sprintf("pi2=%d_%d_%d",all_pi2_momentum$pi2x[indexmom],
                                           all_pi2_momentum$pi2y[indexmom],
                                           all_pi2_momentum$pi2z[indexmom])
-      if(length(unique(h5filedatasetcontent$group[grepl(momstring, h5filedatasetcontent$group)]))==0){
-        msg <- sprintf("Some selected sequential momentum could not be found in %s:\n %s",
+        if(length(unique(h5filedatasetcontent$group[grepl(momstring, h5filedatasetcontent$group)]))==0){
+          msg <- sprintf("Some selected sequential momentum could not be found in %s:\n %s",
                        f,
                        momstring )
-        stop(msg)
+          stop(msg)
+        }
       }
-    }
 
-    tmpprod=length(selections[[selected_diagramm_types]]$pi2x)
-    gammalist <- strsplit(as.character(selections[[selected_diagramm_types]]$interp[1]),",")[[1]]
-    partial_array<- array(0,dim=c(2,Time/2+1,length(all_pi2_momentum$pi2x),length(gammalist)*length(gammalist)*tmpprod/length(all_pi2_momentum$pi2x)))
-    #loop over all the sequential source momentum in the file
+      tmpprod=length(selections[[selected_diagramm_types]]$pi2x)
+      gammalist <- strsplit(as.character(selections[[selected_diagramm_types]]$interp[1]),",")[[1]]
+      partial_array<- array(0,dim=c(2,Time/2+1,length(all_pi2_momentum$pi2x),length(gammalist)*length(gammalist)*tmpprod/length(all_pi2_momentum$pi2x)))
+      #loop over all the sequential source momentum in the file
     
-    for (indexmom in 1:length(all_pi2_momentum$pi2x)){
+      for (indexmom in 1:length(all_pi2_momentum$pi2x)){
 
-      seq_source_momenta <- c(all_pi2_momentum$pi2x[indexmom],
-                              all_pi2_momentum$pi2y[indexmom],
-                              all_pi2_momentum$pi2z[indexmom])
-      filtered_selection <- filter(selections[[selected_diagramm_types]],pi2x==all_pi2_momentum$pi2x[indexmom],
-                                                                         pi2y==all_pi2_momentum$pi2x[indexmom],
-                                                                         pi2z==all_pi2_momentum$pi2z[indexmom])
-      key <- cyprus_make_key_scattering4pt( h5filedatasetcontent$group[2], seq_source_momenta, "mvec" )
+        seq_source_momenta <- c(all_pi2_momentum$pi2x[indexmom],
+                                all_pi2_momentum$pi2y[indexmom],
+                                all_pi2_momentum$pi2z[indexmom])
+        filtered_selection <- filter(selections[[selected_diagramm_types]],pi2x==all_pi2_momentum$pi2x[indexmom],
+                                                                           pi2y==all_pi2_momentum$pi2y[indexmom],
+                                                                           pi2z==all_pi2_momentum$pi2z[indexmom])
+        key <- cyprus_make_key_scattering4pt( h5filedatasetcontent$group[2], seq_source_momenta, "mvec" )
 
-      # read the available momenta
-      # array of 3 integer number
-      data_mom <- h5_get_dataset(h5f, key)
+        # read the available momenta
+        # array of 3 integer number
+        data_mom <- h5_get_dataset(h5f, key)
 
-      number_of_diagrams <- 4
+        number_of_diagrams <- 4
 
-      if (selected_diagramm_types == "B")
-        number_of_diagrams <- 2
-
-
-      for (diaindex in 1:number_of_diagrams){
-
-        key <- cyprus_make_key_scattering4pt( h5filedatasetcontent$group[2], seq_source_momenta, sprintf("%s%d",selected_diagramm_types,diaindex ))
-
-        # read the data
-        data_corr <- h5_get_dataset(h5f, key)
-        # convert it to a two-dimensional format, in such a way
-        # that the first index corresponds to the gauge configuration (and source position)
-        # and the second index corresponds to everything else
-        #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
-        tmpprod <- prod(dim(data_corr))
-        dim(data_corr)<- c(2,16,tmpprod/32/Time,Time)
+        if (selected_diagramm_types == "B")
+          number_of_diagrams <- 2
 
 
+        for (diaindex in 1:number_of_diagrams){
 
-        #looking for the momentum combinations
-        #filtering out the momentum
-        final_indices <- NULL
-        for (differentcombinations in 1: length(filtered_selection$interp)){
+          key <- cyprus_make_key_scattering4pt( h5filedatasetcontent$group[2], seq_source_momenta, sprintf("%s%d",selected_diagramm_types,diaindex ))
 
-          #determining the indices of momentum
-          for(mom in 1:ncol(data_mom)){
-            if ((all.equal(data_mom[,mom],
+          # read the data
+          data_corr <- h5_get_dataset(h5f, key)
+          # convert it to a two-dimensional format, in such a way
+          # that the first index corresponds to the gauge configuration (and source position)
+          # and the second index corresponds to everything else
+          #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
+          tmpprod <- prod(dim(data_corr))
+          dim(data_corr)<- c(2,16,tmpprod/32/Time,Time)
+
+
+
+          #looking for the momentum combinations
+          #filtering out the momentum
+          final_indices <- NULL
+          for (differentcombinations in 1: length(filtered_selection$interp)){
+
+            #determining the indices of momentum
+            for(mom in 1:ncol(data_mom)){
+              if ((all.equal(data_mom[,mom],
                               c(filtered_selection$pi2x[differentcombinations],
                                 filtered_selection$pi2y[differentcombinations],
                                 filtered_selection$pi2z[differentcombinations],
@@ -1224,105 +1237,112 @@ cyprus_read_scattering_4pt_correlation <- function(selections, files, Time, verb
                                 filtered_selection$pf2y[differentcombinations],
                                 filtered_selection$pf2z[differentcombinations])
                ))==TRUE){
-              momindex <- mom
-              break;
-            }
-          }
-          #getting the available gamma structures
-          descrip <- rhdf5::h5readAttributes(h5f,key,"description")
-          tmp <- strsplit(descrip$description,"/")
-          tmp1<- strsplit(tmp[[1]][[4]],"}")
-          tmp2 <- gsub(",\\{","",tmp1[[1]][[3]])
-          gamma_source_list <- strsplit(tmp2,",")[[1]]
-          gammalist <- strsplit(as.character(filtered_selection$interp[differentcombinations]),",")[[1]]
-
-          #Determining the indices of the gamma structures
-          indices <- NULL
-          error_gamma <- TRUE
-          for (line in 1:length(gammalist)){
-            for (line2 in 1:length(gamma_source_list)){
-              if (all.equal(gammalist[line], gamma_source_list[line2])==TRUE){
-                indices <- c(indices,line2);
-                error_gamma <- FALSE
+                momindex <- mom
                 break;
               }
             }
-          }
-          #if we have a gamma structure in the input that cannot be found in the
-          # hdf5 file we return with error message
-          if( error_gamma == TRUE ){
-            msg <- sprintf("Some selected gamma structures could not be found in %s:\n %s",
+            #getting the available gamma structures
+            descrip <- rhdf5::h5readAttributes(h5f,key,"description")
+            tmp <- strsplit(descrip$description,"/")
+            tmp1<- strsplit(tmp[[1]][[4]],"}")
+            tmp2 <- gsub(",\\{","",tmp1[[1]][[3]])
+            gamma_source_list <- strsplit(tmp2,",")[[1]]
+            gammalist <- strsplit(as.character(filtered_selection$interp[differentcombinations]),",")[[1]]
+
+            #Determining the indices of the gamma structures
+            indices <- NULL
+            error_gamma <- TRUE
+            for (line in 1:length(gammalist)){
+              for (line2 in 1:length(gamma_source_list)){
+                if (all.equal(gammalist[line], gamma_source_list[line2])==TRUE){
+                  indices <- c(indices,line2);
+                  error_gamma <- FALSE
+                  break;
+                }
+              }
+            }
+            #if we have a gamma structure in the input that cannot be found in the
+            # hdf5 file we return with error message
+            if( error_gamma == TRUE ){
+              msg <- sprintf("Some selected gamma structures could not be found in %s:\n %s",
                        f,
                        do.call(paste, as.list( gamma_source_list ) )
                      )
-            stop(msg)
-          }
+              stop(msg)
+            }
 
-          #Determining the indices of all the correlation functions
-          #for example if the input is cg1,cg2,cg3 then we need the following
-          #matrix
-          #c( (cg5  ,cg5)  (cg5  ,c)   (cg5  ,cg5g4) (cg5  ,cg4) )
-          #c( (c    ,cg5)  (c    ,c)   (c    ,cg5g4) (c    ,cg4) )
-          #c( (cg5g4,cg5)  (cg5g4,c)   (cg5g4,cg5g4) (cg5g4,cg4) )
-          #c( (cg4  ,cg5)  (cg4  ,c)   (cg4  ,cg5g4) (cg4  ,cg4) )
+            #Determining the indices of all the correlation functions
+            #for example if the input is cg1,cg2,cg3 then we need the following
+            #matrix
+            #c( (cg5  ,cg5)  (cg5  ,c)   (cg5  ,cg5g4) (cg5  ,cg4) )
+            #c( (c    ,cg5)  (c    ,c)   (c    ,cg5g4) (c    ,cg4) )
+            #c( (cg5g4,cg5)  (cg5g4,c)   (cg5g4,cg5g4) (cg5g4,cg4) )
+            #c( (cg4  ,cg5)  (cg4  ,c)   (cg4  ,cg5g4) (cg4  ,cg4) )
 
-          #Note that here we do not project out, we return all the spin components
-          #with real and imaginary part
+            #Note that here we do not project out, we return all the spin components
+            #with real and imaginary part
 
-          for (line1 in 1:length(indices)){
-            for (line2 in 1:length(indices)){
-              final_indices <- c(final_indices, (momindex-1)*length(gamma_source_list)*length(gamma_source_list)+(indices[line1]-1)*length(gamma_source_list)+(indices[line2]))
+            for (line1 in 1:length(indices)){
+              for (line2 in 1:length(indices)){
+                final_indices <- c(final_indices, (momindex-1)*length(gamma_source_list)*length(gamma_source_list)+(indices[line1]-1)*length(gamma_source_list)+(indices[line2]))
+              }
             }
           }
-        }
-        data_pp<- data_corr[,,final_indices,]
+          data_pp<- data_corr[,,final_indices,]
 
-        data_unprojected<- data_corr[,,final_indices,]
-        #Doing possible spin projection
-        data_projection <- data_unprojected
+          data_unprojected<- data_corr[,,final_indices,]
+          #Doing possible spin projection
+          data_projection <- data_unprojected
 
-        #Doing the symmetrization
-        #C+-B=<0.25*Tr(1+-g4)*C>
-        #Csymmetried=C+B(t)-C-B(T-t)
+          #Doing the symmetrization
+          #C+-B=<0.25*Tr(1+-g4)*C>
+          #Csymmetried=C+B(t)-C-B(T-t)
 
-        #Obtaining C(T-t)
-        if (length(final_indices)==1){
-          reversed <- data_projection[,,Time:1]          
-          partial_array[,1,indexmom,] <- partial_array[,1,indexmom,]+0.25*(data_projection[,1,1]+data_projection[,6,1])
-          for (line in 2:(Time/2+1)){
-            partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] + 0.25*(data_projection[,1,line]+data_projection[,6,line])
-            partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] - 0.25*(reversed[,11,line-1]+reversed[,16,line-1])
+          #Obtaining C(T-t)
+          if (length(final_indices)==1){
+            reversed <- data_projection[,,Time:1]          
+            partial_array[,1,indexmom,] <- partial_array[,1,indexmom,]+0.25*(data_projection[,1,1]+data_projection[,6,1])
+            for (line in 2:(Time/2+1)){
+              partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] + 0.25*(data_projection[,1,line]+data_projection[,6,line])
+              partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] - 0.25*(reversed[,11,line-1]+reversed[,16,line-1])
 
-           }
-        }
-        else{
-          reversed <- data_projection[,,,Time:1]
-          partial_array[,1,indexmom,] <- partial_array[,1,indexmom,]+0.25*(data_projection[,1,,1]+data_projection[,6,,1])
-          for (line in 2:(Time/2+1)){
-            partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] + 0.25*(data_projection[,1,,line]+data_projection[,6,,line])
-            partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] - 0.25*(reversed[,11,,line-1]+reversed[,16,,line-1])
+            }
           }
-        }
+          else{
+            reversed <- data_projection[,,,Time:1]
+            partial_array[,1,indexmom,] <- partial_array[,1,indexmom,]+0.25*(data_projection[,1,,1]+data_projection[,6,,1])
+            for (line in 2:(Time/2+1)){
+              partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] + 0.25*(data_projection[,1,,line]+data_projection[,6,,line])
+              partial_array[,line,indexmom,] <- partial_array[,line,indexmom,] - 0.25*(reversed[,11,,line-1]+reversed[,16,,line-1])
+            }
+          }
 
-      } #end of loop for diagramm number
+        } #end of loop for diagramm number
 
-    } #end of loop for sequential momenta
+      } #end of loop for sequential momenta
 
-    tmpprod <- prod(dim(partial_array))
-    dim(partial_array) <- c(2, tmpprod/2)
-    data_final_real <- rbind(data_final_real,partial_array[1,])
-    data_final_imag <- rbind(data_final_imag,partial_array[2,])
-
-    rhdf5::H5Fclose(h5f)
-
-  }
-  attr(data_final_real,"dimnames") <- NULL
-  attr(data_final_imag,"dimnames") <- NULL
+      tmpprod <- prod(dim(partial_array))
+      dim(partial_array) <- c(2, tmpprod/2)
+      data_final_real <- rbind(data_final_real,partial_array[1,])
+      data_final_imag <- rbind(data_final_imag,partial_array[2,])
+      tmp_prod <- prod(dim(data_final_real))
+      #dim(data_final_real) <- c(tmp_prod)
+      #dim(data_final_imag) <- c(tmp_prod)
 
 
-  cf <- cf_meta(nrObs=length(indices)*length(indices)*length(selections[[avail_diagramm_types]]$interp),Time=Time,nrStypes=1)
-  cf$symmetrized <- TRUE
-  cf <- cf_orig(cf, cf=data_final_real,icf=data_final_imag)
-  return(invisible(cf))
+      rhdf5::H5Fclose(h5f)
+
+      attr(data_final_real,"dimnames") <- NULL
+      attr(data_final_imag,"dimnames") <- NULL
+      tictoc::toc()
+
+      cf <- cf_meta(nrObs=length(indices)*length(indices)*length(selections[[avail_diagramm_types]]$interp),Time=Time,nrStypes=1)
+      cf$symmetrized <- TRUE
+      cf <- cf_orig(cf, cf=data_final_real,icf=data_final_imag)
+      return(cf) 
+
+      }
+  )
+  return(loops_per_file)
 
 }
