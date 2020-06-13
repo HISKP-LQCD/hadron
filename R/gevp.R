@@ -350,11 +350,16 @@ bootstrap.gevp <- function(cf, t0 = 1, element.order = 1:cf$nrObs,
 #' \code{\link{bootstrap.effectivemass}}
 #' @keywords GEVP
 #' @examples
-#' 
-#' \dontrun{## apply a GEVP analysis}
-#' \dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
-#' \dontrun{## extract the first principal correlator}
-#' \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
+#'
+#' data(correlatormatrix)
+#' ## bootstrap the correlator matrix
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
+#' ## solve the GEVP
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' ## extract the ground state and plot
+#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' plot(pc1, log="y")
 #'
 #' @export gevp2cf
 gevp2cf <- function(gevp, id=1) {
@@ -451,20 +456,21 @@ gevp2cf <- function(gevp, id=1) {
 #' objects.
 #' 
 #' @examples
-#' 
-#' \dontrun{## apply a GEVP analysis}
-#' \dontrun{pion.cor.gevp <- bootstrap.gevp(pion.cor, t0=1)}
-#' \dontrun{## extract the first principal correlator}
-#' \dontrun{pion.pc1 <- gevp2cf(pion.cor.gevp, id=1)}
-#' \dontrun{pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="acosh")}
-#' \dontrun{pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=12,}
-#' \dontrun{  t2=23, useCov=TRUE)}
-#' \dontrun{## now determine the amplitude}
-#' \dontrun{pion.pc1.amplitude <- gevp2amplitude(pion.cor.gevp, pion.pc1.effectivemass)}
-#' \dontrun{## compute also the pion decay constant}
-#' \dontrun{pion.pc1.amplitude <- computefps(pion.pc1.amplitude, Kappa=0.125, mu1=0.003)}
-#' \dontrun{summary(pion.pc1.amplitude)}
-#' \dontrun{plot(pion.pc1.amplitude)}
+#'
+#' data(correlatormatrix)
+#' ## bootstrap the correlator matrix
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
+#' ## solve the GEVP
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' ## extract the ground state and plot
+#' pion.pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="solve")
+#' pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=8, t2=23, useCov=FALSE)
+#' ## now determine the amplitude
+#' pion.pc1.amplitude <- gevp2amplitude(correlatormatrix.gevp, pion.pc1.effectivemass, useCov=FALSE, t1=8, t2=14)
+#' plot(pion.pc1.amplitude)
+#' summary(pion.pc1.amplitude)
 #'
 #' @export gevp2amplitude
 gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCov=TRUE, fit=TRUE) {
@@ -518,7 +524,9 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   
   ## now we perform a constant fit
   ii <- c((t1+1):(t2+1))
-
+  if(any(is.na(amplitude[ii])) || any(is.na(damplitude[ii]))) {
+    stop("At least one amplitude or its error take the value NA, change t1 and t2! Aborting!")
+  }
   M <- diag(1/damplitude[ii]^2)
   if(useCov) {
     ## compute correlation matrix and compute the correctly normalised inverse
@@ -619,9 +627,12 @@ summary.gevp.amplitude <- function (object, ...) {
 #' No return value.
 #' 
 #' @export
-plot.gevp.amplitude <- function (x, ...) {
+plot.gevp.amplitude <- function (x, xlab="t",
+                                 ylab=paste0("P[,",  x$id, ",", x$op.id, "]"),
+                                 ...) {
   amp <- x
-  plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude, ...)
+  plotwitherror(c(0:(amp$Time/2)), amp$amplitude, amp$damplitude,
+                xlab=xlab, ylab=ylab, ...)
   if(amp$fit) {
     arrows(x0=amp$t1, y0=amp$meanAmplitude,
            x1=amp$t2, y1=amp$meanAmplitude, col=c("red"), length=0)
