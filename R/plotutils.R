@@ -522,8 +522,8 @@ plot.averx <- function(x, ...) {
 #' @export
 plot.pionff <- function (x, ...) {
   ff <- x
-  T <- ff$Cf2ptp0$Time
-  Thalfp1 <- T/2+1
+  Time <- ff$Cf2ptp0$Time
+  Thalfp1 <- Time/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
   plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)

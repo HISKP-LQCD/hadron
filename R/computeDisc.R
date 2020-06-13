@@ -2,8 +2,8 @@
 #' 
 #' computes a disconnected correlation function from loops
 #' 
-#' The dimension of \code{cf$cf} and \code{cf$icf} must be \code{dim(T, S, N)},
-#' where \code{T} is the time extend, \code{S} is the number of samples and
+#' The dimension of \code{cf$cf} and \code{cf$icf} must be \code{dim(Time, S, N)},
+#' where \code{Time} is the time extend, \code{S} is the number of samples and
 #' \code{N} the number of measurements (gauges). \code{cf2} is the same, but
 #' needed only for cross-correlators.
 #' 
@@ -14,7 +14,7 @@
 #' The correlation is computed such as to avoid correlation between equal
 #' samples, unless \code{nrSamples} is equal to 1.
 #' 
-#' \code{cf} and \code{cf2} must agree in \code{T}, number of gauges and number
+#' \code{cf} and \code{cf2} must agree in \code{Time}, number of gauges and number
 #' of samples. Matching of gauges is assumed. If this is not the case results
 #' are wrong.
 #' 
@@ -45,8 +45,8 @@
 #' symmetric, anti-symmetric otherwise.
 #' @param verbose Print some debug output, like the VEVs of the loops.
 #' @return Returns an object of type \code{cf} derived from a \code{list} with
-#' elements \code{cf}, an array of dimension \code{dim(N, T)}, where \code{N}
-#' is the number of samples and \code{T} the time extend, integers \code{Time}
+#' elements \code{cf}, an array of dimension \code{dim(N, Time)}, where \code{N}
+#' is the number of samples and \code{Time} the time extend, integers \code{Time}
 #' for the time extend, \code{nrStypes} and \code{nrObs} for the available
 #' smearing types and operators, and finally \code{nrSamples}, the number of
 #' samples used to generate the correlation function \code{cf}.
@@ -73,7 +73,7 @@ computeDisc <- function(cf, cf2,
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_orig'))
 
-  T <- cf$Time
+  Time <- cf$Time
   ## extract the corresponding part of the correlation matrix
   tcf <- cf$cf
   if(smeared) {
@@ -94,11 +94,11 @@ computeDisc <- function(cf, cf2,
   ## number of gauges
   N <- dim(tcf)[3]
   ## index array for t
-  i <- c(1:T)
+  i <- c(1:Time)
   ## index array for t'
   i2 <- i
   ## space for the correlator
-  Cf <- array(NA, dim=c(N, T/2+1))
+  Cf <- array(NA, dim=c(N, Time/2+1))
 
   vev <- 0.
   ## compute vev first
@@ -114,21 +114,21 @@ computeDisc <- function(cf, cf2,
     if(nrSamples != 1) {
       ## re-order data
       mtcf <- tcf - vev
-      ## average over samples, tcf has dim(T,N)
+      ## average over samples, tcf has dim(Time,N)
       tcf <- apply(mtcf[,sindex,], c(1,3), sum)
     }
     else{
       subtract.equal <- FALSE
       tcf <- tcf[,1,] - vev
     }
-    ## need to run only to T/2 because source and sink are equal
+    ## need to run only to Time/2 because source and sink are equal
     ## only possible type is cosh
-    for(dt in c(0:(T/2))) {
+    for(dt in c(0:(Time/2))) {
       Cf[,1+dt] <- apply(tcf[i,]*tcf[i2,], 2, mean)
       ## subtract product of equal samples
       if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] - apply(apply(mtcf[i,sindex,]*mtcf[i2,sindex,], c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
-      i2 <- (i2) %% T + 1
+      i2 <- (i2) %% Time + 1
     }
     if(subtract.equal) Cf <- Cf/nrSamples/(nrSamples-1)
     else Cf <- Cf/nrSamples/(nrSamples)
@@ -154,7 +154,7 @@ computeDisc <- function(cf, cf2,
       warning("samples numbers for both cf and cf2 equal to 1\n Setting subtract.equal = FALSE\n")
       subtract.equal <- FALSE
     }
-    if(cf2$Time != T) {
+    if(cf2$Time != Time) {
       stop("time extend in two loops does not agree... Aborting...!\n")
     }
     if(!real2 && smeared2) tcf2 <- cf2$sicf
@@ -190,10 +190,10 @@ computeDisc <- function(cf, cf2,
     ## the unique matched configuration number index
     N <- dim(tcf2)[3]
     conf.index <- unique(cf2$conf.index, cf$conf.index)
-    Cf <- array(NA, dim=c(N, T/2+1))
+    Cf <- array(NA, dim=c(N, Time/2+1))
     
     ## re-order data
-    ## and average over samples, tcf and tcf2 have then dim(T,N)
+    ## and average over samples, tcf and tcf2 have then dim(Time,N)
     if(nrSamples != 1) {
       mtcf <- tcf - vev
       tcf <- apply(mtcf[,sindex,], c(1,3), sum)
@@ -210,15 +210,15 @@ computeDisc <- function(cf, cf2,
     }
 
     ## finally we correlate
-    for(dt in c(0:(T/2))) {
-      ## here we do the time average (t and T-1) in the same step
+    for(dt in c(0:(Time/2))) {
+      ## here we do the time average (t and Time-1) in the same step
       Cf[,1+dt] <- apply(0.5*(tcf[i,]*tcf2[i2,] + sign*tcf2[i,]*tcf[i2,]), 2, mean)
       ## subtract product of equal samples
       if(subtract.equal) Cf[,1+dt] <- Cf[,1+dt] -
         apply(apply(0.5*(mtcf[i,sindex,]*mtcf2[i2,sindex2,] + sign*mtcf2[i,sindex2,]*mtcf[i2,sindex,]),
                     c(2,3), mean), 2, sum)
       ## shift the index array by 1 to the left
-      i2 <- (i2) %% T + 1
+      i2 <- (i2) %% Time + 1
     }
     if(nrSamples2 == nrSamples) {
       if(subtract.equal) Cf <- Cf/nrSamples/(nrSamples-1)
@@ -229,7 +229,7 @@ computeDisc <- function(cf, cf2,
       Cf <- Cf/nrSamples/nrSamples2
     }
   }
-  ret <- list(cf=Cf, Time=T, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE, conf.index=conf.index)
+  ret <- list(cf=Cf, Time=Time, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE, conf.index=conf.index)
   attr(ret, "class") <- c("cf", class(ret))
   return(invisible(ret))
 }

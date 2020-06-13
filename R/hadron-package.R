@@ -132,7 +132,7 @@ NULL
 
 #' Sample pseudoscalar correlator
 #' 
-#' Sample data for a pseudoscalar correlator for time extend T=48.
+#' Sample data for a pseudoscalar correlator for time extend Time=48.
 #' 
 #' 
 #' @name pscor.sample

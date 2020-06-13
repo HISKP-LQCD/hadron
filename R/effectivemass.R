@@ -83,9 +83,9 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 
   ## depending on the type, the result is not defined on all t
   ## so we have to cut
-  ## this is for type "acosh", "temporal" and "shifted" where we loose t=0 and t=T/2
+  ## this is for type "acosh", "temporal" and "shifted" where we loose t=0 and t=Time/2
   cutii <- c()
-  ## this is for "log" and "solve" where t=T/2 is not defined
+  ## this is for "log" and "solve" where t=Time/2 is not defined
   cutii2 <- c()
 
   for(i in 1:nrObs) {
@@ -110,14 +110,14 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
         w <- weight.factor
       }
       ## the t-dependence needs to be modified accordingly
-      fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
-                         ( exp(-m*t)+exp(-m*(T-t)) - w*( exp(-m*(t-deltat))+exp(-m*(T-(t-deltat))) ) ) ) ) 
+      fn <- function(m, t, Time, Ratio, w) {
+        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(Time-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(Time-(t+1-deltat))) ) ) /
+                         ( exp(-m*t)+exp(-m*(Time-t)) - w*( exp(-m*(t-deltat))+exp(-m*(Time-(t-deltat))) ) ) ) ) 
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
-        else if(fn(interval[1], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
-        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
+        else if(fn(interval[1], t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w)$root
       }
     }
   }
@@ -226,7 +226,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
     deltat <- cf$deltat
   }
 
-  ## number of time slices (hopefully in units of T/2+1 or T)
+  ## number of time slices (hopefully in units of Time/2+1 or Time)
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
@@ -286,8 +286,8 @@ fit.constant <- function(M, y) {
 #' @param t1,t2 The fit range. If several correlators are fitted, this is
 #' automatically replicated accordingly. The fit range is adjusted such that
 #' \code{NA}s are removed from the fit. They must fulfill \eqn{t_1<t_2}{t1<t2}.
-#' For symmetric correlators, they must both run from 0 to \code{T/2-1},
-#' otherwise from 0 to \code{T-1}.
+#' For symmetric correlators, they must both run from 0 to \code{Time/2-1},
+#' otherwise from 0 to \code{Time-1}.
 #' @param useCov Use the correlated chisquare. This works only for not too
 #' noisy data.
 #' @param replace.na The functions inverted to determine the effective mass
@@ -367,8 +367,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   
   ## create an index array for the fit range
   ## the '+1' for Fortran index convention
-  ## t1 and t2 can be in range 0-T/2
-  ## if not symmetrised even in the range 0 - T-1
+  ## t1 and t2 can be in range 0-Time/2
+  ## if not symmetrised even in the range 0 - Time-1
   ii <- c()
   if(missing(every)){
 	  for(i in 1:cf$nrObs) {

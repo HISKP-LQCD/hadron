@@ -6,7 +6,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 ### the various parameters are used to build a directory name into which R descends to read
 ### onlinemeas.xxxxxx and output.data
 ### but a directory can also be provided via 'rundir' with the understanding
-### that L, T, kappa and mul must always be provided for the fits to work
+### that L, Time, kappa and mul must always be provided for the fits to work
 ### and the decay constant to be determined correctly
 # 'addon' can be used to *append* arbitrary text to the directory name
 # if it is construced on the fly. This is useful for analysing replicas
@@ -29,7 +29,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #    non-degenerate twisted mass Dirac operator.
 #' 
 #' @param L integer. spatial lattice extend
-#' @param T integer. temporal lattice extend
+#' @param Time integer. temporal lattice extend
 #' @param t1 integer. initial time of fit range
 #' @param t2 integer. end time of fit range
 #' @param beta numeric. inverse squared gauge coupling
@@ -98,7 +98,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
 #' 
 #' @export
-analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
+analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             cg_col, evals_id, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",
                             skip=0, rectangle=TRUE,
@@ -120,8 +120,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
-  if( missing(L) | missing(T) | missing(beta) | missing(type) ){
-    stop("L, T and beta must always be provided!\n");
+  if( missing(L) | missing(Time) | missing(beta) | missing(type) ){
+    stop("L, Time and beta must always be provided!\n");
   }
   if( omeas & (missing(t1) || missing(t2) || missing(kappa) || missing(mul)) ){
     stop("t1, t2, kappa and mul must be provided when 'omeas==TRUE'!");
@@ -145,7 +145,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   navec <- t(data.frame(val=NA,dval=NA,tauint=NA,dtauint=NA,Wopt=NA,stringsAsFactors=FALSE))
   
   # set up data structure for analysis results 
-  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
+  result <- list(params=data.frame(L=L,Time=Time,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
                                    mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
                                    musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,
                                    stat_skip=stat_skip,stringsAsFactors=FALSE),
@@ -167,7 +167,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   errorband_color2 <- rgb(0.0,0.0,0.6,0.6)
   
   if(missing(rundir)){
-    rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,T=T,kappa=kappa,mul=mul,
+    rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,Time=Time,kappa=kappa,mul=mul,
                              csw=csw,musigma=musigma,mudelta=mudelta,muh=muh,addon=addon,
                              debug=debug
                             )
@@ -213,7 +213,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     # with a stride of omeas.samples
     omeas.cnums <- omeas.cnums[seq(1, length(omeas.cnums), omeas.samples)]
     # add unique trajectory identifiers to the correlators
-    pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(T/2+1) ) )
+    pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(Time/2+1) ) )
 
     result$params$N.online <- length(omeas.cnums)
 
@@ -592,7 +592,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 #' @param type String. Short identifier for gauge action type. For example, `iwa` for Iwasaki gauge action.
 #' @param beta Numeric. Inverse gauge coupling.
 #' @param L Integer. Spatial lattice extent.
-#' @param T Integer. Temporal lattice extent.
+#' @param Time Integer. Temporal lattice extent.
 #' @param kappa Numeric. Sea quark action hopping parameter.
 #' @param mul Numeric. Sea light quark twisted mass.
 #' @param csw Numeric. Sea quark action clover parameter.
@@ -604,9 +604,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 #'
 #' @return String. Directory name constructed out of the various function parameters. See source code for details.
 #'
-construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
+construct_onlinemeas_rundir <- function(type,beta,L,Time,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
   rundir <- NULL
-  rundir <- sprintf("%s_b%s-L%dT%d",type,beta,L,T)
+  rundir <- sprintf("%s_b%s-L%dT%d",type,beta,L,Time)
 
   if(csw!=0) {
     rundir <- sprintf("%s-csw%s",rundir,csw)

@@ -91,8 +91,8 @@ pion_ff <- function(data3ptp0, data3ptp, data2ptp0, data2ptp,
 #' @export
 summary.pionff <- function (object, ...) {
   ff <- object
-  T <- ff$Cf2ptp0$Time
-  Thalfp1 <- T/2+1
+  Time <- ff$Cf2ptp0$Time
+  Thalfp1 <- Time/2+1
 
   cat("F(q^2) ", ff$plateaufitFF$plateau*ff$Cf2ptratio$cf0[Thalfp1], " ", sd(ff$plateaufitFF$plateau.tsboot[,1]*ff$Cf2ptratio$cf.tsboot$t[,Thalfp1]), "\n")
   cat("ZV     ", ff$Cf2ptp0$cf0[Thalfp1]/ff$plateaufitZV$plateau, " ", sd(ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]/ff$plateaufitZV$plateau.tsboot[,1]), "\n")
@@ -183,7 +183,7 @@ averx <- function(data3pt, data2pt, pionfit,
                          parlist=array(c(1,1), dim=c(2,1)))
   }
 
-  ## which we can use to determine the 2pt correlator at T/2
+  ## which we can use to determine the 2pt correlator at Time/2
   Thalfp1 <- Cf2pt$Time/2+1
   Amp <- pionfit$opt.res$par[2]
   Mass <- pionfit$opt.res$par[1]
@@ -287,10 +287,10 @@ summary.averx <- function(object, ...) {
   cat("Quality of the plateau fit (p-value):", averx$Qval, "\n")
   cat("Quality of the pion fit (p-value):", averx$pionQval, "\n\n")
 
-  cat("Using Cf2pt(T/2) data\n")
+  cat("Using Cf2pt(Time/2) data\n")
   cat("<x>      =", averx$averx, "\n")
   cat("error    =", averx$daverx, "\n")
-  cat("Alternative (using fitted Cf2pt(T/2) ):\n")
+  cat("Alternative (using fitted Cf2pt(Time/2) ):\n")
   cat("<x>      =", averx$averxfit, "\n")
   cat("error    =", averx$daverxfit, "\n")  
   cat("Alternative (using weighted average over plateau)\n")
