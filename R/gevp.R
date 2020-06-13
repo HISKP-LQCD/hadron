@@ -487,7 +487,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
     }
   }
   if((t2 <= t1) || (t1 < 0) || (t2 > (gevp$cf$Time/2-1))) {
-    stop("gevp2amplitude: t1 < t2 and both in 0...T/2-1 is required. Aborting...\n")
+    stop("gevp2amplitude: t1 < t2 and both in 0...Time/2-1 is required. Aborting...\n")
   }
   
   sign <- +1
@@ -512,13 +512,13 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
   else {
     stop("gevp2amplitude requires a numeric vector or an object either of type effectivemassfit or matrixfit as input. Abortgin...\n")
   }
-  T <- gevp$cf$Time
-  t <- c(0:(T/2))
-  amplitude <- abs(gevp$res.gevp$amplitudes[,id,op.id])/sqrt(.5*(exp(-m0*t)+ sign*exp(-m0*(T-t))))
-  tt <- gevp$matrix.size*(T/2+1) + ((id-1)*gevp$matrix.size+(op.id-1))*(T/2+1) + seq(1, T/2+1)
-  amplitude.tsboot <- array(NA, dim=c(gevp$boot.R, T/2+1))
+  Time <- gevp$cf$Time
+  t <- c(0:(Time/2))
+  amplitude <- abs(gevp$res.gevp$amplitudes[,id,op.id])/sqrt(.5*(exp(-m0*t)+ sign*exp(-m0*(Time-t))))
+  tt <- gevp$matrix.size*(Time/2+1) + ((id-1)*gevp$matrix.size+(op.id-1))*(Time/2+1) + seq(1, Time/2+1)
+  amplitude.tsboot <- array(NA, dim=c(gevp$boot.R, Time/2+1))
   for(i in c(1:gevp$boot.R)) {
-    amplitude.tsboot[i,] <- abs(gevp$gevp.tsboot[i,tt])/sqrt(.5*(exp(-m[i]*t)+ sign*exp(-m[i]*(T-t))))
+    amplitude.tsboot[i,] <- abs(gevp$gevp.tsboot[i,tt])/sqrt(.5*(exp(-m[i]*t)+ sign*exp(-m[i]*(Time-t))))
   }
   damplitude <- apply(amplitude.tsboot, 2, gevp$cf$error_fn)
   
@@ -573,7 +573,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
               mass=mass, gevp=gevp,
               boot.R=gevp$boot.R, boot.l=gevp$boot.l, seed=gevp$seed,
               id=id, op.id=op.id,
-              Time=T, m0=m0, m0.tsboot=m, useCov=useCov,
+              Time=Time, m0=m0, m0.tsboot=m, useCov=useCov,
               Qval=1-pchisq(opt.res$value, t2-t1),
               error_fn = gevp$cf$error_fn)
   attr(res, "class") <- c("gevp.amplitude", class(res))
