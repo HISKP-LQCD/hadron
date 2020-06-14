@@ -466,9 +466,11 @@ gevp2cf <- function(gevp, id=1) {
 #' ## extract the ground state and plot
 #' pion.pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
 #' pion.pc1.effectivemass <- bootstrap.effectivemass(cf=pion.pc1, type="solve")
-#' pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=8, t2=23, useCov=FALSE)
+#' pion.pc1.effectivemass <- fit.effectivemass(pion.pc1.effectivemass, t1=8, t2=23,
+#'                                             useCov=FALSE)
 #' ## now determine the amplitude
-#' pion.pc1.amplitude <- gevp2amplitude(correlatormatrix.gevp, pion.pc1.effectivemass, useCov=FALSE, t1=8, t2=14)
+#' pion.pc1.amplitude <- gevp2amplitude(correlatormatrix.gevp, pion.pc1.effectivemass,
+#'                                      useCov=FALSE, t1=8, t2=14)
 #' plot(pion.pc1.amplitude)
 #' summary(pion.pc1.amplitude)
 #'
@@ -621,6 +623,8 @@ summary.gevp.amplitude <- function (object, ...) {
 #' plot.gevp.amplitude
 #'
 #' @param x Object of type `gevp.amplitude`.
+#' @param xlab x axis label
+#' @param ylab y axis label
 #' @param ... Graphical parameters to be passed on.
 #'
 #' @return
