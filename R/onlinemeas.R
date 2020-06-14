@@ -90,7 +90,6 @@
 #' method for all time values in between \code{t1} and \code{t2} }
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmicor}}, \code{\link{uwerr}},
-#' \code{\link{variational}}
 #' @keywords optimize ts
 #' @export onlinemeas
 onlinemeas <- function(data, t1, t2, 
