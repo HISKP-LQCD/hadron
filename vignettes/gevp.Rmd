@@ -120,7 +120,7 @@ the following behaviour
 \[
 \lambda_i(t, t_0)\ \propto\ e^{-E_i(t-t_0)} + e^{-E_i(T-t+t_0)}\,.
 \]
-Here, $T$ is the time extend and we focus on a symmetric correlation
+Here, $T$ is the time extent and we focus on a symmetric correlation
 matrix in time. However, analogously one can show this with a minus
 sign for anti-symmetric correlation matrices in time. Of course, we
 also have $\lambda(t_0, t_0) = 1$. We re-write the generalised

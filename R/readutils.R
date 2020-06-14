@@ -327,7 +327,7 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
 #' real part of the local loop, \code{ind.vec[5]} the imaginary part of the
 #' local loop, \code{ind.vec[6]} and \code{ind.vec[7]} the same for fuzzed (or
 #' smeared) loops and \code{ind.vec[8]} for the configuraton number.
-#' @param L The spatial lattice extend needed for normalisation. If not given
+#' @param L The spatial lattice extent needed for normalisation. If not given
 #' set to \code{Time/2}.
 #' @return a list with elements as follows:
 #' 
@@ -407,7 +407,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 #' 
 #' for \code{extract.loop}: ReTL } \item{icf}{ for \code{extract.loop} only:
 #' ImTL } \item{scf}{ for \code{extract.loop} only: ReTF } \item{sicf}{ for
-#' \code{extract.loop} only: ImTF } \item{Time}{ The time extend of the
+#' \code{extract.loop} only: ImTF } \item{Time}{ The time extent of the
 #' correlation functions.  } \item{nrStypes}{ The number of smearing
 #' combinations.  } \item{nrObs}{ The number of observables.  }
 #' \item{nrSamples}{ for \code{extrac.loop} only: the number of samples found
@@ -550,7 +550,7 @@ readoutputdata <- function(filename) {
 #' 
 #' 
 #' @param file filename of file to read from.
-#' @param Time time extend of the correlation function
+#' @param Time time extent of the correlation function
 #' @param sym if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
 #' -C(-t). Averaging can be switched off using the \code{symmetrise} option.
 #' @param skip number of lines to skip at beginning of file
@@ -574,7 +574,7 @@ readoutputdata <- function(filename) {
 #' and imaginary parts of the correlator, and integers \code{Time},
 #' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
 #' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
-#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' (gauges).  \code{Time} is the time extent, \code{nrStypes} the number of
 #' smearing levels and \code{nrObs} the number of operators, both of which are
 #' currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -723,7 +723,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' files.
 #' 
 #' It is assumend that each file contains at least \code{(obs+N)*Time} complex
-#' doubles, where \code{Time} is the time extend, \code{obs} is the number of the
+#' doubles, where \code{Time} is the time extent, \code{obs} is the number of the
 #' observable to read in and \code{Nop} the number of replicas for this
 #' observable. It is assumed that complex is the fastest running index, next
 #' time and then obs. The filelist is assumed to be ordered according to the
@@ -732,7 +732,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' @param files list of filenames to be read. Can be created using
 #' \code{getorderedfilelist}. The filelist is assumed to be order according to
 #' ascending gauge fields.
-#' @param Time time extend of correlation functions.
+#' @param Time time extent of correlation functions.
 #' @param obs each file may contain many correlation functions. With 'obs'
 #' one choses which observable to read in. To be precise, in each file the
 #' reading will start at point Time*obs*sizeof(complex\code{<double>}) and read
@@ -756,7 +756,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' and imaginary parts of the correlator, and integers \code{Time},
 #' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
 #' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
-#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' (gauges).  \code{Time} is the time extent, \code{nrStypes} the number of
 #' smearing levels and \code{nrObs} the number of operators, both of which are
 #' currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -946,7 +946,7 @@ readbinarysamples <- function(files, Time=48, nosamples=2, endian="little",
 #' Reads disconnected loops from binary files.
 #' 
 #' It is assumend that each file contains O*Time complex doubles, where Time is the
-#' time extend and O the number of observables in the file. It is assumed that
+#' time extent and O the number of observables in the file. It is assumed that
 #' complex is the fastest running index, next time and then observables. The
 #' different samples are assumend to be in different files. The file list is
 #' assumed to be ordered with number of samples running fastest, and then
@@ -955,7 +955,7 @@ readbinarysamples <- function(files, Time=48, nosamples=2, endian="little",
 #' @param files list of filenames to be read. Can be created for instance using
 #' \code{getorderedfilelist}. The filelist is assumed to be ordered with number
 #' of samples running fastest, and the next to fastest nubmer of gauges.
-#' @param Time time extend of correlation functions.
+#' @param Time time extent of correlation functions.
 #' @param obs each file may contain Time*obs correlation functions. With
 #' \code{obs} one choses which observable to read in.
 #' @param endian the endianess of the binary file.
@@ -966,9 +966,8 @@ readbinarysamples <- function(files, Time=48, nosamples=2, endian="little",
 #' and imaginary parts of the loops, and integers \code{Time},
 #' \code{nrStypes=1}, \code{nrSamples} and \code{nrObs=1}. Both of the arrays
 #' have dimension \code{c(Time, N)}, where \code{N} is the number of measurements
-#' (gauges) and \code{Time} the time extend.  \code{Time} is the time extend,
-#' \code{nrStypes} the number of smearing levels and \code{nrObs} the number of
-#' operators, both of which are currently fixed to 1.
+#' (gauges) and \code{Time} the time extent, \code{nrStypes} the number of smearing
+#' levels and \code{nrObs} the number of operators, both of which are currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
 #' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
@@ -1022,7 +1021,7 @@ readbinarydisc <- function(files, Time=48, obs=5, endian="little",
 #' @param excludelist files to exclude from reading.
 #' @param skip lines to skip at beginning of each file.
 #' @param colClasses The column data type classes, the \code{read.table}.
-#' @param L the spatial lattice extend, set to \code{Time/2} if missing.
+#' @param L the spatial lattice extent, set to \code{Time/2} if missing.
 #' @param debug setting debug to TRUE makes the routine more verbose by
 #' spilling out separate filenames.
 #' @return returns a list with four arrays \code{cf}, \code{icf} \code{scf} and
@@ -1030,8 +1029,8 @@ readbinarydisc <- function(files, Time=48, obs=5, endian="little",
 #' loops, respectively, and integers \code{Time}, \code{nrStypes=2},
 #' \code{nrSamples} and \code{nrObs=1}. The four arrays have dimension
 #' \code{c(Time, S, N)}, where \code{S} is the nubmer of samples, \code{Time} is the
-#' time extend and \code{N} is the number of measurements (gauges).
-#' \code{Time} is the time extend, \code{nrStypes} the number of smearing
+#' time extent and \code{N} is the number of measurements (gauges).
+#' \code{Time} is the time extent, \code{nrStypes} the number of smearing
 #' levels and \code{nrObs} the number of operators, which are currently fixed
 #' to 1 and 2, respectively. \code{nrSamples} is the number of samples.
 #' 

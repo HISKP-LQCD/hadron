@@ -2,34 +2,21 @@ append_pdf_filename <- function(basename, pdf_filenames){
   return( c(pdf_filenames, sprintf("%s.pdf", basename)) )
 }
 
-# convenience function for analyzing online data from a tmLQCD run
-### the various parameters are used to build a directory name into which R descends to read
-### onlinemeas.xxxxxx and output.data
-### but a directory can also be provided via 'rundir' with the understanding
-### that L, Time, kappa and mul must always be provided for the fits to work
-### and the decay constant to be determined correctly
-# 'addon' can be used to *append* arbitrary text to the directory name
-# if it is construced on the fly. This is useful for analysing replicas
-# which have identical parameters and thus need to be differentiated
-# 'plaquette', 'dH', 'acc' and 'trajtime' control whether these are plotted
-# cg_col indicates which column in output.data should be used to extract 
-# a representative solver iteration counter
-
 #' analysis_online
 #'
 #' @description
 #' `analysis_online` is a function to analyse the online measurements
-#'   and output files of the tmLQCD software, see references. The function
-#'   operates on a subdirectory either passed via `rundir` or automatically
-#'   constructed from the various function arguments. Depending on which
-#'   parts of the analysis are requested, this subdirectory is expected
-#'   to contain `onlinemeas.%06d` files with online correlator measurements,
-#'   `output.data` containing the plaquette and energy violation, amongst others 
-#'   and `monomial-%02d.data` with measurements of the extremal eigenvalues of the
-#    non-degenerate twisted mass Dirac operator.
+#'  and output files of the tmLQCD software, see references. The function
+#'  operates on a subdirectory either passed via `rundir` or automatically
+#'  constructed from the various function arguments. Depending on which
+#'  parts of the analysis are requested, this subdirectory is expected
+#'  to contain `onlinemeas.%06d` files with online correlator measurements,
+#'  `output.data` containing the plaquette and energy violation, amongst others 
+#'  and `monomial-%02d.data` with measurements of the extremal eigenvalues of the
+#   non-degenerate twisted mass Dirac operator.
 #' 
-#' @param L integer. spatial lattice extend
-#' @param Time integer. temporal lattice extend
+#' @param L integer. spatial lattice extent
+#' @param Time integer. temporal lattice extent
 #' @param t1 integer. initial time of fit range
 #' @param t2 integer. end time of fit range
 #' @param beta numeric. inverse squared gauge coupling

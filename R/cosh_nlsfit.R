@@ -318,7 +318,7 @@ summary.coshfit <- function (object, verbose = FALSE, ...) {
   cat("no. measurements\t=\t", length(effMass$cf$cf[,1]), "\n")
   cat("boot.R\t=\t", effMass$cf$boot.R, "\n")
   cat("boot.l\t=\t", effMass$cf$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$cf$Time, "\n")
+  cat("Time extent\t=\t", effMass$cf$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]))),
       "(",100*length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii])))/ length(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]), "%)\n")
   cat("time range from", effMass$coshfit$t1, " to ", effMass$coshfit$t2, "\n")
