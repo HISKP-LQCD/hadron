@@ -73,7 +73,8 @@ Suggests:
     tikzDevice,
     hash,
     numDeriv,
-    staplr
+    staplr,
+    errors
 License: GPL-3
 URL: https://github.com/HISKP-LQCD/hadron
 BugReports: https://github.com/HISKP-LQCD/hadron/issues

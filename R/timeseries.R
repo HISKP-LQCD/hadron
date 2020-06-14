@@ -87,7 +87,8 @@ plot_timeseries <- function(dat,
                          tex.catwitherror(x=uw.data$value,
                                           dx=uw.data$dvalue,
                                           digits=3,
-                                          with.dollar=FALSE)
+                                          with.dollar=FALSE,
+										  with.cdot=FALSE)
                          ),
          lty=1,
          pch=NA,
