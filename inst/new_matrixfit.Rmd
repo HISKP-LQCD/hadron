@@ -14,7 +14,7 @@ seed <- 1234
 #==============================#
 
 read <- function(n_phi) {
-  corr <- readtextcf(paste0('/home/schlage/Master/R/correlators_',n_phi,'_phi_phi4p.tsv'), T = 24, skip = 4) # Hier muss angepasst werden!
+  corr <- readtextcf(paste0('/home/schlage/Master/R/correlators_',n_phi,'_phi_phi4p.tsv'), Time = 24, skip = 4) # Hier muss angepasst werden!
   return(corr)
 }
 

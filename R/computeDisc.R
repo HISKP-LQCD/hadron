@@ -1,9 +1,7 @@
 #' computes a disconnected correlation function from loops
 #' 
-#' computes a disconnected correlation function from loops
-#' 
 #' The dimension of \code{cf$cf} and \code{cf$icf} must be \code{dim(Time, S, N)},
-#' where \code{Time} is the time extend, \code{S} is the number of samples and
+#' where \code{Time} is the time extent, \code{S} is the number of samples and
 #' \code{N} the number of measurements (gauges). \code{cf2} is the same, but
 #' needed only for cross-correlators.
 #' 
@@ -46,8 +44,8 @@
 #' @param verbose Print some debug output, like the VEVs of the loops.
 #' @return Returns an object of type \code{cf} derived from a \code{list} with
 #' elements \code{cf}, an array of dimension \code{dim(N, Time)}, where \code{N}
-#' is the number of samples and \code{Time} the time extend, integers \code{Time}
-#' for the time extend, \code{nrStypes} and \code{nrObs} for the available
+#' is the number of samples and \code{Time} the time extent, integers \code{Time}
+#' for the time extent, \code{nrStypes} and \code{nrObs} for the available
 #' smearing types and operators, and finally \code{nrSamples}, the number of
 #' samples used to generate the correlation function \code{cf}.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -155,7 +153,7 @@ computeDisc <- function(cf, cf2,
       subtract.equal <- FALSE
     }
     if(cf2$Time != Time) {
-      stop("time extend in two loops does not agree... Aborting...!\n")
+      stop("time extent in two loops does not agree... Aborting...!\n")
     }
     if(!real2 && smeared2) tcf2 <- cf2$sicf
     else if(!real2) tcf2 <- cf2$icf

@@ -29,7 +29,7 @@ pcacsym <- function(data, t, T2, pa=FALSE) {
 #' @param data 'Effectivemasses` from correlators
 #' @param from initial value of fit range
 #' @param to final value of fit range
-#' @param T2 Time extend
+#' @param T2 Time extent
 #' @param pa Boolean. 
 #'
 #' @return

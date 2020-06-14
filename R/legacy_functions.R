@@ -40,7 +40,7 @@ effmass2 <- function(data, timeextent, t) {
 #'
 #' @param from integer. Fit in fitrange (from, to)
 #' @param to integer. see from.
-#' @param Time integer. time extend of the lattice
+#' @param Time integer. time extent of the lattice
 #' @param Z data
 #' @param pl boolean. plot
 #' @param S numeric. see \link{uwerr}

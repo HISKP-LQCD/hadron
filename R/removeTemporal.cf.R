@@ -436,7 +436,7 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
 #' @param single.cf2 Object of type \link{cf}
 #' @param p1 Numeric vector. Spatial momentum of first state
 #' @param p2 Numeric vector. Spatial momentum of second state
-#' @param L Integer. Spatial lattice extend.
+#' @param L Integer. Spatial lattice extent.
 #' @param lat.disp Boolean. Use lattice dispersion relation instead of
 #'   continuum one
 #' @param weight.cosh Boolean. Use cosh functional form in the

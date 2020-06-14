@@ -20,7 +20,7 @@
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @return returns a numeric value representing the finite size correction or
 #' in case of \code{fs.a0} the corrected value for a0.
@@ -47,7 +47,7 @@ fs.qcotdelta <- function(mps, L) {
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @param a0 scattering length at finite L
 #' @return returns a numeric value representing the finite size correction or
@@ -72,7 +72,7 @@ fs.a0 <- function(a0, mps, L) {
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @param fps pion decay constant as a scalar variable (must not be a vector)
 #' @return returns a numeric value representing the finite size correction or

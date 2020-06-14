@@ -36,7 +36,7 @@
 #' @param cf The correlation function either as a vector of length
 #' \code{nrObs*(Thalf+1)} or as an array of dimension Nx\code{nrObs*(Thalf+1)},
 #' where N is the number of observations. N will be averaged over.
-#' @param Thalf The half time extend of the lattice
+#' @param Thalf Half of the time extent of the lattice
 #' @param type The function to be used to compute the effective mass values.
 #' Possibilities are "acosh", "solve", "log", "temporal", "shifted" and
 #' "weighted". While the first three assume normal cosh behaviour of the
@@ -75,7 +75,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   }
 
   if(length(Cor) != nrObs*(tmax+1)) {
-    stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
+    stop("cf does not have the correct time extent in effectivemass.cf! Aborting...!\n")
   }
   ## here we generate the index arrays
   ## this is the complete index for time
@@ -503,7 +503,7 @@ summary.effectivemass <- function (object, ...) {
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$Time, "\n")
+  cat("Time extent\t=\t", effMass$Time, "\n")
   cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$t))), "\n")
   cat("values with errors:\n\n")
   print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
@@ -526,7 +526,7 @@ summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
   cat("type\t=\t", effMass$type, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$Time, "\n")
+  cat("Time extent\t=\t", effMass$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$t[,effMass$ii]))),
       "(",100*length(which(is.na(effMass$t[,effMass$ii])))/ length(effMass$t[,effMass$ii]), "%)\n")
   cat("NAs replaced in fit:", effMass$effmassfit$replace.na, "\n")
