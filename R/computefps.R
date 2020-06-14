@@ -49,7 +49,6 @@
 #' \code{normalistaion} and \code{Kappa} if applicable.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{matrixfit}}, \code{\link{gevp2amplitude}},
-#' \code{\link{pion}}
 #' @keywords GEVP optimise ts
 #' @export computefps
 computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", disprel="continuum", boot.fit=TRUE) {

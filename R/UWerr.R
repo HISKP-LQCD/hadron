@@ -451,7 +451,7 @@ summary.uwerr <- function (object, ...) {
 #' autocorrelationfunction and the integrated autocorrelation time, all with
 #' error bars.
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
-#' @seealso \code{\link{uwerr}}, \code{\link{pion}}
+#' @seealso \code{\link{uwerr}}
 #' @keywords methods hplot
 #'
 #' @return
