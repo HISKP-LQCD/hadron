@@ -21,3 +21,4 @@ src/RcppExports.cpp
 vignettes/*.pdf
 vignettes/*.html
 vignettes/*.log
+tags
