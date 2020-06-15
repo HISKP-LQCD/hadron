@@ -17,6 +17,22 @@
 #' 
 NULL
 
+#' Sample loop data
+#'
+#' @description
+#'
+#' @name loopdata
+#'
+#' @docType data
+#' @format list of 10 elements: "nrObs" "Time" "nrStypes" "symmetrised" "cf" 
+#' "icf" "scf" "iscf" "nrSamples" "obs"
+#' @keywords datasets
+#' @examples
+#'
+#' data("loopdata")
+#'
+NULL
+
 #' Internal Hadron Functions
 #' 
 #' Internal hadron functions

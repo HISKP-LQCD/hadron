@@ -54,11 +54,9 @@
 #' @keywords correlator
 #' @examples
 #' 
-#' \dontrun{files <- getorderedfilelist(basename="disc.0.13872.0.003.k0v.", last.digits=3)}
-#' \dontrun{vdata <- readcmiloopfiles(files)}
-#' \dontrun{loops <- extract.loop(vdata, obs=9)}
-#' \dontrun{Cpi0v4 <- computeDisc(cf=loops, real=TRUE, subtract.vev=TRUE)}
-#' \dontrun{Cpi0v4 <- bootstrap.cf(Cpi0v4, boot.R=1000, boot.l=20)}
+#' data(loopdata)
+#' Cpi0v4 <- computeDisc(cf=loopdata, real=TRUE, subtract.vev=TRUE)
+#' Cpi0v4 <- bootstrap.cf(Cpi0v4, boot.R=99, boot.l=1, seed=14556)
 #' 
 #' @export computeDisc
 computeDisc <- function(cf, cf2,
@@ -227,12 +225,11 @@ computeDisc <- function(cf, cf2,
       Cf <- Cf/nrSamples/nrSamples2
     }
   }
-  ret <- list(cf=Cf, Time=Time, nrStypes=1, nrObs=1, nrSamples=nrSamples, nrSamples2=nrSamples2, obs=cf$obs, obs2=obs2, boot.samples=FALSE, conf.index=conf.index)
-  attr(ret, "class") <- c("cf", class(ret))
+  ret <- cf_orig(cf=Cf)
+  ret <- cf_meta(.cf=ret, Time=Time, nrObs=1, nrStypes=1, symmetrised=TRUE)
+  ret$nrSamples=nrSamples
+  ret$nrSamples2=nrSamples2
+  ret <- addConfIndex2cf(ret, conf.index)
   return(invisible(ret))
 }
 
-## finding missing configs
-## if(any(!(cf$conf.index %in% cf2$conf.index)))
-##    missing.ii <- which(!(cf$conf.index %in% cf2$conf.index))
-##    missingcf2 <- cf$conf.index[!(cf$conf.index %in% cf2$conf.index)]
