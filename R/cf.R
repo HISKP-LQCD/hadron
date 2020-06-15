@@ -727,7 +727,7 @@ uwerr.cf <- function(cf){
 #' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #' @seealso \link{cf}
 #' @keywords correlator analysis bootstrap
-#' @example
+#' @examples
 #'
 #' data(samplecf)
 #' conf.index <- c(1:1018)
@@ -763,7 +763,7 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' data(samplecf)
 #' ## the following is not useful, but
 #' ## explains the usage
-#' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)}
+#' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)
 #' 
 #' @export
 addStat.cf <- function(cf1, cf2) {
