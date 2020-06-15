@@ -20,7 +20,9 @@ NULL
 #' Sample loop data
 #'
 #' @description
-#'
+#' Sample data for fermion loops for a 24 cube times 48 lattice QCD
+#' simulation. It is stored in form of a list.
+#' 
 #' @name loopdata
 #'
 #' @docType data
