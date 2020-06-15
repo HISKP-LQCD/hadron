@@ -642,9 +642,9 @@ plot.pionff <- function (x, ...) {
 #' @export 
 #' @examples
 #' 
-#' \dontrun{plaq <- readoutputdata("output.data")}
-#' \dontrun{plaq.plot <- plot(plaq, skip=100)}
-#' \dontrun{summary(plaq.plot$plaq.res)}
+#' plaq <- readoutputdata(paste0(system.file(package="hadron"), "/extdata/output.data"))
+#' plaq.plot <- plot(plaq, skip=100)
+#' summary(plaq.plot$plaq.res)
 #' 
 plot.outputdata <- function (x, skip = 0, ...) {
   data <- x
