@@ -19,6 +19,9 @@
 #'
 #' @return
 #' returns an object of S3 class \code{cf} derived from a \code{list}
+#'
+#' @examples
+#' newcf <- cf()
 #' 
 #' @export
 cf <- function () {
@@ -39,7 +42,11 @@ cf <- function () {
 #'
 #' @return
 #' returns the input object of class \code{cf} with the metadata mixin added
-#' 
+#'
+#' @examples
+#' newcf <- cf_orig(cf=array(rnorm(25*100), dim=c(100, 25))) 
+#' newcf <- cf_meta(newcf, nrObs=1, Time=48, symmetrised=TRUE)
+#'
 #' @export
 cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
   stopifnot(inherits(.cf, 'cf'))
@@ -221,7 +228,13 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
 #'
 #' @return
 #' returns the input object of class \code{cf} with the original data mixin added
-#' 
+#' @examples
+#'
+#' newcf <- cf_orig(cf=array(rnorm(25*100), dim=c(100, 25))) 
+#' newcf <- cf_meta(newcf, nrObs=1, Time=48, symmetrised=TRUE)
+#' newcf <- bootstrap.cf(newcf)
+#' plot(newcf)
+#'
 #' @export
 cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   stopifnot(inherits(.cf, 'cf'))
@@ -585,6 +598,12 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 #' S.N. Lahiri, "On the jackknife-after-bootstrap method for dependent data and
 #' its consistency properties", Econometric Theory, 2002, Vol. 18, 79-98
 #' @keywords jackknife timeseries
+#'
+#' @examples
+#' data(samplecf)
+#' samplecf <- jackknife.cf(samplecf, boot.l=1)
+#' plot(samplecf, log="y")
+#' 
 #' @export jackknife.cf
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
@@ -667,6 +686,7 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #'         `NA` for all members.
 #' 
 #' @examples
+#' data(samplecf)
 #' uwerr.cf(samplecf)
 #' 
 #' @export
@@ -707,6 +727,12 @@ uwerr.cf <- function(cf){
 #' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #' @seealso \link{cf}
 #' @keywords correlator analysis bootstrap
+#' @example
+#'
+#' data(samplecf)
+#' conf.index <- c(1:1018)
+#' samplecf <- addConfIndex2cf(samplecf, conf.index=conf.index)
+#' 
 #' @export addConfIndex2cf
 addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
@@ -733,10 +759,13 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' @seealso \code{\link{cf}}
 #' @keywords correlation function
 #' @examples
+#'
+#' data(samplecf)
+#' ## the following is not useful, but
+#' ## explains the usage
+#' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)}
 #' 
-#' \dontrun{cf0 <- addStat(cf1=cf1, cf2=cf2)}
-#' 
-#' @export addStat.cf
+#' @export
 addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
