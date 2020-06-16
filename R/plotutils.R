@@ -694,3 +694,45 @@ new_window_if_appropriate <- function () {
     dev.new()
   }
 }
+
+#' pointswithslantederror
+#'
+#' plots data points with slanted error bars
+#'
+#' @description
+#' This function plots points with x- and y-errors visualised as a
+#' slanted errorbar. The length of the error bar represents x- and y-errors
+#' added in quadrature. The slope of the error bar is positive of negative
+#' depending on whether the correlation betwenn x and y is positive or
+#' negative, respectively.
+#'
+#' @param x numeric vector. x-values
+#' @param y numeric vector. y-values
+#' @param dx numeric vector. x-standard errors
+#' @param dy numeric vector. y-standard errors
+#' @param cor numeric vector. Correlation coefficients between x- and y-
+#' errors.
+#' @param col the color of the points
+#' @param bcol the color of the slanted error bars
+#' @param ... further graphical parameters to be passed on to `points`
+#'
+#' @examples
+#' x <- c(1:5)
+#' y <- x^2
+#' dx <- c(0.1, 0.2, 0.2, 0.1, 0.05)
+#' dy <- c(0.05, 0.2, 0.1, 0.2, 0.1)
+#' cor <- c(1, -1, -1, 1, 1)
+#' plot(NA, xlim=range(x), ylim=range(y), xlab="y", ylab="y")
+#' pointswithslantederror(x=x, y=y, dx=dx, dy=dy, cor=cor)
+#' 
+#' @export
+pointswithslantederror <- function(x, y, dx, dy, cor, col="black", bcol="black", ...) {
+  points(x=x, y=y, col=col, ...)
+  l <- sqrt(dx^2+dy^2)
+  fac <- rep(1, times=length(cor))
+  fac[which(cor < 0)] <- -1
+  arrows(code=0,
+         x0=x-fac*dx, y0=y-dy,
+         x1=x+fac*dx, y1=y+dy,
+         col=bcol)
+}
