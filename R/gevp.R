@@ -280,7 +280,8 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
 #' 
 #' ## we can also use matrixfit with a special model for a principal
 #' ## correlators
-#' pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE)
+#' pc1.matrixfit <- matrixfit(pc1, t1=2, t2=24, fit.method="lm", model="pc", useCov=FALSE,
+#'                            parlist=array(c(1,1), dim=c(2,1)), sym.vec=c("cosh"), neg.vec=c(1))
 #' summary(pc1.matrixfit)
 #' plot(pc1.matrixfit)
 #' 
