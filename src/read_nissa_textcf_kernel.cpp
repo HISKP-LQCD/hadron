@@ -144,7 +144,6 @@ NumericMatrix read_nissa_textcf_kernel(
     const unsigned int nts,
     DataFrame combs_to_read)
 {
-  typedef CharacterVector::iterator char_vec_iter;
 
   const unsigned int n_correls = combs_to_read.nrows();
   const unsigned int n_smear_combs = smear_combs_to_read.size();
