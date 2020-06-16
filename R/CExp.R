@@ -13,6 +13,12 @@
 #' @return vector \eqn{f(x)}
 #' @author Carsten Urbach \email{carsten.urbach@@liverpool.ac.uk}
 #' @keywords math
+#' @examples
+#'
+#' m <- 0.1
+#' Time <- 48
+#' x <- seq(0, 48, 1)
+#' CExp(m=m, Time=Time, x=x)
 #' @export CExp
 CExp <- function(m, Time, x, sign=1.) {
   return(0.5*(exp(-m*(Time-x)) + sign*exp(-m*x)))

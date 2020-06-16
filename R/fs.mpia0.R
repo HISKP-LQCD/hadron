@@ -54,6 +54,8 @@ fs.qcotdelta <- function(mps, L) {
 #' in case of \code{fs.a0} the corrected value for a0.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @references For the original formula see Eq. (31) from hep-lat/0601033
+#' @examples
+#' fs.a0(a0=1., mps=0.123, L=24)
 #' @export
 fs.a0 <- function(a0, mps, L) {
   delta <- fs.qcotdelta(mps, L)
@@ -79,6 +81,8 @@ fs.a0 <- function(a0, mps, L) {
 #' in case of \code{fs.a0} the corrected value for a0.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @references For the original formula see Eq. (31) from hep-lat/0601033
+#' @examples
+#' fs.mpia0(mps=0.123, fps=0.2, L=24)
 #' @export
 fs.mpia0 <- function(mps, fps, L) {
 

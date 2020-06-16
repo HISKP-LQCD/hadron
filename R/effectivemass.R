@@ -60,9 +60,15 @@
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{bootstrap.effectivemass}}
 #' @references arXiv:1203.6041
+#' @examples
+#'
+#' data(correlatormatrix)
+#' cfnew <- extractSingleCor.cf(correlatormatrix, id=1)
+#' cfnew <- bootstrap.cf(cfnew, boot.R=99, boot.l=1)
+#' X <- effectivemass.cf(cfnew$cf, Thalf=25, tmax=24)
 #' @export effectivemass.cf
 effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
-                             weight.factor = NULL, deltat=1, tmax=Thalf) {
+                             weight.factor = NULL, deltat=1, tmax=Thalf-1) {
   if(missing(cf)) {
     stop("cf must be provided to effectivemass.cf! Aborting...\n")
   }

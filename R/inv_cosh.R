@@ -12,7 +12,9 @@
 #'
 #' @return
 #' A single numeric value is returned corresponding to the mass.
-#' 
+#' @examples
+#'
+#' invcosh(1.2, timeextent=24, t=12)
 #' @export
 invcosh <- function(ratio, timeextent, t, eps=1.e-9, maxiterations=1000) {
 
