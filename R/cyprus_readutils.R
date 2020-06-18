@@ -1,4 +1,4 @@
-#' @title HDF5 key for Cyprus CalcLoops scalar-type loops
+#u' @title HDF5 key for Cyprus CalcLoops scalar-type loops
 #' @description Generates an HDF5 key (full path) for the scalar
 #'              type loops from the Cyprus CalcLoops application.
 #' @param istoch Integer, index of the stochastic sample that the key should
@@ -81,13 +81,25 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
 #' @param interpolator_type: String that determines the type of the 
 #'               interpolator: Comes from PLEGMA, possible values
 #                Pp_Cgi_Cgi
-cyprus_make_key_baryon <- function( type_of_correlation_function, confnumber, source_location, baryon_type, interpolator_type ){
+#cyprus_make_key_baryon <- function( type_of_correlation_function, confnumber, source_location, baryon_type, interpolator_type ){
 
-  return (sprintf("/%s/%s/%s/%s/%s", type_of_correlation_function,
-                                                                confnumber,
-                                                                source_location,
-                                                                baryon_type,
-                                                                interpolator_type))
+#  return (sprintf("/%s/%s/%s/%s/%s", type_of_correlation_function,
+#                                                                confnumber,
+#                                                                source_location,
+#                                                                baryon_type,
+#                                                                interpolator_type))
+#}
+#/0280_SS_gN50a4p_aN50a0p5/sx09sy15sz18st37/baryons_u[+2.5e-03]d[-2.5e-03]s[+1.5e-02]/OmegaMn/Pp_Cgi_Cgi Dataset {64}
+
+cyprus_make_key_baryon <- function( type_of_correlation_function, smearing_type, baryon_building_blocks, confnumber, source_location, baryon_type, interpolator_type ){
+
+  return (sprintf("/%s_%s_%s/%s/%s/%s/%s", confnumber,
+                                           type_of_correlation_function, 
+                                           smearing_type,
+                                           source_location,
+                                           baryon_building_blocks,
+                                           baryon_type,
+                                           interpolator_type))
 }
 
 #' @title HDF5 key for Cyprus piNdiagramms- 2pt baryon contractions
@@ -646,10 +658,10 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
 cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, verbose = FALSE){
   rhdf5_avail <- requireNamespace("rhdf5")
   dplyr_avail <- requireNamespace("dplyr")
-#  stringr_avail <- requireNamespace("stringr")
- # if( !rhdf5_avail | !dplyr_avail | stringr_avail){
- ##   stop("The 'dplyr', 'stringr'  and 'rhdf5' packages are required to use this function!\n")
- # }
+  stringr_avail <- requireNamespace("stringr")
+  if( !rhdf5_avail | !dplyr_avail | !stringr_avail){
+    stop("The 'dplyr', 'stringr'  and 'rhdf5' packages are required to use this function!\n")
+  }
   if( verbose ){
     tictoc_avail <- requireNamespace("tictoc")
     if( !tictoc_avail ){
@@ -662,7 +674,7 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
   for( ifile in 1:length(files) ){
     f <- files[ifile]
     if(verbose) tictoc::tic(sprintf("Reading %s",f))    
-
+    print(files[ifile])
     h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
     #First we extract the configuration id-s
     temporary1 <- rhdf5::h5ls(h5f)
@@ -684,15 +696,13 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
     type_of_correlation_function <- as.vector(selections[[avail_baryon_types[1]]]$type)[1]
 
 
-    filtering_pattern <- sprintf("%s/....", type_of_correlation_function)
+    filtering_pattern <- sprintf("/....", type_of_correlation_function)
     temporary2 <- unique(temporary1$group %>% str_extract(pattern=filtering_pattern))
     gauge_conf_list <- temporary2[!is.na(temporary2)] 
 
 
 
     interpolator_list_length <- length(selections[[avail_baryon_types[1]]]$interp)
-    print("lsasa")
-    print(interpolator_list_length)
 
     # In case we symmetrize the correlator we do not store separately
     # the plus and minus projection, and we store the timeslices only
@@ -708,10 +718,11 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
       final_val <- array(as.complex(NA), dim=c(length(gauge_conf_list), length(selected_baryon_types)*2*interpolator_list_length*Time))
     }
     for (gauges in gauge_conf_list){
+      print(gauges)
 
     #we wanted to extract all source position for a given config
 
-      splitting_pattern <- sprintf("%s/", type_of_correlation_function)
+      splitting_pattern <- sprintf("/")
       configstring <- unlist(strsplit(gauges, split = splitting_pattern, fixed = TRUE))[[2]]
       temporary1 <- rhdf5::h5ls(h5f)
       temporary1 <- temporary1$group[grepl(configstring,temporary1$group)]
@@ -741,7 +752,7 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
             #Reading the positive
             interp_pp <- sprintf("Pp_%s", interp)
 
-            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], configstring, sp, baryon_type, interp_pp )
+            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pp )
 
             # read the data, which comes in the ordering
             # time, complex
@@ -750,28 +761,35 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
 
             #Reading the negative
             interp_pm <- sprintf("Pm_%s", interp)
-            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], configstring, sp, baryon_type, interp_pm )
+            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pm )
 
             # read the data, which comes in the ordering
             # time, complex
             data_pm <- h5_get_dataset(h5f, key)
              
             if (symmetrize == TRUE){
-              reversed <- data_pm[,ncol(data_pm):1]
+              if (length(dim(data_pm))==1){
+                 reversed <- data_pm[nrow(data_pm):1]
+              } else { reversed <- data_pm[,ncol(data_pm):1] }
+              
               for (line in 2:(Time/2+1)){
-                data_pp[,line] <- data_pp[,line]-reversed[,line-1]
+                if (length(dim(data_pm))==1){
+                         data_pp[line] <- data_pp[line]-reversed[line-1]
+                } else { data_pp[,line] <- data_pp[,line]-reversed[,line-1] }
               }
-              rval[which(sp==source_position_list),1:(Time/2+1)] <- complex(real=data_pp[1,1:(Time/2+1)], imaginary=data_pp[2,1:(Time/2+1)])
-             
-
-            }
-            else{
-              rval1[which(sp==source_position_list),1:Time] <- complex(real=data_pp[1,1:Time], imaginary=data_pp[2,1:Time])
-              rval2[which(sp==source_position_list),1:Time] <- complex(real=data_pm[1,1:Time], imaginary=data_pm[2,1:Time])
+              if (length(dim(data_pm))==1){
+                        rval[which(sp==source_position_list),1:(Time/2+1)] <- complex(real=data_pp[1:(Time/2+1)], imaginary=rep(0,length(data_pp[1:(Time/2+1)])))
+              } else  { rval[which(sp==source_position_list),1:(Time/2+1)] <- complex(real=data_pp[1,1:(Time/2+1)], imaginary=data_pp[2,1:(Time/2+1)]) }
+            } else{
+              if (length(dim(data_pm))==1){
+                rval1[which(sp==source_position_list),1:Time] <- complex(real=data_pp[1:Time], imaginary=rep(length(data_pp[1:Time])))
+                rval2[which(sp==source_position_list),1:Time] <- complex(real=data_pm[1:Time], imaginary=rep(length(data_pm[1:Time]))) 
+              } else {
+                rval1[which(sp==source_position_list),1:Time] <- complex(real=data_pp[1,1:Time], imaginary=data_pp[2,1:Time])
+                rval2[which(sp==source_position_list),1:Time] <- complex(real=data_pm[1,1:Time], imaginary=data_pm[2,1:Time])    }
 
             }
           } # source_positions 
-          str(rval)
           if (symmetrize == TRUE){
 
             for (nt in 1:Time/2+1){
@@ -928,7 +946,7 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
       # that the first index corresponds to the gauge configuration (and source position)
       # and the second index corresponds to everything else
       #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
-      dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/128,Time) 
+      dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/Time,Time) 
 
 
 
