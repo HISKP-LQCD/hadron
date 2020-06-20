@@ -92,15 +92,13 @@ cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated 
 #}
 #/0280_SS_gN50a4p_aN50a0p5/sx09sy15sz18st37/baryons_u[+2.5e-03]d[-2.5e-03]s[+1.5e-02]/OmegaMn/Pp_Cgi_Cgi Dataset {64}
 
-cyprus_make_key_baryon <- function( type_of_correlation_function, smearing_type, baryon_building_blocks, confnumber, source_location, baryon_type, interpolator_type ){
+cyprus_make_key_baryon <- function( replicum, type_of_correlation_function, smearing_type, baryon_building_blocks, confnumber, source_location, baryon_type, interpolator_type ){
 
-  return (sprintf("/%s_%s_%s/%s/%s/%s/%s", confnumber,
-                                           type_of_correlation_function, 
-                                           smearing_type,
-                                           source_location,
-                                           baryon_building_blocks,
-                                           baryon_type,
-                                           interpolator_type))
+  return (sprintf("/%s/%s/%s/%s/%s",confnumber,
+                                              source_location,
+                                              baryon_building_blocks,
+                                              baryon_type,
+                                              interpolator_type))
 }
 
 #' @title HDF5 key for Cyprus piNdiagramms- 2pt baryon contractions
@@ -716,10 +714,12 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
 
     type_of_correlation_function <- as.vector(selections[[avail_baryon_types[1]]]$type)[1]
 
-
-    filtering_pattern <- sprintf("/....", type_of_correlation_function)
-    temporary2 <- unique(temporary1$group %>% str_extract(pattern=filtering_pattern))
-    gauge_conf_list <- temporary2[!is.na(temporary2)] 
+    temporary2 <- temporary1$group[grepl(sprintf("%s",as.vector(selections[[avail_baryon_types[1]]]$replicum)[1]),temporary1$group)]
+    filtering_pattern <- sprintf("/%s/....", as.vector(selections[[avail_baryon_types[1]]]$replicum)[1])
+    print(filtering_pattern)
+    temporary3 <- unique(temporary2 %>% str_extract(pattern=filtering_pattern))
+    gauge_conf_list <- temporary3[!is.na(temporary3)] 
+    print(gauge_conf_list)
 
 
     interpolator_list_length <- length(selections[[avail_baryon_types[1]]]$interp)
@@ -742,8 +742,8 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
 
     #we wanted to extract all source position for a given config
 
-      splitting_pattern <- sprintf("/")
-      configstring <- unlist(strsplit(gauges, split = splitting_pattern, fixed = TRUE))[[2]]
+      splitting_pattern <- sprintf("/s")
+      configstring <- unlist(strsplit(gauges, split = splitting_pattern, fixed = TRUE))[[1]]
       temporary1 <- rhdf5::h5ls(h5f)
       temporary1 <- temporary1$group[grepl(configstring,temporary1$group)]
       temporary2 <- unique(temporary1 %>% str_extract(pattern="sx..sy..sz..st..."))
@@ -772,7 +772,7 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
             #Reading the positive
             interp_pp <- sprintf("Pp_%s", interp)
 
-            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pp )
+            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$replicum)[1], as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pp )
 
             # read the data, which comes in the ordering
             # time, complex
@@ -781,7 +781,7 @@ cyprus_read_baryon_correlation <- function(selections, files, symmetrize, Time, 
 
             #Reading the negative
             interp_pm <- sprintf("Pm_%s", interp)
-            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pm )
+            key <- cyprus_make_key_baryon( as.vector(selections[[baryon_type]]$replicum)[1], as.vector(selections[[baryon_type]]$type)[1], as.vector(selections[[baryon_type]]$smearing_type)[1], as.vector(selections[[baryon_type]]$baryon_building_blocks)[1], configstring, sp, baryon_type, interp_pm )
 
             # read the data, which comes in the ordering
             # time, complex
