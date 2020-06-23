@@ -1092,6 +1092,201 @@ cyprus_read_scattering_2pt_correlation <- function(selections, files, Time, verb
 
 }
 
+
+#' @export
+cyprus_read_scattering_2pt_correlation_all <- function(selections, files, Time, verbose = FALSE){
+  rhdf5_avail <- requireNamespace("rhdf5")
+  dplyr_avail <- requireNamespace("dplyr")
+  if( verbose ){
+    tictoc_avail <- requireNamespace("tictoc")
+    if( !tictoc_avail ){
+      stop("Time reporting requires the 'tictoc' package!")
+    }
+  }
+
+  selected_baryon_types <- names(selections)
+
+  #we store the real parts and imaginary parts for
+  #the different source positions separately
+  data_final_real <- NULL
+  data_final_imag <- NULL
+
+  #loop on the list of files provided in the input
+  for( ifile in 1:length(files) ){
+    f <- files[ifile]
+    if(verbose) tictoc::tic(sprintf("Reading %s",f))
+
+    #open the file with read only argument
+    h5f <- rhdf5::H5Fopen(f, flags = "H5F_ACC_RDONLY")
+
+    #checking whether the wanted baryon type is available in the file
+    temporary1 <- rhdf5::h5ls(h5f)
+    avail_baryon_types <- unlist( lapply( selected_baryon_types, function(x){ x %in% temporary1$name } ) )
+    if( any( !avail_baryon_types ) ){
+        msg <- sprintf("Some selected baryon types could not be found in %s:\n %s",
+                       f,
+                       do.call(paste, as.list( selected_baryon_types[!avail_baryon_types] ) )
+                     )
+        stop(msg)
+    }
+
+    #First we extract the source positions contained in the file
+    h5filedatasetcontent <- rhdf5::h5ls(h5f)
+
+    filtering_pattern <- "/..../"
+    temporary <- unique(h5filedatasetcontent$group %>% str_extract(pattern=filtering_pattern))
+    gauge_conf_list <- temporary[!is.na(temporary)]
+
+    for (gauge  in  gauge_conf_list){
+
+      #loop over all the source positions in the file, 
+      #for each sourceposition we write out seperately "mvec" dataset
+      #that is the reason for the division by 2
+      temporary <- h5filedatasetcontent$group[grepl(gauge,h5filedatasetcontent$group)]
+      sourceposition_list <- temporary[grepl("sx",temporary)]
+      for (sourceposition in 1:length(sourceposition_list)){
+
+        key <- cyprus_make_key_scattering2pt( sourceposition_list[sourceposition], "mvec" )
+
+        # read the available momenta
+        # array of 3 integer number
+        data_mom <- h5_get_dataset(h5f, key)
+
+        key <- cyprus_make_key_scattering2pt( sourceposition_list[sourceposition], selected_baryon_types )
+
+        # read the data
+        data_corr <- h5_get_dataset(h5f, key)
+        # convert it to a two-dimensional format, in such a way
+        # that the first index corresponds to the gauge configuration (and source position)
+        # and the second index corresponds to everything else
+        #res <- matrix(data_corr, prod(dim(data_corr)[1:3]),dim(data_corr)[5])
+        dim(data_corr)<- c(2,16,prod(dim(data_corr))/32/Time,Time)
+
+
+
+        #looking for the momentum combinations
+        #filtering out the momentum
+        final_indices <- NULL
+        for (differentcombinations in 1: length(selections[[avail_baryon_types]]$interp)){
+
+          #determining the indices of momentum
+          for(mom in 1:ncol(data_mom)){
+            if (all.equal(data_mom[,mom],
+                              c(selections[[selected_baryon_types]]$px[differentcombinations],
+                                selections[[selected_baryon_types]]$py[differentcombinations],
+                                selections[[selected_baryon_types]]$pz[differentcombinations]))==TRUE){
+            momindex <- mom
+            break;
+            }
+          }
+          #getting the available gamma structures
+          descrip <- rhdf5::h5readAttributes(h5f,key,"description")
+          tmp <- strsplit(descrip$description,"/")
+          tmp1<- strsplit(tmp[[1]][[4]],"}")
+          tmp2 <- gsub(",\\{","",tmp1[[1]][[3]])
+          gamma_source_list <- strsplit(tmp2,",")[[1]]
+          gammalist <- strsplit(as.character(selections[[selected_baryon_types]]$interp[differentcombinations]),",")[[1]]
+
+          #Determining the indices of the gamma structures
+          indices <- NULL
+          error_gamma <- TRUE
+          for (line in 1:length(gammalist)){
+            for (line2 in 1:length(gamma_source_list)){
+              if (all.equal(gammalist[line], gamma_source_list[line2])==TRUE){
+                indices <- c(indices,line2);
+                error_gamma <- FALSE
+                break;
+              }
+            }
+          }
+          #if we have a gamma structure in the input that cannot be found in the
+          # hdf5 file we return with error message
+          if( error_gamma == TRUE ){
+            msg <- sprintf("Some selected gamma structures could not be found in %s:\n %s",
+                       f,
+                       do.call(paste, as.list( gamma_source_list ) )
+                     )
+            stop(msg)
+          }
+
+          #Determining the indices of all the correlation functions
+          #for example if the input is cg1,cg2,cg3 then we need the following
+          #matrix
+          #c( (cg1,cg1)  (cg1,cg2) (cg1,cg3) )
+          #c( (cg2,cg1)  (cg2,cg2) (cg2,cg3) )
+          #c( (cg3,cg1)  (cg3,cg2) (cg3,cg3) )
+          #Note that here we do not project out, we return all the spin components
+          #with real and imaginary part
+
+          for (line1 in 1:length(indices)){
+            for (line2 in 1:length(indices)){
+              final_indices <- c(final_indices, (momindex-1)*length(gamma_source_list)*length(gamma_source_list)+(indices[line1]-1)*length(gamma_source_list)+(indices[line2]))
+            }
+          }
+        }
+        data_unprojected<- data_corr[,,final_indices,]
+        #Doing possible spin projection
+        data_projection <- data_unprojected
+
+        #Doing the symmetrization
+        #C+-B=<0.25*Tr(1+-g4)*C>
+        #Csymmetried=C+B(t)-C-B(T-t)
+
+
+        partial_array<- array(0,dim=c(2,Time/2+1,length(final_indices)))
+
+        #Obtaining C(T-t)
+
+        #if we filter out just one gammastructure and momentum, then
+        #data_projection will be not 4 but three dimensional structure
+        #therefore we have do an if statement here
+        if (length(final_indices)==1){
+          reversed <- data_projection[,,Time:1]
+
+          partial_array[,1,] <- 0.25*(data_projection[,1,1]+data_projection[,6,1])
+          for (line in 2:(Time/2+1)){
+            partial_array[,line,] <- 0.25*(data_projection[,1,line]+data_projection[,6,line])
+            partial_array[,line,] <- partial_array[,line,]-0.25*(reversed[,11,line-1]+reversed[,16,line-1])
+          }
+
+        }
+        else{
+          reversed <- data_projection[,,,Time:1]
+
+          partial_array[,1,] <- 0.25*(data_projection[,1,,1]+data_projection[,6,,1])
+          for (line in 2:(Time/2+1)){
+            partial_array[,line,] <- 0.25*(data_projection[,1,,line]+data_projection[,6,,line])
+            partial_array[,line,] <- partial_array[,line,]-0.25*(reversed[,11,,line-1]+reversed[,16,,line-1])
+
+          }
+        }
+
+        #convert the final array into two dimensional
+        #merge the dimension time, gamma and momentum
+        #leave the complex (real and imag) intact
+        #real part will be equal to cf
+        #complex part will be equal to icf
+        tmpprod <- prod(dim(partial_array))
+        dim(partial_array) <- c(2, tmpprod/2)
+        data_final_real <- rbind(data_final_real, partial_array[1,])
+        data_final_imag <- rbind(data_final_imag, partial_array[2,])
+
+      }
+    }
+
+    rhdf5::H5Fclose(h5f)
+  }
+  attr(data_final_real,"dimnames") <- NULL
+  attr(data_final_imag,"dimnames") <- NULL
+
+  cf <- cf_meta(nrObs=length(indices)*length(indices)*length(selections[[avail_baryon_types]]$interp),Time=Time,nrStypes=1,symmetrised=TRUE)
+  cf$symmetrised=TRUE
+  cf <- cf_orig(cf, cf=data_final_real,icf=data_final_imag)
+  return(invisible(cf))
+
+}
+
+
 #' @export
 #' @title read HDF5 unprojected contraction files in the Cyprus piNdiagramms format
 #' @description The piNdiagramms function produces all types of baryon
