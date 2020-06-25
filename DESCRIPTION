@@ -1,6 +1,6 @@
 Package: hadron
 Version: 3.1.0
-Date: 2020-06-09
+Date: 2020-06-23
 Title: Statistical Methods to Extract (Hadronic) Quantities from
     Correlation Functions in Mote Carlo Simulations
 Authors@R: 
@@ -74,6 +74,8 @@ Suggests:
     hash,
     numDeriv,
     staplr,
+    markdown,
+    rmarkdown,
     errors
 License: GPL-3
 URL: https://github.com/HISKP-LQCD/hadron
