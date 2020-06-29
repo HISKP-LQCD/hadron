@@ -197,11 +197,16 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' \code{\link{readcmidisc}}
 #' @keywords file
 #' @examples
-#' 
+#'
+#' ## a running toy example
 #' files <- paste0(system.file(package="hadron"), "/extdata/outprcvn.dddd.00.0000")
 #' X <- readcmifiles(files, skip=0,
 #'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
 #' X
+#'
+#' ## a more realistic example
+#' \dontrun{filelist <- getorderedfilelist("ouptrc", last.digits=3, ending=".dat")}
+#' \dontrun{cmicor <- readcmidatafiles(filelist, skip=1)}
 #' 
 #' @export readcmifiles
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
@@ -1057,9 +1062,18 @@ readbinarydisc <- function(files, Time=48, obs=5, endian="little",
 #' @keywords file
 #' @examples
 #'
-#' X <- readcmidisc(files=paste0(system.file(package="hadron"), "/extdata/newdisc.0.1373.0.006.k0v4.10"))
+#' # a running toy example
+#' hpath <- system.file(package="hadron")
+#' files <- paste0(hpath, "/extdata/newdisc.0.1373.0.006.k0v4.10")
+#' X <- readcmidisc(files=files)
 #' X
-#' 
+#'
+#' ## a more realistic example
+#' \dontrun{v4files <- character()}
+#' \dontrun{for(i in seq(600,1744,8))}
+#' \dontrun{  v4files <- }
+#' \dontrun{   c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("%.04d", i), sep=""))}
+#' \dontrun{v4data <- readcmidisc(v4files)}
 #' @export readcmidisc
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                         excludelist=c(""), skip=0, L,
