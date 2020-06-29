@@ -198,7 +198,7 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' @keywords file
 #' @examples
 #' 
-#' files <- paste0(system.file((package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' files <- paste0(system.file(package="hadron"), "/extdata/outprcvn.dddd.00.0000")
 #' X <- readcmifiles(files, skip=0,
 #'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
 #' X
@@ -425,7 +425,7 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 #' @keywords ts
 #' @examples
 #' 
-#' files <- paste0(system.file((package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' files <- paste0(system.file(package="hadron"), "/extdata/outprcvn.dddd.00.0000")
 #' X <- readcmifiles(files, skip=0,
 #'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
 #' Y <- extract.obs(X)
@@ -775,8 +775,10 @@ readnissatextcf <- function(file_basenames_to_read,
 #' @keywords file
 #' @examples
 #'
-#' X <- readbinarycf(paste0(system.file(package="hadron"), "/extdata/C2_bin.dat"), Time=64)
+#' X <- readbinarycf(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                   files="C2_bin.dat", Time=64, obs=0)
 #' X
+#' X$cf
 #' 
 #' @export readbinarycf
 readbinarycf <- function(files, 
