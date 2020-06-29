@@ -27,8 +27,10 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 #' @keywords file
 #' @export
 #' @examples
-#' 
-#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
+#'
+#' filelist <- getorderedfilelist(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                                basename="testfile", last.digits=3, ending=".dat")
+#' filelist
 #' 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
@@ -80,6 +82,11 @@ getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digit
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmidatafiles}}, \code{\link{extract.obs}}
 #' @keywords file
+#'
+#' @examples
+#' confignumbers <- getorderedconfignumbers(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                                basename="testfile", last.digits=3, ending=".dat")
+#' confignumbers
 #' @export
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
@@ -191,9 +198,10 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' @keywords file
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
-#' \dontrun{cmicor <- readcmidatafiles(filelist, skip=1)}
+#' files <- paste0(system.file((package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' X <- readcmifiles(files, skip=0,
+#'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
+#' X
 #' 
 #' @export readcmifiles
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
@@ -417,8 +425,11 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 #' @keywords ts
 #' @examples
 #' 
-#' \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}
-#' \dontrun{cf <- extract.obs(cmicor, vec.obs=c(1,3))}
+#' files <- paste0(system.file((package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' X <- readcmifiles(files, skip=0,
+#'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
+#' Y <- extract.obs(X)
+#' Y
 #' 
 #' @export extract.obs
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
@@ -530,9 +541,8 @@ readhlcor <- function(filename) {
 #' 
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{plaq <- readcmicor("output.data")}
-#' \dontrun{plot(plaq)}
+#' plaq <- readoutputdata(paste0(system.file(package="hadron"), "/extdata/output.data"))
+#' plot(plaq)
 #' 
 #' @export readoutputdata
 readoutputdata <- function(filename) {
@@ -764,8 +774,9 @@ readnissatextcf <- function(file_basenames_to_read,
 #' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
-#' \dontrun{cf <- readbinarycf(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
+#'
+#' X <- readbinarycf(paste0(system.file(package="hadron"), "/extdata/C2_bin.dat"), Time=64)
+#' X
 #' 
 #' @export readbinarycf
 readbinarycf <- function(files, 
@@ -1043,13 +1054,9 @@ readbinarydisc <- function(files, Time=48, obs=5, endian="little",
 #' \code{\link{readbinarydisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
-#' \dontrun{v4files <- character()}
-#' \dontrun{for(i in seq(600,1744,8))}
-#' \dontrun{  v4files <- }
-#' \dontrun{   c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("%.04d", i), sep=""))}
-#' \dontrun{v4data <- readcmidisc(v4files)}
-#' 
+#'
+#' X <- readcmidisc(files=paste0(system.file(package="hadron"), "/extdata/newdisc.0.1373.0.006.k0v4.10"))
+#' X
 #' 
 #' @export readcmidisc
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),

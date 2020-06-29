@@ -23,10 +23,10 @@
 #' @family tikzutils
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)}
-#' \dontrun{plot(...)}
-#' \dontrun{tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
+#' tikzfiles <- tikz.init("plotname",width=3,height=4)
+#' plot(x=c(1:3), y=c(1:3)^2, xlab="$x$", ylab="$y$")
+#' tikz.finalize(tikzfiles=tikzfiles, clean=TRUE)
+#' file.remove("plotname.pdf")
 #' 
 #' @export
 tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
@@ -66,17 +66,11 @@ tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
 #' @author Bartosz Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
 #' @keywords file
 #'
+#' @seealso \code{\link{tikz.init}} 
 #' @family tikzutils
 #'
 #' @return
 #' No return value.
-#' 
-#' @examples
-#' 
-#' library(hadron)
-#' \dontrun{tikzfiles <- tikz.init("plotname",width=3,height=4)}
-#' \dontrun{plot(...)}
-#' \dontrun{tikz.finalize(tikzfiles=tikzfiles,clean=FALSE)}
 #' 
 #' @export
 tikz.finalize <- function(tikzfiles, crop=TRUE, margins=0, clean=TRUE) {
