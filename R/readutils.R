@@ -1165,8 +1165,8 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 #' @keywords file
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{raw.gf <- readgradflow(path)}
+#' path <- system.file("extdata/", package="hadron")
+#' raw.gf <- readgradflow(path)
 #' 
 #' @export readgradflow
 readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
