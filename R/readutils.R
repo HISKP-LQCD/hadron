@@ -991,7 +991,13 @@ readbinarysamples <- function(files, Time=48, nosamples=2, endian="little",
 #' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
+#'
+#' ## running toy example
+#' file <- paste0(system.file("extdata", package = "hadron"), "/C2_pi0.dat")
+#' X <- readbinarydisc(files=file, Time=64, obs=0)
+#' X$cf
+#'
+#' ## more realistic example
 #' \dontrun{files <- character()}
 #' \dontrun{for(i in seq(600,1744,8)) }
 #' \dontrun{  files <- c(files, "C2_dis_u_conf", sprintf("%.04d", i), ".dat", sep="")}
