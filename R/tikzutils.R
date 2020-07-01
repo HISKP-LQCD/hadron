@@ -23,10 +23,10 @@
 #' @family tikzutils
 #' @examples
 #' 
-#' \dontcheck{tikzfiles <- tikz.init("plotname",width=3,height=4)}
-#' \dontcheck{plot(x=c(1:3), y=c(1:3)^2, xlab="$x$", ylab="$y$")}
-#' \dontcheck{tikz.finalize(tikzfiles=tikzfiles, clean=TRUE)}
-#' \dontcheck{file.remove("plotname.pdf")}
+#' \donttest{tikzfiles <- tikz.init("plotname",width=3,height=4)}
+#' \donttest{plot(x=c(1:3), y=c(1:3)^2, xlab="$x$", ylab="$y$")}
+#' \donttest{tikz.finalize(tikzfiles=tikzfiles, clean=TRUE)}
+#' \donttest{file.remove("plotname.pdf")}
 #' 
 #' @export
 tikz.init <- function(basename, standAlone = TRUE, engine, ...) {
