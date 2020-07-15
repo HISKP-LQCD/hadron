@@ -1,8 +1,8 @@
 Package: hadron
-Version: 3.1.0
-Date: 2020-06-23
-Title: Statistical Methods to Extract (Hadronic) Quantities from
-    Correlation Functions in Monte Carlo Simulations
+Version: 3.1.1
+Date: 2020-07-01
+Title: Analysis Framework for Monte Carlo Simulation Data
+    in Physics
 Authors@R: 
     c(person(given = "Bartosz",
              family = "Kostrzewa",
