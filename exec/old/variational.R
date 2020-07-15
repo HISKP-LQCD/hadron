@@ -67,7 +67,7 @@ variational <- function(Cor, ta, tb, tmax, N, T1, matrix.size, no.masses) {
       values[j] <- X[j,j]
     }
     rm(X)
-                                        #  cat(ta, tb, variational.masses, variational.solve$values, "\n")
+    ##  message(ta, " ", tb, " ", variational.masses, " ", variational.solve$values, "\n")
     res.values[t-ta,] <- -log(abs(values[sortindex]))
   }
       
@@ -86,7 +86,3 @@ variational <- function(Cor, ta, tb, tmax, N, T1, matrix.size, no.masses) {
   
 }
 
-#variational.analysis <- function(cmicor,ta=3, tb=4, tmax, N) {
-
-
-#}

@@ -230,11 +230,11 @@ cdh.R <-  function(parm, rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     mnnlo <- - (xi_P/2) * (xi_P^2 * I6mpi)
     flo <- (xi_P) * (I2fpi)
     fnlo= (xi_P) * (xi_P * I4fpi)
-    cat("mpi: ", mlo, mnlo, mnnlo, "\nfpi: ", flo, fnlo, "\n")
+    message("mpi: ", mlo, " ", mnlo, " ", mnnlo, "\nfpi: ", flo, " ", fnlo, "\n")
   }
   if(printit) {
-    cat("Rmpi:", Rmpi, "\n")
-    cat("Rfpi:", Rfpi, "\n")
+    message("Rmpi:", Rmpi, "\n")
+    message("Rfpi:", Rfpi, "\n")
   }
   
   if(any(is.na(c(mpiFV, fpiFV)))) {
@@ -327,11 +327,11 @@ cdhnew.R <- function(rev=-1, aLamb1=0.055, aLamb2=0.58, aLamb3, aLamb4,
     mnlo <- - (xi_P/2) * (xi_P * I4mpi)
     flo <- (xi_P) * (I2fpi)
     fnlo= (xi_P) * (xi_P * I4fpi)
-    cat("mpi: ", mlo, mnlo, "\n", "fpi: ", flo, fnlo, "\n")
+    message("mpi: ", mlo, " ", mnlo, "\n", "fpi: ", flo, " ", fnlo, "\n")
   }
   if(printit) {
-    cat("Rmpi:", ( - (xi_P/2) * (I2mpi + xi_P * I4mpi)), "\n")
-    cat("Rfpi:", ((xi_P)   * (I2fpi + xi_P * I4fpi)), "\n")
+    message("Rmpi:", ( - (xi_P/2) * (I2mpi + xi_P * I4mpi)), "\n")
+    message("Rfpi:", ((xi_P)   * (I2fpi + xi_P * I4fpi)), "\n")
   }
   
   if(any(is.na(c(mpiFV, fpiFV)))) {

@@ -27,6 +27,10 @@
 #' @param uw.summary Boolean. Generate an \link{uwerr} summary plot.
 #' @param ... Generic graphical parameters to be passed on.
 #'
+#' @return
+#' Returns a \link{data.frame} with named columns `val`, `dval`, `tauint`, `dtauint`, `Wopt`
+#' and `stringsAsFactors`, see \link{uwerr}.
+#' 
 #' @export
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
@@ -58,6 +62,7 @@ plot_timeseries <- function(dat,
   }
 
   op <- par(family="Palatino",cex.main=0.8,font.main=1)
+  on.exit(par(op))
   par(mgp=c(2,1.0,0))
 
   # plot the timeseries
@@ -171,6 +176,10 @@ plot_timeseries <- function(dat,
 #' @param errorband_color String. Colour of the error band.
 #' @param debug Boolean. Generate debug output.
 #'
+#' @return
+#' Returns a list with two named elements `mineval` and `maxeval` for the minimal
+#' and the maximal eigenvalue, see \link{plot_timeseries}.
+#' 
 #' @export
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
@@ -198,7 +207,8 @@ plot_eigenvalue_timeseries <- function(dat,
   if(!missing(pdf.filename)){
     tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
   }
-  par(mgp=c(2,1,0))
+  par_save <- par(mgp=c(2,1,0))
+  on.exit(par(par_save))
 
   # plot the timeseries
   plot(x=dat$traj, xlim=range(dat$traj), 

@@ -17,6 +17,24 @@
 #' 
 NULL
 
+#' Sample loop data
+#'
+#' @description
+#' Sample data for fermion loops for a 24 cube times 48 lattice QCD
+#' simulation. It is stored in form of a list.
+#' 
+#' @name loopdata
+#'
+#' @docType data
+#' @format list of 10 elements: "nrObs" "Time" "nrStypes" "symmetrised" "cf" 
+#' "icf" "scf" "iscf" "nrSamples" "obs"
+#' @keywords datasets
+#' @examples
+#'
+#' data("loopdata")
+#'
+NULL
+
 #' Internal Hadron Functions
 #' 
 #' Internal hadron functions
@@ -37,11 +55,24 @@ NULL
 #' 
 #' An R implementation of fitting routines used in lattice QCD. It provides
 #' useful functions for extraction hadronic quantities and such like.
-#' 
-#' An R implementation of fitting routines used in lattice QCD. It provides
-#' useful functions for extraction hadronic quantities and such like.
-#' 
-#' More to come.
+#'
+#' Toolkit to perform statistical analyses of correlation
+#' functions generated from Lattice Monte Carlo simulations. In
+#' particular, a class `cf` for correlation functions and
+#' methods to analyse those are defined. This includes (blocked)
+#' bootstrap and jackknife, but also an automatic determination of
+#' integrated autocorrelation times. `hadron` also provides a very
+#' general function `bootstrap.nlsfit` to bootstrap a non-linear least squares fit.
+#' More specific functions are provided to extract hadronic quantities
+#' from Lattice Quantum Chromodynamics simulations, a particular Monte
+#' Carlo simulation,(see e.g. European Twisted Mass Collaboration, P. Boucaud et
+#' al. (2008) \doi{10.1016/j.cpc.2008.06.013}). Here, to determine
+#' energy eigenvalues of hadronic states, specific fitting routines
+#' and in particular the generalised eigenvalue method (see
+#' e.g. B. Blossier et al. (2009) \doi{10.1088/1126-6708/2009/04/094}
+#' and M. Fischer et al. (2020)
+#' <https://inspirehep.net/literature/1792113>) are implemented.
+#' In addition, input/output and plotting routines are available.
 #' 
 #' @name hadron
 #' @docType package
@@ -95,7 +126,7 @@ NULL
 #' @references S.N. Lahiri, "On the jackknife-after-bootstrap method for
 #' dependent data and its consistency properties", Econometric Theory, 2002,
 #' Vol. 18, 79-98
-#' @keywords bootstrap, jackknife, boostrap-after-jackknife, error of error
+#' @keywords bootstrap jackknife boostrap-after-jackknife error-of-error
 NULL
 
 #' Sample plaquette time series
@@ -119,7 +150,7 @@ NULL
 
 #' Sample pseudoscalar correlator
 #' 
-#' Sample data for a pseudoscalar correlator for time extend T=48.
+#' Sample data for a pseudoscalar correlator for time extent Time=48.
 #' 
 #' 
 #' @name pscor.sample

@@ -62,8 +62,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, with.cdot=TRUE, 
   }
   else{
     if(requireNamespace('errors')){
-      require('errors')
-      tmp <- format(set_errors(x, dx), digits=digits, ...)
+      tmp <- format(errors::set_errors(x, dx), digits=digits, ...)
     }else{
       warning("The `errors`-package is not installed. The output of `tex.catwitherror` might not be as you want it.")
       tmp <- formatC(x, digits=digits, ...)

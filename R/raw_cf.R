@@ -10,6 +10,9 @@
 #'
 #' @family raw_cf constructors
 #'
+#' @return
+#' An object of S3 class `raw_cf`.
+#' 
 #' @export
 raw_cf <- function () {
   cf <- list()
@@ -29,6 +32,9 @@ raw_cf <- function () {
 #'
 #' @family raw_cf constructors
 #'
+#' @return
+#' An object of S3 class `raw_cf` with metadat mixing added.
+#' 
 #' @export
 raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=c(1,1), nts = Time ) {
   stopifnot(inherits(cf, 'raw_cf'))
@@ -54,6 +60,9 @@ raw_cf_meta <- function (cf = raw_cf(), nrObs = 1, Time = NA, nrStypes = 1, dim=
 #'
 #' @family raw_cf constructors
 #'
+#' @return
+#' An object of S3 class `raw_cf` with original data mixin added.
+#' 
 #' @export
 raw_cf_data <- function (cf, data) {
   stopifnot(inherits(cf, 'raw_cf'))
@@ -258,6 +267,9 @@ block.raw_cf <- function(cf, block_length){
 #' If the dimensions (except for the measurements) of the `data` fields of the
 #' two containers match, they are concatenated along the measurement dimension.
 #'
+#' @return
+#' An object of S3 class `raw_cf` identical to the input object but with extended statistics.
+#' 
 #' @export
 addStat.raw_cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'raw_cf'))
@@ -401,6 +413,9 @@ mul.raw_cf <- function(cf, a=1.) {
 #' @title check if an object is of class `raw_cf`
 #' @param x object to be checked 
 #'
+#' @return
+#' Returns TRUE if `x` is an object of class `raw_cf`, FALSE otherwise.
+#' 
 #' @export
 is.raw_cf <- function(x){
   inherits(x, "raw_cf")
@@ -409,6 +424,9 @@ is.raw_cf <- function(x){
 #' @title check if an obect is of class `raw_cf` and empty otherwise
 #' @param x object to be checked
 #'
+#' @return
+#' Returns TRUE if `x` is an empty object of class `raw_cf`, FALSE otherwise.
+#' 
 #' @export
 is_empty.raw_cf <- function(x){
   .raw_cf <- x
@@ -420,6 +438,10 @@ is_empty.raw_cf <- function(x){
 #'
 #' @param ... Zero or multiple objects of type `raw_cf`.
 #'
+#' @return
+#' Returns an object of S3 class `raw_cf`, the concatenation of the
+#' input objects.
+#' 
 #' @export
 c.raw_cf <- function (...) {
   rval <- Reduce(concat.raw_cf, list(...), raw_cf())
@@ -433,6 +455,10 @@ c.raw_cf <- function (...) {
 #'              after the slices of \code{left}
 #' @param left `raw_cf` object to be concatenated with \code{right}
 #' @param right `raw_cf` object to be concatenated with \code{left}
+#'
+#' @return
+#' Returns an object of S3 class `raw_cf`, the concatenation of the
+#' two input objects.
 #'
 #' @export
 concat.raw_cf <- function (left, right) {
@@ -664,6 +690,10 @@ plot.raw_cf <- function(x,
 #' @param title Character vector, will be passed as the \code{main} argument to
 #'              \link{plotwitherror} which in turn passes it to \link{plot}. Can
 #'              be either of length '1' or \code{prod(cf$dim)}
+#'
+#' @return
+#' No return value, only plots are generated.
+#' 
 #' @export
 overview_plot_raw_cf <- function(cf,
                                  grid,
@@ -689,6 +719,7 @@ overview_plot_raw_cf <- function(cf,
       stop("'prod(grid)' must be equal to 'prod(cf$dim)'")
     }
     par_save <- par()
+    on.exit(par(par_save))
     par(mfrow=grid)
   }
 
@@ -783,10 +814,6 @@ overview_plot_raw_cf <- function(cf,
       do.call(plotwitherror, args)
     }
   }
-  # reset par which was modified above
-  if(!missing(grid)){
-    par(par_save)
-  }
 }
 
 #' @title shift a \code{raw_cf} correlation function by 'places' time-slices
@@ -804,6 +831,10 @@ overview_plot_raw_cf <- function(cf,
 #' The correlation funtion \eqn{C(t)} is shifted in time to produce:
 #'   \deqn{C'(t) = C(t+places)}
 #' using periodic boundary conditions in time.
+#'
+#' @return
+#' Returns an object of class `raw_cf`, shifted compared to the input object.
+#'
 #' @export
 shift.raw_cf <- function(cf, places) {
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -872,6 +903,9 @@ shift.raw_cf <- function(cf, places) {
 #'                  index matrix to access a particular element of the interior
 #'                  dimensions. Must of the the same length as cf$dim.
 #'
+#' @return
+#' An object of type matrix is returned containing the tensor index set.
+#' 
 #' @export
 idx_matrix.raw_cf <- function(cf, component){
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -899,6 +933,9 @@ idx_matrix.raw_cf <- function(cf, component){
 #' @title Construct tensor index set for the internal degrees of freedom
 #' @param cf `raw_cf` container
 #'
+#' @return
+#' Returns a matrix containing the above mentioned index set.
+#' 
 #' @export
 int_idx_matrix.raw_cf <- function(cf){
   stopifnot(inherits(cf, 'raw_cf_meta'))
@@ -917,6 +954,9 @@ int_idx_matrix.raw_cf <- function(cf){
 #'                   for all components of the 'raw_cf'. This can
 #'                   be slow so the default is \code{FALSE}.
 #'
+#' @return
+#' The summary is returned invisibly in form of a data frame.
+#' 
 #' @export
 summary.raw_cf <- function(object, ..., statistics = FALSE) {
   cf <- object
@@ -955,6 +995,9 @@ summary.raw_cf <- function(object, ..., statistics = FALSE) {
 #' @param x `raw_cf` container with data and meta-data
 #' @param ... ignored
 #'
+#' @return
+#' See \link{summary.raw_cf}.
+#' 
 #' @export
 print.raw_cf <- function(x, ...) {
   cf <- x
