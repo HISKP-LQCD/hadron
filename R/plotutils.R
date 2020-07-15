@@ -143,13 +143,13 @@ errorpos <- function(dx,errsum.method="linear") {
 #' }
 #' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
 #' adding points with error bars to the current plot. Switches the underlying
-#' plotting routine from \code{\link[graphics]{plot}} to
+#' plotting routine from \code{\link[base]{plot}} to
 #' \code{\link[graphics]{points}}.
-#' @param ...  any graphic options passed over to \code{\link[graphics]{plot}}
+#' @param ...  any graphic options passed over to \code{\link[base]{plot}}
 #' @return a plot with error bars is drawn on the current device
 #' @author Carsten Urbach, \email{urbach@@hiskp.uni-bonn.de} \cr Bartosz
 #' Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
-#' @seealso \code{\link[graphics]{plot}}, \code{\link[graphics]{points}}
+#' @seealso \code{\link[base]{plot}}, \code{\link[graphics]{points}}
 #'
 #' @return
 #' Returns for convenience a list with elements `xlim` and `ylim` representing the
