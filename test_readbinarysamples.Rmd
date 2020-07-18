@@ -10,7 +10,7 @@ devtools::load_all()
 ```{r}
 samples <- readbinarysamples(
     files = Sys.glob('../hadron_example_data/pionff/cA2.60.32/vector_ff.samples.00.*'),
-    T = 48,
+    Time = 48,
     nosamples = 4)
 ```
 

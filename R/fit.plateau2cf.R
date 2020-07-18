@@ -13,6 +13,12 @@
 #' @author Carsten Urbach \email{curbach@@gmx.de}
 #' @seealso \code{\link{cf}}
 #' @keywords bootstrap fit
+#' @examples
+#'
+#' data(correlatormatrix)
+#' cfnew <- extractSingleCor.cf(correlatormatrix, id=1)
+#' cfnew <- bootstrap.cf(cfnew, boot.R=99, boot.l=1)
+#' X <- fit.plateau2cf(cfnew, t1=13, t2=20)
 #' @export fit.plateau2cf
 fit.plateau2cf <- function(cf, t1, t2, useCov=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))

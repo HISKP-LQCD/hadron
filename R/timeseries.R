@@ -10,30 +10,41 @@
 #' @param plotsize Width and Height of plot.
 #' @param titletext Text in the plot title.
 #' @param hist.by Numeric. Stepping to compute the histogram breaks.
-#' @param stat_range range of statistics to use.
+#' @param stat_range Optional integer vector of length 2. Start and end indices
+#'        of the subset of `dat` to be plotted. If left empty, all of `dat` will be
+#'        plotted.
 #' @param pdf.filename String. PDF filename.
 #' @param name String. Timeseries name.
-#' @param hist.probs Probablities for the histogram
+#' @param hist.probs Optional numeric vector of length 2. Probability extrema to limit the width
+#'        of the histogram or smoothed density plots. By default all data is used. Note: this
+#'        has not effect on the analysis as a whole or other plots.
+#' @param smooth_density Boolean. Instead of plotting a histogram, use a smoothed density.
 #' @param errorband_color String. Colour of the error band.
-#' @param type String. Plot type.
+#' @param type String. Plot type, see \link{plot} for details.
 #' @param uwerr.S Numeric. `S` of the \link{uwerr} method to be used.
 #' @param periodogram Boolean. Whether to show a periodogram.
 #' @param debug Boolean. Generate debug output.
-#' @param uw.summary Boolean. Generate an \link{uwerr} summary.
+#' @param uw.summary Boolean. Generate an \link{uwerr} summary plot.
 #' @param ... Generic graphical parameters to be passed on.
 #'
+#' @return
+#' Returns a \link{data.frame} with named columns `val`, `dval`, `tauint`, `dtauint`, `Wopt`
+#' and `stringsAsFactors`, see \link{uwerr}.
+#' 
 #' @export
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
-                            stat_range,
+                            stat_range = c(1.0, length(dat$y)),
                             pdf.filename,
                             name="", xlab="$t_\\mathrm{MD}$", 
                             hist.probs=c(0.0,1.0), errorband_color=rgb(0.6,0.0,0.0,0.6),
                             type='l',
                             uwerr.S=2,
+                            smooth_density=FALSE,
                             periodogram=FALSE,debug=FALSE,uw.summary=TRUE,...) {
 
-  if(missing(stat_range)) { stat_range <- c(1,length(dat$y)) }
+  stopifnot(length(stat_range) == 2)
+  stopifnot(length(hist.probs) == 2)
 
   yrange <- range(dat$y)
 
@@ -51,6 +62,7 @@ plot_timeseries <- function(dat,
   }
 
   op <- par(family="Palatino",cex.main=0.8,font.main=1)
+  on.exit(par(op))
   par(mgp=c(2,1.0,0))
 
   # plot the timeseries
@@ -75,7 +87,8 @@ plot_timeseries <- function(dat,
                          tex.catwitherror(x=uw.data$value,
                                           dx=uw.data$dvalue,
                                           digits=3,
-                                          with.dollar=FALSE)
+                                          with.dollar=FALSE,
+										  with.cdot=FALSE)
                          ),
          lty=1,
          pch=NA,
@@ -93,13 +106,32 @@ plot_timeseries <- function(dat,
       hist.breaks <- 70
     }
   }
-  
-  hist.data <- hist(stat_y,
-                    xlim=quantile(stat_y,probs=hist.probs),
-                    main=titletext,
-                    xlab=ylab, 
-                    breaks=hist.breaks)
-  rect(ytop=max(hist.data$counts),
+ 
+  if( smooth_density ){
+    # determine an appropriate bandwidth for the density estimate
+    # by finding the closest power of 2 smaller than half the
+    # number of measurements
+    n <- ifelse(length(stat_y)/2 > 512, 
+                2^floor(log2(length(stat_y)/2)),
+                512)
+    d <- density(stat_y, bw = "SJ", n = n)
+    plot(d, 
+         xlim=quantile(stat_y,probs=hist.probs),
+         main=titletext,
+         xlab=ylab, 
+         breaks=hist.breaks)
+    ytop <- max(d$y)
+    ybottom <- 0.0
+  } else { 
+    hist.data <- hist(stat_y,
+                      xlim=quantile(stat_y,probs=hist.probs),
+                      main=titletext,
+                      xlab=ylab, 
+                      breaks=hist.breaks)
+    ytop <- max(hist.data$counts)
+    ybottom <- 0.0
+  }
+  rect(ytop=ytop,
        ybottom=0,
        xright=uw.data$value+uw.data$dvalue,
        xleft=uw.data$value-uw.data$dvalue,
@@ -144,6 +176,10 @@ plot_timeseries <- function(dat,
 #' @param errorband_color String. Colour of the error band.
 #' @param debug Boolean. Generate debug output.
 #'
+#' @return
+#' Returns a list with two named elements `mineval` and `maxeval` for the minimal
+#' and the maximal eigenvalue, see \link{plot_timeseries}.
+#' 
 #' @export
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
@@ -171,7 +207,8 @@ plot_eigenvalue_timeseries <- function(dat,
   if(!missing(pdf.filename)){
     tikzfiles <- tikz.init(basename=pdf.filename,width=plotsize,height=plotsize)
   }
-  par(mgp=c(2,1,0))
+  par_save <- par(mgp=c(2,1,0))
+  on.exit(par(par_save))
 
   # plot the timeseries
   plot(x=dat$traj, xlim=range(dat$traj), 

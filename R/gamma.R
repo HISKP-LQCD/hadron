@@ -24,6 +24,11 @@
 #'
 #' @concept Dirac
 #' @concept gamma
+#' 
+#' @return
+#' Returns the requested \eqn{\gamma}{gamma} matrix as a 4x4 complex valued
+#' array, see \link{gm}.
+#' 
 #' @export
 gm_mu <- function(mu, basis = 'chiral_tmlqcd'){
   if( !(basis %in% c('ukqcd', 'chiral_tmlqcd')) ){
@@ -61,6 +66,8 @@ gm_mu <- function(mu, basis = 'chiral_tmlqcd'){
   }
 }
 
+#' @name gm
+#' 
 #' @title List of arrays of gamma structures
 #'
 #' @description
@@ -90,10 +97,12 @@ gm_mu <- function(mu, basis = 'chiral_tmlqcd'){
 #'
 #' The function \code{\link{gm_mu}} can be used to access its elements using a more
 #' "natural" indexing.
-#.
+#'
+#' @docType data
 #' @concept Dirac
 #' @concept gamma
-#' @export
+NULL
+
 gm <- list()
   
 gm[['chiral_tmlqcd']] <- array(complex(16), dim=c(7,4,4))

@@ -1,5 +1,5 @@
 
-AC_INIT([src/zeta_function_R_interface.c])
+AC_INIT([src/alpha_s.c])
 AC_PROG_CXX
 AC_CHECK_LIB(gsl, gsl_sf_airy_Ai_e,
              [LIBS="${LIBS} -lgsl -lgslcblas"], 

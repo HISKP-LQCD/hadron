@@ -84,7 +84,7 @@ cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=1500, boot.l=2, seed=1442556)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
 #' effmass <- fit.cosh(bootstrap.effectivemass(cf=samplecf), t1=15, t2=23)
 #' summary(effmass)
 #' plot(effmass, ylim=c(0.14,0.15))
@@ -132,9 +132,9 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
       masses = c(m.init, acosh(C1/CMiddle))
       amplitudes = c(a0, C1/cosh(masses[[2]]*(t1-Thalf)))
       if(any(is.na(masses)) || any(is.na(amplitudes))){
-        cat("The higher cosh-term cannot be resolved properly.\nA plateau fit is recommended.\n")
+        warning("The higher cosh-term cannot be resolved properly.\nA plateau fit is recommended.\n")
         if(adjust.n.cosh){
-          cat("Changing number of cosh-terms. Now n.cosh=1.\n")
+          message("Changing number of cosh-terms. Now n.cosh=1.\n")
           n.cosh = 1
           masses = c(m.init)
           amplitudes = c(a0)
@@ -241,6 +241,10 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
 #' (\code{plot.corr}) as well as the corresponding effective mass
 #' (\code{plot.mass}, if fitted with effMass).
 #' @param ... graphical parameters to be passed on to \link{plotwitherror}
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr = FALSE, ...) {
   effMass <- x
@@ -262,10 +266,7 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
 
   if(plot.mass){
     t.all <- effMass$t.idx
-    op <- options()
-    options(warn=-1)
-    plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...)
-    options(op)
+    suppressWarnings(plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...))
 
     if(!is.null(effMass$coshfit)){
       Y <- cosh.to.effmass(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)
@@ -306,6 +307,10 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
 #' correlation matrix of the fit parameters are showed. Otherwise only the
 #' effective mass with error is given.
 #' @param ... additional parameters to match generic \link{summary} arguments
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.coshfit <- function (object, verbose = FALSE, ...) {
   effMass <- object
@@ -313,7 +318,7 @@ summary.coshfit <- function (object, verbose = FALSE, ...) {
   cat("no. measurements\t=\t", length(effMass$cf$cf[,1]), "\n")
   cat("boot.R\t=\t", effMass$cf$boot.R, "\n")
   cat("boot.l\t=\t", effMass$cf$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$cf$Time, "\n")
+  cat("Time extent\t=\t", effMass$cf$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]))),
       "(",100*length(which(is.na(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii])))/ length(effMass$cf$cf.tsboot$t[,effMass$coshfit$ii]), "%)\n")
   cat("time range from", effMass$coshfit$t1, " to ", effMass$coshfit$t2, "\n")

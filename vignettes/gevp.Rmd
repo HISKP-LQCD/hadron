@@ -2,9 +2,10 @@
 title: "GEVP energy level extraction"
 author: "Carsten Urbach"
 output:
-  pdf_document:
-    #citation_package: biblatex
-    toc: yes
+  rmarkdown::html_vignette
+#pdf_document:
+#    #citation_package: biblatex
+#    toc: yes
     
 #bibliography: gevp.bib
 #link_citation: yes
@@ -87,7 +88,7 @@ First the resampling needs to be performed, for instance for the
 (blocked) bootstrap
 
 ```{r, cache=TRUE}
-boot.R <- 1500
+boot.R <- 150
 boot.l <- 1
 seed <- 1433567
 correlatormatrix <- bootstrap.cf(cf=correlatormatrix,
@@ -119,7 +120,7 @@ the following behaviour
 \[
 \lambda_i(t, t_0)\ \propto\ e^{-E_i(t-t_0)} + e^{-E_i(T-t+t_0)}\,.
 \]
-Here, $T$ is the time extend and we focus on a symmetric correlation
+Here, $T$ is the time extent and we focus on a symmetric correlation
 matrix in time. However, analogously one can show this with a minus
 sign for anti-symmetric correlation matrices in time. Of course, we
 also have $\lambda(t_0, t_0) = 1$. We re-write the generalised

@@ -5,8 +5,6 @@
 
 #include <math.h>
 
-gsl_error_handler_t *old_handler;
-
 void my_errhandler(const char *reason, const char *file, int line, int gsl_errno) {
   if (gsl_errno != GSL_EUNDRFLW) {
     error("ERROR: In GSL the following error occured: %s\nline %d of file %s\n",
@@ -373,6 +371,7 @@ SEXP cdh_c(SEXP rev,
   PROTECT(res = NEW_NUMERIC(2 * N));
   resp = NUMERIC_POINTER(res);
 
+  gsl_error_handler_t *old_handler;
   old_handler = gsl_set_error_handler(&my_errhandler);
 
   fscdh(revp[0],
@@ -442,6 +441,7 @@ SEXP cdhnew_c(SEXP rev,
   PROTECT(res = NEW_NUMERIC(2 * N));
   resp = NUMERIC_POINTER(res);
 
+  gsl_error_handler_t *old_handler;
   old_handler = gsl_set_error_handler(&my_errhandler);
 
   fscdhnew(revp[0],

@@ -1,8 +1,3 @@
-## alpha_s at scale mu to nl's order in PT
-## input needed is Lambda_QCD, Nc, Nf
-## original fortran code by Vittorio Lubicz
-
-
 #' compute alpha strong at given scale
 #' 
 #' compute alpha strong (\eqn{\alpha_s}{alpha_s}) at given scale \eqn{\mu}{mu}
@@ -18,7 +13,7 @@
 #' which might improve speed.
 #' @return returns the value of alpha strong \eqn{\alpha_s}{alpha_s} at scale
 #' \eqn{\mu}{mu}
-#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}, Vittorio Lubicz (of the original Fortran code)
 #' @seealso \code{\link{zetazp}}
 #' @examples
 #' 

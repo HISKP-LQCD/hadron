@@ -16,7 +16,6 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 #' 
 #' All filenames are assumend to have equal length.
 #' 
-#' @aliases getorderedfilelist getorderedconfignumbers
 #' @param path the path to be searched
 #' @param basename the basename of the files
 #' @param last.digits the number of last characters in each filename to be used
@@ -28,8 +27,10 @@ readcmicor <- function(filename, colClasses=c("integer","integer","integer","num
 #' @keywords file
 #' @export
 #' @examples
-#' 
-#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
+#'
+#' filelist <- getorderedfilelist(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                                basename="testfile", last.digits=3, ending=".dat")
+#' filelist
 #' 
 getorderedfilelist <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename,ending ) ) 
@@ -65,6 +66,27 @@ getorderedconfigindices <- function(path="./", basename="onlinemeas", last.digit
   return(invisible(order(gaugeno)))
 }
 
+#' Creates an ordered vector of gauge config file numbers
+#' 
+#' These functions generate an ordered list of config
+#' numbers by using a path and a basename and '*'.
+#' 
+#' All filenames are assumend to have equal length.
+#' 
+#' @param path the path to be searched
+#' @param basename the basename of the files
+#' @param last.digits the number of last characters in each filename to be used
+#' for ordering the list.
+#' @param ending the file extension after the digits.
+#' @return returns the ordered list of gauge config numbers as a numeric vector.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{readcmidatafiles}}, \code{\link{extract.obs}}
+#' @keywords file
+#'
+#' @examples
+#' confignumbers <- getorderedconfignumbers(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                                basename="testfile", last.digits=3, ending=".dat")
+#' confignumbers
 #' @export
 getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digits=4, ending="") {
   ofiles <- Sys.glob( sprintf( "%s/%s*%s", path, basename, ending ) ) 
@@ -92,7 +114,7 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' 
 #' The cmi (Chris Michael) format for connected correlators comprises 6 colums
 #' per file: 1) the observable type number (itype); 2) the operator type number
-#' (iobs); 3) the time difference from source going from 0 to \eqn{T/2} for
+#' (iobs); 3) the time difference from source going from 0 to \eqn{Time/2} for
 #' each operator type; 4) \eqn{c_1}{c1} correlator value at time value forward
 #' in time; 5) \eqn{c_2}{c2} correlator value at time value backward in time;
 #' 6) number of gauge configuration.
@@ -175,9 +197,15 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' \code{\link{readcmidisc}}
 #' @keywords file
 #' @examples
-#' 
-#' library(hadron)
-#' \dontrun{filelist <- getorderedfilelist("ouptrc")}
+#'
+#' ## a running toy example
+#' files <- paste0(system.file(package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' X <- readcmifiles(files, skip=0,
+#'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
+#' X
+#'
+#' ## a more realistic example
+#' \dontrun{filelist <- getorderedfilelist("ouptrc", last.digits=3, ending=".dat")}
 #' \dontrun{cmicor <- readcmidatafiles(filelist, skip=1)}
 #' 
 #' @export readcmifiles
@@ -217,7 +245,7 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
     if( !(files[i] %in% excludelist) && file.exists(files[i]) && (i-1) %% stride == 0) {
       
       if(verbose) {
-        cat("Reading from file", files[i], "\n")
+        message("Reading from file ", files[i], "\n")
       }
       ## read the data
       tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
@@ -312,8 +340,8 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
 #' real part of the local loop, \code{ind.vec[5]} the imaginary part of the
 #' local loop, \code{ind.vec[6]} and \code{ind.vec[7]} the same for fuzzed (or
 #' smeared) loops and \code{ind.vec[8]} for the configuraton number.
-#' @param L The spatial lattice extend needed for normalisation. If not given
-#' set to \code{T/2}.
+#' @param L The spatial lattice extent needed for normalisation. If not given
+#' set to \code{Time/2}.
 #' @return a list with elements as follows:
 #' 
 #' \code{cf}: real part of the local loop
@@ -324,7 +352,7 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
 #' 
 #' \code{iscf}: imaginary part of the smeared loop
 #' 
-#' \code{Time=T}, \code{nrSamples}, \code{nrObs=1}, \code{nrStypes=2},
+#' \code{Time=Time}, \code{nrSamples}, \code{nrObs=1}, \code{nrStypes=2},
 #' \code{obs=obs} and \code{conf.index}. The last is the list of configurations
 #' corresponding to the loops.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -332,19 +360,19 @@ readcmiloopfiles <- function(files, excludelist=c(""), skip=0, verbose=FALSE,
 #' @export extract.loop
 extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
   ldata <- cmiloop[cmiloop[,ind.vec[1]] == obs,] 
-  T <- max(ldata[,ind.vec[2]])
+  Time <- max(ldata[,ind.vec[2]])
   nrSamples <- max(ldata[,ind.vec[3]])
   if(missing(L)) {
-    L <- T/2
+    L <- Time/2
   }
 
-  cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_meta(nrObs = 1, Time = Time, nrStypes = 2)
   cf <- cf_orig(cf,
-                cf = array(ldata[,ind.vec[4]], dim=c(T, nrSamples, length(ldata[,ind.vec[4]])/T/nrSamples))/sqrt(L^3),
-                icf = array(ldata[,ind.vec[5]], dim=c(T, nrSamples, length(ldata[,ind.vec[5]])/T/nrSamples))/sqrt(L^3))
+                cf = array(ldata[,ind.vec[4]], dim=c(Time, nrSamples, length(ldata[,ind.vec[4]])/Time/nrSamples))/sqrt(L^3),
+                icf = array(ldata[,ind.vec[5]], dim=c(Time, nrSamples, length(ldata[,ind.vec[5]])/Time/nrSamples))/sqrt(L^3))
   cf <- cf_smeared(cf,
-                   scf = array(ldata[,ind.vec[6]], dim=c(T, nrSamples, length(ldata[,ind.vec[6]])/T/nrSamples))/sqrt(L^3),
-                   iscf =  array(ldata[,ind.vec[7]], dim=c(T, nrSamples, length(ldata[,ind.vec[7]])/T/nrSamples))/sqrt(L^3),
+                   scf = array(ldata[,ind.vec[6]], dim=c(Time, nrSamples, length(ldata[,ind.vec[6]])/Time/nrSamples))/sqrt(L^3),
+                   iscf =  array(ldata[,ind.vec[7]], dim=c(Time, nrSamples, length(ldata[,ind.vec[7]])/Time/nrSamples))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
@@ -382,17 +410,17 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 #' indicating whether the corresponding correlation function should be
 #' multiplied by +-1.
 #' @param symmetrise if set to \code{TRUE}, the correlation function will be
-#' averaged for \code{t} and \code{T-t}, with the sign depending on the value
+#' averaged for \code{t} and \code{Time-t}, with the sign depending on the value
 #' of \code{sym}.  Note that currently the correlator with t-values larger than
-#' \code{T/2} will be discarded.
+#' \code{Time/2} will be discarded.
 #' @return returns a list containing \item{cf}{ for \code{extract.obs}: array
 #' containing the correlation function with dimension number of files times
-#' (nrObs*nrStypes*(T/2+1)). C(t) and C(-t) are averaged according to
+#' (nrObs*nrStypes*(Time/2+1)). C(t) and C(-t) are averaged according to
 #' \code{sym.vec}.
 #' 
 #' for \code{extract.loop}: ReTL } \item{icf}{ for \code{extract.loop} only:
 #' ImTL } \item{scf}{ for \code{extract.loop} only: ReTF } \item{sicf}{ for
-#' \code{extract.loop} only: ImTF } \item{Time}{ The time extend of the
+#' \code{extract.loop} only: ImTF } \item{Time}{ The time extent of the
 #' correlation functions.  } \item{nrStypes}{ The number of smearing
 #' combinations.  } \item{nrObs}{ The number of observables.  }
 #' \item{nrSamples}{ for \code{extrac.loop} only: the number of samples found
@@ -402,8 +430,11 @@ extract.loop <- function(cmiloop, obs=9, ind.vec=c(2,3,4,5,6,7,8,1), L) {
 #' @keywords ts
 #' @examples
 #' 
-#' \dontrun{cmicor <- readcmidatafiles("outprc", skip=1)}
-#' \dontrun{cf <- extract.obs(cmicor, vec.obs=c(1,3))}
+#' files <- paste0(system.file(package="hadron"), "/extdata/outprcvn.dddd.00.0000")
+#' X <- readcmifiles(files, skip=0,
+#'                   colClasses=c("integer", "integer","integer","numeric","numeric"))
+#' Y <- extract.obs(X)
+#' Y
 #' 
 #' @export extract.obs
 extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
@@ -420,15 +451,15 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   Time <-  2*max(cmicor[,ind.vec[3]])
   Thalf <- max(cmicor[,ind.vec[3]])+1
   if(Thalf != length(unique(cmicor[,ind.vec[3]]))) {
-    stop("extract.obs: data inconsistent, T not equal to what was found in the input data\n")
+    stop("extract.obs: data inconsistent, Time not equal to what was found in the input data\n")
   }
-  if(verbose) cat("extract.obs: nrObs=",nrObs, "nrStypes=",nrStypes, "T=", Time, "\n")
+  if(verbose) message("extract.obs: nrObs=",nrObs, " nrStypes=",nrStypes, " Time=", Time, "\n")
 
   data <- cmicor[cmicor[,ind.vec[1]] %in% vec.obs,]
   cf <- NULL
   
   if(symmetrise){
-    ## we divide everything by 2 apart from t=0 and t=T/2
+    ## we divide everything by 2 apart from t=0 and t=Time/2
     data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]] <-
         data[(data[,ind.vec[3]]!=0 & (data[,ind.vec[3]]!=(Thalf-1))),ind.vec[c(4,5)]]/2
     ## symmetrise or anti-symmetrise for given observable?
@@ -464,9 +495,9 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
       tmp <-  t(array(data=data[,ind.vec[4+bw]],dim=c(nrObs*Thalf*nrStypes, length(data[,1])/(nrObs*Thalf*nrStypes))))
       for(i in c(1:nrObs)){
         for(s in c(1:nrStypes)){
-          # since we are not symmetrising, the individual correlators have T entries 
+          # since we are not symmetrising, the individual correlators have Time entries 
           lhs <- c((bw+1):(Thalf-bw)) + (i-1)*nrStypes*Time  + (s-1)*Time  + bw*(Thalf-1)
-          # in the cmi format, the backward correlator is on time-slices 1 to T/2-1 (indices 2 to T/2)
+          # in the cmi format, the backward correlator is on time-slices 1 to Time/2-1 (indices 2 to Time/2)
           rhs <- c((bw+1):(Thalf-bw)) + (i-1)*nrStypes*Thalf + (s-1)*Thalf
           # but in "reverse" order (to ease averaging)
           if( bw == 1 ) rhs <- rev(rhs)
@@ -477,15 +508,19 @@ extract.obs <- function(cmicor, vec.obs=c(1), ind.vec=c(1,2,3,4,5),
   }
   
   ret <- cf_meta(nrObs = nrObs, Time = Time, nrStypes = nrStypes, symmetrised = symmetrise)
-  ret <- cf_orig(ret, cf = cf, icf = NA)
+  ret <- cf_orig(ret, cf = cf, icf = NULL)
 
   return (invisible(ret))
 }
 
 #' readhlcor
 #'
-#' @param filename String. Filename of the heavy light correlator data file.
-#' 
+#' @param filename String. Filename of the heavy light correlator data file. The
+#'    file is expected to have nine columns, the first four integer, the second four numeric
+#'    and the last integer valued again.
+#'
+#' @return
+#' Invisibly returns a \link{data.frame} object containing the file content.
 #' @export
 readhlcor <- function(filename) {
   return(invisible(read.table(filename, header=FALSE,
@@ -505,11 +540,14 @@ readhlcor <- function(filename) {
 #' data.
 #' @author Carsten Urbach \email{curbach@@gmx.de}
 #' @keywords file
+#' @return
+#' Returns an object of class `outputdata` derived from a data.frame
+#' as generated by \link{read.table} applied to the input file.
+#' 
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{plaq <- readcmicor("output.data")}
-#' \dontrun{plot(plaq)}
+#' plaq <- readoutputdata(paste0(system.file(package="hadron"), "/extdata/output.data"))
+#' plot(plaq)
 #' 
 #' @export readoutputdata
 readoutputdata <- function(filename) {
@@ -527,20 +565,20 @@ readoutputdata <- function(filename) {
 #' 
 #' 
 #' @param file filename of file to read from.
-#' @param T time extend of the correlation function
+#' @param Time time extent of the correlation function
 #' @param sym if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
 #' -C(-t). Averaging can be switched off using the \code{symmetrise} option.
 #' @param skip number of lines to skip at beginning of file
 #' @param check.t if set to an integer value larger than zero the function will
 #' assume that in the corresponding column of the file the Euclidean time is
 #' counted and it will check whether the maximum in this column is identical to
-#' T-1.
+#' Time-1.
 #' @param ind.vector index vector of length 2 with the indices of real and
 #' imaginary values of correlator, respectivley.
 #' @param symmetrise if set to \code{TRUE}, the correlation function will be
-#' averaged for \code{t} and \code{T-t}, with the sign depending on the value
+#' averaged for \code{t} and \code{Time-t}, with the sign depending on the value
 #' of \code{sym}. Note that currently the correlator with t-values larger than
-#' \code{T/2} will be discarded.
+#' \code{Time/2} will be discarded.
 #' @param path the path to the files.
 #' @param autotruncate Boolean. Whether to autotruncate or not
 #' @param avg Integer. Average over successive number samples
@@ -551,7 +589,7 @@ readoutputdata <- function(filename) {
 #' and imaginary parts of the correlator, and integers \code{Time},
 #' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
 #' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
-#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' (gauges).  \code{Time} is the time extent, \code{nrStypes} the number of
 #' smearing levels and \code{nrObs} the number of operators, both of which are
 #' currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -560,35 +598,35 @@ readoutputdata <- function(filename) {
 #' \code{\link{readbinarycf}}
 #' @keywords file
 #' @export readtextcf
-readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
                        stride=1, avg=1, Nmin=4, autotruncate=TRUE) {
   stopifnot(!missing(file))
-  stopifnot(T >= 1)
+  stopifnot(Time >= 1)
 
   tmp <- read.table(paste(path, file, sep=""), skip=skip)
   stopifnot(!((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)))
   
-  if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
-    stop("T in function call does not match the one in the file, aborting...\n")
+  if(check.t > 0 && max(tmp[[check.t]]) != Time-1) {
+    stop("Time in function call does not match the one in the file, aborting...\n")
   }
 
-  if(length(tmp[[ind.vector[1]]]) %% T != 0) {
-    stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
+  if(length(tmp[[ind.vector[1]]]) %% Time != 0) {
+    stop("Time does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
   }
   
-  ii <- c(1:(T/2+1))
+  ii <- c(1:(Time/2+1))
 
-  tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(T, length(tmp[[ind.vector[1]]])/T))
+  tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(Time, length(tmp[[ind.vector[1]]])/Time))
   if( (stride > 1 | avg > 1) & (ncol(tmp) %% (stride*avg) != 0) ){
     if(autotruncate){
-      cat(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
-      cat("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
-      cat("readtextcf: Reducing the number of total measurements to fit!\n")
+      warning(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
+      warning("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      warning("readtextcf: Reducing the number of total measurements to fit!\n")
       nmeas <- as.integer( (stride*avg)*floor( ncol(tmp)/(stride*avg) ))
       if( nmeas/(stride*avg) >= Nmin ){
         tmp <- tmp[,1:nmeas]
       } else {
-        cat(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        warning(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
         stride <- 1
         avg <- 1
       }
@@ -605,7 +643,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
   # average over 'avg' measurements sequentially
   if(avg > 1){
     tmp2 <- tmp
-    tmp <- array(0, dim=c(T,ncol(tmp2)/avg))
+    tmp <- array(0, dim=c(Time,ncol(tmp2)/avg))
     for( i in c(1:ncol(tmp)) ){
       tmp[,i] <- (1.0/avg)*apply(X=tmp2[,((i-1)*avg+1):(i*avg)],
                                  MARGIN=1,
@@ -613,7 +651,7 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
     }
   }
   
-  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1)
+  ret <- cf_meta(nrObs = 1, Time=Time, nrStypes = 1)
   ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
 
   if (symmetrise) {
@@ -654,6 +692,9 @@ readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vec
 #'                   correlators should be done after the correlator has been read in.
 #' @param nts Integer, number of time slices to be read from the correlator files.
 #'
+#' @return
+#' Returns an object of class `cf`.
+#' 
 #' @export
 readnissatextcf <- function(file_basenames_to_read,
                             smear_combs_to_read,
@@ -696,8 +737,8 @@ readnissatextcf <- function(file_basenames_to_read,
 #' Reads a correlation function from binary files, including hdf5 formatted
 #' files.
 #' 
-#' It is assumend that each file contains at least \code{(obs+N)*T} complex
-#' doubles, where \code{T} is the time extend, \code{obs} is the number of the
+#' It is assumend that each file contains at least \code{(obs+N)*Time} complex
+#' doubles, where \code{Time} is the time extent, \code{obs} is the number of the
 #' observable to read in and \code{Nop} the number of replicas for this
 #' observable. It is assumed that complex is the fastest running index, next
 #' time and then obs. The filelist is assumed to be ordered according to the
@@ -706,11 +747,11 @@ readnissatextcf <- function(file_basenames_to_read,
 #' @param files list of filenames to be read. Can be created using
 #' \code{getorderedfilelist}. The filelist is assumed to be order according to
 #' ascending gauge fields.
-#' @param T time extend of correlation functions.
+#' @param Time time extent of correlation functions.
 #' @param obs each file may contain many correlation functions. With 'obs'
 #' one choses which observable to read in. To be precise, in each file the
-#' reading will start at point T*obs*sizeof(complex\code{<double>}) and read
-#' Nop*T*sizeof(complex\code{<double>}).
+#' reading will start at point Time*obs*sizeof(complex\code{<double>}) and read
+#' Nop*Time*sizeof(complex\code{<double>}).
 #' @param symmetrise symmetrise the correlation function or not
 #' @param Nop number of replicas for the correlator to read in.
 #' @param endian the endianess of the binary file.
@@ -722,7 +763,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' @param path path to be prepended to every filename.
 #' @param hdf5format if \code{TRUE}, try to read from an hdf5 file.
 #' @param hdf5name Name of the data set as a string.
-#' @param hdf5index The data might be an array of size n x T. \code{hdf5index}
+#' @param hdf5index The data might be an array of size n x Time. \code{hdf5index}
 #' is used to convert two columns of the data to a complex valued vector using
 #' the first and second index for real and imaginary part, respectively. If
 #' \code{hdf5index} has length smaller than 2 the first index is reused.
@@ -730,7 +771,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' and imaginary parts of the correlator, and integers \code{Time},
 #' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
 #' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
-#' (gauges).  \code{Time} is the time extend, \code{nrStypes} the number of
+#' (gauges).  \code{Time} is the time extent, \code{nrStypes} the number of
 #' smearing levels and \code{nrObs} the number of operators, both of which are
 #' currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
@@ -738,12 +779,15 @@ readnissatextcf <- function(file_basenames_to_read,
 #' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
-#' \dontrun{cf <- readbinarycf(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
+#'
+#' X <- readbinarycf(path=paste0(system.file(package="hadron"), "/extdata/"),
+#'                   files="C2_bin.dat", Time=64, obs=0)
+#' X
+#' X$cf
 #' 
 #' @export readbinarycf
 readbinarycf <- function(files, 
-                         T, 
+                         Time, 
                          obs=5, 
                          Nop=1,
                          symmetrise=TRUE,
@@ -764,8 +808,8 @@ readbinarycf <- function(files,
   if(obs < 0) {
     stop("obs must be a positive integer, aborting...\n")
   }
-  if(T < 1) {
-    stop("T must be larger than 0 and integer, aborting...\n")
+  if(Time < 1) {
+    stop("Time must be larger than 0 and integer, aborting...\n")
   }
   if(endian != "little" && endian != "big") {
     stop("endian must be either little or big, aborting...\n")
@@ -778,7 +822,7 @@ readbinarycf <- function(files,
     Nop <- 1
     if(length(hdf5index)<2) hdf5index <- c(hdf5index, hdf5index)
   }
-  ii <- c(1:(Nop*T))+obs*T
+  ii <- c(1:(Nop*Time))+obs*Time
 
   Cf <- complex()
   for(f in files) {
@@ -787,11 +831,11 @@ readbinarycf <- function(files,
       tmp <- numeric()
       if(!hdf5format) {
         to.read <- file(ifs, "rb")
-        tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*T, endian = endian)[ii]
+        tmp <- readBin(to.read, what=complex(), n=(obs+Nop)*Time, endian = endian)[ii]
       }
       else {
         LS <- rhdf5::h5ls(ifs)
-        if(as.integer(LS[LS$name == hdf5name,]$dim) != T) {
+        if(as.integer(LS[LS$name == hdf5name,]$dim) != Time) {
           stop(paste(hdf5name, "in file", ifs, "has not the correct length, aborting...\n"))
         }
         tmp <- rhdf5::h5read(file=ifs, name=hdf5name)
@@ -800,14 +844,14 @@ readbinarycf <- function(files,
       ## we average the replica
       if(Nop > 1) {
         if(op == "aver") {
-          tmp <- apply(array(tmp, dim=c(T, Nop)), 1, mean)
+          tmp <- apply(array(tmp, dim=c(Time, Nop)), 1, mean)
         }
         else {
-          tmp <- apply(array(tmp, dim=c(T, Nop)), 1, sum)
+          tmp <- apply(array(tmp, dim=c(Time, Nop)), 1, sum)
         }
       }
 
-      Cf <- cbind(Cf, tmp[1:T])
+      Cf <- cbind(Cf, tmp[1:Time])
       
       if(!hdf5format) {
         close(to.read)
@@ -817,11 +861,11 @@ readbinarycf <- function(files,
       }
     }
     else if(!file.exists(ifs)) {
-      cat("file ", ifs, "does not exist...\n")
+      warning("file ", ifs, " does not exist...\n")
     }
   }
 
-  ret <- cf_meta(nrObs = 1, Time=T, nrStypes = 1, symmetrised = FALSE)
+  ret <- cf_meta(nrObs = 1, Time=Time, nrStypes = 1, symmetrised = FALSE)
   ret <- cf_orig(ret, cf = t(Re(Cf)), icf = t(Im(Cf)))
 
   if (symmetrise) {
@@ -842,7 +886,7 @@ readbinarycf <- function(files,
 #'
 #' @param files character vector. Paths to the file to read. As `path` is
 #' prepended to each element, one can also just pass the filenames here.
-#' @param T numeric. Time extent.
+#' @param Time numeric. Time extent.
 #' @param endian character, either `little` or `big`.
 #' @param path character. Path that is prefixed to each of the paths given in
 #' `files`.
@@ -853,9 +897,12 @@ readbinarycf <- function(files,
 #' @param ftype numeric type. As the data is read in binary this type has to
 #' match exactly the one in the file.
 #' @param nosamples number of samples
+#'
+#' @return
+#' Returns a \link{list} of `cf` objects.
 #' 
 #' @export
-readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
+readbinarysamples <- function(files, Time=48, nosamples=2, endian="little",
                               excludelist=c(""), sym=TRUE, path="", ftype=double() ){
 
   if(missing(files)) {
@@ -863,8 +910,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
   }
   stopifnot(length(files) > 0)
 
-  if(T < 1) {
-    stop("T must be larger than 0 and integer, aborting...\n")
+  if(Time < 1) {
+    stop("Time must be larger than 0 and integer, aborting...\n")
   }
   if(endian != "little" && endian != "big") {
     stop("endian must be either little or big, abroting...\n")
@@ -879,7 +926,7 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
     ifs <- paste(path, f, sep="")
     if( !(ifs %in% excludelist) && file.exists(ifs)){
       to.read <- file(ifs,"rb")
-      tmp <- array(readBin(to.read, what=ftype, n=T*nosamples, endian=endian), dim=c(T, nosamples))
+      tmp <- array(readBin(to.read, what=ftype, n=Time*nosamples, endian=endian), dim=c(Time, nosamples))
       close(to.read)
       # average over increasing numbers of samples
       for( i in 1:nosamples ){
@@ -892,13 +939,13 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
         Cf[[i]] <- cbind(Cf[[i]], tmp2)
       }
     } else if(!file.exists(ifs)) {
-      cat("file ", ifs, "does not exist...\n")
+      warning("file ", ifs, " does not exist...\n")
     }
   }
 
   ret <- list()
   for (i in 1:nosamples) {
-    ret[[i]] <- cf_meta(nrObs = 1, Time = T, nrStypes = 1, symmetrised = FALSE)
+    ret[[i]] <- cf_meta(nrObs = 1, Time = Time, nrStypes = 1, symmetrised = FALSE)
     ret[[i]] <- cf_orig(ret[[i]], cf = t(Re(Cf[[i]])), icf = t(Im(Cf[[i]])))
 
     sign <- +1
@@ -916,8 +963,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 #' 
 #' Reads disconnected loops from binary files.
 #' 
-#' It is assumend that each file contains O*T complex doubles, where T is the
-#' time extend and O the number of observables in the file. It is assumed that
+#' It is assumend that each file contains O*Time complex doubles, where Time is the
+#' time extent and O the number of observables in the file. It is assumed that
 #' complex is the fastest running index, next time and then observables. The
 #' different samples are assumend to be in different files. The file list is
 #' assumed to be ordered with number of samples running fastest, and then
@@ -926,8 +973,8 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 #' @param files list of filenames to be read. Can be created for instance using
 #' \code{getorderedfilelist}. The filelist is assumed to be ordered with number
 #' of samples running fastest, and the next to fastest nubmer of gauges.
-#' @param T time extend of correlation functions.
-#' @param obs each file may contain T*obs correlation functions. With
+#' @param Time time extent of correlation functions.
+#' @param obs each file may contain Time*obs correlation functions. With
 #' \code{obs} one choses which observable to read in.
 #' @param endian the endianess of the binary file.
 #' @param excludelist files to exclude from reading.
@@ -936,23 +983,28 @@ readbinarysamples <- function(files, T=48, nosamples=2, endian="little",
 #' @return returns a list with two arrays \code{cf} and \code{icf} with real
 #' and imaginary parts of the loops, and integers \code{Time},
 #' \code{nrStypes=1}, \code{nrSamples} and \code{nrObs=1}. Both of the arrays
-#' have dimension \code{c(T, N)}, where \code{N} is the number of measurements
-#' (gauges) and \code{T} the time extend.  \code{Time} is the time extend,
-#' \code{nrStypes} the number of smearing levels and \code{nrObs} the number of
-#' operators, both of which are currently fixed to 1.
+#' have dimension \code{c(Time, N)}, where \code{N} is the number of measurements
+#' (gauges) and \code{Time} the time extent, \code{nrStypes} the number of smearing
+#' levels and \code{nrObs} the number of operators, both of which are currently fixed to 1.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarycf}},
 #' \code{\link{readcmidisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
+#'
+#' ## running toy example
+#' file <- paste0(system.file("extdata", package = "hadron"), "/C2_pi0.dat")
+#' X <- readbinarydisc(files=file, Time=64, obs=0)
+#' X$cf
+#'
+#' ## more realistic example
 #' \dontrun{files <- character()}
 #' \dontrun{for(i in seq(600,1744,8)) }
-#' \dontrun{  files <- c(files, "C2_dis_u_conf", sprintf("%.04d", i), ".dat", sep=""))}
+#' \dontrun{  files <- c(files, "C2_dis_u_conf", sprintf("%.04d", i), ".dat", sep="")}
 #' \dontrun{cf <- readbinarydisc(files, obs=4, excludelist=c("C2_pi0_conf0632.dat"))}
 #' 
 #' @export readbinarydisc
-readbinarydisc <- function(files, T=48, obs=5, endian="little",
+readbinarydisc <- function(files, Time=48, obs=5, endian="little",
                            excludelist=c(""), nrSamples=1, path="") {
   Cf <- complex()
 
@@ -964,14 +1016,14 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
     ifs <- paste(path,f,sep="")
     if( !(ifs %in% excludelist) && file.exists(ifs)) {
       to.read <- file(ifs, "rb")
-      tmp <- readBin(to.read, complex(), n=(obs+1)*T, endian = endian)
-      Cf <- cbind(Cf, tmp[c((obs*T+1):((obs+1)*T))])
+      tmp <- readBin(to.read, complex(), n=(obs+1)*Time, endian = endian)
+      Cf <- cbind(Cf, tmp[c((obs*Time+1):((obs+1)*Time))])
       close(to.read)
     }
   }
-  Cf <- array(Cf, dim=c(T, nrSamples, N))
+  Cf <- array(Cf, dim=c(Time, nrSamples, N))
 
-  cf <- cf_meta(Time = T)
+  cf <- cf_meta(Time = Time)
   cf <- cf_orig(cf, cf = Re(Cf), icf = Im(Cf))
   cf <- cf_smeared(cf, scf = NA, iscf = NA, nrSamples = nrSamples, obs = obs)
 
@@ -993,16 +1045,16 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
 #' @param excludelist files to exclude from reading.
 #' @param skip lines to skip at beginning of each file.
 #' @param colClasses The column data type classes, the \code{read.table}.
-#' @param L the spatial lattice extend, set to \code{Time/2} if missing.
+#' @param L the spatial lattice extent, set to \code{Time/2} if missing.
 #' @param debug setting debug to TRUE makes the routine more verbose by
 #' spilling out separate filenames.
 #' @return returns a list with four arrays \code{cf}, \code{icf} \code{scf} and
 #' \code{sicf} containing real and imaginary parts of the local and smeared
 #' loops, respectively, and integers \code{Time}, \code{nrStypes=2},
 #' \code{nrSamples} and \code{nrObs=1}. The four arrays have dimension
-#' \code{c(T, S, N)}, where \code{S} is the nubmer of samples, \code{T} is the
-#' time extend and \code{N} is the number of measurements (gauges).
-#' \code{Time} is the time extend, \code{nrStypes} the number of smearing
+#' \code{c(Time, S, N)}, where \code{S} is the nubmer of samples, \code{Time} is the
+#' time extent and \code{N} is the number of measurements (gauges).
+#' \code{Time} is the time extent, \code{nrStypes} the number of smearing
 #' levels and \code{nrObs} the number of operators, which are currently fixed
 #' to 1 and 2, respectively. \code{nrSamples} is the number of samples.
 #' 
@@ -1015,14 +1067,19 @@ readbinarydisc <- function(files, T=48, obs=5, endian="little",
 #' \code{\link{readbinarydisc}}, \code{\link{readcmicor}}
 #' @keywords file
 #' @examples
-#' 
+#'
+#' # a running toy example
+#' hpath <- system.file(package="hadron")
+#' files <- paste0(hpath, "/extdata/newdisc.0.1373.0.006.k0v4.10")
+#' X <- readcmidisc(files=files)
+#' X
+#'
+#' ## a more realistic example
 #' \dontrun{v4files <- character()}
 #' \dontrun{for(i in seq(600,1744,8))}
 #' \dontrun{  v4files <- }
 #' \dontrun{   c(v4files, paste("disc.0.163265.0.006.k0v4.", sprintf("%.04d", i), sep=""))}
 #' \dontrun{v4data <- readcmidisc(v4files)}
-#' 
-#' 
 #' @export readcmidisc
 readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
                         excludelist=c(""), skip=0, L,
@@ -1058,18 +1115,18 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
       n <- n+1
     }
   }
-  T <- max(ldata[,ind.vec[2]])
+  Time <- max(ldata[,ind.vec[2]])
   nrSamples <- max(ldata[,ind.vec[3]])
 
-  if(missing(L)) L <- T/2
+  if(missing(L)) L <- Time/2
 
-  cf <- cf_meta(nrObs = 1, Time = T, nrStypes = 2)
+  cf <- cf_meta(nrObs = 1, Time = Time, nrStypes = 2)
   cf <- cf_orig(cf,
-                cf = array(ldata[, ind.vec[4]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                icf = array(ldata[, ind.vec[5]], dim=c(T, nrSamples, nFiles))/sqrt(L^3))
+                cf = array(ldata[, ind.vec[4]], dim=c(Time, nrSamples, nFiles))/sqrt(L^3),
+                icf = array(ldata[, ind.vec[5]], dim=c(Time, nrSamples, nFiles))/sqrt(L^3))
   cf <- cf_smeared(cf,
-                   scf = array(ldata[, ind.vec[6]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
-                   iscf= array(ldata[, ind.vec[7]], dim=c(T, nrSamples, nFiles))/sqrt(L^3),
+                   scf = array(ldata[, ind.vec[6]], dim=c(Time, nrSamples, nFiles))/sqrt(L^3),
+                   iscf= array(ldata[, ind.vec[7]], dim=c(Time, nrSamples, nFiles))/sqrt(L^3),
                    nrSamples = nrSamples,
                    obs = obs)
 
@@ -1108,8 +1165,8 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 #' @keywords file
 #' @examples
 #' 
-#' library(hadron)
-#' \dontrun{raw.gf <- readgradflow(path)}
+#' path <- system.file("extdata/", package="hadron")
+#' raw.gf <- readgradflow(path)
 #' 
 #' @export readgradflow
 readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
