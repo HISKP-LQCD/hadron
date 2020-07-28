@@ -120,7 +120,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
   }
 
   # store analysis results in practical R format, replacing entries as new data is added
-  resultsfile <- "omeas.summary.RData"
+  resultsfile <- "omeas.summary.Rdata"
   
   resultsum <- list()
   if(file.exists(resultsfile)){
@@ -227,8 +227,8 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
       if(trajlabel){
         filelabel <- sprintf("%s_traj%06d-%06d",filelabel,min(omeas.cnums),max(omeas.cnums))
       }
-      message("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
-      save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
+      message("Writing online measurements Rdata to ", sprintf("onlineout.%s.Rdata",filelabel), "\n")
+      save(onlineout,file=sprintf("onlineout.%s.Rdata",filelabel))
 
       plotcounter <- plotcounter+1
       dpaopp_filename <- sprintf("%02d_dpaopp_%s",plotcounter,filelabel)
