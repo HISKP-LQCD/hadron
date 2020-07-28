@@ -1,0 +1,112 @@
+---
+title: "The 'tseries' class"
+author: "Bartosz Kostrzewa"
+output: 
+  rmarkdown::html_vignette
+  
+vignette: >
+  %\VignetteIndexEntry{The 'tseries' class}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+require(hadron)
+require(ggplot2)
+```
+
+# Introduction
+
+The `tseries` class is designed to work with arbitrary-dimensioned timeseries data following *tidy data* concepts. 
+
+## The original data constructor
+
+Let's assume that we have a real-numbered 3D field on a $10 \times 10 \times 10$ grid observed at $100$ times.
+The values of the field at these points in space at time will be stored in a column `val`, and we will pass to the `tseries_orig` constructor the names of the explanatory variables `x`, `y` and `z`.
+
+```{r}
+md_idx <- 1:100
+xyz_md <- expand.grid(x=0:9, y=0:9, z=0:9, md_idx=md_idx)
+
+
+val <- sin(xyz_md$x)*cos(xyz_md$y)*log(1 + xyz_md$z)*rnorm(prod(dim(xyz_md)))
+threed_field_tseries <- 
+  tseries_orig(data = cbind(xyz_md, val = val),
+               explanatory_vars = c('x','y','z'))
+```
+
+And let's assume that we have another 3D field, similarly observed at $100$ times.
+
+```{r}
+val <- 2*abs(cos((xyz_md$x^2 + xyz_md$y^2)/6)^2*log(3 + xyz_md$z)*rnorm(prod(dim(xyz_md))))
+second_threed_field_tseries <-
+  tseries_orig(data = cbind(xyz_md, val = val),
+               explanatory_vars = c('x','y','z'))
+```
+
+
+## Bootstrapping the timeseries
+
+```{r}
+bs_threed_field_tseries <- 
+  bootstrap.tseries(threed_field_tseries,
+                    boot.R = 100, boot.l = 10, seed = 12345,
+                    sim = 'geom', endcorr = TRUE, serial = FALSE)
+
+# here we assume that the two fields come from the same statistical ensemble,
+# such that we produce the bootstrap samples with the same parameters to preserve
+# the correlation
+bs_second_threed_field_tseries <-
+  bootstrap.tseries(second_threed_field_tseries,
+                    boot.R = 100, boot.l = 10, seed = 12345,
+                    sim = 'geom', endcorr = TRUE, serial = FALSE)
+```
+
+```{r fig.width=7, fig.height=4, echo=FALSE}
+p <- ggplot2::ggplot(bs_threed_field_tseries$central, aes(x = x, y = y, fill = val)) +
+       ggplot2::facet_wrap(z ~ ., ncol = 5) +
+       ggplot2::geom_tile() +
+       ggplot2::labs(title = "threed_field_tseries") +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=4, echo=FALSE}
+p <- ggplot2::ggplot(bs_second_threed_field_tseries$central, aes(x = x, y = y, fill = val)) +
+       ggplot2::facet_wrap(z ~ ., ncol = 5) +
+       ggplot2::geom_tile() +
+       ggplot2::labs(title = "second_threed_field_tseries") +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+## Arithmetic operations on timeseries
+
+We may want to perform arithmetic operations on the timeseries, applying the operation on both the central values, as well as the bootstrap samples.
+With the `tseries` class, this happens automagically.
+
+```{r}
+prod_threed_field_tseries <- bs_threed_field_tseries * bs_second_threed_field_tseries
+
+diff_threed_field_tseries <- bs_threed_field_tseries - bs_second_threed_field_tseries
+```
+
+```{r fig.width=7, fig.height=4, echo=FALSE}
+p <- ggplot2::ggplot(prod_threed_field_tseries$central, aes(x = x, y = y, fill = val)) +
+       ggplot2::facet_wrap(z ~ ., ncol = 5) +
+       ggplot2::geom_tile() +
+       ggplot2::labs(title = "prod_threed_field_tseries") +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=4, echo=FALSE}
+p <- ggplot2::ggplot(diff_threed_field_tseries$central, aes(x = x, y = y, fill = val)) +
+       ggplot2::facet_wrap(z ~ ., ncol = 5) +
+       ggplot2::geom_tile() +
+       ggplot2::labs(title = "diff_threed_field_tseries") +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+
