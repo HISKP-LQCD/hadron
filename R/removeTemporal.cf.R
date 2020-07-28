@@ -291,24 +291,6 @@ dispersion_relation <- function (energy, momentum_d, extent_space, plus = TRUE, 
   return (energy_out)
 }
 
-#' generic function to extract a fitted mass
-#'
-#' @description
-#' One of the main analysis tasks in \link{hadron} is the estimation
-#'   of energy levels or masses from correlation functions. The
-#'   corresponding analysis functions return objects, typically lists,
-#'   containing the masses or energy levels. `extract_mass` is a
-#'   generic function to extrac such fitted mass values.
-#' 
-#' @param object Object to extract the mass from.
-#'
-#' @return Numeric. The mass value.
-#'
-#' @export
-extract_mass <- function (object) {
-  UseMethod('extract_mass')
-}
-
 #' specialisation of \link{extract_mass} to objects of type
 #' `effectivemassfit`
 #' 

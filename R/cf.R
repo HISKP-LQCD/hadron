@@ -419,7 +419,7 @@ is_empty.cf <- function (.cf) {
 #'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
 #'         `resampling_method`, `boot_dim`, `icf` and, optionally
 #'         `iboot_dim` (if both `cf1` and `cf2` contain imaginary parts).
-resampling_is_compatible <- function(cf1, cf2){
+resampling_is_compatible.cf <- function(cf1, cf2){
   
   res <- list()
   res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
@@ -453,7 +453,7 @@ resampling_is_compatible <- function(cf1, cf2){
 #'         with elements `boot`, `boot.R`, `boot.l`, `sim`, `endcorr`,
 #'         `resampling_method`, `boot_nrow`, `icf` and, optionally
 #'         `iboot_nrow` (if both `cf1` and `cf2` contain imaginary parts).
-resampling_is_concatenable <- function(cf1, cf2){
+resampling_is_concatenable.cf <- function(cf1, cf2){
   res <- list()
   res$boot <- ( inherits(cf1, 'cf_boot') & inherits(cf2, 'cf_boot') )
   res$seed <- (cf1$seed == cf2$seed)
