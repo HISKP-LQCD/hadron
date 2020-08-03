@@ -1283,65 +1283,40 @@ residual_plot <- function (x, ...) {
 
 #' @export
 residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, operation = `/`) {
+  if (is.null(x$mask)) {
+    x$mask <- rep(TRUE, length(x$x))
+  }
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
   }
-  
-  # We let the model give us the prediction values at the given data.
-  npar <- length(x$par.guess)
-  prediction_val <- do.call(x$fn, c(list(par = x$t0[1:npar], x = x$x, boot.r = 0), x$tofn))
-  
-  # The same is done for the bootstrap samples
-  prediction_boot_fn <- function (boot.r) {
-    par <- x$t[boot.r, 1:npar]
-    do.call(x$fn, c(list(par = par, x = x$x, boot.r = boot.r), x$tofn))
-  }
-  prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
-  
-  residual_val <- operation(x$y, prediction_val)
+
+  prediction <- predict(x, x$x)
+
+  residual_val <- operation(x$y, prediction$val)
   # We want to subtract or divide (depending on the given `operation`) the
-  # samples of the data and the central value of the prediction. R is a matrix
-  # based programming langauge and therefore one can apply such an operation
-  # directly to matrices and vectors, but one has to be very careful about it.
-  # Dividing two equal length vectors or equal shape matrices is fine because
-  # the operation is done element-by-element. In the case that the shape of the
-  # two operands is not exactly the same, R does some internal broadcasting.
-  # This is a common patter in all matrix based languages (like MATLAB) or
-  # matrix libraries (like NumPy for Python). These broadcasting rules are
-  # non-trivial and one needs to know how they work. The left operand is are the
-  # bootstrap samples where we have $R$ observations of $T$ time slices. Well,
-  # since it is symmetrized it is rather $T/2+1$, but we will not concern
-  # ourselves with that for this here. The shape of the first object is $R
-  # \times T$ then. The central value of the prediction is just of length $T$.
-  # When we do `bsamples - prediction_val` we would _hope_ that it does the
-  # right thing and match up along the $T$-direction, so we would want to
-  # interpret `prediction_val` as a row vector. However, it is interpreted as a
-  # column vector for these types of operations. A sane person might object now
-  # and say that `bsamples` has $R$ rows whereas `prediction_val` has $T$ rows.
-  # Broadcasting would not work in a sane matrix environment. But R was
-  # desighned to be helpful and turns out to be an annoying dipshit. In case $R$
-  # is cleanly divisible by $T$ it will just repeat the `prediction_val` column
-  # vector until it has length $R$. If you happen to do a test case with $T =
-  # 25$ and $R = 400$ you will get a result, it will just be not what you
-  # actually want. Since `prediction_val` is interpreted as a column vector we
-  # need to transpose `bsamples` with the transpose function `t()`. Then it has
-  # dimension $T \times R$. Subtracting or dividing by `prediction_val` will
-  # then broadcast it into the correct direction. The end result will have
-  # dimension $T \times R$, so we need to apply the transposition operation
-  # again in order to get the result that we want.
-  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
+  # samples of the data and the central value of the prediction. Due to
+  # major-layout one needs to transpose twice to get the operation applied the
+  # right way.
+  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction$val))
   residual_err <- apply(residual_boot, 2, error_fn)
   
-  band_val <- operation(prediction_val, prediction_val)
-  # And here it is the same …
-  band_boot <- t(operation(t(prediction_boot), prediction_val))
+  band_val <- operation(prediction$val, prediction$val)
+  band_boot <- t(operation(t(prediction$boot), prediction$val))
   band_err <- apply(band_boot, 2, error_fn)
   
-  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40')
+  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ...)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[x$mask]
+  }
+  do.call(plotwitherror, plot_args)
+  
+  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40', rep = TRUE)
   if(x$errormodel == "xyerrors") {
     plot_args$dx <- x$dx[-x$mask]
   }
-  do.call(plotwitherror, plot_args)
+  if (length(plot_args$x) > 0) {
+    do.call(plotwitherror, plot_args)
+  }
   
   polygon(x = c(x$x, rev(x$x)),
           y = c(band_val - band_err, rev(band_val + band_err)),
@@ -1351,11 +1326,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
         y = band_val,
         col = 'gray70')
   
-  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
-  if(x$errormodel == "xyerrors") {
-    plot_args$dx <- x$dx[x$mask]
-  }
-  do.call(plotwitherror, plot_args)
+  
 }
 
 #' Predict values for bootstrapfit
