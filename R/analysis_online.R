@@ -494,7 +494,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     plotcounter <- plotcounter+1
     ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals_id, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals_id )
-    pdf_filenames <- append_pdf_filename(basename = ev_filename,
+    pdf_filenames <- append_pdf_filename(basename = ev_pdf_filename,
                                          pdf_filenames = pdf_filenames)
     
     evaldata <- tryCatch(read.table(ev_filename, stringsAsFactors=FALSE, 
