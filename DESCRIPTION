@@ -1,6 +1,6 @@
 Package: hadron
-Version: 3.1.1
-Date: 2020-07-01
+Version: 3.1.2
+Date: 2020-08-03
 Title: Analysis Framework for Monte Carlo Simulation Data
     in Physics
 Authors@R: 
