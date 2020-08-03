@@ -1341,7 +1341,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
 #'
 #' @export
 #' @family NLS fit functions
-predict.bootstrapfit <- function (object, x, error = object$error.function) {
+predict.bootstrapfit <- function (object, x, error = object$error.function, ...) {
   ## to include additional parameter to x$fn originally given as ... to
   ## bootstrap.nlsfit requires some pull-ups
   npar <- length(object$par.guess)
