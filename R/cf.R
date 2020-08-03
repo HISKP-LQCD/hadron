@@ -1191,6 +1191,18 @@ concat.cf <- function (left, right) {
                     resampling_method = left$resampling_method)
   }
 
+  # If one of the correlation functions has been weighted, we need both of them
+  # to be so. Then we copy the data over.
+  if (inherits(left, 'cf_weighted')) {
+    stopifnot(inherits(right, 'cf_weighted'))
+    stopifnot(left$weight.factor == right$weight.factor)
+    stopifnot(left$weight.cosh == right$weight.cosh)
+
+    rval <- cf_weighted(.cf = rval,
+                        weight.factor = left$weight.factor,
+                        weight.cosh = left$weight.cosh)
+  }
+
   return (invisible(rval))
 }
 
