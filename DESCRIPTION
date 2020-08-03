@@ -33,6 +33,7 @@ LinkingTo:
     Rcpp
 Suggests: 
     dplyr,
+    hadronsampledata,
     minpack.lm,
     parallel,
     rhdf5,
@@ -52,3 +53,5 @@ RoxygenNote: 7.1.0
 Encoding: UTF-8
 Remotes: bioc::release/rhdf5
 VignetteBuilder: knitr
+Additional_repositories:
+    https://hiskp-lqcd.github.io/r-repo/
