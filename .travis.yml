@@ -5,7 +5,7 @@
 #   https://docs.travis-ci.com/user/languages/r/
 
 language: r
-dist: trusty
+dist: bionic
 sudo: required
 cache: packages
 warnings_are_errors: true
