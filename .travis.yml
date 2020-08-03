@@ -17,8 +17,7 @@ notifications:
     on_failure: change
           
 r:
-  - oldrel
-#- release 
+  - release 
 
 r_packages:
   - tikzDevice
