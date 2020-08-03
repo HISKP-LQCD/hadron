@@ -1,5 +1,5 @@
 Package: hadron
-Version: 3.1.1
+Version: 3.2.0
 Date: 2020-07-01
 Title: Analysis Framework for Monte Carlo Simulation Data
     in Physics
@@ -64,6 +64,7 @@ LinkingTo:
     Rcpp
 Suggests: 
     dplyr,
+    hadronsampledata,
     minpack.lm,
     parallel,
     rhdf5,
@@ -82,6 +83,8 @@ URL: https://github.com/HISKP-LQCD/hadron
 BugReports: https://github.com/HISKP-LQCD/hadron/issues
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Encoding: UTF-8
 VignetteBuilder: knitr
+Additional_repositories:
+    https://hiskp-lqcd.github.io/r-repo/
