@@ -167,3 +167,11 @@ NULL
 
 #' A three pion correlator with significant thermal states.
 "cA2.09.48_3pi_I3_0_A1u_1_pc"
+
+# https://thecoatlessprofessor.com/programming/r/r-data-packages-in-external-data-repositories-using-the-additional_repositories-field/
+.onLoad <- function(libname, pkgname) {
+  repos = getOption("repos")
+  repos['hiskp-lqcd'] = 'https://hiskp-lqcd.github.io/r-repo/'
+  options(repos = repos)
+  invisible(repos)
+}
