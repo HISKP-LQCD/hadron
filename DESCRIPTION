@@ -57,13 +57,13 @@ Description: Toolkit to perform statistical analyses of correlation
 Imports:
     abind,
     boot,
+    dplyr,
     R6,
     Rcpp,
     stringr
 LinkingTo: 
     Rcpp
 Suggests: 
-    dplyr,
     minpack.lm,
     parallel,
     rhdf5,
