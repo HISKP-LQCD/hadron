@@ -88,6 +88,9 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #' If not, the errors are estimated with help of the jacobian (either provided
 #' in \code{gr} or calculated using the \code{numDeriv}-package).
 #'
+#' @return
+#' See \link{simple.nlsfit}.
+#' 
 #' @export
 #' @family NLS fit functions
 #' 
@@ -143,6 +146,9 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
 #' @inheritParams bootstrap.nlsfit
 #' @inheritParams parametric.bootstrap.cov
 #' @param bootstrap boolean. If `TRUE`, bootstrap is used.
+#' 
+#' @return
+#' See \link{simple.nlsfit}.
 #' 
 #' @export
 #' @family NLS fit functions
@@ -436,6 +442,9 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
 #' bootstrap samples. If this list is not specified priors are omitted
 #' within the fit.
 #'
+#' @return
+#' Returns an object of class `bootstrapfit`, see \link{bootstrap.nlsfit}.
+#' 
 #' @export
 #' @family NLS fit functions
 #' 
@@ -1107,6 +1116,9 @@ bootstrap.nlsfit <- function(fn,
 #' @param print.correlation Logical. Whether to show the correlation between of
 #' the fit parameters.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 #' @family NLS fit functions
 summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TRUE) {
@@ -1117,17 +1129,17 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
   npar <- length(object$par.guess)
   
   ## parameters with errors as strings
-  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=digits, human.readable=FALSE)
+  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
   if(!is.null(object$t)) {
     bias <- object$t0-apply(X=object$t, MARGIN=2, FUN=mean, na.rm=TRUE)
     dim(bias) <- c(length(bias), 1)
-    bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE, na.rm=TRUE)
     dim(ci16) <- c(length(ci16), 1)
-    ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     ci84 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.84), drop=FALSE, na.rm=TRUE)
     dim(ci84) <- c(length(ci84), 1)
-    ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
     print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
   }else{
@@ -1179,6 +1191,9 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
 #' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
 #' @param digits number of significant digits to print in summary or print.
 #'
+#' @return
+#' No return value.
+#' 
 #' @family NLS fit functions
 #'
 #' @export
@@ -1204,6 +1219,9 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'   schemes. Default is \link{sd} for bootstrap. For other resampling
 #'   schemes this might need to be changed.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 #' @family NLS fit functions
 plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function) {
@@ -1266,6 +1284,9 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
 #'
 #' @param x the object to plot
 #' @param ... additional parameters to be passed on to specialised functions
+#' 
+#' @return
+#' No return value.
 #' 
 #' @export
 residual_plot <- function (x, ...) {

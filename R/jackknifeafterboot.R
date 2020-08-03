@@ -36,6 +36,10 @@ jab <- function(t, t0, starts, m=1, fn=sd) {
 #' 
 #' @param cf object of type \link{cf}
 #' @param m integer. block length
+#'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}, with
+#' Jackknife samples added accordingly.
 #' 
 #' @export
 jab.cf <- function(cf, m = 1) {
@@ -66,6 +70,10 @@ jab.cf <- function(cf, m = 1) {
 #'
 #' @param cf object of type \link{cf}
 #' @param m integer. block length
+#'
+#' @return
+#' Returns a numeric vector with the jackknife estimates of
+#' standard error.
 #' 
 #' @export
 jab.cf.derived <- function(cf, m=1) {

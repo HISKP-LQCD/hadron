@@ -36,7 +36,7 @@
 #' @param cf The correlation function either as a vector of length
 #' \code{nrObs*(Thalf+1)} or as an array of dimension Nx\code{nrObs*(Thalf+1)},
 #' where N is the number of observations. N will be averaged over.
-#' @param Thalf The half time extend of the lattice
+#' @param Thalf Half of the time extent of the lattice
 #' @param type The function to be used to compute the effective mass values.
 #' Possibilities are "acosh", "solve", "log", "temporal", "shifted" and
 #' "weighted". While the first three assume normal cosh behaviour of the
@@ -60,9 +60,15 @@
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{bootstrap.effectivemass}}
 #' @references arXiv:1203.6041
+#' @examples
+#'
+#' data(correlatormatrix)
+#' cfnew <- extractSingleCor.cf(correlatormatrix, id=1)
+#' cfnew <- bootstrap.cf(cfnew, boot.R=99, boot.l=1)
+#' X <- effectivemass.cf(cfnew$cf, Thalf=25, tmax=24)
 #' @export effectivemass.cf
 effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE, interval=c(0.000001,2.), 
-                             weight.factor = NULL, deltat=1, tmax=Thalf) {
+                             weight.factor = NULL, deltat=1, tmax=Thalf-1) {
   if(missing(cf)) {
     stop("cf must be provided to effectivemass.cf! Aborting...\n")
   }
@@ -75,7 +81,7 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
   }
 
   if(length(Cor) != nrObs*(tmax+1)) {
-    stop("cf does not have the correct time extend in effectivemass.cf! Aborting...!\n")
+    stop("cf does not have the correct time extent in effectivemass.cf! Aborting...!\n")
   }
   ## here we generate the index arrays
   ## this is the complete index for time
@@ -83,9 +89,9 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
 
   ## depending on the type, the result is not defined on all t
   ## so we have to cut
-  ## this is for type "acosh", "temporal" and "shifted" where we loose t=0 and t=T/2
+  ## this is for type "acosh", "temporal" and "shifted" where we loose t=0 and t=Time/2
   cutii <- c()
-  ## this is for "log" and "solve" where t=T/2 is not defined
+  ## this is for "log" and "solve" where t=Time/2 is not defined
   cutii2 <- c()
 
   for(i in 1:nrObs) {
@@ -110,14 +116,14 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
         w <- weight.factor
       }
       ## the t-dependence needs to be modified accordingly
-      fn <- function(m, t, T, Ratio, w) {
-        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(T-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(T-(t+1-deltat))) ) ) /
-                         ( exp(-m*t)+exp(-m*(T-t)) - w*( exp(-m*(t-deltat))+exp(-m*(T-(t-deltat))) ) ) ) ) 
+      fn <- function(m, t, Time, Ratio, w) {
+        return(Ratio - ( ( exp(-m*(t+1))+exp(-m*(Time-t-1)) - w*( exp(-m*(t+1-deltat))+exp(-m*(Time-(t+1-deltat))) ) ) /
+                         ( exp(-m*t)+exp(-m*(Time-t)) - w*( exp(-m*(t-deltat))+exp(-m*(Time-(t-deltat))) ) ) ) ) 
       }
       for(i in t) {
         if(is.na(Ratio[i])) effMass[i] <- NA
-        else if(fn(interval[1], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
-        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (tmax+1)), T=2*Thalf, Ratio = Ratio[i], w=w)$root
+        else if(fn(interval[1], t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w)*fn(interval[2], t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w) > 0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval, t=(i %% (tmax+1)), Time=2*Thalf, Ratio = Ratio[i], w=w)$root
       }
     }
   }
@@ -223,7 +229,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
     deltat <- cf$deltat
   }
 
-  ## number of time slices (hopefully in units of T/2+1 or T)
+  ## number of time slices (hopefully in units of Time/2+1 or Time)
   Nt <- length(cf$cf0)
   
   tmax <- cf$Time/2
@@ -283,8 +289,8 @@ fit.constant <- function(M, y) {
 #' @param t1,t2 The fit range. If several correlators are fitted, this is
 #' automatically replicated accordingly. The fit range is adjusted such that
 #' \code{NA}s are removed from the fit. They must fulfill \eqn{t_1<t_2}{t1<t2}.
-#' For symmetric correlators, they must both run from 0 to \code{T/2-1},
-#' otherwise from 0 to \code{T-1}.
+#' For symmetric correlators, they must both run from 0 to \code{Time/2-1},
+#' otherwise from 0 to \code{Time-1}.
 #' @param useCov Use the correlated chisquare. This works only for not too
 #' noisy data.
 #' @param replace.na The functions inverted to determine the effective mass
@@ -364,8 +370,8 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   
   ## create an index array for the fit range
   ## the '+1' for Fortran index convention
-  ## t1 and t2 can be in range 0-T/2
-  ## if not symmetrised even in the range 0 - T-1
+  ## t1 and t2 can be in range 0-Time/2
+  ## if not symmetrised even in the range 0 - Time-1
   ii <- c()
   if(missing(every)){
 	  for(i in 1:cf$nrObs) {
@@ -420,7 +426,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   if( length( ii.remove ) > 0 ) {
     ## remove the columns that should be excluded from the fit below
     ii <- ii[ -ii.remove ]
-    cat("Due to NAs we have removed the time slices", ii.remove-1, " from the fit\n")
+    message("Due to NAs we have removed the time slices ", ii.remove-1, " from the fit\n")
   }
   cf$ii <- ii
   cf$dof <-  length(ii)-1
@@ -489,6 +495,10 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
 #'
 #' @param object Object of type \code{effectivemass} generated by \link{fit.effectivemass}
 #' @param ... Generic parameters to pass on.
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.effectivemass <- function (object, ...) {
   effMass <- object
@@ -496,7 +506,7 @@ summary.effectivemass <- function (object, ...) {
   cat("no. measurements\t=\t", effMass$N, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$Time, "\n")
+  cat("Time extent\t=\t", effMass$Time, "\n")
   cat("total NA count in bootstrap samples:\t", length(which(is.na(effMass$t))), "\n")
   cat("values with errors:\n\n")
   print(data.frame(t= effMass$t.idx-1, m = effMass$t0, dm = effMass$se))
@@ -507,6 +517,10 @@ summary.effectivemass <- function (object, ...) {
 #' @param object Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
 #' @param verbose More verbose output.
+#'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
   effMass <- object
@@ -515,7 +529,7 @@ summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
   cat("type\t=\t", effMass$type, "\n")
   cat("boot.R\t=\t", effMass$boot.R, "\n")
   cat("boot.l\t=\t", effMass$boot.l, "\n")
-  cat("Time extend\t=\t", effMass$Time, "\n")
+  cat("Time extent\t=\t", effMass$Time, "\n")
   cat("NA count in fitted bootstrap samples:\t", length(which(is.na(effMass$t[,effMass$ii]))),
       "(",100*length(which(is.na(effMass$t[,effMass$ii])))/ length(effMass$t[,effMass$ii]), "%)\n")
   cat("NAs replaced in fit:", effMass$effmassfit$replace.na, "\n")
@@ -542,6 +556,8 @@ summary.effectivemassfit <- function(object, ..., verbose = FALSE) {
 #' @param ... Additional parameters to be passed on.
 #' @param verbose Boolean. More verbose output.
 #'
+#' @return
+#' No return value.
 #' @export
 print.effectivemassfit <- function (x, ..., verbose = FALSE) {
   effMass <- x
@@ -556,6 +572,9 @@ print.effectivemassfit <- function (x, ..., verbose = FALSE) {
 #' @param col String. Colour of the data points.
 #' @param col.fitline String. Colour of the fitted line.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
   effMass <- x
@@ -565,17 +584,14 @@ plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
   if(missing(col.fitline)) {
 	col.fitline <- col[1]
   }
-  op <- options()
-  options(warn=-1)
   # BaKo: is this also valid for acosh type effective masses?
   t <- effMass$t.idx
-  plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...)
+  suppressWarnings(plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...))
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...)
+      suppressWarnings(plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...))
     }
   }
-  options(op)
   if(!missing(ref.value)) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }

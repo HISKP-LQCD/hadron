@@ -15,7 +15,7 @@ compute_sqrt <- function(x,name=NA,debug=FALSE){
   nidx <- which( x$val < 0)
   if(length(nidx)>0){
     x["val",nidx] <- abs(x["val",nidx])
-    cat(sprintf("compute_sqrt: Warning, negative value replaced by absolute value for %s!\n",name))
+    warning(sprintf("compute_sqrt: Warning, negative value replaced by absolute value for %s!\n",name))
   }
   rval <- list( val=sqrt(x$val),
                 dval=0.5*x$dval/sqrt(x$val),
@@ -54,7 +54,7 @@ compute_sum <- function(a,b,name=NA,debug=FALSE) {
                       dval=sqrt( a$dval^2 + b$dval^2 ),
                       name=name )
   if(debug) {
-    cat(sprintf("compute_sum: %s\n",as.character(name)))
+    message(sprintf("compute_sum: %s\n",as.character(name)))
     print(rval)
   }
   return(rval)
@@ -64,7 +64,7 @@ compute_difference <- function(pos,neg,name=NA,debug=FALSE) {
   neg$val <- -neg$val
   rval <- compute_sum(a=pos,b=neg,name=name,debug=FALSE)
   if(debug) {
-    cat(sprintf("compute_difference: %s\n",as.character(name)))
+    message(sprintf("compute_difference: %s\n",as.character(name)))
     print(rval)
   }
   return(rval)
