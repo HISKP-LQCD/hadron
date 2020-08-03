@@ -817,6 +817,7 @@ simple.nlsfit <- function(fn,
 #' fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 #' summary(fit.result)
 #' plot(fit.result)
+#' residual_plot(fit.result, main = 'Residual Plot')
 #'
 #' @export
 #' @family NLS fit functions
