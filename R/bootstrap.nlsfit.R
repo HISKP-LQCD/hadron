@@ -1235,7 +1235,6 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
     rx <- plot.range
   }
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
-  npar <- length(x$par.guess)
 
   ## use the xylimits computation of plotwitherror
   if(x$errormodel == "yerrors") {
@@ -1247,23 +1246,11 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   my.xlim <- mylims$xlim
   my.ylim <- mylims$ylim
 
-  ## to include additional parameter to x$fn originally given as ... to
-  ## bootstrap.nlsfit requires some pull-ups
-  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot.r = 0), x$tofn))
+  prediction <- predict(x, X)
 
-  if(!is.null(x$t)) {
-    ## error band
-    ## define a dummy function to be used in apply
-    prediction_boot_fn <- function (boot.r) {
-      par <- x$t[boot.r, 1:npar, drop = FALSE]
-      do.call(x$fn, c(list(par = par, x = X, boot.r = boot.r), x$tofn))
-    }
-    predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
-    se <- apply(predictions, 2, error, na.rm = TRUE)
-    stopifnot(length(se) == length(X))
-
-    ## plot it
-    polyval <- c(Y+se, rev(Y-se))
+  ## error band
+  if(!is.null(prediction$err)) {
+    polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
     if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
       polyval[polyval < my.ylim[1]] <- my.ylim[1]
       polyval[polyval > my.ylim[2]] <- my.ylim[2]
@@ -1275,7 +1262,7 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   }
 
   ## plot the fitted curve on top
-  lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
+  lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
 }
 
 #' residual_plot
@@ -1368,4 +1355,42 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
     plot_args$dx <- x$dx[x$mask]
   }
   do.call(plotwitherror, plot_args)
+}
+
+#' Predict values for bootstrapfit
+#'
+#' @param object Object of type bootstrapfit.
+#' @param x Numeric vector with independent variable.
+#' @param error Function to compute error from samples.
+#'
+#' @return
+#' List with independent variable `x`, predicted central value `val`, error
+#' estimate `err` and sample matrix `boot`.
+#'
+#' @export
+#' @family NLS fit functions
+predict.bootstrapfit <- function (object, x, error = object$error.function) {
+  ## to include additional parameter to x$fn originally given as ... to
+  ## bootstrap.nlsfit requires some pull-ups
+  npar <- length(object$par.guess)
+  val <- do.call(object$fn, c(list(par = object$t0[1:npar], x = x, boot.r = 0), object$tofn))
+
+  prediction <- list(x = x, val = val)
+
+  if(!is.null(object$t)) {
+    ## error band
+    ## define a dummy function to be used in apply
+    prediction_boot_fn <- function (boot.r) {
+      par <- object$t[boot.r, 1:npar, drop = FALSE]
+      do.call(object$fn, c(list(par = par, x = x, boot.r = boot.r), object$tofn))
+    }
+    prediction_boot <- do.call(rbind, lapply(1:nrow(object$t), prediction_boot_fn))
+    prediction$boot <- prediction_boot
+
+    err <- apply(prediction_boot, 2, error, na.rm = TRUE)
+    stopifnot(length(err) == length(x))
+    prediction$err <- err
+  }
+
+  return (prediction)
 }
