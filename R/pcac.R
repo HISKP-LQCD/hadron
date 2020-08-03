@@ -29,9 +29,12 @@ pcacsym <- function(data, t, T2, pa=FALSE) {
 #' @param data 'Effectivemasses` from correlators
 #' @param from initial value of fit range
 #' @param to final value of fit range
-#' @param T2 Time extend
+#' @param T2 Time extent
 #' @param pa Boolean. 
 #'
+#' @return
+#' Single numeric value, the mass.
+#' 
 #' @export
 pcacfit <- function(data, from, to, T2, pa=FALSE) {
   mass <- 0.
@@ -122,7 +125,7 @@ pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0
   Zap <- array(axps$ap, dim=c(T2, length(axps$ap)/T2))
   if(pa) Zpa <- array(psax$pa, dim=c(T2, length(psax$pa)/T2))
 
-  cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
+  message("Found ", length(psscar$ps)/T2, " measurements, skipping ", skip, " \n")
 
   rm(psscar)
   rm(axps)

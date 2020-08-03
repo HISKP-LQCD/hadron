@@ -19,6 +19,10 @@ Gamma5 <- matrix(c(1+0*1i,  0+0*1i,  0+0*1i,  0+0*1i,
 #' @param bc String. Boundary conditions, default 'antiperiodic'
 #' @param twistangle Numeric. Angle in twisted boundary conditions.
 #'
+#' @return
+#' Returns a \link{data.frame} with two columns, the first the forward and
+#' the second the backward propagating proton correlation function.
+#' 
 #' @export
 proton <- function(data, bc="antiperiodic", twistangle=0) {
 

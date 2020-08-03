@@ -49,8 +49,17 @@
 #' \code{normalistaion} and \code{Kappa} if applicable.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{matrixfit}}, \code{\link{gevp2amplitude}},
-#' \code{\link{pion}}
 #' @keywords GEVP optimise ts
+#'
+#' @examples
+#'
+#' cfnew <- extractSingleCor.cf(correlatormatrix, id=1)
+#' cfnew <- bootstrap.cf(cfnew, boot.R=99, boot.l=1)
+#' cfnew.fit <- matrixfit(cf=cfnew, t1=12, t2=20, parlist=array(c(1,1),
+#'                        dim=c(2,1)), sym.vec=c("cosh"), neg.vec=c(1))
+#' cfnew.fps <- computefps(mfit=cfnew.fit, mu1=0.004, normalisation="new")
+#' summary(cfnew.fps)
+#' 
 #' @export computefps
 computefps <- function(mfit, PP, mass, mu1, mu2, Kappa, normalisation="cmi", disprel="continuum", boot.fit=TRUE) {
   if(missing(mu1)) {

@@ -30,6 +30,9 @@
 #'          lengths having a geometric distribution with mean ‘l’) or
 #'          ‘"scramble"’ (phase scrambling).
 #' @param endcorr boolean. whether or not to apply end correction
+#'
+#' @return
+#' Returns a list with named elements `starts` and `lengths`.
 boot_ts_array <- function (n, n.sim, R, l, sim, endcorr) 
 {
     endpt <- if (endcorr) 

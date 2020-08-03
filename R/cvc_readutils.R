@@ -4,6 +4,9 @@
 #' @param gamma Integer, CVC convention gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 {
@@ -22,6 +25,9 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #' @param gamma Integer, CVC convention gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 {
@@ -44,6 +50,9 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p)
 {
@@ -74,6 +83,9 @@ correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, snk_p)
 {
@@ -143,6 +155,9 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                                       src_ts, dt, 
@@ -242,6 +257,9 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                              dt, 

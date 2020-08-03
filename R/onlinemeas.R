@@ -90,7 +90,6 @@
 #' method for all time values in between \code{t1} and \code{t2} }
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readcmicor}}, \code{\link{uwerr}},
-#' \code{\link{variational}}
 #' @keywords optimize ts
 #' @export onlinemeas
 onlinemeas <- function(data, t1, t2, 
@@ -124,7 +123,7 @@ onlinemeas <- function(data, t1, t2,
   nrType <- 1
   Skip <- (skip*(T1)*nrType*nrObs+1)
   Length <- length(data[,ind.vec[3]])
-  cat("time =", Time, "Thalf =", Thalf, "\n")
+  message("time =", Time, " Thalf =", Thalf, "\n")
 #  Thalf <- Thalf + 1
   if(missing(nrep)) {
     nrep <- c(length(data[((Skip):Length),ind.vec[3]])/(nrObs*(T1)*nrType))
@@ -152,7 +151,6 @@ onlinemeas <- function(data, t1, t2,
 
   # some effective pion masses
   eff <- effectivemass(from=(t1+1), to=(t2+1), Time, W[1:T1,] , pl=FALSE, S=1.5, nrep=nrep)
-  options(show.error.messages = TRUE)
 
   mass.eff <- data.frame(t=eff$t, m=eff$mass, dm=eff$dmass)
 
@@ -186,7 +184,7 @@ onlinemeas <- function(data, t1, t2,
   }
   sfit.fpi <- 2*kappa*2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
 #    sfit.fpi <- 2*mu/sqrt(2)*abs(massfit$par[1])/sqrt(sfit.mass^3)
-  cat("mpi =", sfit.mass, " fpi =",sfit.fpi, "\n")
+  message("mpi =", sfit.mass, " fpi =",sfit.fpi, "\n")
   
   sfit.dof <- (t2-t1+1)-length(massfit$par)
   sfit.chisqr <- massfit$value

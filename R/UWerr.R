@@ -1,31 +1,3 @@
-# this is a more or less line by line translation of
-# U. Wolffs UWerr.m for R: The R Project for Statistical Computing
-#
-# See
-# ``Monte Carlo errors with less errors''
-#   by Ulli Wolff, hep-lat/0306017
-#   for details about the method
-#
-# R is free software and can be obtained at
-# http://www.r-project.org/
-#
-# a typical call would be like (plaq is a vector with plaquette values)
-#  source("UWerr.R")
-#  plaq.res <- uwerr(data=plaq)
-# or
-#  nrep <- c(1234,878)
-#  plaq.res <- uwerr(data=plaq, nrep=nrep, S=2.)
-# then try
-#  summary(plaq.res)
-# and
-#  source("plotutils.R")
-#  plot(plaq.res)
-# try help(read.table) for how to read data from a file
-#
-# 
-
-
-
 #' Time Series Analysis With Gamma Method
 #' 
 #' Analyse time series data with the so called gamma method
@@ -77,6 +49,7 @@
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{plot.uwerr}}
 #' @references ``Monte Carlo errors with less errors'', Ulli Wolff,
+#'  Comput.Phys.Commun. 156 (2004) 143-153, Comput.Phys.Commun. 176 (2007) 383 (erratum),
 #' hep-lat/0306017
 #' @keywords optimize ts
 #' @examples
@@ -432,6 +405,9 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 #' @param object Object of type \link{uwerr}
 #' @param ... Generic parameters to pass on.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 summary.uwerr <- function (object, ...) {
   uwerr <- object
@@ -475,15 +451,19 @@ summary.uwerr <- function (object, ...) {
 #' autocorrelationfunction and the integrated autocorrelation time, all with
 #' error bars.
 #' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
-#' @seealso \code{\link{uwerr}}, \code{\link{pion}}
+#' @seealso \code{\link{uwerr}}
 #' @keywords methods hplot
-#' @export 
+#'
+#' @return
+#' No return value.
+#' 
 #' @examples
 #' 
 #' data(plaq.sample)
 #' plaq.res <- uwerrprimary(plaq.sample)
 #' plot(plaq.res)
 #' 
+#' @export 
 plot.uwerr <- function(x, ..., main="x", plot.hist=TRUE, index=1, Lambda=100) {
 
   if(x$primary && plot.hist) {
