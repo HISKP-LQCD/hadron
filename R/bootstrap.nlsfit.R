@@ -816,7 +816,8 @@ simple.nlsfit <- function(fn,
 #'
 #' fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 #' summary(fit.result)
-#' plot(fit.result)
+#' plot(fit.result, main = 'Ribbon on top')
+#' plot(fit.result, ribbon.on.top = FALSE, main = 'Ribbon below')
 #' residual_plot(fit.result, main = 'Residual Plot')
 #'
 #' @export
@@ -1212,20 +1213,21 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @param lty line type of fitted curve.
 #' @param supports number of supporting points for plotting the function.
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
-#' range in which fitline and errorband are plotted. Default is the range of
-#' the data.
-#' @param ... Additional parameters passed to the `plotwitherror`
-#'   function.
-#' @param error Function to compute the standard error in resampling
-#'   schemes. Default is \link{sd} for bootstrap. For other resampling
-#'   schemes this might need to be changed.
+#'   range in which fitline and errorband are plotted. Default is the range of
+#'   the data.
+#' @param ... Additional parameters passed to the `plotwitherror` function.
+#' @param error Function to compute the standard error in resampling schemes.
+#'   Default is \link{sd} for bootstrap. For other resampling schemes this might
+#'   need to be changed.
+#' @param ribbon.on.top Logical, controls whether the ribbon should be in
+#'   front of the data points. This is recommended when there are very many data
+#'   points and a highly constrained model.
 #'
-#' @return
-#' No return value.
-#' 
+#' @return No return value.
+#'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function, ribbon.on.top = TRUE) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1236,34 +1238,57 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
     rx <- plot.range
   }
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
-
-  ## use the xylimits computation of plotwitherror
-  if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
-  }
-  else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
-  }
-  my.xlim <- mylims$xlim
-  my.ylim <- mylims$ylim
-
   prediction <- predict(x, X)
-
-  ## error band
-  if(!is.null(prediction$err)) {
-    polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
-    if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
-      polyval[polyval < my.ylim[1]] <- my.ylim[1]
-      polyval[polyval > my.ylim[2]] <- my.ylim[2]
+  
+  # Initialize plot.
+  if (x$errormodel == "xyerrors") {
+    xlim <- range(c(x$x - x$dx, x$x + x$dx))
+  } else {
+    xlim <- range(x$x)
+  }
+  ylim <- range(c(x$y - x$dy, x$y + x$dy))
+  if (!is.null(list(...)$xlim)) {
+    xlim <- list(...)$xlim
+  }
+  if (!is.null(list(...)$ylim)) {
+    ylim <- list(...)$ylim
+  }
+  plot(NA, xlim = xlim, ylim = ylim, ...)
+  
+  plot_data <- function () {
+    if(x$errormodel == "yerrors") {
+      plotwitherror(x=x$x, y=x$y, dy=x$dy, rep = TRUE, ...)
     }
-    pcol <- col2rgb(col.band, alpha=TRUE)/255 
-    pcol[4] <- opacity.band
-    pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
-    polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
+    else {
+      plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = TRUE, ...)
+    }
+  }
+  
+  plot_ribbion <- function () {## error band
+    if(!is.null(prediction$err)) {
+      polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
+      if(any(polyval < ylim[1]) || any(polyval > ylim[2])) {
+        polyval[polyval < ylim[1]] <- ylim[1]
+        polyval[polyval > ylim[2]] <- ylim[2]
+      }
+      pcol <- col2rgb(col.band, alpha=TRUE)/255 
+      pcol[4] <- opacity.band
+      pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
+      polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
+    }
+    
+    ## plot the fitted curve on top
+    lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
   }
 
-  ## plot the fitted curve on top
-  lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
+  if (ribbon.on.top) {
+    plot_data()
+    plot_ribbion()
+  } else {
+    plot_ribbion()
+    plot_data()
+  }
+  
 }
 
 #' residual_plot
@@ -1310,7 +1335,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
   } else {
     xlim <- range(x$x)
   }
-  plot(NA, xlim = range(x$x), ylim = range(c(residual_val - residual_err, residual_val + residual_err)), ...)
+  plot(NA, xlim = xlim, ylim = range(c(residual_val - residual_err, residual_val + residual_err)), ...)
   
   # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
