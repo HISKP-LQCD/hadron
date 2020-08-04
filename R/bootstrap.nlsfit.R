@@ -1304,20 +1304,15 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
   band_boot <- t(operation(t(prediction$boot), prediction$val))
   band_err <- apply(band_boot, 2, error_fn)
   
-  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ...)
-  if(x$errormodel == "xyerrors") {
-    plot_args$dx <- x$dx[x$mask]
+  # Initialize plot.
+  if (x$errormodel == "xyerrors") {
+    xlim <- range(c(x$x - x$dx, x$x + x$dx))
+  } else {
+    xlim <- range(x$x)
   }
-  do.call(plotwitherror, plot_args)
+  plot(NA, xlim = range(x$x), ylim = range(c(residual_val - residual_err, residual_val + residual_err)), ...)
   
-  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40', rep = TRUE)
-  if(x$errormodel == "xyerrors") {
-    plot_args$dx <- x$dx[-x$mask]
-  }
-  if (length(plot_args$x) > 0) {
-    do.call(plotwitherror, plot_args)
-  }
-  
+  # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
           y = c(band_val - band_err, rev(band_val + band_err)),
           border = NA,
@@ -1326,7 +1321,21 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
         y = band_val,
         col = 'gray70')
   
+  # Plot points which are not used in the fit.
+  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], rep = TRUE, ...)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[x$mask]
+  }
+  do.call(plotwitherror, plot_args)
   
+  # Plot points which are used in the fit.
+  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], col = 'gray40', rep = TRUE, ...)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[-x$mask]
+  }
+  if (length(plot_args$x) > 0) {
+    do.call(plotwitherror, plot_args)
+  }
 }
 
 #' Predict values for bootstrapfit
