@@ -3,6 +3,8 @@
 set -e
 set -u
 
+autoreconf -vif
+
 # XXX: Starting with Roxygen version 7.1.0 or some version or Rcpp there is a
 # circular dependency on the `NAMESPACE` file. Roxygen will call
 # `Rcpp::compileAttributes()` which needs the `NAMESPACE`, which does not exist
