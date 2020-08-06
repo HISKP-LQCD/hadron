@@ -1253,14 +1253,23 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   if (!is.null(list(...)$ylim)) {
     ylim <- list(...)$ylim
   }
-  plot(NA, xlim = xlim, ylim = ylim, ...)
+  
+  args <- list(...)
+  if (is.null(args$xlim)) {
+    args$xlim <- xlim
+  }
+  if (is.null(args$ylim)) {
+    args$ylim <- ylim
+  }
+  
+  do.call(plot, c(list(NA), args))
   
   plot_data <- function () {
     if(x$errormodel == "yerrors") {
-      plotwitherror(x=x$x, y=x$y, dy=x$dy, rep = TRUE, ...)
+      do.call(plotwitherror, c(list(x=x$x, y=x$y, dy=x$dy, rep = TRUE), args))
     }
     else {
-      plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = TRUE, ...)
+      do.call(plotwitherror, c(list(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = TRUE), args))
     }
   }
   
@@ -1335,7 +1344,16 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
   } else {
     xlim <- range(x$x)
   }
-  plot(NA, xlim = xlim, ylim = range(c(residual_val - residual_err, residual_val + residual_err)), ...)
+  ylim <- range(c(residual_val - residual_err, residual_val + residual_err))
+  args <- list(...)
+  if (is.null(args$xlim)) {
+    args$xlim <- xlim
+  }
+  if (is.null(args$ylim)) {
+    args$ylim <- ylim
+  }
+  
+  do.call(plot, c(list(NA), args))
   
   # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
