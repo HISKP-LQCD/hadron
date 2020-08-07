@@ -1240,64 +1240,42 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
   prediction <- predict(x, X)
   
-  # Initialize plot.
-  if (x$errormodel == "xyerrors") {
-    xlim <- range(c(x$x - x$dx, x$x + x$dx))
-  } else {
-    xlim <- range(x$x)
-  }
-  ylim <- range(c(x$y - x$dy, x$y + x$dy))
-  if (!is.null(list(...)$xlim)) {
-    xlim <- list(...)$xlim
-  }
-  if (!is.null(list(...)$ylim)) {
-    ylim <- list(...)$ylim
-  }
-  
-  args <- list(...)
-  if (is.null(args$xlim)) {
-    args$xlim <- xlim
-  }
-  if (is.null(args$ylim)) {
-    args$ylim <- ylim
-  }
-  
-  do.call(plot, c(list(NA), args))
-  
-  plot_data <- function () {
+  plot_data <- function (rep) {
     if(x$errormodel == "yerrors") {
-      do.call(plotwitherror, c(list(x=x$x, y=x$y, dy=x$dy, rep = TRUE), args))
+      limits <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep = rep, ...)
     }
     else {
-      do.call(plotwitherror, c(list(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = TRUE), args))
+      limits <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = rep, ...)
     }
+    limits
   }
   
-  plot_ribbion <- function () {## error band
-    if(!is.null(prediction$err)) {
-      polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
-      if(any(polyval < ylim[1]) || any(polyval > ylim[2])) {
-        polyval[polyval < ylim[1]] <- ylim[1]
-        polyval[polyval > ylim[2]] <- ylim[2]
-      }
-      pcol <- col2rgb(col.band, alpha=TRUE)/255 
-      pcol[4] <- opacity.band
-      pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
-      polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
-    }
+  # We plot all the data first to get the xlim and ylim right.
+  limits <- plot_data(rep = FALSE)
+  
+  # Plot the ribbon.
+  if(!is.null(prediction$err)) {
+    xlim <- limits$xlim
+    ylim <- limits$ylim
     
-    ## plot the fitted curve on top
-    lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
-  }
-
-  if (ribbon.on.top) {
-    plot_data()
-    plot_ribbion()
-  } else {
-    plot_ribbion()
-    plot_data()
+    polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
+    if(any(polyval < ylim[1]) || any(polyval > ylim[2])) {
+      polyval[polyval < ylim[1]] <- ylim[1]
+      polyval[polyval > ylim[2]] <- ylim[2]
+    }
+    pcol <- col2rgb(col.band, alpha=TRUE)/255 
+    pcol[4] <- opacity.band
+    pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
+    polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
   }
   
+  ## plot the fitted curve on top
+  lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
+  
+  # Optionally plot the data on top one more time.
+  if (!ribbon.on.top) {
+    plot_data(rep = TRUE)
+  }
 }
 
 #' residual_plot
@@ -1338,22 +1316,8 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
   band_boot <- t(operation(t(prediction$boot), prediction$val))
   band_err <- apply(band_boot, 2, error_fn)
   
-  # Initialize plot.
-  if (x$errormodel == "xyerrors") {
-    xlim <- range(c(x$x - x$dx, x$x + x$dx))
-  } else {
-    xlim <- range(x$x)
-  }
-  ylim <- range(c(residual_val - residual_err, residual_val + residual_err))
-  args <- list(...)
-  if (is.null(args$xlim)) {
-    args$xlim <- xlim
-  }
-  if (is.null(args$ylim)) {
-    args$ylim <- ylim
-  }
-  
-  do.call(plot, c(list(NA), args))
+  # First we plot all the data points to get the xlim and ylim right.
+  plotwitherror(x=x$x[x$mask], y=residual_val, dy=residual_err, ...)
   
   # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
