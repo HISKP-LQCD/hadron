@@ -1317,7 +1317,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
   band_err <- apply(band_boot, 2, error_fn)
   
   # First we plot all the data points to get the xlim and ylim right.
-  plotwitherror(x=x$x[x$mask], y=residual_val, dy=residual_err, ...)
+  plotwitherror(x=x$x, y=residual_val, dy=residual_err, ...)
   
   # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
