@@ -1350,6 +1350,7 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, ope
 #' @param object Object of type bootstrapfit.
 #' @param x Numeric vector with independent variable.
 #' @param error Function to compute error from samples.
+#' @param ... additional parameters to be passed on to the prediction function.
 #'
 #' @return
 #' List with independent variable `x`, predicted central value `val`, error
