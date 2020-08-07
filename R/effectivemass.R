@@ -222,11 +222,6 @@ bootstrap.effectivemass <- function(cf, type="solve") {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
-  ## number of measurements
-  N <- length(cf$cf[,1])
-  if(is.null(cf$cf)) {
-    N <- cf$N
-  }
   deltat <- 1
   if(type == "shifted" && any(names(cf) == "deltat")) {
     deltat <- cf$deltat
@@ -250,7 +245,7 @@ bootstrap.effectivemass <- function(cf, type="solve") {
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = cf$boot.R, boot.l = cf$boot.l, seed = cf$seed,
-              massfit.tsboot=NULL, Time=cf$Time, N=N, nrObs=nrObs, dof=NULL,
+              massfit.tsboot=NULL, Time=cf$Time, nrObs=nrObs, dof=NULL,
               chisqr=NULL, Qval=NULL
              )
   ret$cf <- cf
