@@ -38,13 +38,14 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, with.cdot=TRUE, 
   if(missing(x) || length(x) == 0) {
     stop("x must be a numeric vector with length > 0")
   }
-  if(length(x) == 2){
+  
+  if (!missing(dx)) {
+    have.error <- TRUE
+  } else if (length(x) == 2) {
     dx <- x[2]
     x <- x[1]
     have.error <- TRUE
-  }else if(!missing(dx)){
-    have.error <- TRUE
-  }else{
+  } else {
     have.error <- FALSE
   }
 
