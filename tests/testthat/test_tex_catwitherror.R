@@ -94,3 +94,12 @@ test_that('vectorized_with_zero_error', {
     str_vec <- tex.catwitherror(val, err)
     expect_equal(str_apply, str_vec)
 })
+
+test_that('vectorized_with_zero_error_at_front', {
+    val <- runif(20)
+    err <- c(rep(0.0, 10), runif(10))
+    
+    str_apply <- mapply(function (v, e) tex.catwitherror(v, e), val, err)
+    str_vec <- tex.catwitherror(val, err)
+    expect_equal(str_apply, str_vec)
+})
