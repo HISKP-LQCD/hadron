@@ -85,3 +85,12 @@ test_that('vectorized_two_elements', {
     str_vec <- tex.catwitherror(val, err)
     expect_equal(str_apply, str_vec)
 })
+
+test_that('vectorized_with_zero_error', {
+    val <- runif(20)
+    err <- c(runif(10), rep(0.0, 10))
+    
+    str_apply <- mapply(function (v, e) tex.catwitherror(v, e), val, err)
+    str_vec <- tex.catwitherror(val, err)
+    expect_equal(str_apply, str_vec)
+})

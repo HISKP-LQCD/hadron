@@ -48,34 +48,43 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, with.cdot=TRUE, 
   } else {
     have.error <- FALSE
   }
+  
+  tmp <- character(length(x))
 
-  if(!have.error){
+  if (!have.error) {
     ## just a number without error
-    tmp <- formatC(x, digits=digits, ...)
+    tmp <- sapply(x, formatC, digits = digits, ...)
   }
-  else if(is.numeric(dx) && dx == 0){
-    tmp <- formatC(x, digits=digits, ...)
-    if(grepl("e", tmp, fixed=TRUE)){
-      tmp <- sub("e", "(0)e", tmp)
-    }else{
-      tmp <- paste0(tmp, "(0)")
+  else {
+    zero_error <- is.numeric(dx) & dx == 0
+    if (any(zero_error)) {
+      tmp[zero_error] <- formatC(x[zero_error], digits = digits, ...)
+      tmp[zero_error] <- ifelse(
+        grepl("e", tmp[zero_error], fixed = TRUE),
+        sub("e", "(0)e", tmp[zero_error]),
+        paste0(tmp[zero_error], "(0)"))
+    }
+    if (any(!zero_error)) {
+      if (requireNamespace('errors')) {
+        tmp[!zero_error] <-
+          format(errors::set_errors(x[!zero_error], dx[!zero_error]), digits = digits, ...)
+      } else{
+        warning(
+          "The `errors`-package is not installed. The output of `tex.catwitherror` might not be as you want it."
+        )
+        tmp[!zero_error] <-
+          formatC(x[!zero_error], digits = digits, ...)
+        tmp[!zero_error] <-
+          paste0(tmp[!zero_error], " +- ", formatC(dx[!zero_error], digits = digits, ...))
+      }
     }
   }
-  else{
-    if(requireNamespace('errors')){
-      tmp <- format(errors::set_errors(x, dx), digits=digits, ...)
-    }else{
-      warning("The `errors`-package is not installed. The output of `tex.catwitherror` might not be as you want it.")
-      tmp <- formatC(x, digits=digits, ...)
-      tmp <- paste0(tmp, " +- ", formatC(dx, digits=digits, ...))
-    }
-  } 
 
-  if(with.cdot){
-    if(grepl("e", tmp, fixed=TRUE)){
-      tmp <- sub("e", "\\\\cdot 10^{", tmp)
-      tmp <- paste0(tmp, "}")
-    }
+  if (with.cdot) {
+    tmp <- ifelse(
+      grepl("e", tmp, fixed = TRUE),
+      paste0(sub("e", "\\\\cdot 10^{", tmp), "}"),
+      tmp)
     tmp <- sub("+-", "\\\\pm", tmp, fixed=TRUE)
   }
   if (with.dollar) {
