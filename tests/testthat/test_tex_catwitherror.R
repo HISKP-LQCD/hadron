@@ -75,3 +75,13 @@ test_that('vector', {
                      tex.catwitherror(c(x, dx), digits = 4))
     }
 })
+
+
+test_that('vectorized_two_elements', {
+    val <- runif(2)
+    err <- runif(2)
+    
+    str_apply <- mapply(function (v, e) tex.catwitherror(v, e), val, err)
+    str_vec <- tex.catwitherror(val, err)
+    expect_equal(str_apply, str_vec)
+})
