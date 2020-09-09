@@ -1223,6 +1223,8 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'   front of the data points. This is recommended when there are very many data
 #'   points and a highly constrained model.
 #'
+#' @importFrom stats predict
+#' 
 #' @return No return value.
 #'
 #' @export
