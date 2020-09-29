@@ -7,6 +7,10 @@
 #' @param logscale Boolean.
 #' @param cumul.dval Numeric. Cumulative error.
 #' @param cumul.mdval Numeric. Cumulative error.
+#'
+#' @return
+#' The computed plot limits are returned as a two component
+#' numeric vector.
 compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
   tmp <- val - 0.1*abs(val)
   tmpp <- val + 0.1*abs(val)
@@ -139,13 +143,18 @@ errorpos <- function(dx,errsum.method="linear") {
 #' }
 #' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
 #' adding points with error bars to the current plot. Switches the underlying
-#' plotting routine from \code{\link[graphics]{plot}} to
+#' plotting routine from \code{\link[base]{plot}} to
 #' \code{\link[graphics]{points}}.
-#' @param ...  any graphic options passed over to \code{\link[graphics]{plot}}
+#' @param ...  any graphic options passed over to \code{\link[base]{plot}}
 #' @return a plot with error bars is drawn on the current device
 #' @author Carsten Urbach, \email{urbach@@hiskp.uni-bonn.de} \cr Bartosz
 #' Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
-#' @seealso \code{\link[graphics]{plot}}, \code{\link[graphics]{points}}
+#' @seealso \code{\link[base]{plot}}, \code{\link[graphics]{points}}
+#'
+#' @return
+#' Returns for convenience a list with elements `xlim` and `ylim` representing the
+#' x- and y-limits chosen by the routine.
+#' 
 #' @examples
 #' 
 #' # Create some random data, set one error to zero.
@@ -374,6 +383,9 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
 #' @param x0 Numeric. Left value of the range of the horizontal line.
 #' @param x1 Numeric. Right value of the range of the horizontal line.
 #'
+#' @return
+#' No return value, only graphics is generated.
+#' 
 #' @export
 plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
   if(missing(dm)) {
@@ -394,62 +406,14 @@ plothlinewitherror <- function(m, dp, dm, col=c("red"), x0, x1) {
 #' @param xlab String. Label for x-axis
 #' @param ylab String. Lable for y-axis
 #'
+#' @return
+#' See \link{plotwitherror}.
+#'
 #' @export
 plot.massfit <- function(x, ..., xlab = "t", ylab = "m") {
   plotwitherror(x$t, x$mass, x$dmass, xlab=xlab, ylab=ylab, ...)
 }
 
-#' plot.pionfit
-#'
-#' @description
-#' Generic function to plot an object of type `pionfit`
-#'
-#' @param x Object of type `pionfit`
-#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
-#'
-#' @export
-plot.pionfit <- function(x, ...) {
-  plot.cfit(x)
-}
-
-#' plot.rhofit
-#'
-#' @description
-#' Generic function to plot an object of type `rhofit`
-#'
-#' @param x Object of type `rhofit`
-#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
-#'
-#' @export
-plot.rhofit <- function(x, ...) {
-  plot.cfit(x)
-}
-
-#' plot.b1fit
-#'
-#' @description
-#' Generic function to plot an object of type `b1fit`
-#'
-#' @param x Object of type `b1fit`
-#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
-#'
-#' @export
-plot.b1fit <- function(x, ...) {
-  plot.cfit(x)
-}
-
-#' plot.ofit
-#'
-#' @description
-#' Generic function to plot an object of type `ofit`
-#'
-#' @param x Object of type `ofit`
-#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
-#'
-#' @export
-plot.ofit <- function(x, ...) {
-  plot.cfit(x)
-}
 
 #' plot.c1fit
 #'
@@ -459,6 +423,9 @@ plot.ofit <- function(x, ...) {
 #' @param x Object of type `c1fit`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' No return value, only plots are generated.
+#' 
 #' @export
 plot.cfit <- function(x, ...) {
   fit <- x
@@ -524,6 +491,24 @@ plot.cfit <- function(x, ...) {
   }
 }
 
+
+#' plot.ofit
+#'
+#' @description
+#' Generic function to plot an object of type `ofit`
+#'
+#' @param x Object of type `ofit`
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
+#'
+#' @return
+#' See \link{plot.cfit}
+#' 
+#' @export
+plot.ofit <- function(x, ...) {
+  plot.cfit(x)
+}
+
+
 #' plot.effmass
 #'
 #' @param x Object of class `effmass`
@@ -532,6 +517,9 @@ plot.cfit <- function(x, ...) {
 #' @param lf local-fuzzed effective mass object
 #' @param ff fuzzed-fuzzed effective mass object
 #'
+#' @return
+#' No value returned, only plots are generated.
+#' 
 #' @export
 plot.effmass <- function (x, ..., ll, lf, ff) {
   m <- x
@@ -566,6 +554,11 @@ plot.effmass <- function (x, ..., ll, lf, ff) {
 #' @param x `averx` object
 #' @param ... ignored
 #'
+#' @return
+#' Returns the plotted data in from of a \link{data.frame} with named
+#' columns `t` (the time index), `averx` the values of average x and
+#' `daverx` the statistical error estimate.
+#' 
 #' @export
 plot.averx <- function(x, ...) {
   averx <- x
@@ -600,11 +593,14 @@ plot.averx <- function(x, ...) {
 #' @param x Object of type `pionff`
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' No return value, only plots are generated.
+#' 
 #' @export
 plot.pionff <- function (x, ...) {
   ff <- x
-  T <- ff$Cf2ptp0$Time
-  Thalfp1 <- T/2+1
+  Time <- ff$Cf2ptp0$Time
+  Thalfp1 <- Time/2+1
   plot(mul.cf(ff$Cf3ptp0, 1./ff$Cf2ptp0$cf0[Thalfp1]), main=c("1./Z_V"), xlab=c("t/a"), ylab=c("1/Z_V"))
   plothlinewitherror(m=1./ff$Cf2ptp0$cf0[Thalfp1]*ff$plateaufitZV$plateau, dp=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]), dm=sd(ff$plateaufitZV$plateau.tsboot[,1]/ff$Cf2ptp0$cf.tsboot$t[,Thalfp1]),
                     x0=ff$plateaufitZV$t1, x1=ff$plateaufitZV$t2)
@@ -637,12 +633,18 @@ plot.pionff <- function (x, ...) {
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @seealso \code{\link{readoutputdata}}, \code{\link{uwerr}}
 #' @keywords methods hplot
+#' @return
+#' The plotted data is return in form of a \link{list} with named elements `data`
+#' containing the input data, plaq.res an object returned by \link{uwerrprimary}
+#' for the plaquette data dn `dH.res` an object returned by \link{uwerrprimary}
+#' for \eqn{\Delta H}{Delta H}.
+#' 
 #' @export 
 #' @examples
 #' 
-#' \dontrun{plaq <- readoutputdata("output.data")}
-#' \dontrun{plaq.plot <- plot(plaq, skip=100)}
-#' \dontrun{summary(plaq.plot$plaq.res)}
+#' plaq <- readoutputdata(paste0(system.file(package="hadron"), "/extdata/output.data"))
+#' plaq.plot <- plot(plaq, skip=100)
+#' summary(plaq.plot$plaq.res)
 #' 
 plot.outputdata <- function (x, skip = 0, ...) {
   data <- x
@@ -683,27 +685,54 @@ drawXbars <- function(x,y,dx,length=0.01,...) {
            x+dx, yp, ...)
 }
 
-
-#postscript(file = "test.eps", family="NimbusRom", paper="special", horizontal=FALSE, onefile=FALSE, width=6.996766, height=6.996766)
-# linewidth, tick length and direction, margings, orientation
-#opar <- par(lwd=0.5, tck=0.02, mgp=c(2,.5,0), las=1)
-#plot(b, axes="F")
-#main axis
-#axis(1, lwd=0.5)
-#axis(2, lwd=0.5)
-#sub ticks
-#axis(1, at=seq(0,100,10), tck=0.01, labels=F, lwd=0.5)
-#axis(2, at=seq(0,100,10), tck=0.01, labels=F, lwd=0.5)
-#box()
-#dev.off()
-#par(opar)
-
 new_window_if_appropriate <- function () {
   is_X11 <- grepl(pattern = "X11", x = names(dev.cur()), ignore.case = TRUE)
   is_null <- grepl(pattern = "null", x = names(dev.cur()), ignore.case = TRUE)
 
   if (interactive() && (is_X11 || is_null)) {
-    cat('Opening a new X11 window.\n')
+    message('Opening a new X11 window.\n')
     dev.new()
   }
+}
+
+#' pointswithslantederror
+#'
+#' plots data points with slanted error bars
+#'
+#' @description
+#' This function plots points with x- and y-errors visualised as a
+#' slanted errorbar. The length of the error bar represents x- and y-errors
+#' added in quadrature. The slope of the error bar is positive of negative
+#' depending on whether the correlation betwenn x and y is positive or
+#' negative, respectively.
+#'
+#' @param x numeric vector. x-values
+#' @param y numeric vector. y-values
+#' @param dx numeric vector. x-standard errors
+#' @param dy numeric vector. y-standard errors
+#' @param cor numeric vector. Correlation coefficients between x- and y-
+#' errors.
+#' @param col the color of the points
+#' @param bcol the color of the slanted error bars
+#' @param ... further graphical parameters to be passed on to `points`
+#'
+#' @examples
+#' x <- c(1:5)
+#' y <- x^2
+#' dx <- c(0.1, 0.2, 0.2, 0.1, 0.05)
+#' dy <- c(0.05, 0.2, 0.1, 0.2, 0.1)
+#' cor <- c(1, -1, -1, 1, 1)
+#' plot(NA, xlim=range(x), ylim=range(y), xlab="y", ylab="y")
+#' pointswithslantederror(x=x, y=y, dx=dx, dy=dy, cor=cor)
+#' 
+#' @export
+pointswithslantederror <- function(x, y, dx, dy, cor, col="black", bcol="black", ...) {
+  points(x=x, y=y, col=col, ...)
+  l <- sqrt(dx^2+dy^2)
+  fac <- rep(1, times=length(cor))
+  fac[which(cor < 0)] <- -1
+  arrows(code=0,
+         x0=x-fac*dx, y0=y-dy,
+         x1=x+fac*dx, y1=y+dy,
+         col=bcol)
 }

@@ -372,10 +372,9 @@ TwoStateModel <- R6::R6Class(
   )
 )
 
-#' Model for the n particle correlator fit
-#'
-#' @description
-#' n particle correlator with thermal pollution term(s)
+## Model for the n particle correlator fit
+##
+## n particle correlator with thermal pollution term(s)
 NParticleModel <- R6::R6Class(
   'NParticleModel',
   inherit = MatrixModel,
@@ -416,6 +415,7 @@ NParticleModel <- R6::R6Class(
   )
 )
 
+<<<<<<< HEAD
 #' Model for the n particle correlator fit
 #'
 #' @description
@@ -565,6 +565,9 @@ SingleConstantModel <- R6::R6Class(
 #'   the `higher_states` parameter to restrict the thermal states with priors to
 #'   stabilize the fit.
 #'
+#' @return
+#' See \link{bootstrap.nlsfit}.
+#' 
 #' @export
 new_matrixfit <- function(cf,
                           t1, t2,
@@ -624,7 +627,7 @@ new_matrixfit <- function(cf,
   }
   
   if (dim(parlist)[2] != mSize) {
-    cat(mSize, dim(parlist)[2], "\n")
+    warning(mSize, " ", dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
   }
   if (length(sym.vec) != mSize) {
@@ -736,6 +739,8 @@ new_matrixfit <- function(cf,
 #' @param corr_matrix_size integer. Number of correlators in the matrix. This
 #' must be a the square of an integer.
 #'
+#' @return
+#' Returns a square, integer-valued matrix.
 #' @export
 make_parlist <- function (corr_matrix_size) {
   n <- sqrt(corr_matrix_size)
@@ -754,6 +759,9 @@ make_parlist <- function (corr_matrix_size) {
 #' fitted. The signal counts as one summand, each explicit pollution term with
 #' independent amplitudes counts as its own summand.
 #'
+#' @return
+#' Returns an array with the parameter indices.
+#' 
 #' @export
 make_parind <- function (parlist, length_time, summands = 1) {
   corr_matrix_size <- ncol(parlist)

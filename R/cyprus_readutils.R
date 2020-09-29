@@ -11,6 +11,9 @@
 #' @param accumulated Boolean, depending on whether the loop data was accumulated
 #'                    over the stochastic source d.o.f. or not, the keys are
 #'                    different. Default: FALSE
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4, accumulated = FALSE){
   if( any( !(loop_type %in% c("Scalar","dOp","Naive")) ) ){
@@ -41,6 +44,9 @@ cyprus_make_key_scalar <- function(istoch, loop_type, cid = 4, accumulated = FAL
 #' @param accumulated Boolean, depending on whether the loop data was accumulated
 #'                    over the stochastic source d.o.f. or not, the keys are
 #'                    different. Default: FALSE
+#' @return
+#' A character vector with the HDF5 key.
+#' 
 #' @export
 cyprus_make_key_vector <- function(istoch, loop_type, dir, cid = 4, accumulated = FALSE){
   vector_loop_types <- c("LpsDw", "Loops", "LpsDwCv", "LoopsCv")
@@ -245,7 +251,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
                                    )
                            )
   if( any( files_not_exist ) ){
-    cat("The files: ", files[files_not_exist], " do not exist! \n")
+    warning("The files: ", files[files_not_exist], " do not exist! \n")
     stop("There were missing files!")
   }
  
@@ -307,7 +313,7 @@ cyprus_read_loops <- function(selections, files, Time, nstoch,
     FUN = function(ifile){
       f <- files[ifile]
       if(verbose){
-        cat(sprintf("Opening %s\n",f))
+        message(sprintf("Opening %s\n",f))
         tictoc::tic("Loop extraction")
       }
 

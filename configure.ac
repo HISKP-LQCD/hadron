@@ -1,5 +1,5 @@
 
-AC_INIT([src/zeta_function_R_interface.c])
+AC_INIT([src/alpha_s.c])
 AC_PROG_CXX
 AC_CHECK_LIB(gsl, gsl_sf_airy_Ai_e,
              [LIBS="${LIBS} -lgsl -lgslcblas"], 
@@ -9,6 +9,7 @@ AC_CHECK_HEADER([gsl/gsl_version.h], ,
              [AC_MSG_ERROR([Cannot find GSL headers.])])
 AC_MSG_CHECKING([if GSL version >= 1.8])
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <stdlib.h>
 #include <string.h>
 #include <gsl/gsl_version.h>
 int main() {

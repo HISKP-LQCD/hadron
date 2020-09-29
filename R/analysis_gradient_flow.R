@@ -60,7 +60,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
   resultsfile <- "gradflow.summary.RData"
   gradflow_resultsum <- list()
   if(file.exists(resultsfile)){
-    cat("Loading gradient flow results database from ", resultsfile, "\n")
+    message("Loading gradient flow results database from ", resultsfile, "\n")
     load(resultsfile)
   }
 
@@ -68,7 +68,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
     raw.gradflow <- readgradflow(path=path, skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
   }else{
-    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
+    warning(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
     load(sprintf("%s.raw.gradflow.Rdata",outputbasename))
   }
   if(dbg==TRUE) print(raw.gradflow)

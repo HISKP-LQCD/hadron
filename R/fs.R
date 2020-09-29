@@ -43,7 +43,7 @@ fs <- function(data) {
 
   fit.comb2 <- optim(par=c(fit.mpi.fs$par[1:2]+0.2, fit.fpi.fs$par[1], fit.fpi.fs$par[2]), ChiSqr.fs.comb2, method="BFGS",
                     L=L, mps=mps, fps=fps, dmps=err, dfps=dfps)
-  cat("fit.com2\n")
+  message("fit.com2\n")
   print(fit.comb2)
   new_window_if_appropriate()
   plotwitherror(fit.mpi.fs$par[1]*L, mps, err, xlab="mps*L", ylab="m_ps")

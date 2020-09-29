@@ -17,6 +17,12 @@
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns an object of S3 class \code{cf} derived from a \code{list}
+#'
+#' @examples
+#' newcf <- cf()
+#' 
 #' @export
 cf <- function () {
   cf <- list()
@@ -33,6 +39,13 @@ cf <- function () {
 #' @param symmetrised Logical, indicating whether the correlation function has been symmetrized.
 #'
 #' @family cf constructors
+#'
+#' @return
+#' returns the input object of class \code{cf} with the metadata mixin added
+#'
+#' @examples
+#' newcf <- cf_orig(cf=array(rnorm(25*100), dim=c(100, 25))) 
+#' newcf <- cf_meta(newcf, nrObs=1, Time=48, symmetrised=TRUE)
 #'
 #' @export
 cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised = FALSE) {
@@ -71,6 +84,9 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns the input object of class \code{cf} with the bootstrap mixin added
+#' 
 #' @export
 cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, icf.tsboot = NULL, resampling_method) {
   stopifnot(inherits(.cf, 'cf'))
@@ -141,6 +157,9 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, 
 #' \eqn{m} is the number of non-NA values. With NA values removed we would
 #' otherwise underestimate the uncertainty.
 #'
+#' @return
+#' returns a single numeric representing the jackknife estimate of error
+#' 
 #' @export
 jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
   ## Number of jackknife samples.
@@ -172,6 +191,9 @@ jackknife_error <- function (samples, boot.l = 1, na.rm = FALSE) {
 #' option is set.
 #' @param ... parameters to be forwarded to \link{cov}.
 #'
+#' @return
+#' returns a matrix corresponding to the jackknife estimate of the covariance matrix
+#' 
 #' @export
 jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
     factor <- 1.0
@@ -206,6 +228,15 @@ jackknife_cov <- function (x, y = NULL, na.rm = FALSE, ...) {
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns the input object of class \code{cf} with the original data mixin added
+#' @examples
+#'
+#' newcf <- cf_orig(cf=array(rnorm(25*100), dim=c(100, 25))) 
+#' newcf <- cf_meta(newcf, nrObs=1, Time=48, symmetrised=TRUE)
+#' newcf <- bootstrap.cf(newcf)
+#' plot(newcf)
+#'
 #' @export
 cf_orig <- function (.cf = cf(), cf, icf = NULL) {
   stopifnot(inherits(.cf, 'cf'))
@@ -226,6 +257,9 @@ cf_orig <- function (.cf = cf(), cf, icf = NULL) {
 #' used in the GEVP.
 #'
 #' @family cf constructors
+#'
+#' @return
+#' returns the input object of class \code{cf} with the principal correlator mixin added
 #'
 #' @export
 cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
@@ -252,6 +286,9 @@ cf_principal_correlator <- function (.cf = cf(), id, gevp_reference_time) {
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns the input object of class \code{cf} with the shifted mixin added
+#' 
 #' @export
 cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
   stopifnot(inherits(.cf, 'cf'))
@@ -281,6 +318,9 @@ cf_shifted <- function (.cf = cf(), deltat, forwardshift) {
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns the input object of class \code{cf} with the smeared mixin added
+#' 
 #' @export
 cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
   stopifnot(inherits(.cf, 'cf'))
@@ -303,6 +343,9 @@ cf_smeared <- function (.cf = cf(), scf, iscf = NULL, nrSamples, obs) {
 #' @param subtracted.ii Integer vector, TODO
 #'
 #' @family cf constructors
+#'
+#' @return
+#' returns the input object of class \code{cf} with the subtracted mixin added
 #'
 #' @export
 cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
@@ -329,6 +372,9 @@ cf_subtracted <- function (.cf = cf(), subtracted.values, subtracted.ii) {
 #'
 #' @family cf constructors
 #'
+#' @return
+#' returns the input object of class \code{cf} with the weighted mixin added
+#' 
 #' @export
 cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
   stopifnot(inherits(.cf, 'cf'))
@@ -346,6 +392,9 @@ cf_weighted <- function (.cf = cf(), weight.factor, weight.cosh) {
 #'
 #' @param .cf `cf` object.
 #'
+#' @return
+#' returns \code{FALSE} if \code{.cf} contains no data, \code{TRUE} otherwise
+#' 
 #' @export
 #' @examples
 #' # The empty cf object must be empty:
@@ -429,6 +478,10 @@ resampling_is_concatenable <- function(cf1, cf2){
 #'
 #' @param .cf `cf` object
 #'
+#' @return
+#' Returns \code{TRUE} if the \code{.cf} object has an element \code{icf},
+#' which is the imaginary component of the correlation function.
+#' 
 #' @export
 has_icf <- function(.cf) {
   stopifnot( inherits(.cf, 'cf') ) 
@@ -611,7 +664,13 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 #' 
 #' S.N. Lahiri, "On the jackknife-after-bootstrap method for dependent data and
 #' its consistency properties", Econometric Theory, 2002, Vol. 18, 79-98
-#' @keywords bootstrap, time series,
+#' @keywords jackknife timeseries
+#'
+#' @examples
+#' data(samplecf)
+#' samplecf <- jackknife.cf(samplecf, boot.l=1)
+#' plot(samplecf, log="y")
+#' 
 #' @export jackknife.cf
 jackknife.cf <- function(cf, boot.l = 1) {
   stopifnot(inherits(cf, 'cf_orig'))
@@ -769,6 +828,7 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
 #'         `NA` for all members.
 #' 
 #' @examples
+#' data(samplecf)
 #' uwerr.cf(samplecf)
 #' 
 #' @export
@@ -799,16 +859,22 @@ uwerr.cf <- function(cf){
 
 #' add a configuration index to an \code{cf} object
 #' 
-#' add a configuration number index and adds it to a \code{cf} object.
+#' add a configuration number index to \code{cf} object.
 #' 
 #' 
 #' @param cf and object of class \code{cf}
 #' @param conf.index a configuration index of the same length as \code{cf}.
 #' @return Returns an object of class \code{cf} equal to the input but with
 #' element \code{conf.index} added
-#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #' @seealso \link{cf}
 #' @keywords correlator analysis bootstrap
+#' @examples
+#'
+#' data(samplecf)
+#' conf.index <- c(1:1018)
+#' samplecf <- addConfIndex2cf(samplecf, conf.index=conf.index)
+#' 
 #' @export addConfIndex2cf
 addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
@@ -829,16 +895,14 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' @param reverse2 `boolean`
 #'
 #' @examples
-#' Suppose we have correlation functions in replicum A from 0 to 500
-#' in steps of 4 and in replicum B from 4 to 500 in steps of 4.
-#' To combined the two replicas we have to use
 #'
-#' addstat.cf(cf_replicumB, cf_replicumA, TRUE, FALSE)
-#' which means
-#' combined=(cf500 from B, cf496 from B,...,cf004 from B, cf000 from A, ..
-#' cf500 from A) 
+#' data(samplecf)
+#' ## the following is not useful, but
+#' ## explains the usage
+#' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)
+#' 
 #' @export
-addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
+addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
 
@@ -909,6 +973,9 @@ addStat.cf <- function(cf1, cf2,reverse1=FALSE, reverse2=FALSE) {
 #'
 #' @param cf object of type \link{cf}
 #'
+#' @return
+#' Returns an object of class \code{cf}.
+#' 
 #' @export
 avg.cbt.cf <- function(cf){
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1001,6 +1068,10 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 #'
 #' @param cf1,cf2 `cf_orig` objects.
 #'
+#' @return
+#' The value is
+#' \deqn{cf1 + cf2 \,.}
+#'
 #' @export
 '+.cf' <- function (cf1, cf2) {
   add.cf(cf1, cf2, a = 1.0, b = 1.0)
@@ -1009,6 +1080,10 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 #' Arithmetically subtract correlators
 #'
 #' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @return
+#' The value is
+#' \deqn{cf1 - cf2 \,.}
 #'
 #' @export
 '-.cf' <- function(cf1, cf2) {
@@ -1034,6 +1109,9 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
 #' 
 #' @param cf1,cf2 `cf_orig` objects.
 #'
+#' @return
+#' The value is
+#' \deqn{cf1 / cf2 \,.}
 #' @export
 '/.cf' <- function(cf1, cf2) {
   apply_elementwise.cf(cf1, cf2, `/`)
@@ -1070,11 +1148,16 @@ apply_elementwise.cf <- function(cf1, cf2, `%op%` = `/`) {
   return (cf)
 }
 
-#' Arithmetically scale a correlator
+#' Arithmetically scale a correlator by a scalar a
 #'
+#' Note that this function is fundamentally different from \code{*.cf}.
+#' 
 #' @param cf `cf_orig` objects.
 #' @param a Numeric, scaling factor.
 #'
+#' @return
+#' Returns an object of class \code{cf}.
+#' 
 #' @export
 mul.cf <- function(cf, a=1.) {
   stopifnot(inherits(cf, 'cf_orig'))
@@ -1125,6 +1208,11 @@ mul.cf <- function(cf, a=1.) {
 #' @author Carsten Urbach \email{curbach@@gmx.de}
 #' @seealso \code{\link{cf}}
 #' @keywords bootstrap correlator
+#'
+#' @return
+#' Returns an object of class \code{cf} corresponding ot the \code{id}s element
+#' in the input object \code{cf}
+#' 
 #' @export extractSingleCor.cf
 extractSingleCor.cf <- function(cf, id=c(1)) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1167,6 +1255,8 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
 #'
 #' @param x Object, possibly of class `cf`.
 #'
+#' @return
+#' Returns TRUE if the input object is of class `cf`, FALSE otherwise.
 #' @export
 is.cf <- function (x) {
   inherits(x, "cf")
@@ -1176,6 +1266,10 @@ is.cf <- function (x) {
 #'
 #' @param ... Zero or multiple objects of type `cf`.
 #'
+#' @return
+#' Returns an object of class \code{cf} representing the concatenation
+#' of all the input objects of class \code{cf}.
+#' 
 #' @export
 c.cf <- function (...) {
   rval <- Reduce(concat.cf, list(...), cf())
@@ -1185,6 +1279,10 @@ c.cf <- function (...) {
 #' Concatenate two correlation function objects
 #'
 #' @param left,right `cf` objects to concatenate.
+#'
+#' @return
+#' Returns an object of class \code{cf} representing the concatenation
+#' of the two input objects of class \code{cf}.
 #'
 #' @export
 concat.cf <- function (left, right) {
@@ -1261,6 +1359,18 @@ concat.cf <- function (left, right) {
                     resampling_method = left$resampling_method)
   }
 
+  # If one of the correlation functions has been weighted, we need both of them
+  # to be so. Then we copy the data over.
+  if (inherits(left, 'cf_weighted')) {
+    stopifnot(inherits(right, 'cf_weighted'))
+    stopifnot(left$weight.factor == right$weight.factor)
+    stopifnot(left$weight.cosh == right$weight.cosh)
+
+    rval <- cf_weighted(.cf = rval,
+                        weight.factor = left$weight.factor,
+                        weight.cosh = left$weight.cosh)
+  }
+
   return (invisible(rval))
 }
 
@@ -1273,6 +1383,10 @@ concat.cf <- function (left, right) {
 #' @param rep See \code{\link{plotwitherror}}.
 #' @param ... Graphical parameter to be passed on to \link{plotwitherror}
 #'
+#' @return
+#' Invisibly returns a data.frame with named columns `t` containing the (physical)
+#' t-values, `CF` the mean values of the correlation function and `Err` its standard error.
+#' 
 #' @export
 plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
   cf <- x
@@ -1305,6 +1419,9 @@ plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ..
 #' @param cf unsymmetrised correlation function (cf_meta and cf_orig mixins required)
 #' @param places integer number of time-slices for backward (negative) or forward (positive) shifts
 #'
+#' @return
+#' Returns an object of class \code{cf} containing the shifted correlation function.
+#' 
 #' @export
 shift.cf <- function(cf, places) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1376,6 +1493,9 @@ shift.cf <- function(cf, places) {
 #'
 #' @param cf `cf` object.
 #'
+#' @return
+#' Returns an object of class \code{cf} with all resampling removed.
+#' 
 #' @export
 invalidate.samples.cf <- function (cf) {
   cf$boot.l <- NULL
@@ -1415,6 +1535,10 @@ invalidate.samples.cf <- function (cf) {
 #'                time-reflection symmetry (1 for symmetric, -1 for anti-symmetric)
 #'                of the observable in question. 
 #'
+#' @return
+#' Returns an object of class \code{cf}, which is the symmetrised version
+#' of the input \code{cf} object.
+#' 
 #' @export
 symmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1508,6 +1632,11 @@ symmetrise.cf <- function(cf, sym.vec=c(1) ) {
 #' @param sym.vec Integer vector giving the symmetry properties (see \link{symmetrise.cf})
 #'                of the original unsymmetrised correlation function. This should be of
 #'                length cf$nrObs
+#'
+#' @return
+#' Returns an object of class \code{cf}, which is the unfolded version
+#' of the input \code{cf} object.
+#' 
 #' @export
 unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
   stopifnot(inherits(cf, 'cf_meta'))
@@ -1606,6 +1735,9 @@ unsymmetrise.cf <- function(cf, sym.vec=c(1) ) {
 #' @param object Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
 #'
+#' @return
+#' No return value, only output is produced.
+#' 
 #' @export
 summary.cf <- function(object, ...) {
   cf <- object
@@ -1644,6 +1776,9 @@ summary.cf <- function(object, ...) {
 #'
 #' @param x Object of type \link{cf}
 #' @param ... Generic parameters to pass on.
+#'
+#' @return
+#' No return value, only output is produced.
 #'
 #' @export
 print.cf <- function (x, ...) {

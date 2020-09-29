@@ -125,6 +125,11 @@ bootstrap.hankel_summed <- function(cf, t0values=c(1:(N-2*n-deltat)), deltat=1,
 #' @param object Object of type "hankel_summed" generated
 #' by \link{bootstrap.hankel_summed}
 #' @param ... Generic parameters to pass on.
+#'
+#' @return
+#' Returns invisibly a data frame with columns `E`, `dE` (energies and their standard errors)
+#' `q16` and `q84` the 16 and 84 percent quantiles.
+#' 
 #' @export
 summary.hankel_summed <- function(object, ...) {
   X <- data.frame(E   =-log(object$t0)/object$deltat,
@@ -349,6 +354,8 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #' 
 #' @family hankel
 #'
+#' @return
+#' No return value.
 plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   n <- hankel$n
   stopifnot(max(id) <= n & min(id) >= 1)
@@ -382,7 +389,7 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   mode<-density(tmp, na.rm=TRUE)$x[which.max(density(tmp, na.rm=TRUE)$y)]
   new_window_if_appropriate()
   plot(density(tmp, na.rm=TRUE))
-  cat("Mode of this density:", mode, "deltat:", deltat, "\n")
+  message("Mode of this density:", mode, "deltat:", deltat, "\n")
 }
 
 #' @title hankel2cf
@@ -403,8 +410,11 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
-#' alternatively use \link{hankel2effectivemass}.
+#' alternatively use \link{hankel2effectivemass}. For the `cf` class see
+#' \link{cf}
 #'
+#' @return
+#' Returns an object of S3 class `cf`.
 #' @export
 hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
                       sort.type="values", sort.t0=TRUE) {
@@ -571,8 +581,12 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
-#' alternatively use \link{hankel2cf}.
+#' alternatively use \link{hankel2cf}. See also
+#' \link{bootstrap.effectivemass}
 #'
+#' @return
+#' Returns an object of S3 class `effectivemass`.
+#' 
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
                                   range=c(0,1), eps=1.e-16,
@@ -636,6 +650,10 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
 #'
 #' computes the density of all bootstrap replicates of effective masses
 #'
+#' @seealso \link{bootstrap.effectivemass}, \link{hankel2effectivemass}
+#' @return
+#' Returns an object of S3 class `effectivemass`.
+#' #' 
 hankeldensity2effectivemass <- function(hankel, range=c(0,1),
                                         method="median") {
 

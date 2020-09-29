@@ -26,6 +26,9 @@
 #'   they are removed simultaneously.
 #' @param deltat Integer. Time shift value.
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 old_removeTemporal.cf <- function(cf, 
                               single.cf1, 
@@ -50,7 +53,7 @@ old_removeTemporal.cf <- function(cf,
   Time <- cf$Time
   if(missing(L)) {
     L <- cf$Time/2
-    warning("L was missing, set it to T/2\n")
+    warning("L was missing, set it to Time/2\n")
   }
   mass1 <- list()
   mass2 <- list()
@@ -185,9 +188,9 @@ old_removeTemporal.cf <- function(cf,
 takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
 
-  ## number of time slices (hopefully in units of T/2+1 if the correlator has been symmetrised)
+  ## number of time slices (hopefully in units of Time/2+1 if the correlator has been symmetrised)
   ## and units of the time extent if it has not
-  T <- cf$Time
+  Time <- cf$Time
   Nt <- dim(cf$cf)[2]
 
   nts <- cf$Time/2+1
@@ -344,7 +347,7 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 #' @description
 #' Weights a correlation function with the given energy difference \eqn{\Delta E}{Delta E}
 #' such that the function is first multiplied with
-#' \eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (T - t)}{exp(Delta E t) + c exp(Delta E(T-t))}.
+#' \eqn{\exp(\Delta E t) + c \exp(\Delta E \cdot (Time - t)}{exp(Delta E t) + c exp(Delta E(Time-t))}.
 #'
 #' @param cf cf_orig and possibly cf_boot object.
 #' @param energy_difference_val numeric. A single energy value \eqn{\Delta E}{Delta E} for
@@ -357,6 +360,9 @@ make_weight_factor <- function (energy_difference, time_extent, time_start,
 #'   after a shift.
 #' @param inverse boolean. If `TRUE` apply inverse weight.
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
                        cosh_factor, offset = 0, inverse = FALSE) {
@@ -388,6 +394,9 @@ weight.cf <- function (cf, energy_difference_val, energy_difference_boot,
 #'
 #' @inheritParams weight.cf
 #'
+#' @return
+#' Returns an object of class `cf`, see \link{cf}.
+#' 
 #' @export
 weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_difference_boot, cosh_factor) {
   cf <- weight.cf(cf, energy_difference_val, energy_difference_boot,
@@ -427,7 +436,7 @@ weight_shift_reweight.cf <- function (cf, energy_difference_val, energy_differen
 #' @param single.cf2 Object of type \link{cf}
 #' @param p1 Numeric vector. Spatial momentum of first state
 #' @param p2 Numeric vector. Spatial momentum of second state
-#' @param L Integer. Spatial lattice extend.
+#' @param L Integer. Spatial lattice extent.
 #' @param lat.disp Boolean. Use lattice dispersion relation instead of
 #'   continuum one
 #' @param weight.cosh Boolean. Use cosh functional form in the
@@ -451,7 +460,7 @@ removeTemporal.cf <- function(cf, single.cf1, single.cf2,
   Time <- cf$Time
   if(missing(L)) {
     L <- cf$Time/2
-    warning("L was missing, set it to T/2\n")
+    warning("L was missing, set it to Time/2\n")
   }
 
   if (missing(single.cf2)) {
