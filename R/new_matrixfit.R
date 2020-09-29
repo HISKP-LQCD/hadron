@@ -76,6 +76,53 @@ MatrixModel <- R6::R6Class(
   )
 )
 
+SingleBaryonModel <- R6::R6Class(
+  'SingleBaryonModel',
+  inherit = MatrixModel,
+  public = list(
+    prediction = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+        (exp(-par[1] * x) )#+ sign_vec * exp(-par[1] * (self$time_extent - x)))
+    },
+    prediction_jacobian = function (par, x, ...) {
+      parind <- make_parind(self$parlist, length(x), summands = 1)
+      sign_vec <- make_sign_vec(self$sym_vec, length(x), self$m_size)
+      ov_sign_vec <- make_ov_sign_vec(self$neg_vec, length(x), self$m_size)
+
+      ## Derivative with respect to the mass, `par[1]`.
+      zp <- ov_sign_vec * 0.5 * par[parind[, 1]] * par[parind[, 2]] *
+        (-x * exp(-par[1] * x) )#-
+          # (self$time_extent-x) * sign_vec * exp(-par[1] * (self$time_extent-x)))
+      res <- zp
+      
+      ## Derivatives with respect to the amplitudes.
+      for (i in 2:length(par)) {
+        zp1 <- rep(0, length(zp))
+        j <- which(parind[, 1] == i)
+        zp1[j] <- ov_sign_vec * 0.5 * par[parind[j, 2]] *
+          (exp(-par[1] * x[j]) )#+ sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
+        
+        zp2 <- rep(0, length(zp))
+        j <- which(parind[, 2] == i)
+        zp2[j] <- ov_sign_vec * 0.5 * par[parind[j, 1]] *
+          (exp(-par[1] * x[j]) )#+ sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
+        
+        res <- cbind(res, zp1 + zp2)
+      }
+      stopifnot(nrow(res) == length(x))
+      stopifnot(ncol(res) == length(par))
+
+      dimnames(res) <- NULL
+      
+      return (res)
+    }
+  )
+)
+
 SingleModel <- R6::R6Class(
   'SingleModel',
   inherit = MatrixModel,
@@ -98,19 +145,19 @@ SingleModel <- R6::R6Class(
         (-x * exp(-par[1] * x) -
            (self$time_extent-x) * sign_vec * exp(-par[1] * (self$time_extent-x)))
       res <- zp
-      
+
       ## Derivatives with respect to the amplitudes.
       for (i in 2:length(par)) {
         zp1 <- rep(0, length(zp))
         j <- which(parind[, 1] == i)
         zp1[j] <- ov_sign_vec * 0.5 * par[parind[j, 2]] *
           (exp(-par[1] * x[j]) + sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
-        
+
         zp2 <- rep(0, length(zp))
         j <- which(parind[, 2] == i)
         zp2[j] <- ov_sign_vec * 0.5 * par[parind[j, 1]] *
           (exp(-par[1] * x[j]) + sign_vec[j] * exp(-par[1] * (self$time_extent-x[j])))
-        
+
         res <- cbind(res, zp1 + zp2)
       }
 
@@ -118,11 +165,12 @@ SingleModel <- R6::R6Class(
       stopifnot(ncol(res) == length(par))
 
       dimnames(res) <- NULL
-      
+
       return (res)
     }
   )
 )
+
 
 TwoAmplitudesModel <- R6::R6Class(
   'TwoAmplitudesModel',
@@ -368,6 +416,51 @@ NParticleModel <- R6::R6Class(
   )
 )
 
+#' Model for the n particle correlator fit
+#'
+#' @description
+#' n particle correlator with thermal pollution term(s)
+NBaryonParticleModel <- R6::R6Class(
+  'NBaryonParticleModel',
+  inherit = MatrixModel,
+  public = list(
+    initialize = function (time_extent, parlist, sym_vec, neg_vec, m_size) {
+      super$initialize(time_extent, parlist, sym_vec, neg_vec, m_size)
+      self$sm <- SingleBaryonModel$new(time_extent, parlist, sym_vec, neg_vec, m_size)
+     },
+    prediction = function (par, x, ...) {
+      n <- length(par) / 2
+      y <- 0
+      par_aux <- numeric(2)
+      for (i in 1:n) {
+        par_aux[1] <- par[2*i - 1]
+        par_aux[2] <- par[2*i]
+        corr_part <- self$sm$prediction(par_aux, x, ...)
+        y <- y + corr_part
+      }
+      return(y)
+    },
+    prediction_jacobian = function (par, x, ...) {
+      n <- length(par) / 2
+      par_aux <- numeric(2)
+      par_aux[1] <- par[1]
+      par_aux[2] <- par[2]
+      y <- self$sm$prediction_jacobian(par_aux, x, ...)
+      if (n > 1) {
+        for (i in 2:n) {
+          par_aux[1] <- par[2*i - 1]
+          par_aux[2] <- par[2*i]
+          jacobian_part_aux <- self$sm$prediction_jacobian(par_aux, x, ...)
+          y <- cbind(y, jacobian_part_aux)
+        }
+      }
+      return(y)
+    },
+    sm = NA
+  )
+)
+
+
 #' Model for a single correlator and a simple additive constant.
 #'
 #' @description
@@ -561,6 +654,8 @@ new_matrixfit <- function(cf,
   
   if (model == 'single') {
     model_object <- SingleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else if (model == 'single_baryon') {
+    model_object <- SingleBaryonModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   } else if (model == 'two_amplitudes') {
     stopifnot(cf$nrObs == 1)
     model_object <- TwoAmplitudesModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
@@ -576,6 +671,9 @@ new_matrixfit <- function(cf,
   } else if (model == 'n_particles') {
     stopifnot(cf$nrObs == 1)
     model_object <- NParticleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
+  } else if (model == 'n_baryon_particles') {
+    stopifnot(cf$nrObs == 1)
+    model_object <- NBaryonParticleModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
   } else if (model == 'single_constant') {
     stopifnot(cf$nrObs == 1)
     model_object <- SingleConstantModel$new(cf$Time, parlist, sym.vec, neg.vec, mSize)
