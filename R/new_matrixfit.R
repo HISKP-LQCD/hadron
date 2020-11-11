@@ -415,7 +415,6 @@ NParticleModel <- R6::R6Class(
   )
 )
 
-<<<<<<< HEAD
 #' Model for the n particle correlator fit
 #'
 #' @description

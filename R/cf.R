@@ -902,7 +902,7 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)
 #' 
 #' @export
-addStat.cf <- function(cf1, cf2) {
+addStat.cf <- function(cf1, cf2, reverse1=TRUE,reverse2=FALSE) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
 
