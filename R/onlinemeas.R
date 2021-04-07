@@ -78,6 +78,8 @@
 #' result of the time series analysis for the lowest mass as carried out by
 #' \code{\link{uwerr}} } \item{uwerrresultmpcac}{ the result of the time series
 #' analysis for the PCAC mass carried out by \code{\link{uwerr}}, see details }
+#' \item{uwerrresultpp}{ the results of the time series analysis for the PS mass
+#' carried out via \code{\link{uwerr}}, see details }
 #' \item{effmass}{ effective masses in the pion channel } \item{matrix.size}{
 #' size of the data matrix, copied from input } \item{boot}{ object returned by
 #' the call to \code{\link{boot}} if \code{method} was set correspodingly.
@@ -288,6 +290,7 @@ onlinemeas <- function(data, t1, t2,
   
   res <- list(fitresult=pcacfit, fitresultpp=massfit, t1=t1, t2=t2, N=length(W[1,]), Time=Time,
               fitdata=data.frame(t=(jj-1), Fit=Fit[ii], Cor=Cor[ii], Err=E[ii], Chi=Chi[ii]),
+              uwerrresultpp=sfit.uwerrm, # central value and errors from fit to PP correl only
               uwerrresultmps=fit.uwerrm, 
               uwerrresultmpcac=fit.uwerrpcac, 
               uwerrresultfps=fit.uwerrfpi, 

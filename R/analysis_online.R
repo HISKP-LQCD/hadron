@@ -152,6 +152,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
   
   errorband_color <- rgb(0.6,0.0,0.0,0.6)
   errorband_color2 <- rgb(0.0,0.0,0.6,0.6)
+  errorband_color3 <- rgb(0.0,0.6,0.0,0.6)
   
   if(missing(rundir)){
     rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,Time=Time,kappa=kappa,mul=mul,
@@ -304,7 +305,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
       # we deal with it here
       ploterror <- try(plotwitherror(x=onlineout$effmass$t,
                                      y=onlineout$effmass$m,dy=onlineout$effmass$dm,t='p',
-                                     ylab="$aM_\\mathrm{PS}$",
+                                     ylab="$aM_{\\mathrm{PS}}^{\\mathrm{eff}}$",
                                      xlab="$t/a$",
                                      main=titletext),silent=FALSE)
       # and plot without errors if required
@@ -317,21 +318,32 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
            ybottom=onlineout$uwerrresultmps$value[1]-onlineout$uwerrresultmps$dvalue[1],
            border=FALSE,
            col=errorband_color)
-      abline(h=onlineout$uwerrresultmps$value[1],col="black")
+      rect(xleft=t1,
+           xright=t2,
+           ytop=onlineout$uwerrresultpp$value[1]+onlineout$uwerrresultpp$dvalue[1],
+           ybottom=onlineout$uwerrresultpp$value[1]-onlineout$uwerrresultpp$dvalue[1],
+           border=FALSE,
+           col=errorband_color2)
+      abline(h=onlineout$uwerrresultmps$value[1],col="red")
+      abline(h=onlineout$uwerrresultpp$value[1],col="blue")
+      legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), 
+            legend=c("$aM_{\\mathrm{PS}}$ from 3-param fit to PP and PA correls",
+                     "$aM_{\\mathrm{PS}}$ from 2-param fit to PP correl only")
+            )
       tikz.finalize(tikzfiles)
 
-      result$obs$mpi <- t(data.frame(val=abs(onlineout$fitresultpp$par[2]),
-                                    dval=onlineout$uwerrresultmps$dvalue[1],
-                                    tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
+      result$obs$mpi <- t(data.frame(val=onlineout$uwerrresultmps$value[1],
+                                     dval=onlineout$uwerrresultmps$dvalue[1],
+                                     tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize,
+                                     dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize,
+                                     Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/
                                          (sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
-                                    dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue[1],
-                                    tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize,
-                                    dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize,
-                                    Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
+                                     dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue[1],
+                                     tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize,
+                                     dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize,
+                                     Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
 
       if(method=="boot" | method=="all"){
         mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/
