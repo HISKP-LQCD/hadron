@@ -3,8 +3,9 @@ title: "Multi-Particle Fit Test"
 author: "Martin Ueding"
 date: \today
 output:
-  pdf_document:
-    fig_crop: false
+  rmarkdown::html_vignette
+#pdf_document:
+#    fig_crop: false
 vignette: >
   %\VignetteIndexEntry{Multi-Particle Fit Test}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,7 +15,7 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-devtools::load_all()
+library(hadron)
 ```
 
 First we need to create some artificial data in order to get a feeling whether this function actually works. We will take two states and add some noise.
@@ -24,7 +25,7 @@ time_extent <- 96
 e0_val <- 0.12
 e1_val <- 0.0
 rel_amplitude <- 0.4
-boot_R <- 300
+boot_R <- 99
 n_meas <- 100
 ```
 
@@ -104,7 +105,7 @@ abline(h = e0_val)
 
 We first try the “single” model, that will of course fail miserably.
 
-```{r}
+```{r, eval=FALSE}
 fit_single <- new_matrixfit(
   corr_boot,
   t1 = 1,
@@ -121,7 +122,7 @@ residual_plot(fit_single)
 
 The “shifted” model will of course work.
 
-```{r}
+```{r, eval=FALSE}
 fit_shifted <- new_matrixfit(
   corr_shifted,
   t1 = 1,
@@ -138,7 +139,7 @@ residual_plot(fit_shifted)
 
 And with the “n_particle” model we can also get the result. It is not entirely correct because I must not use the original data for $E_1$ but rather the bootstrapped one. But I do not want to bootstrap that vector since I lack a function to do it nicely for me. So I just generate it uncorrelated.
 
-```{r}
+```{r, eval=FALSE}
 fit_n_particle <- new_matrixfit(
   corr_boot,
   t1 = 1,

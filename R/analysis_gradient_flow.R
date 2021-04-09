@@ -23,13 +23,19 @@ ref_gf_scales[["w0_Wsym"]] <- list(val=0.1755, dval=0.0019,
 #'
 #' @param path string. path to data files
 #' @param outputbasename string. basename of output files
-#' @param basename string. basename of input files
+#' @param basename string. basename of input files, for example "gradflow"
 #' @param read.data boolean. Indicates whether to read data fresh from
 #'   data files or to use `basename.raw.gradflow.Rdata` instead
 #' @param pl boolean. If set to `TRUE` plots will be generated
 #' @param skip integer. number of measurements to skip
 #' @param start integer. start value for time
-#' @param scale numeric. scale factor
+#' @param scale numeric. scale factor for the MD time, should be set to
+#'        the stridelength (in units of trajectories or configurations)
+#'        which was used to produce the gradient flow files, such that
+#'        the distance between measurements can be interpreted
+#'        correctly and the reported autocorrelation times scaled appropriately.
+#' @param plotsize numeric. Plot sidelength, this is passed to
+#'        \code{tikz.init}.
 #' @param dbg boolean. If set to `TRUE` debugging output will be provided.
 #'
 #' @description
@@ -44,8 +50,9 @@ ref_gf_scales[["w0_Wsym"]] <- list(val=0.1755, dval=0.0019,
 #'
 #' @export
 analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
-                                   read.data=TRUE, pl=FALSE, skip=0, start=0,
-                                    scale=1, dbg=FALSE) {
+                                   read.data=TRUE, pl=FALSE, plotsize=4,
+                                   skip=0, start=0,
+                                   scale=1, dbg=FALSE) {
 
   # much like for the analysis of online measurements, we store summary information
   # in the list "gradflow_resultsum" with elements named by "outputbasename"
@@ -53,7 +60,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
   resultsfile <- "gradflow.summary.RData"
   gradflow_resultsum <- list()
   if(file.exists(resultsfile)){
-    cat("Loading gradient flow results database from ", resultsfile, "\n")
+    message("Loading gradient flow results database from ", resultsfile, "\n")
     load(resultsfile)
   }
 
@@ -61,7 +68,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
     raw.gradflow <- readgradflow(path=path, skip=skip, basename=basename)
     save(raw.gradflow,file=sprintf("%s.raw.gradflow.Rdata",outputbasename),compress=FALSE)
   }else{
-    cat(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
+    warning(sprintf("Warning, reading data from %s.raw.gradflow.Rdata, if the number of samples changed, set read.data=TRUE to reread all output files\n",outputbasename))
     load(sprintf("%s.raw.gradflow.Rdata",outputbasename))
   }
   if(dbg==TRUE) print(raw.gradflow)
@@ -146,7 +153,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
        file=resultsfile)
    
   if(pl) {
-    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=4,height=4)
+    tikzfiles <- tikz.init(basename=sprintf("%s.gradflow",outputbasename),width=plotsize,height=plotsize)
     for( i in 1:length(ref_gf_scales) ){
       scale_obs <- ref_gf_scales[[i]]$obs
       scale_obslabel <- ref_gf_scales[[i]]$obslabel
@@ -184,7 +191,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
                                                # for the error, we use the average of the plus and minus errors
                                                dx=0.5*(abs(gf_scale[3]-gf_scale[2]) + abs(gf_scale[2]-gf_scale[1])),
                                                digits=2,
-                                               with.dollar=FALSE)
+                                               with.dollar=FALSE, with.cdot=FALSE)
                               ),
                     sprintf("$a=%s$\\,fm", 
                             tex.catwitherror(x=gf_latspac[[2]]$val,
@@ -194,7 +201,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
                                                              ) 
                                                        )^2 + gf_latspac[[2]]$dval^2 ),
                                              digits=2,
-                                             with.dollar=FALSE)
+                                             with.dollar=FALSE, with.cdot=FALSE)
                             )
                     ),
              bty='n')
@@ -219,7 +226,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
                             tex.catwitherror(x=gf_approx_scales[[i]]$tauint,
                                              dx=gf_approx_scales[[i]]$dtauint,
                                              digits=2,
-                                             with.dollar=FALSE)
+                                             with.dollar=FALSE, with.cdot=FALSE)
                             )
              )
     }
@@ -261,7 +268,7 @@ analysis_gradient_flow <- function(path, outputbasename, basename="gradflow",
                             tex.catwitherror(x=gradflow[tmax_idx, "Qsym.tauint"],
                                              dx=gradflow[tmax_idx, "Qsym.dtauint"],
                                              digits=1,
-                                             with.dollar=FALSE)
+                                             with.dollar=FALSE, with.cdot=FALSE)
                             )
              )
     }

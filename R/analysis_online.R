@@ -2,34 +2,21 @@ append_pdf_filename <- function(basename, pdf_filenames){
   return( c(pdf_filenames, sprintf("%s.pdf", basename)) )
 }
 
-# convenience function for analyzing online data from a tmLQCD run
-### the various parameters are used to build a directory name into which R descends to read
-### onlinemeas.xxxxxx and output.data
-### but a directory can also be provided via 'rundir' with the understanding
-### that L, T, kappa and mul must always be provided for the fits to work
-### and the decay constant to be determined correctly
-# 'addon' can be used to *append* arbitrary text to the directory name
-# if it is construced on the fly. This is useful for analysing replicas
-# which have identical parameters and thus need to be differentiated
-# 'plaquette', 'dH', 'acc' and 'trajtime' control whether these are plotted
-# cg_col indicates which column in output.data should be used to extract 
-# a representative solver iteration counter
-
 #' analysis_online
 #'
 #' @description
 #' `analysis_online` is a function to analyse the online measurements
-#'   and output files of the tmLQCD software, see references. The function
-#'   operates on a subdirectory either passed via `rundir` or automatically
-#'   constructed from the various function arguments. Depending on which
-#'   parts of the analysis are requested, this subdirectory is expected
-#'   to contain `onlinemeas.%06d` files with online correlator measurements,
-#'   `output.data` containing the plaquette and energy violation, amongst others 
-#'   and `monomial-%02d.data` with measurements of the extremal eigenvalues of the
-#    non-degenerate twisted mass Dirac operator.
+#'  and output files of the tmLQCD software, see references. The function
+#'  operates on a subdirectory either passed via `rundir` or automatically
+#'  constructed from the various function arguments. Depending on which
+#'  parts of the analysis are requested, this subdirectory is expected
+#'  to contain `onlinemeas.%06d` files with online correlator measurements,
+#'  `output.data` containing the plaquette and energy violation, amongst others 
+#'  and `monomial-%02d.data` with measurements of the extremal eigenvalues of the
+#   non-degenerate twisted mass Dirac operator.
 #' 
-#' @param L integer. spatial lattice extend
-#' @param T integer. temporal lattice extend
+#' @param L integer. spatial lattice extent
+#' @param Time integer. temporal lattice extent
 #' @param t1 integer. initial time of fit range
 #' @param t2 integer. end time of fit range
 #' @param beta numeric. inverse squared gauge coupling
@@ -98,7 +85,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' K. Jansen and C. Urbach, Comput.Phys.Commun. 180 (2009) 2717-2738
 #' 
 #' @export
-analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
+analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             cg_col, evals_id, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",
                             skip=0, rectangle=TRUE,
@@ -120,8 +107,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
   # if we want to look at the online measurements in addition to output.data, we better provide
   # these parameters! 
-  if( missing(L) | missing(T) | missing(beta) | missing(type) ){
-    stop("L, T and beta must always be provided!\n");
+  if( missing(L) | missing(Time) | missing(beta) | missing(type) ){
+    stop("L, Time and beta must always be provided!\n");
   }
   if( omeas & (missing(t1) || missing(t2) || missing(kappa) || missing(mul)) ){
     stop("t1, t2, kappa and mul must be provided when 'omeas==TRUE'!");
@@ -137,7 +124,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   
   resultsum <- list()
   if(file.exists(resultsfile)){
-    cat("Loading analysis result database from ", resultsfile, "\n")
+    message("Loading analysis result database from ", resultsfile, "\n")
     load(resultsfile)
   }
 
@@ -145,7 +132,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   navec <- t(data.frame(val=NA,dval=NA,tauint=NA,dtauint=NA,Wopt=NA,stringsAsFactors=FALSE))
   
   # set up data structure for analysis results 
-  result <- list(params=data.frame(L=L,T=T,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
+  result <- list(params=data.frame(L=L,Time=Time,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
                                    mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
                                    musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,
                                    stat_skip=stat_skip,stringsAsFactors=FALSE),
@@ -167,7 +154,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   errorband_color2 <- rgb(0.0,0.0,0.6,0.6)
   
   if(missing(rundir)){
-    rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,T=T,kappa=kappa,mul=mul,
+    rundir <- construct_onlinemeas_rundir(type=type,beta=beta,L=L,Time=Time,kappa=kappa,mul=mul,
                              csw=csw,musigma=musigma,mudelta=mudelta,muh=muh,addon=addon,
                              debug=debug
                             )
@@ -213,7 +200,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
     # with a stride of omeas.samples
     omeas.cnums <- omeas.cnums[seq(1, length(omeas.cnums), omeas.samples)]
     # add unique trajectory identifiers to the correlators
-    pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(T/2+1) ) )
+    pioncor <- cbind( pioncor, rep(omeas.cnums, each=3*(Time/2+1) ) )
 
     result$params$N.online <- length(omeas.cnums)
 
@@ -240,7 +227,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
       if(trajlabel){
         filelabel <- sprintf("%s_traj%06d-%06d",filelabel,min(omeas.cnums),max(omeas.cnums))
       }
-      cat("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
+      message("Writing online measurements RData to ", sprintf("onlineout.%s.RData",filelabel), "\n")
       save(onlineout,file=sprintf("onlineout.%s.RData",filelabel))
 
       plotcounter <- plotcounter+1
@@ -256,8 +243,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                              plotsize=plotsize,
                                              filelabel=filelabel,
                                              titletext=titletext,
-                                             errorband_color=errorband_color)
-                                             #ist.by=0.0002))
+                                             errorband_color=errorband_color,
+                                             smooth_density = TRUE)
       
       # adjust autocorrelation times to be in terms of trajectories
       result$obs$mpcac_mc[3:5] <- result$obs$mpcac_mc[3:5]*omeas.stepsize
@@ -280,6 +267,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       tikzfiles <- tikz.init(basename=dpaopp_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
+      on.exit(par(op))
       par(mgp=c(2,1,0))
       plotwitherror(x=onlineout$dpaopp$t,
                     y=onlineout$dpaopp$mass,dy=onlineout$dpaopp$dmass,t='p',
@@ -309,6 +297,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 
       tikzfiles <- tikz.init(mpi_plateau_filename,width=plotsize,height=plotsize)
       op <- par(family="Palatino",cex.main=0.6,font.main=1)
+      on.exit(par(op))
       par(mgp=c(2,1,0))
 
       # sometimes the error computation for the effective mass fails
@@ -439,7 +428,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                     plotsize=plotsize,
                                     filelabel=filelabel,
                                     titletext=titletext,
-                                    errorband_color=errorband_color)
+                                    errorband_color=errorband_color,
+                                    smooth_density = TRUE)
   }
   if(dH) {
     plotcounter <- plotcounter+1
@@ -457,7 +447,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                      filelabel=filelabel,
                                      titletext=titletext,
                                      errorband_color=errorband_color,
-                                     ylim=c(-2,3))
+                                     smooth_density = TRUE,
+                                     ylim=c(-2,3),
+                                     hist.probs=c(0.01,0.99))
 
     plotcounter <- plotcounter+1
     expdH_filename <- sprintf("%02d_expdH_%s",plotcounter,filelabel)
@@ -475,7 +467,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                         titletext=titletext,
                                         errorband_color=errorband_color,
                                         hist.xlim=c(-2,4),
-                                        ylim=c(-0,6))
+                                        smooth_density = TRUE,
+                                        ylim=c(0,6),
+                                        hist.probs=c(0.01,0.99))
   }
   if( !missing("cg_col") ) {
     plotcounter <- plotcounter+1
@@ -492,13 +486,15 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                           plotsize=plotsize,
                                           filelabel=filelabel,
                                           titletext=titletext,
-                                          errorband_color=errorband_color)
+                                          errorband_color=errorband_color,
+                                          smooth_density = TRUE
+                                          )
   }
   if( !missing("evals_id") ) {
     plotcounter <- plotcounter+1
     ev_pdf_filename <- sprintf("%02d_evals_%02d_%s", plotcounter, evals_id, filelabel )
     ev_filename <- sprintf("%s/monomial-%02d.data", rundir, evals_id )
-    pdf_filenames <- append_pdf_filename(basename = ev_filename,
+    pdf_filenames <- append_pdf_filename(basename = ev_pdf_filename,
                                          pdf_filenames = pdf_filenames)
     
     evaldata <- tryCatch(read.table(ev_filename, stringsAsFactors=FALSE, 
@@ -538,7 +534,8 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                           filelabel=filelabel,
                                           titletext=titletext,
                                           errorband_color=errorband_color,
-                                          hist.by=0.5)
+                                          hist.by=0.5,
+                                          smooth_density = FALSE)
   }
   if( trajtime == TRUE ){
     plotcounter <- plotcounter+1
@@ -556,7 +553,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
                                            plotsize=plotsize,
                                            filelabel=filelabel,
                                            titletext=titletext,
-                                           errorband_color=errorband_color)
+                                           errorband_color=errorband_color,
+                                           smooth_density = TRUE,
+                                           hist.probs = c(0.01,0.99))
   }
 
   print(result$params)
@@ -569,7 +568,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
   system(command=sprintf("rm -f ??_*_%s.pdf", filelabel))
 
   resultsum[[rundir]] <- result
-  cat("Storing analysis result database in ", resultsfile, "\n")
+  message("Storing analysis result database in ", resultsfile, "\n")
   save(resultsum,file=resultsfile)
 
   return(invisible(result))
@@ -580,7 +579,7 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 #' @param type String. Short identifier for gauge action type. For example, `iwa` for Iwasaki gauge action.
 #' @param beta Numeric. Inverse gauge coupling.
 #' @param L Integer. Spatial lattice extent.
-#' @param T Integer. Temporal lattice extent.
+#' @param Time Integer. Temporal lattice extent.
 #' @param kappa Numeric. Sea quark action hopping parameter.
 #' @param mul Numeric. Sea light quark twisted mass.
 #' @param csw Numeric. Sea quark action clover parameter.
@@ -592,9 +591,9 @@ analysis_online <- function(L, T, t1, t2, beta, kappa, mul,
 #'
 #' @return String. Directory name constructed out of the various function parameters. See source code for details.
 #'
-construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
+construct_onlinemeas_rundir <- function(type,beta,L,Time,kappa=0,mul=0,csw=0,musigma=0,mudelta=0,muh=0,addon="",debug=FALSE) {
   rundir <- NULL
-  rundir <- sprintf("%s_b%s-L%dT%d",type,beta,L,T)
+  rundir <- sprintf("%s_b%s-L%dT%d",type,beta,L,Time)
 
   if(csw!=0) {
     rundir <- sprintf("%s-csw%s",rundir,csw)
@@ -627,7 +626,7 @@ construct_onlinemeas_rundir <- function(type,beta,L,T,kappa=0,mul=0,csw=0,musigm
   }
 
   if(debug) {
-    cat("Trying to read from directory:", rundir,"\n")
+    message("Trying to read from directory:", rundir,"\n")
   }
 
   return(rundir)

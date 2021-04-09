@@ -88,6 +88,9 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 #' If not, the errors are estimated with help of the jacobian (either provided
 #' in \code{gr} or calculated using the \code{numDeriv}-package).
 #'
+#' @return
+#' See \link{simple.nlsfit}.
+#' 
 #' @export
 #' @family NLS fit functions
 #' 
@@ -106,7 +109,7 @@ parametric.bootstrap.cov <- function (boot.R, x, cov, seed) {
 parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
                                lower = rep(x = -Inf, times = length(par.guess)),
                                upper = rep(x = +Inf, times = length(par.guess)),
-                               ..., bootstrap=TRUE, na.rm = FALSE) {
+                               ..., bootstrap=TRUE) {
   stopifnot(length(x) == length(y))
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
@@ -126,12 +129,12 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
   if (bootstrap) {
     stopifnot(!missing(boot.R))
     bsamples <- parametric.bootstrap(boot.R, values, errors)
-    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., lower = lower, upper = upper, dx = dx, dy = dy, na.rm = na.rm)
+    bootstrap.nlsfit(fn, par.guess, y, x, bsamples, ..., lower = lower, upper = upper, dx = dx, dy = dy)
   }else {
     if(missing(boot.R)) {
       boot.R = 0
     }
-    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., lower = lower, upper = upper, dx = dx, dy = dy, boot.R = boot.R, na.rm = na.rm)
+    simple.nlsfit(fn, par.guess, y, x, errormodel, ..., lower = lower, upper = upper, dx = dx, dy = dy, boot.R = boot.R)
   }
 }
 
@@ -143,6 +146,9 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
 #' @inheritParams bootstrap.nlsfit
 #' @inheritParams parametric.bootstrap.cov
 #' @param bootstrap boolean. If `TRUE`, bootstrap is used.
+#' 
+#' @return
+#' See \link{simple.nlsfit}.
 #' 
 #' @export
 #' @family NLS fit functions
@@ -179,10 +185,6 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
 get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error) {
   ## invert covariance matrix, if applicable
   if (useCov) {
-    if (!missing(dx) || !missing(dy)) {
-      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
-    }
-
     inversion.worked <- function(InvCovMatrix) {
       if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
@@ -198,8 +200,8 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
       inversion.worked(InvCovMatrix)
       W <- chol(InvCovMatrix)
     } else {
-      # a (potentially hand-crafted) covariance matrix was passeed
-      # we asumme that it's cleanly invertible at this stage and simply use `solve`
+      # a (potentially hand-crafted) covariance matrix was passed
+      # we assume that it's cleanly invertible at this stage and simply use `solve`
       CholCovMatrix <- chol(CovMatrix)
       InvCovMatrix <- try(solve(CholCovMatrix), silent = TRUE)
       inversion.worked(InvCovMatrix)
@@ -250,10 +252,6 @@ get.errors <- function (useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_
 get.errors.wo.bootstrap <- function (useCov, y, dy, dx, CovMatrix, errormodel) {
   ## invert covariance matrix, if applicable
   if (useCov) {
-    if (!missing(dx) || !missing(dy)) {
-      stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
-    }
-
     inversion.worked <- function(InvCovMatrix) {
       if (inherits(InvCovMatrix, "try-error")) {
         stop("Variance-covariance matrix could not be inverted!")
@@ -304,9 +302,9 @@ set.fitchi <- function (fn, errormodel, useCov, W, x, ipx, na.rm, priors) {
     }
   }else{
     if(useCov){
-      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W %*% (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx], par[priors$param])) }
     }else{
-      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx])) }
+      fitchi <- function(y, par, ...) { W * (y - c(fn(par=par[-ipx], x=par[ipx], ...), par[ipx], par[priors$param])) }
     }
   }
 
@@ -444,6 +442,9 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
 #' bootstrap samples. If this list is not specified priors are omitted
 #' within the fit.
 #'
+#' @return
+#' Returns an object of class `bootstrapfit`, see \link{bootstrap.nlsfit}.
+#' 
 #' @export
 #' @family NLS fit functions
 #' 
@@ -473,6 +474,7 @@ simple.nlsfit <- function(fn,
                           boot.R = 0,
                           gr,
                           dfn,
+                          mask,
                           use.minpack.lm = TRUE,
                           error = sd,
                           maxiter = 500,
@@ -485,6 +487,7 @@ simple.nlsfit <- function(fn,
     ncolps <- length(priors$psamples)
   }
   stopifnot(!missing(y))
+  stopifnot(!missing(dy))
   stopifnot(!missing(x))
   stopifnot(!missing(par.guess))
   stopifnot(!missing(fn))
@@ -500,13 +503,52 @@ simple.nlsfit <- function(fn,
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   useCov <- !missing(CovMatrix)
+  if (useCov && !(missing(dx) && missing(dy))) {
+    stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
+  }
 
   if (use.minpack.lm) {
     lm.avail <- requireNamespace('minpack.lm')
   } else {
     lm.avail <- FALSE
   }
+
+  ## Apply the mask as in bootstrap.nlsfit.
+  if (!missing(mask)) {
+    if(errormodel == "xyerrors") {
+      ## CovMatrix has twice the length for xy-errors, therefore
+      ## need to apply mask twice.
+      mask.twice <- c(mask, length(y)+mask)
+    }else{
+      dx <- NULL
+    }
+
+    full <- list(x=x, y=y,
+                 dx=dx, dy=dy)
+
+    x <- x[mask]
+    y <- y[mask]
+    if(errormodel == "xyerrors") dx <- dx[mask]
+    dy <- dy[mask]
+
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      if(errormodel == "yerrors"){
+        CovMatrix <- CovMatrix[mask, mask]
+      }else{
+        CovMatrix <- CovMatrix[mask.twice, mask.twice]
+      }
+    }
+  }
+
+  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
 
   ## cast y and dy to Y and dY, respectively
   if (errormodel == 'yerrors') {
@@ -520,16 +562,14 @@ simple.nlsfit <- function(fn,
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
   
-  ## If a list 'priors' is specified, modify the parameters y, func and bsamples
+  ## If a list 'priors' is specified, modify the parameters y and func
   ## by adding p, param and psamples, respectively.
   priors.avail <- !any(c(is.null(priors$param), is.null(priors$p), is.null(priors$psamples)))
   if(priors.avail) {
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
-    bsamples <- cbind(bsamples, priors$psamples)
   }
   
-  all.errors <- get.errors.wo.bootstrap(useCov, y, dy, dx, CovMatrix, errormodel)
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
@@ -599,6 +639,7 @@ simple.nlsfit <- function(fn,
   }
 
   cov <- solve(t(jac) %*% jac)
+  cov <- 0.5*(cov + t(cov))
   if(relative.weights){
       cov <- cov * chisq/dof
   }
@@ -633,6 +674,17 @@ simple.nlsfit <- function(fn,
 
   if(boot.R > 0){
     res$t <- parametric.bootstrap.cov(boot.R, first.res$par, cov)
+  }
+
+  # The user might have supplied a mask, therefore we need to restore all the
+  # information and un-apply the mask.
+  if (!missing(mask)) {
+    for (name in names(full)) {
+      if (name %in% names(res)) {
+        res[[name]] <- full[[name]]
+      }
+    }
+    res$mask <- mask
   }
 
   attr(res, "class") <- c("bootstrapfit", "list")
@@ -764,7 +816,9 @@ simple.nlsfit <- function(fn,
 #'
 #' fit.result <- bootstrap.nlsfit(fn, c(1, 1), value, x, bsamples)
 #' summary(fit.result)
-#' plot(fit.result)
+#' plot(fit.result, main = 'Ribbon on top')
+#' plot(fit.result, ribbon.on.top = FALSE, main = 'Ribbon below')
+#' residual_plot(fit.result, main = 'Residual Plot')
 #'
 #' @export
 #' @family NLS fit functions
@@ -804,50 +858,22 @@ bootstrap.nlsfit <- function(fn,
   if(!is.null(priors$param)){
     stopifnot(is.vector(priors$param))
   }
-  stopifnot(length(priors$param) == length(priors$p) &&
-              length(priors$param) == ncolps &&
-              length(priors$p) == ncolps )
+  stopifnot(length(priors$param) == length(priors$p))
+  stopifnot(length(priors$param) == ncolps)
+  stopifnot(length(priors$p) == ncolps)
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
+  # The user might have specified a mask which is logical. Since we later use
+  # it as integer indices, we need to make sure that it is an integer mask.
+  if (!missing(mask) && is.logical(mask)) {
+    mask <- which(mask)
+  }
+
   boot.R <- nrow(bsamples)
   useCov <- !missing(CovMatrix)
-  
-  # Apply the mask. The user might have specified a mask that is used to
-  # restrict the selection of the points that are to be used in the fit. In
-  # order to make this additional feature a minimal change to the following code
-  # we will *change* the input parameters here and store them with new names.
-  # Then at the very end we switch them back.
-  if (!missing(mask)) {
-    full <- list()
-    
-    if (!missing(dx)) {
-      full$dx <- dx
-      dx <- dx[mask]
-    } else if (ncol(bsamples) > length(y)) {
-      full$dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
-    }
-    
-    if (!missing(dy)) {
-      full$dy <- dy
-      dy <- dy[mask]
-    } else {
-      full$dy <- apply(bsamples[, 1:length(y)], 2, error)
-    }
-    
-    full$x <- x
-    x <- x[mask]
-    
-    full$y <- y
-    y <- y[mask]
-    
-    full$bsamples <- bsamples
-    bsamples <- bsamples[, mask]
-    
-    if (!missing(CovMatrix)) {
-      full$CovMatrix <- CovMatrix
-      CovMatrix <- CovMatrix[mask, mask]
-    }
+  if (useCov && !(missing(dx) && missing(dy))) {
+    stop('Specifying a covariance matrix and `dx` and `dy` does not make sense, use either.')
   }
   
   if (use.minpack.lm) {
@@ -860,21 +886,71 @@ bootstrap.nlsfit <- function(fn,
     parallel <- requireNamespace('parallel')
   }
 
-  crr <- c(1:(boot.R+1))
-  rr <- c(2:(boot.R+1))
-
-  ## cast y and dy to Y and W, respectively
+  ## determine the errormodel
   if (ncol(bsamples) == length(y)) {
-    Y <- y
-    par.Guess <- par.guess
     errormodel <- "yerrors"
   } else if (ncol(bsamples) == length(y) + length(x)) {
-    Y <- c(y, x)
-    par.Guess <- c(par.guess, x)
     errormodel <- "xyerrors"
   } else {
     stop("The provided bootstrap samples do not match the number of data points with errors. Make sure that the number of columns is either the length of `y` alone for just y-errors or the length of `y` and `x` for xy-errors.")
   }
+
+  ## Apply the mask. The user might have specified a mask that is used to
+  ## restrict the selection of the points that are to be used in the fit. In
+  ## order to make this additional feature a minimal change to the following code
+  ## we will *change* the input parameters here and store them with new names.
+  ## Then at the very end we switch them back.
+  if (!missing(mask)) {
+    if(errormodel == "xyerrors") {
+      if(missing(dx)) {
+        dx <- apply(bsamples[, (length(y)+1):ncol(bsamples)], 2, error)
+      }
+      ## bsamples and CovMatrix have twice the length for xy-errors, therefore
+      ## need to apply mask twice.
+      mask.twice <- c(mask, length(y)+mask)
+    }else{
+      dx <- NULL
+    }
+
+    if(missing(dy)) {
+      dy <- apply(bsamples[, 1:length(y)], 2, error)
+    }
+
+    full <- list(x=x, y=y,
+                 dx=dx, dy=dy,
+                 bsamples=bsamples)
+
+    x <- x[mask]
+    y <- y[mask]
+    dy <- dy[mask]
+    if(errormodel == "yerrors"){
+      bsamples <- bsamples[, mask]
+    }else{
+      bsamples <- bsamples[, mask.twice]
+      dx <- dx[mask]
+    }
+    
+    if (!missing(CovMatrix)) {
+      full$CovMatrix <- CovMatrix
+      if(errormodel == "yerrors"){
+        CovMatrix <- CovMatrix[mask, mask]
+      }else{
+        CovMatrix <- CovMatrix[mask.twice, mask.twice]
+      }
+    }
+  }
+
+  crr <- c(1:(boot.R+1))
+  rr <- c(2:(boot.R+1))
+
+  if(errormodel == "yerrors"){
+    Y <- y
+    par.Guess <- par.guess
+  }else{
+    Y <- c(y, x)
+    par.Guess <- c(par.guess, x)
+  }
+
 
   nx <- length(x)
   ipx <- length(par.Guess)-seq(nx-1,0)
@@ -885,18 +961,30 @@ bootstrap.nlsfit <- function(fn,
   if(priors.avail) {
     Yp <- c(Y, priors$p)
     yp <- c(y, priors$p)
+    if(errormodel == "yerrors"){
+      dy <- c(dy, apply(matrix(priors$psamples, boot.R), 2, error))
+    }else{
+      dx <- c(dx, apply(matrix(priors$psamples, boot.R), 2, error))
+    }
     bsamples <- cbind(bsamples, priors$psamples)
     CovMatrix <- cov_fn(bsamples)
   }
   
   all.errors <- get.errors(useCov, y, dy, dx, CovMatrix, errormodel, bsamples, cov_fn, error)
+
   if(!priors.avail) {
     dy <- all.errors$dy
     dx <- all.errors$dx
   } else {
-    dy <- head(all.errors$dy, -length(priors$p))
-    dydp <- all.errors$dy
-    dx <- all.errors$dx
+    if(errormodel == "yerrors"){
+      dydp <- all.errors$dy
+      dy <- head(dydp, -length(priors$p))
+      dx <- all.errors$dx
+    }else{
+      dy <- all.errors$dy
+      dydp <- c(dy, tail(all.errors$dx, length(priors$p)))
+      dx <- head(all.errors$dx, -length(priors$p))
+    }
   }
   W <- all.errors$W
   
@@ -1030,6 +1118,9 @@ bootstrap.nlsfit <- function(fn,
 #' @param print.correlation Logical. Whether to show the correlation between of
 #' the fit parameters.
 #'
+#' @return
+#' No return value.
+#' 
 #' @export
 #' @family NLS fit functions
 summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TRUE) {
@@ -1040,17 +1131,17 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
   npar <- length(object$par.guess)
   
   ## parameters with errors as strings
-  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, with.dollar=FALSE, digits=digits, human.readable=FALSE)
+  tmp <- apply(X=array(c(values, errors), dim=c(length(values), 2)), MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
   if(!is.null(object$t)) {
     bias <- object$t0-apply(X=object$t, MARGIN=2, FUN=mean, na.rm=TRUE)
     dim(bias) <- c(length(bias), 1)
-    bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    bias <- apply(X=bias, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     ci16 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.16), drop=FALSE, na.rm=TRUE)
     dim(ci16) <- c(length(ci16), 1)
-    ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci16 <- apply(X=ci16, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     ci84 <- apply(X=object$t, MARGIN=2, FUN=quantile, probs=c(0.84), drop=FALSE, na.rm=TRUE)
     dim(ci84) <- c(length(ci84), 1)
-    ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, human.readable=FALSE)
+    ci84 <- apply(X=ci84, MARGIN=1, FUN=tex.catwitherror, digits=digits, with.dollar=FALSE, with.cdot=FALSE)
     cat("    best fit parameters with errors, bootstrap bias and 68% confidence interval\n\n")
     print(data.frame(par=tmp[1:npar], bias=bias[1:npar], ci16=ci16[1:npar], ci84=ci84[1:npar]))
   }else{
@@ -1102,7 +1193,12 @@ summary.bootstrapfit <- function(object, ..., digits = 2, print.correlation = TR
 #' @param ... Additional parameters passed to the `summary.bootstrapfit` function.
 #' @param digits number of significant digits to print in summary or print.
 #'
+#' @return
+#' No return value.
+#' 
 #' @family NLS fit functions
+#'
+#' @export
 print.bootstrapfit <- function(x, ..., digits = 2) {
   summary.bootstrapfit(object=x, digits=digits)
 }
@@ -1117,17 +1213,23 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @param lty line type of fitted curve.
 #' @param supports number of supporting points for plotting the function.
 #' @param plot.range vector with two elements \code{c(min,max)} defining the
-#' range in which fitline and errorband are plotted. Default is the range of
-#' the data.
-#' @param ... Additional parameters passed to the `plotwitherror`
-#'   function.
-#' @param error Function to compute the standard error in resampling
-#'   schemes. Default is \link{sd} for bootstrap. For other resampling
-#'   schemes this might need to be changed.
+#'   range in which fitline and errorband are plotted. Default is the range of
+#'   the data.
+#' @param ... Additional parameters passed to the `plotwitherror` function.
+#' @param error Function to compute the standard error in resampling schemes.
+#'   Default is \link{sd} for bootstrap. For other resampling schemes this might
+#'   need to be changed.
+#' @param ribbon.on.top Logical, controls whether the ribbon should be in
+#'   front of the data points. This is recommended when there are very many data
+#'   points and a highly constrained model.
+#'
+#' @importFrom stats predict
+#' 
+#' @return No return value.
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=sd) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function, ribbon.on.top = TRUE) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1138,114 +1240,88 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
     rx <- plot.range
   }
   X <- seq(rx[1], rx[2], (rx[2]-rx[1])/supports)
-  npar <- length(x$par.guess)
-
-  ## use the xylimits computation of plotwitherror
-  if(x$errormodel == "yerrors") {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, ...)
-  }
-  else {
-    mylims <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, ...)
-  }
-  my.xlim <- mylims$xlim
-  my.ylim <- mylims$ylim
-
-  ## to include additional parameter to x$fn originally given as ... to
-  ## bootstrap.nlsfit requires some pull-ups
-  Y <- do.call(x$fn, c(list(par = x$t0[1:npar], x = X, boot.r = 0), x$tofn))
-
-  if(!is.null(x$t)) {
-    ## error band
-    ## define a dummy function to be used in apply
-    prediction_boot_fn <- function (boot.r) {
-      par <- x$t[boot.r, 1:npar, drop = FALSE]
-      do.call(x$fn, c(list(par = par, x = X, boot.r = boot.r), x$tofn))
+  prediction <- predict(x, X)
+  
+  plot_data <- function (rep) {
+    if(x$errormodel == "yerrors") {
+      limits <- plotwitherror(x=x$x, y=x$y, dy=x$dy, rep = rep, ...)
     }
-    predictions <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
-    se <- apply(predictions, 2, error, na.rm = TRUE)
-    stopifnot(length(se) == length(X))
-
-    ## plot it
-    polyval <- c(Y+se, rev(Y-se))
-    if(any(polyval < my.ylim[1]) || any(polyval > my.ylim[2])) {
-      polyval[polyval < my.ylim[1]] <- my.ylim[1]
-      polyval[polyval > my.ylim[2]] <- my.ylim[2]
+    else {
+      limits <- plotwitherror(x=x$x, y=x$y, dy=x$dy, dx=x$dx, rep = rep, ...)
+    }
+    limits
+  }
+  
+  # We plot all the data first to get the xlim and ylim right.
+  limits <- plot_data(rep = FALSE)
+  
+  # Plot the ribbon.
+  if(!is.null(prediction$err)) {
+    xlim <- limits$xlim
+    ylim <- limits$ylim
+    
+    polyval <- c(prediction$val + prediction$err, rev(prediction$val - prediction$err))
+    if(any(polyval < ylim[1]) || any(polyval > ylim[2])) {
+      polyval[polyval < ylim[1]] <- ylim[1]
+      polyval[polyval > ylim[2]] <- ylim[2]
     }
     pcol <- col2rgb(col.band, alpha=TRUE)/255 
     pcol[4] <- opacity.band
     pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
     polygon(x=c(X, rev(X)), y=polyval, col=pcol, lty=0, lwd=0.001, border=pcol)
   }
-
+  
   ## plot the fitted curve on top
-  lines(x=X, y=Y, col=col.line, lty=lty, lwd=lwd)
+  lines(x=X, y=prediction$val, col=col.line, lty=lty, lwd=lwd)
+  
+  # Optionally plot the data on top one more time.
+  if (!ribbon.on.top) {
+    plot_data(rep = TRUE)
+  }
 }
 
+#' residual_plot
+#'
+#' generic residual_plot method
+#'
+#' @param x the object to plot
+#' @param ... additional parameters to be passed on to specialised functions
+#' 
+#' @return
+#' No return value.
+#' 
+#' @export
 residual_plot <- function (x, ...) {
   UseMethod("residual_plot", x)
 }
 
-residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) {
+#' @export
+residual_plot.bootstrapfit <- function (x, ..., error_fn = x$error.function, operation = `/`) {
+  if (is.null(x$mask)) {
+    x$mask <- rep(TRUE, length(x$x))
+  }
   if (is.logical(x$mask)) {
     x$mask <- which(x$mask)
   }
-  
-  # We let the model give us the prediction values at the given data.
-  npar <- length(x$par.guess)
-  prediction_val <- do.call(x$fn, c(list(par = x$t0[1:npar], x = x$x, boot.r = 0), x$tofn))
-  
-  # The same is done for the bootstrap samples
-  prediction_boot_fn <- function (boot.r) {
-    par <- x$t[boot.r, 1:npar]
-    do.call(x$fn, c(list(par = par, x = x$x, boot.r = boot.r), x$tofn))
-  }
-  prediction_boot <- do.call(rbind, lapply(1:nrow(x$t), prediction_boot_fn))
-  
-  residual_val <- operation(x$y, prediction_val)
+
+  prediction <- predict(x, x$x)
+
+  residual_val <- operation(x$y, prediction$val)
   # We want to subtract or divide (depending on the given `operation`) the
-  # samples of the data and the central value of the prediction. R is a matrix
-  # based programming langauge and therefore one can apply such an operation
-  # directly to matrices and vectors, but one has to be very careful about it.
-  # Dividing two equal length vectors or equal shape matrices is fine because
-  # the operation is done element-by-element. In the case that the shape of the
-  # two operands is not exactly the same, R does some internal broadcasting.
-  # This is a common patter in all matrix based languages (like MATLAB) or
-  # matrix libraries (like NumPy for Python). These broadcasting rules are
-  # non-trivial and one needs to know how they work. The left operand is are the
-  # bootstrap samples where we have $R$ observations of $T$ time slices. Well,
-  # since it is symmetrized it is rather $T/2+1$, but we will not concern
-  # ourselves with that for this here. The shape of the first object is $R
-  # \times T$ then. The central value of the prediction is just of length $T$.
-  # When we do `bsamples - prediction_val` we would _hope_ that it does the
-  # right thing and match up along the $T$-direction, so we would want to
-  # interpret `prediction_val` as a row vector. However, it is interpreted as a
-  # column vector for these types of operations. A sane person might object now
-  # and say that `bsamples` has $R$ rows whereas `prediction_val` has $T$ rows.
-  # Broadcasting would not work in a sane matrix environment. But R was
-  # desighned to be helpful and turns out to be an annoying dipshit. In case $R$
-  # is cleanly divisible by $T$ it will just repeat the `prediction_val` column
-  # vector until it has length $R$. If you happen to do a test case with $T =
-  # 25$ and $R = 400$ you will get a result, it will just be not what you
-  # actually want. Since `prediction_val` is interpreted as a column vector we
-  # need to transpose `bsamples` with the transpose function `t()`. Then it has
-  # dimension $T \times R$. Subtracting or dividing by `prediction_val` will
-  # then broadcast it into the correct direction. The end result will have
-  # dimension $T \times R$, so we need to apply the transposition operation
-  # again in order to get the result that we want.
-  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction_val))
+  # samples of the data and the central value of the prediction. Due to
+  # major-layout one needs to transpose twice to get the operation applied the
+  # right way.
+  residual_boot <- t(operation(t(x$bsamples[, 1:length(x$y)]), prediction$val))
   residual_err <- apply(residual_boot, 2, error_fn)
   
-  band_val <- operation(prediction_val, prediction_val)
-  # And here it is the same …
-  band_boot <- t(operation(t(prediction_boot), prediction_val))
+  band_val <- operation(prediction$val, prediction$val)
+  band_boot <- t(operation(t(prediction$boot), prediction$val))
   band_err <- apply(band_boot, 2, error_fn)
   
-  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], ..., col = 'gray40')
-  if(x$errormodel == "xyerrors") {
-    plot_args$dx <- x$dx[-x$mask]
-  }
-  do.call(plotwitherror, plot_args)
+  # First we plot all the data points to get the xlim and ylim right.
+  plotwitherror(x=x$x, y=residual_val, dy=residual_err, ...)
   
+  # Error band and central fit line.
   polygon(x = c(x$x, rev(x$x)),
           y = c(band_val - band_err, rev(band_val + band_err)),
           border = NA,
@@ -1254,9 +1330,58 @@ residual_plot.bootstrapfit <- function (x, ..., error_fn = sd, operation = `/`) 
         y = band_val,
         col = 'gray70')
   
-  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], ..., rep = TRUE)
+  # Plot points which are not used in the fit.
+  plot_args <- list(x=x$x[x$mask], y=residual_val[x$mask], dy=residual_err[x$mask], rep = TRUE, ...)
   if(x$errormodel == "xyerrors") {
     plot_args$dx <- x$dx[x$mask]
   }
   do.call(plotwitherror, plot_args)
+  
+  # Plot points which are used in the fit.
+  plot_args <- list(x=x$x[-x$mask], y=residual_val[-x$mask], dy=residual_err[-x$mask], col = 'gray40', rep = TRUE, ...)
+  if(x$errormodel == "xyerrors") {
+    plot_args$dx <- x$dx[-x$mask]
+  }
+  if (length(plot_args$x) > 0) {
+    do.call(plotwitherror, plot_args)
+  }
+}
+
+#' Predict values for bootstrapfit
+#'
+#' @param object Object of type bootstrapfit.
+#' @param x Numeric vector with independent variable.
+#' @param error Function to compute error from samples.
+#' @param ... additional parameters to be passed on to the prediction function.
+#'
+#' @return
+#' List with independent variable `x`, predicted central value `val`, error
+#' estimate `err` and sample matrix `boot`.
+#'
+#' @export
+#' @family NLS fit functions
+predict.bootstrapfit <- function (object, x, error = object$error.function, ...) {
+  ## to include additional parameter to x$fn originally given as ... to
+  ## bootstrap.nlsfit requires some pull-ups
+  npar <- length(object$par.guess)
+  val <- do.call(object$fn, c(list(par = object$t0[1:npar], x = x, boot.r = 0), object$tofn))
+
+  prediction <- list(x = x, val = val)
+
+  if(!is.null(object$t)) {
+    ## error band
+    ## define a dummy function to be used in apply
+    prediction_boot_fn <- function (boot.r) {
+      par <- object$t[boot.r, 1:npar, drop = FALSE]
+      do.call(object$fn, c(list(par = par, x = x, boot.r = boot.r), object$tofn))
+    }
+    prediction_boot <- do.call(rbind, lapply(1:nrow(object$t), prediction_boot_fn))
+    prediction$boot <- prediction_boot
+
+    err <- apply(prediction_boot, 2, error, na.rm = TRUE)
+    stopifnot(length(err) == length(x))
+    prediction$err <- err
+  }
+
+  return (prediction)
 }

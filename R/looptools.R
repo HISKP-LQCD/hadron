@@ -18,6 +18,10 @@
 #'                 contribution to the three-point function.
 #' @param vev_subtract Boolean, whether the loop contains a vev which should
 #'                     be subtracted.
+#' @return `raw_cf` container with the product of loop and 2pt function, shifted
+#'         in time to be relative to source using the info from \code{src_ts}
+#'
+#' @export
 disc_3pt <- function(cf_2pt, 
                      loop,
                      src_ts,
@@ -105,6 +109,8 @@ disc_3pt <- function(cf_2pt,
   cf_3pt <- raw_cf_data(cf_3pt,
                         data = data
                         )
+  cf_3pt <- shift.raw_cf(cf_3pt, places = src_ts)
+
   return(cf_3pt)
 }
 
@@ -120,12 +126,17 @@ disc_3pt <- function(cf_2pt,
 #'               instead of the (much faster) equivalent
 #'               \eqn{ (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
 #'                     \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] ) }.
+#' @param nstoch_to_avg String or integer, how many of the available stochastic
+#'                      samples should be averaged over. See \link{loop_stochav} for
+#'                      details.
 #' @return 'raw_cf' container with two-point function of these two quark loops.
 #'         In the calculation, both averaging over all source locations and
 #'         the average over all stochastic sample combinations are performed.
 #' @export
-loop_2pt <- function(loop_snk, loop_src,
-                     random_vectors_outer_product = FALSE){
+loop_2pt <- function(loop_snk,
+                     loop_src,
+                     random_vectors_outer_product = FALSE,
+                     nstoch_to_avg = 'all'){
   stopifnot( inherits(loop_snk, 'raw_cf_meta') )
   stopifnot( inherits(loop_snk, 'raw_cf_data') )
   stopifnot( inherits(loop_src, 'raw_cf_meta') )
@@ -140,6 +151,18 @@ loop_2pt <- function(loop_snk, loop_src,
 
   Time <- loop_snk$Time
 
+  if( nstoch_to_avg == "all" ){
+    nstoch_to_avg <- loop_src$dim[1]
+  }
+  if( nstoch_to_avg >= 1 && nstoch_to_avg <= loop_src$dim[1] ){
+    loop_src$data <- loop_src$data[,,c(1:nstoch_to_avg),,,drop=FALSE]
+    loop_src$dim[1] <- nstoch_to_avg
+    loop_snk$data <- loop_snk$data[,,c(1:nstoch_to_avg),,,drop=FALSE]
+    loop_snk$dim[1] <- nstoch_to_avg
+  } else {
+    stop("The only valid values for 'nstoch_to_avg' are 'all' or an integer smaller or equal to 'loop_src$dim[1]'")
+  }
+
   loop_src_avg <- loop_stochav(loop_src)
 
   cf_2pt <- raw_cf_meta(Time = Time,
@@ -149,27 +172,29 @@ loop_2pt <- function(loop_snk, loop_src,
 
   dims <- loop_snk$dim
 
+  random_combinations <- t(combn(x=1:dims[1], m=2))
   if( random_vectors_outer_product ){
-    random_idcs <- expand.grid( 1:dims[1], 1:dims[1], KEEP.OUT.ATTRS = FALSE)
-    colnames(random_idcs) <- c("r1", "r2")
-    random_idcs <- random_idcs[ which(random_idcs$r1 != random_idcs$r2), ]
+    random_idcs <- data.frame(r1=random_combinations[,1], 
+                              r2=random_combinations[,2])
   }
 
   for( t_sep in 0:(Time-1) ){
     loop_snk_shift <- shift.raw_cf(loop_snk, t_sep)
-
+    # for testing, we can compute the 2pt function explicitly using i != j
+    # random combinations
+    # of course, this is extremely slow
     if( random_vectors_outer_product ){
-      cf_2pt$data[,(t_sep+1),,] <- (1.0/Time)*apply(loop_src$data[,,random_idcs$r1,,,drop=FALSE] * 
-                                                      loop_snk_shift$data[,,random_idcs$r2,,,drop=FALSE], 
-                                                    c(1,4,5), 
-                                                    mean)
+      cf_2pt$data[,(t_sep+1),,] <- apply(loop_src$data[,,random_idcs$r1,,,drop=FALSE] * 
+                                         loop_snk_shift$data[,,random_idcs$r2,,,drop=FALSE], 
+                                         c(1,4,5), 
+                                         mean)
     } else {
       loop_snk_avg_shift <- loop_stochav(loop_snk_shift)
       
-      # Compute (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ])
+      # Compute 1/N_r^2 (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ])
       c_sep_full <- loop_src_avg * loop_snk_avg_shift
 
-      # Compute \sum_i Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ]
+      # Compute 1/N_r \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] )
       c_sep <- loop_src * loop_snk_shift
       c_sep_diag <- loop_stochav(c_sep)
 
@@ -178,11 +203,15 @@ loop_2pt <- function(loop_snk, loop_src,
       # \sum_{i != j} Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_j ] =
       # (\sum_i Tr[ \Gamma_snk M_i ])*(\sum_j Tr[ \Gamma_src M_j ]) -
       #  \sum_i ( Tr[ \Gamma_snk M_i ] Tr[ \Gamma_src M_i ] )
-      # note that since we work with averages (rather than sums), we need to account for the relative normalisation
-      # of the full and diagonal random vector product
-      cf_2pt$data[,(t_sep+1),,] <- (1.0/Time)*( apply(c_sep_full$data - c_sep_diag$data/dims[1], 
-                                                      c(1,3,4), 
-                                                      mean) )
+      # note that since we work with averages (rather than sums), we need to account
+      # for the relative normalisation of the full and diagonal random vector products
+      # as well as the relative weight of the full N_r^2 combinations
+      # and the unique C(N_r,2) combinations, such that the mean that we take
+      # in the end is over those
+      cf_2pt$data[,(t_sep+1),,] <- 0.5/nrow(random_combinations)*
+                                      apply(dims[1]^2*c_sep_full$data - dims[1]*c_sep_diag$data, 
+                                            c(1,3,4),
+                                            mean) 
     }
   }
   return(cf_2pt)
@@ -196,6 +225,10 @@ loop_2pt <- function(loop_snk, loop_src,
 #'                      If an integer is supplied, it must be at least '1'
 #'                      and at most consistent with the number of stochastic
 #'                      samples in \code{loop}.
+#' @return
+#' Returns the input `loop` object with named elemens `data` and
+#' `dim` added.
+#' 
 #' @export
 loop_stochav <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
@@ -232,6 +265,11 @@ loop_stochav <- function(loop, nstoch_to_avg = 'all'){
 #'                      to average over. Only possible string is 'all'. If an
 #'                      integer is provided it must be at least '1' and at most
 #'                      consistent with the number of stochastic samples in \code{loop}.
+#'
+#' @return
+#' Returns the input `loop` object with added data.
+#' 
+#' @export
 loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )
@@ -280,6 +318,10 @@ loop_vev_subtract <- function(loop, nstoch_to_avg = 'all'){
 #' @param scale_factor Complex scaling factor to be applied.
 #' @param herm_conj Boolean, optionally the loop matrix \eqn{M} can be hermitian
 #'                  conjugated before the spin projection is performed.
+#'
+#' @return
+#' Returns an object of class \link{raw_cf}.
+#' 
 #' @export
 loop_spin_project <- function(loop,
                               gamma,
@@ -290,8 +332,13 @@ loop_spin_project <- function(loop,
   stopifnot( inherits(loop, 'raw_cf_meta') )
   stopifnot( inherits(loop, 'raw_cf_data') )
   stopifnot( all(dim(gamma) == 4) & length(dim(gamma)) == 2 )
-  stopifnot( length(dim(loop$data)) == 5 )
   stopifnot( length(factor) == 1 )
+  
+  if( stochav ){
+    stopifnot( length(dim(loop$data)) == 5 )
+  } else {
+    stopifnot( length(dim(loop$data)) == 4 | length(dim(loop$data)) == 5 )
+  }
 
   if( !(reim %in% c('real','imag','both') ) ){
     stop("'reim' can only be one of 'real', 'imag' or 'both'")

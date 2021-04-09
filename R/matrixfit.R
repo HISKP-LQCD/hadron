@@ -6,7 +6,12 @@
 #' @param data Original data to bootstrap
 #' @param R Number of bootstrap replicates.
 #' @param l Block length.
+#'
+#' @return
+#' Returns a numeric vector with the estimated standard error
+#' of the mean.
 #' 
+#' @export
 bootstrap.meanerror <- function(data, R=400, l=20) {
   bootit <- boot::boot(block.ts(data, l=l), meanindexed, R=R)
   return(apply(bootit$t, 2, sd))
@@ -17,18 +22,22 @@ bootstrap.meanerror <- function(data, R=400, l=20) {
 #' @param par Numeric vector: Fit parameters of the model. In an 
 #'   object of type \code{matrixfit}, this should be located at 
 #'   \code{$opt.res$par}.
-#' @param t Numeric vector: Time of interest.
-#' @param T Numeric: Time extent of the lattice.
+#' @param t integer vector: Time of interest.
+#' @param Time integer: Time extent of the lattice.
 #' @param parind See \code{\link{matrixfit}}.
 #' @param sign.vec Numeric vector: Relative sign between forward and
 #'   backwards propagating part. A plus makes it cosh, a minus makes it sinh.
 #' @param ov.sign.vec Numeric vector: Overal sign.
 #' @param deltat Numeric: time shift.
+#'
+#' @return
+#' Returns a numeric vector with the same length as the input vector `t`
+#' containing the model evaluation for these t-values.
 #' 
 #' @seealso \code{\link{matrixfit}}
-matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
+matrixModel <- function(par, t, Time, parind, sign.vec, ov.sign.vec, deltat=0) {
   return(ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*
-         (exp(-par[1]*(t-deltat/2)) + sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+         (exp(-par[1]*(t-deltat/2)) + sign.vec*exp(-par[1]*(Time-(t-deltat/2))))
          )
 }
 
@@ -38,55 +47,59 @@ matrixModel <- function(par, t, T, parind, sign.vec, ov.sign.vec, deltat=0) {
 #'   object of type \code{matrixfit}, this should be located at 
 #'   \code{$opt.res$par}.
 #' @param t Numeric vector: Time of interest.
-#' @param T Numeric: Time extent of the lattice.
+#' @param Time Numeric: Time extent of the lattice.
 #' @param reference_time Numeric: GEVP reference time value in physical time convention
 #' @param delta1 dummy parameter for compatibility
 #' 
+#' @return
+#' Returns a numeric vector with the same length as the input vector `t`
+#' containing the model evaluation for these t-values.
+#' 
 #' @seealso \code{\link{matrixfit}}
-pcModel <- function(par, t, T, delta1=1, reference_time) {
+pcModel <- function(par, t, Time, delta1=1, reference_time) {
   return( exp(-abs(par[1])*(t-reference_time))*( par[3] + (1-par[3])*exp(-(abs(par[2]))*(t-reference_time)) ) )
 }
 
-matrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+matrixChisqr <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(Time-t))))
   return( sum(z %*% M %*% z) )
 }
 
-matrixChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
+matrixChi <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(Time-t))))
   return( L %*% z )
 }
 
 ## deltat and reference_time are dummy variable here
-dmatrixChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
+dmatrixChi <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(Time-t)*sign.vec*exp(-par[1]*(Time-t)))
   res <- L %*% zp
   for(i in 2:length(par)) {
     zp1 <- rep(0, length(zp))
     j <- which(parind[,1]==i)
-    zp1[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp1[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(Time-t[j])))
     zp2 <- rep(0, length(zp))
     j <- which(parind[,2]==i)
-    zp2[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp2[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(Time-t[j])))
     res <- c(res, L %*% zp1 + L %*% zp2)
   }
   return(res)
 }
 
 ## deltat and reference_time are dummy variable here
-dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+dmatrixChisqr <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
   res <- rep(0., times=length(par))
-  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(T-t))))
-  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(T-t)*sign.vec*exp(-par[1]*(T-t)))
+  z <- (y-ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*t) + sign.vec*exp(-par[1]*(Time-t))))
+  zp <- -ov.sign.vec*0.5*par[parind[,1]]*par[parind[,2]]*(-t*exp(-par[1]*t) -(Time-t)*sign.vec*exp(-par[1]*(Time-t)))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp[j] <- -ov.sign.vec*0.5*par[parind[j,2]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(Time-t[j])))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(T-t[j])))
+    zp[j] <- -ov.sign.vec*0.5*par[parind[j,1]]*(exp(-par[1]*t[j]) + sign.vec[j]*exp(-par[1]*(Time-t[j])))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
@@ -101,18 +114,18 @@ dmatrixChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat
 ## the respective gradient functions follow
 ##
 ## deltat is a dummy variable here
-pcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
+pcChi <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
   return( (y - exp(-abs(par[1])*(t-reference_time))*( par[3] + (1-par[3])*exp(-(abs(par[2]))*(t-reference_time)) )) %*% L )
 }
 
 ## deltat is a dummy variable here
-pcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+pcChisqr <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
   z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time))))
   return( sum(z %*% M %*% z) )
 }
 
 ## deltat is a dummy variable here
-dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
+dpcChi <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
   zp <- (t-reference_time)*exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time)))
   res <- L %*% zp
   zp <- exp(-abs(par[1])*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-(abs(par[2]))*(t-reference_time))
@@ -123,7 +136,7 @@ dpcChi <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, ref
 }
 
 ## deltat is a dummy variable here
-dpcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
+dpcChisqr <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time) {
   res <- rep(0., times=length(par))
   z <- (y - exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time))))
   zp <- (t-reference_time)*exp(-abs(par[1])*(t-reference_time))*(par[3]+(1-par[3])*exp(-(abs(par[2]))*(t-reference_time)))
@@ -136,47 +149,47 @@ dpcChisqr <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, 
 }
 
 ## reference_time is a dummy variable here
-matrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+matrixChisqr.shifted <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(Time-(t-deltat/2)))))
   return( sum(z %*% M %*% z ) )
 }
 
 ## reference_time is a dummy variable here
-dmatrixChisqr.shifted <- function(par, t, y, M, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+dmatrixChisqr.shifted <- function(par, t, y, M, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
   res <- rep(0., times=length(par))
-  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
-  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(Time-(t-deltat/2)))))
+  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (Time-t+deltat/2)*sign.vec*exp(-par[1]*(Time-(t-deltat/2))))
   res[1] <- sum(zp %*% M %*% z + z %*% M %*% zp)
   for(i in 2:length(par)) {
     zp <- rep(0, length(z))
     j <- which(parind[,1]==i)
-    zp[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(Time-(t[j]-deltat/2))))
     res[i] <- sum(zp %*% M %*% z + z %*% M %*% zp)
     zp <- rep(0, length(z))
     j <- which(parind[,2]==i)
-    zp[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(Time-(t[j]-deltat/2))))
     res[i] <- res[i] + sum(zp %*% M %*% z + z %*% M %*% zp)
   }
   return(res)
 }
 
 ## reference_time is a dummy variable here
-matrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(T-(t-deltat/2)))))
+matrixChi.shifted <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  z <- (y-ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(exp(-par[1]*(t-deltat/2)) - sign.vec*exp(-par[1]*(Time-(t-deltat/2)))))
   return( L %*% z )
 }
 
 ## reference_time is a dummy variable here
-dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
-  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) +(T-t+deltat/2)*sign.vec*exp(-par[1]*(T-(t-deltat/2))))
+dmatrixChi.shifted <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec, deltat=1, reference_time=0) {
+  zp <- -ov.sign.vec*par[parind[,1]]*par[parind[,2]]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) +(Time-t+deltat/2)*sign.vec*exp(-par[1]*(Time-(t-deltat/2))))
   res <- L %*% zp
   for(i in 2:length(par)) {
     zp1 <- c(0)
     j <- which(parind[,1]==i)
-    zp1[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp1[j] <- -ov.sign.vec[j]*par[parind[j,2]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(Time-(t[j]-deltat/2))))
     zp2 <- c(0)
     j <- which(parind[,2]==i)
-    zp2[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(T-(t[j]-deltat/2))))
+    zp2[j] <- -ov.sign.vec[j]*par[parind[j,1]]*(exp(-par[1]*(t[j]-deltat/2)) - sign.vec[j]*exp(-par[1]*(Time-(t[j]-deltat/2))))
     res <- c(res, L %*% zp1 + L %*% zp2)
   }
   return(res)
@@ -184,27 +197,27 @@ dmatrixChi.shifted <- function(par, t, y, L, T, parind, sign.vec, ov.sign.vec, d
 
 
 # the calling code must supply the correct three parameters 
-deriv.CExp <- function(par, t, T, sign) {
+deriv.CExp <- function(par, t, Time, sign) {
   res <- array(0.,dim=c(length(par),length(t)))
 
-  res[1,] <- 0.5*par[2]*par[3]*(-t*exp(-par[1]*t) -(T-t)*sign*exp(-par[1]*(T-t)))
-  res[2,] <- 0.5*par[3]*(exp(-par[1]*t) + sign*exp(-par[1]*(T-t)))
-  res[3,] <- 0.5*par[2]*(exp(-par[1]*t) + sign*exp(-par[1]*(T-t)))
+  res[1,] <- 0.5*par[2]*par[3]*(-t*exp(-par[1]*t) -(Time-t)*sign*exp(-par[1]*(Time-t)))
+  res[2,] <- 0.5*par[3]*(exp(-par[1]*t) + sign*exp(-par[1]*(Time-t)))
+  res[3,] <- 0.5*par[2]*(exp(-par[1]*t) + sign*exp(-par[1]*(Time-t)))
 
   return(res)
 }
 
-deriv.CExp.shifted <- function(par, t, T, sign, deltat=1) {
+deriv.CExp.shifted <- function(par, t, Time, sign, deltat=1) {
   res <- array(0.,dim=c(length(par),length(t)))
   
-  res[1,] <- par[2]*par[3]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (T-(t-deltat/2))*sign*exp(-par[1]*(T-(t-deltat/2))))
-  res[2,] <- par[3]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(T-(t-deltat/2))))
-  res[3,] <- par[2]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(T-(t-deltat/2))))
+  res[1,] <- par[2]*par[3]*(-(t-deltat/2)*exp(-par[1]*(t-deltat/2)) + (Time-(t-deltat/2))*sign*exp(-par[1]*(Time-(t-deltat/2))))
+  res[2,] <- par[3]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(Time-(t-deltat/2))))
+  res[3,] <- par[2]*(exp(-par[1]*(t-deltat/2)) - sign*exp(-par[1]*(Time-(t-deltat/2))))
 
   return(res)
 }
 
-deriv.pcModel <- function(par, t, T, reference_time) {
+deriv.pcModel <- function(par, t, Time, reference_time) {
   res <- array(0.,dim=c(length(par),length(t)))
   res[1, ] <- -(t-reference_time)*exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-par[2]*(t-reference_time)))
   res[2, ] <- -exp(-par[1]*(t-reference_time))*(1-par[3])*(t-reference_time)*exp(-((par[2]))*(t-reference_time))
@@ -213,6 +226,121 @@ deriv.pcModel <- function(par, t, T, reference_time) {
 
 }
 
+
+
+#' Routine For A Factorising Matrix Fit
+#' 
+#' Performs a factorising fit on a correlation matrix
+#' 
+#' The routine expects in \code{cf$cf} a set of correlation functions.  The
+#' mapping of this linear construct to a matrix or a part of a matrix is
+#' achieved via \code{parlist}. The symmetry properties of the individual
+#' correlation functions must be encoded in \code{sym.vec}.
+#' 
+#' \code{matrixfit} will fit to every correlator in \code{cf$cf} a function
+#' \eqn{p_i p_j f(t)}. The indices \eqn{i,j} are determined from \code{parlist}
+#' and \eqn{f} is either \eqn{cosh}{\cosh} or \eqn{sinh}{\sinh}, depending on
+#' \code{sym.vec}.
+#' 
+#' The inverse covariance matrix is computed using a singular value
+#' decomposition. If the sample size N is too small, only sqrt(N) eigenvalues
+#' of the matrix are kept exactly, while all others are replaced by the mean of
+#' the rest. This helps to reduce instabilities induced by too small
+#' eigenvalues of the covariance matrix.
+#' 
+#' @param cf correlation matrix obtained with a call to \code{extrac.obs}.
+#' @param t1 lower bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param t2 upper bound for the fitrange in time (t1,t2). Counting starts with
+#' 0.
+#' @param parlist a two dimensional array of dimension 2 times number of
+#' correlators in cf. Every column assigns a pair of fit parameters to the
+#' corresponding correlator in cf. In case this is missing there are defaults
+#' provided for certain matrix sizes.
+#' @param sym.vec a vector of length number of correlators in cf indicating
+#' whether the correlation function is a cosh, a sinh or an exponential.
+#' Possible values are \code{"cosh"}, \code{"sinh"} and \code{"exp"}.  In case
+#' this is missing there are defaults provided for certain matrix sizes.
+#' @param neg.vec a vector of length number of correlators in cf indicating
+#' whether the correlation function is to be multiplied globally with a minus
+#' sign.  In case this is missing there are defaults provided for certain
+#' matrix sizes.
+#' @param useCov use correlated or uncorrelated chisquare. Default is
+#' \code{useCov=FALSE}.
+#' @param boot.fit If set to \code{FALSE}, the fit is not bootstrapped, even if
+#' the bootstrapping parameters have been set and the correlation function has
+#' been bootstrapped.  This is a useful time-saver if error information is not
+#' strictly necessary.  Of course, this affects the return values related to
+#' the bootstrap, which are set to \code{NA}.
+#' @param fit.method Can be either \code{"optim"} or \code{"lm"}. The latter
+#' works only if the library \code{"minpack.lm"} can be loaded. Default and
+#' fallback is \code{"optim"}.
+#' @param model Sets the fit model to be used in the fit. The default model
+#' is\cr \eqn{0.5 p_i p_j (\exp(-Et) \pm c* \exp(-E(Time-t)))}\cr with sign
+#' depending on \code{"cosh"} or \code{"sinh"}. c equals one except for the
+#' \code{"exp"} functional dependence. When model is set to \code{"shifted"},
+#' the fit uses the function\cr \eqn{p_i p_j (\exp(-E(t+1/2)) \mp c*
+#' \exp(-E(Time-(t+1/2))))}\cr which is useful when the original correlation
+#' function or matrix is shifted, see e.g. \link{bootstrap.gevp}.\cr In case
+#' only a single principal correlator from a GEVP is to be fitted the
+#' additional model \code{"pc"} is available. It implements\cr
+#' \eqn{\exp(-E(t-t_0))(A + (1-A)\exp(-DeltaE(t-t_0))}\cr with \eqn{t_0} the
+#' reference timesclice of the GEVP. See \link{bootstrap.gevp} for details.
+#' @param autoproceed When the inversion of the variance-covariance matrix
+#' fails, the default behaviour is to abort the fit. Setting this to
+#' \code{TRUE} means that the fit is instead continued with a diagonal inverse
+#' of the variance-covariance matrix.
+#' @param every Fit only a part of the data points. Indices that are not
+#' multiples of \code{every} are skipped. If no value is provided, all points
+#' are taken into account.
+#' @return returns an object of class \code{matrixfit} with entries: \item{CF}{
+#' object of class cf which contains the mean correlation functions} \item{M}{
+#' inverse variance-covariance matrix for weighted Chi squared minimization}
+#' \item{L}{squre root of \code{M}.} \item{parind}{indices in the parameter
+#' vector used for the different matrix combinations} \item{sign.vec}{vector
+#' of signs} \item{ii}{vector of vector indices giving the columns of the
+#' correlation function arrays (CF above, say), which are contained in the fit
+#' range} \item{opt.res}{return value of the minimization (see ?optim) on the
+#' original data.} \item{t0}{Result of the chisqr fit on the original data.
+#' \code{t0} is a vector of length npar+1, where \code{npar} the number of fit
+#' parameters. The last value is the chisqr value.} \item{t}{Bootstrap
+#' samples of the \code{R} Chi squared minimizations of length(par)+1. \code{t}
+#' has dimension \eqn{R x (npar+1)}, where \code{R} is the number of bootstrap
+#' samples and \code{npar} the number of fit parameters. The last column
+#' corresponds to the chisquare values.} \item{se}{Bootstrap estimate of
+#' standard error for all parameters. \code{se} is a vector of length
+#' \code{npar}, where \code{npar} the number of fit parameters.}
+#' \item{useCov}{whether covariances in the data were taken into account}
+#' \item{invCovMatrix}{inverse of covariance matrix or inverse variance
+#' weighted if useCov=FALSE} \item{Qval}{real number between 0 and 1 giving
+#' the "quality" of the fit} \item{chisqr}{total Chi squared of the fit}
+#' \item{dof}{fit degrees of freedom} \item{mSize}{integer size of the
+#' matrix which was fitted} \item{cf}{object of type cf which contains,
+#' amongst other objects, cf$cf which is a concatenated array of raw
+#' correlation functions where each row is one of N observations and there are
+#' mSize*Time columns (see ?extract.obs)} \item{boot.R}{number of bootstrap
+#' samples} \item{boot.l}{block size for blocked bootstrap} \item{t1}{
+#' beginning of fit range} \item{t2}{end of fit range} \item{parlist}{array
+#' of parameter combinations for the matrix fit} \item{sym.vec}{vector of
+#' strings indicating the functional form of correlation functions which were
+#' fitted} \item{seed}{RNG seed for bootstrap procedure} \item{model}{see
+#' input.} \item{fit.method}{see input.} \item{reference_time}{The GEVP
+#' reference time for the principal correlator model}
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link{cf}}, \code{\link{bootstrap.cf}}
+#' @references C. Michael, `hep-lat/9412087hep-lat/9412087`
+#' @keywords optimize ts
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
+#' fitres <- matrixfit(cf=samplecf, t1=16, t2=24, useCov=FALSE,
+#'                     parlist=array(c(1,1), dim=c(2,1)),
+#'                     sym.vec=c("cosh"), fit.method="lm")
+#' summary(fitres)
+#' plot(fitres)
+#' 
+#' @export matrixfit
 matrixfit <- function(cf, t1, t2,
                       parlist,
                       sym.vec,
@@ -317,7 +445,7 @@ matrixfit <- function(cf, t1, t2,
   }
   
   if(dim(parlist)[2] != mSize) {
-    cat(mSize, dim(parlist)[2], "\n")
+    warning(mSize, " ", dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")
   }
   if(length(sym.vec) != mSize) {
@@ -398,7 +526,7 @@ matrixfit <- function(cf, t1, t2,
   }
   else {
     j <- which(parlist[1,]==1 & parlist[2,]==1)
-    par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$T)
+    par[1] <- invcosh(CF$Cor[t1p1+(j-1)*Thalfp1]/CF$Cor[t1p1+(j-1)*Thalfp1+1], t=t1p1, cf$Time)
     ## catch failure of invcosh
     if(is.na(par[1]) || is.nan(par[1])) par[1] <- 0.2
     ## the amplitudes we estimate from diagonal elements
@@ -448,18 +576,18 @@ matrixfit <- function(cf, t1, t2,
   opt.res <- NA
   rchisqr <- 0.
   if(lm.avail) {
-    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, T=cf$Time, deltat=deltat,
+    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac=dfitfn, t=CF$t[ii], y=CF$Cor[ii], L=LM, Time=cf$Time, deltat=deltat,
                       parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii], reference_time=reference_time,
                       control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
+      warning(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
     rchisqr <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn,
                      method="BFGS", control=list(maxit=500, parscale=par, ndeps=rep(1.e-8, times=length(par)), REPORT=50),
-                     t=CF$t[ii], y=CF$Cor[ii], M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], reference_time=reference_time,
+                     t=CF$t[ii], y=CF$Cor[ii], M=M, Time=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], reference_time=reference_time,
                      ov.sign.vec=ov.sign.vec[ii], deltat=deltat)
     rchisqr <- opt.res$value
   }
@@ -473,7 +601,7 @@ matrixfit <- function(cf, t1, t2,
   opt.tsboot <- NA
   if(boot.fit) {
     opt.tsboot <- apply(X=cf$cf.tsboot$t[,ii], MARGIN=1, FUN=fit.formatrixboot, par=opt.res$par, t=CF$t[ii], deltat=deltat,
-                        M=M, T=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii],
+                        M=M, Time=cf$Time, parind=parind[ii,], sign.vec=sign.vec[ii], ov.sign.vec=ov.sign.vec[ii],
                         L=LM, lm.avail=lm.avail, fitfn=fitfn, dfitfn=dfitfn, reference_time=reference_time)
   }
   N <- length(cf$cf[,1])
@@ -510,6 +638,11 @@ matrixfit <- function(cf, t1, t2,
 #' @param ... Graphical parameters to be passed on to \link{plot} or \link{plotwitherror}.
 #' 
 #' @seealso \code{\link{matrixfit}}
+#'
+#' @return
+#' Returns no value, generated only plots.
+#' 
+#' @export
 plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab = "y",
                             do.qqplot = TRUE, plot.raw = TRUE, rep = FALSE, col, every, ...) {
   mfit <- x
@@ -517,8 +650,8 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
   parind <-  mfit$parind
   sign.vec <- mfit$sign.vec
   ov.sign.vec <- mfit$ov.sign.vec
-  T <- mfit$cf$T
-  Thalfp1 <- T/2+1
+  Time <- mfit$cf$Time
+  Thalfp1 <- Time/2+1
   deltat <- 1
   if(mfit$model == "shifted" && any(names(mfit$cf) == "deltat")) {
     deltat <- mfit$cf$deltat
@@ -557,20 +690,20 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
     pars <- c(par[1],par[par.ind[2]],par[par.ind[3]])
     sgn <- sign.vec[(i-1)*Thalfp1+1]
     
-    if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
-    else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, T=T, reference_time=mfit$reference_time)
-    else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
+    if(mfit$model == "shifted") y <- pars[2]*pars[3]*( exp(-pars[1]*(tx-deltat/2)) - sgn*exp(-pars[1]*(Time-(tx-deltat/2))))
+    else if(mfit$model == "pc") y <- pcModel(par=par[1:3], t=tx, Time=Time, reference_time=mfit$reference_time)
+    else y <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(Time-tx)))
     
     # yp is the physical exponential in case we want to look at the ratio plot
     if(!plot.raw) {
       if(mfit$model == "shifted") {
-        yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(T-(tt-deltat/2))))
+        yp <- pars[2]*pars[3]*( exp(-pars[1]*(tt-deltat/2)) - sgn*exp(-pars[1]*(Time-(tt-deltat/2))))
       }
       else if(mfit$model == "pc") {
         yp <- exp(-par[1]*(tt - mfit$reference_time))*par[3]
       }
       else {
-        yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(T-tt)))
+        yp <- 0.5*pars[2]*pars[3]*( exp(-pars[1]*tt) + sgn*exp(-pars[1]*(Time-tt)))
       }
     }
     else {
@@ -580,21 +713,21 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
     lwd <- c(1.5)
     if(plot.errorband) {
 
-      dummyfn <- function(par, tx, T, sgn, deltat, reference_time) {
-        0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(T-tx)))
+      dummyfn <- function(par, tx, Time, sgn, deltat, reference_time) {
+        0.5*pars[2]*pars[3]*( exp(-pars[1]*tx) + sgn*exp(-pars[1]*(Time-tx)))
       }
       if(mfit$model == "shifted") {
-        dummyfn <- function(par, tx, T, sgn, deltat, reference_time) {
-          pars[2]*pars[3]*( exp(-pars[1]*(tx - deltat/2)) - sgn*exp(-pars[1]*(T-(tx-deltat/2))))
+        dummyfn <- function(par, tx, Time, sgn, deltat, reference_time) {
+          pars[2]*pars[3]*( exp(-pars[1]*(tx - deltat/2)) - sgn*exp(-pars[1]*(Time-(tx-deltat/2))))
         }
       }
       else if(mfit$model == "pc") {
-        dummyfn <- function(par, tx, T, sgn, deltat, reference_time) {
-          pcModel(par=par[1:3], t=tx, T=T, reference_time=reference_time)
+        dummyfn <- function(par, tx, Time, sgn, deltat, reference_time) {
+          pcModel(par=par[1:3], t=tx, Time=Time, reference_time=reference_time)
         }        
       }
 
-      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, T=T, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=mfit$cf$error_fn, MARGIN=1)
+      se <- apply(X=apply(X=mfit$t[, par.ind], MARGIN=1, FUN=dummyfn, tx=tx, Time=Time, deltat=deltat, sgn=sgn, reference_time=mfit$reference_time), FUN=mfit$cf$error_fn, MARGIN=1)
       
       polyval <- c( (y + se), rev(y - se) )
       ## any of those not on the plot? replace to avoid wrongly drawn band!
@@ -637,6 +770,11 @@ plot.matrixfit <- function (x, plot.errorband = FALSE, ylim, xlab = "t/a", ylab 
 #'
 #' @param object Object of type \link{matrixfit}
 #' @param ... Generic parameters to pass on.
+#'
+#' @return
+#' No return value.
+#' 
+#' @export
 summary.matrixfit <- function (object, ...) {
   mfit <- object
   if(mfit$model == "pc") {
@@ -700,25 +838,25 @@ summary.matrixfit <- function (object, ...) {
   }
 }
 
-fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1, reference_time=0) {
+fit.formatrixboot <- function(cf, par, t, M, LM, Time, parind, sign.vec, ov.sign.vec, lm.avail=FALSE, fitfn, dfitfn, deltat=1, reference_time=0) {
   if(lm.avail && !missing(LM)) {
-    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, T=T, parind=parind, sign.vec=sign.vec,
+    opt.res <- minpack.lm::nls.lm(par = par, fn = fitfn, jac = dfitfn, t=t, y=cf, L=LM, Time=Time, parind=parind, sign.vec=sign.vec,
                       deltat=deltat, ov.sign.vec=ov.sign.vec, reference_time=reference_time,
                       control = minpack.lm::nls.lm.control(ftol=1.e-8, ptol=1.e-8, maxiter=500, maxfev=5000))
     if( !(opt.res$info %in% c(1,2,3) ) ){
-      cat(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
+      warning(sprintf("Termination reason of nls.lm opt.res$info: %d\n", opt.res$info))
     }
     opt.res$value <- opt.res$rsstrace[length(opt.res$rsstrace)]
   }
   else {
     opt.res <- optim(par, fn = fitfn, gr = dfitfn, reference_time=reference_time,
                      method="BFGS", control=list(maxit=500, parscale=par, REPORT=50),
-                     t=t, y=cf, M=M, T=T, parind=parind, sign.vec=sign.vec, deltat=deltat,
+                     t=t, y=cf, M=M, Time=Time, parind=parind, sign.vec=sign.vec, deltat=deltat,
                      ov.sign.vec=ov.sign.vec)
   }
   ##opt.res <- optim(opt.res$par, fn = matrixChisqr, gr = dmatrixChisqr,
   ##                 method="BFGS", control=list(maxit=500, parscale=opt.res$par, REPORT=50),
-  ##                 t=t, y=apply(cf,2,mean), M=M, T=T, parind=parind, sign.vec=sign.vec)
+  ##                 t=t, y=apply(cf,2,mean), M=M, Time=Time, parind=parind, sign.vec=sign.vec)
   return(c(opt.res$par, opt.res$value, opt.res$niter))
 }
 
@@ -748,6 +886,8 @@ fit.formatrixboot <- function(cf, par, t, M, LM, T, parind, sign.vec, ov.sign.ve
 #'   correlation function \eqn{C(t)} as \eqn{M(t) + C(t) - \bar{C}(t)}, where
 #'   \eqn{M(t)} is the fit model and \eqn{\bar{C}(t)} denotes the average over
 #'   the (bootstrap) samples. Only time slices earlier than the fit are altered.
+#'
+#' @export
 subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
   if(inherits(cf, "cf") && inherits(mfit, "matrixfit")) {
@@ -773,7 +913,7 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
 
     tt <- mfit$CF$t[ii]
     ## compute the difference of mean data to model at times smaller than fit range
-    dz <- mfit$cf$cf0[ii] - nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+    dz <- mfit$cf$cf0[ii] - nfac*matrixModel(par=mfit$opt.res$par, t=tt, Time=cf$Time,
                                         parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
                                         ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
     cf$subtracted.values <- dz
@@ -782,13 +922,13 @@ subtract.excitedstates <- function(cf, mfit, from.samples=FALSE) {
       cf$cf[i,ii] <- mfit$cf$cf[i,ii]-dz
     }
     if(from.samples && cf$boot.samples) {
-      cf$cf0[ii] <- nfac*matrixModel(par=mfit$opt.res$par, t=tt, T=cf$Time,
+      cf$cf0[ii] <- nfac*matrixModel(par=mfit$opt.res$par, t=tt, Time=cf$Time,
                                 parind=mfit$parind[ii,], sign.vec=sign.vec[ii],
                                 ov.sign.vec=mfit$ov.sign.vec[ii], deltat=deltat)
       cf$cf.tsboot$t0[ii] <- cf$cf0[ii]
       for(i in 1:cf$boot.R) {
         cf$cf.tsboot$t[i,ii] <- nfac*matrixModel(par=mfit$t[i, c(1:length(mfit$opt.res$par))],
-                                            t=tt, T=cf$Time, parind=mfit$parind[ii,],
+                                            t=tt, Time=cf$Time, parind=mfit$parind[ii,],
                                             sign.vec=mfit$sign.vec[ii],
                                             ov.sign.vec=sign.vec[ii],
                                             deltat=deltat)

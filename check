@@ -1,10 +1,16 @@
 #!/bin/bash
-# Copyright © 2019 Martin Ueding <dev@martin-ueding.de>
+# Copyright © 2019 Martin Ueding <mu@martin-ueding.de>
 
 set -e
 set -u
 
 version=$(grep Version: DESCRIPTION | cut -d ' ' -f 2)
 
+./document
 R CMD build .
-R CMD check hadron_$version.tar.gz
+R CMD check --as-cran hadron_$version.tar.gz
+
+# Unfortunately the `R CMD check` does not reflect warnings in the exit code.
+# Also the Travic CI setting `warnings_are_errors` does not have the desired
+# effect. We therefore need to check the output for the word `WARNING`.
+! grep WARNING hadron.Rcheck/00check.log

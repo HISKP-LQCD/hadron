@@ -1,4 +1,3 @@
-
 pcacsym <- function(data, t, T2, pa=FALSE) {
   # t and T2 in R counting (starting with 1)
   # so t must be larger than 1
@@ -30,8 +29,13 @@ pcacsym <- function(data, t, T2, pa=FALSE) {
 #' @param data 'Effectivemasses` from correlators
 #' @param from initial value of fit range
 #' @param to final value of fit range
-#' @param T2 Time extend
+#' @param T2 Time extent
 #' @param pa Boolean. 
+#'
+#' @return
+#' Single numeric value, the mass.
+#' 
+#' @export
 pcacfit <- function(data, from, to, T2, pa=FALSE) {
   mass <- 0.
   for(t in from:to) {
@@ -43,6 +47,35 @@ pcacfit <- function(data, from, to, T2, pa=FALSE) {
 
 
 
+
+
+#' Computes the pcac mass
+#' 
+#' Computes the pcac mass from the PP and the AP (PA) correlators and estimates
+#' the errors using the gamma method
+#' 
+#' the symmetric difference operator is used.
+#' 
+#' @param psfilename filename of the file from which to read the PP correlator.
+#' It is supposed to be in GWC code format. mandatory.
+#' @param apfilename filename of the file from which to read the AP correlator.
+#' It is supposed to be in GWC code format. Either PA or AP correlator (or
+#' both) must be given. If both are given, both are used by averaging.
+#' @param pafilename filename of the file from which to read the PA correlator.
+#' It is supposed to be in GWC code format. Either PA or AP correlator (or
+#' both) must be given. If both are given, both are used by averaging.
+#' @param from the effective mass is computed starting with t=from
+#' @param to the effective mass is computed ending with t=to
+#' @param fit logical. if TRUE a fit is performed to all t-values to determine
+#' the pcac mass.
+#' @param skip no of measurements to skip at the beginning of the file
+#' @param S passed to \code{uwerr}, see documentation of \code{\link{uwerr}}.
+#' @param plotit logical. if TRUE a plot is drawn.
+#' @return returns a data.frame with the results. The object is also of class
+#' \code{massfit} which can be plotted using the generic function \code{plot}.
+#' @author Carsten Urbach, \email{carsten.urbach@@liverpool.ac.uk}
+#' @keywords optimize ts
+#' @export pcac
 pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0, plotit=F, S=1.5) {
   debug <- FALSE
   if(!missing(psfilename)) {
@@ -92,7 +125,7 @@ pcac <- function(psfilename, apfilename, pafilename, from=3, to=3, fit=F, skip=0
   Zap <- array(axps$ap, dim=c(T2, length(axps$ap)/T2))
   if(pa) Zpa <- array(psax$pa, dim=c(T2, length(psax$pa)/T2))
 
-  cat("Found", length(psscar$ps)/T2, "measurements, skipping", skip, " \n")
+  message("Found ", length(psscar$ps)/T2, " measurements, skipping ", skip, " \n")
 
   rm(psscar)
   rm(axps)
