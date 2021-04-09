@@ -1,5 +1,6 @@
 #' Reweighting factor container
 #'
+#' @details
 #' This function `rw()` creates containers for reweighting factors
 #' of class `rw`. This class is particularly designed to store reweighting 
 #' factors for each gauge configuration, that can be applied on 
@@ -8,12 +9,13 @@
 #' and not on bootstrapped correlation function. Multiplication operation 
 #' is defined for this class, as well as increasing statistics and \link{is.rw}.
 #'
-#' @details
-#'
 #' @family rw constructors
 #'
+#' @examples
+#' x <- rw()
+#' 
 #' @export
-rw <- function () {
+rw <- function() {
   rw <- list()
   class(rw) <- append(class(rw), 'rw')
   return (rw)
@@ -40,6 +42,7 @@ rw_meta <- function (.rw = rw(), conf.index ) {
 #' rw metadata mixin constructor
 #'
 #' @param .rw `rw` object to extend.
+#' @param rw vector of reweighting factors
 #' @param conf.index list of Integers, containing the index of gauge configurations
 #' @param max_value value used to be for normalization
 #' @param stochastic_error error coming from the stochastic samples for each gauge conf
@@ -64,6 +67,19 @@ rw_orig <- function (.rw = rw(), rw, conf.index, max_value, stochastic_error) {
   return (.rw)
 }
 
+#' rw_unit
+#'
+#' generates an 'rw' object with all elements set to 1.
+#' 
+#' @param .rw  an object of class 'rw'
+#' @param conf.index integer vector of configuration indices
+#'
+#' @return
+#' an object of class 'rw' with all elements equal to unity
+#'
+#' @examples
+#' x <- rw_unit(conf.index=c(1,2,3,4))
+#' 
 #' @export
 rw_unit <- function (.rw = rw(), conf.index) {
   stopifnot(inherits(.rw, 'rw'))
@@ -148,11 +164,12 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 
 #' Arithmetically multiply reweighting factors
 #'
-#' @param rw1,rw2 `rw_orig` objects.
+#' @param rw1 `rw_orig` object
+#' @param rw2 `rw_orig` object
 #'
 #' @export
 '*.rw' <- function (rw1, rw2) {
-  multiply.rw(cf1, cf2, nf1 = 1, nf2 = 1)
+  multiply.rw(rw1, rw2, nf1 = 1, nf2 = 1)
 }
 
 
@@ -160,6 +177,10 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 #'
 #' @param x Object, possibly of class `rw`.
 #'
+#' @examples
+#' x <- c()
+#' is.rw(x)
+#' 
 #' @export
 is.rw <- function (x) {
   inherits(x, "rw")
@@ -169,12 +190,11 @@ is.rw <- function (x) {
 #' Plot a reweighting factor function
 #'
 #' @param x `rw` object
+#' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #' @param rep See \code{\link{plotwitherror}}.
 #'
-#' @inheritParams plotwitherror
-#'
 #' @export
-plot.rw <- function(x, rep = FALSE, ...) {
+plot.rw <- function(x, ..., rep = FALSE) {
   rw <- x
   stopifnot(inherits(rw, 'rw'))
   negs <- which(rw$rw < 0)
@@ -204,7 +224,7 @@ plot.rw <- function(x, rep = FALSE, ...) {
 #'                           the replicas (chain of reweighting 
 #'                           factors in simulation time) has  
 #'                           to be reversed.
-#' @param reverse2 `boolean`
+#' @param reverse2 `boolean`, see 'reverse1'
 #'
 #' @examples
 #' # Suppose we have reweighting factors in replicum A from 0 to 500
@@ -217,7 +237,7 @@ plot.rw <- function(x, rep = FALSE, ...) {
 #' # combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
 #' # rw500 from A) 
 #' @export
-addStat.rw <- function(rw1, rw2,reverse1=FALSE, reverse2=FALSE) {
+addStat.rw <- function(rw1, rw2, reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))
   stopifnot(inherits(rw2, 'rw'))
 

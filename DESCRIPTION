@@ -55,7 +55,6 @@ Description: Toolkit to perform statistical analyses of correlation
    <https://inspirehep.net/literature/1792113>) are implemented.
    In addition, input/output and plotting routines are available.
 Imports:
-    dplyr,
     abind,
     boot,
     dplyr,

@@ -35,6 +35,39 @@ NULL
 #'
 NULL
 
+#' Sample rw data
+#'
+#' @description
+#' Sample data for reweighting coefficients
+#' 
+#' @name samplerw
+#'
+#' @docType data
+#' @format list of 4 elements: "conf.index" "rw" "max_value" "stochastic_error"
+#' @keywords datasets
+#' @examples
+#'
+#' data("samplerw")
+#'
+NULL
+
+#' Sample inverse rw data
+#'
+#' @description
+#' Sample data for inverse reweighting coefficients
+#' 
+#' @name samplerw_inverse
+#'
+#' @docType data
+#' @format list of 4 elements: "conf.index" "rw" "max_value" "stochastic_error"
+#' @keywords datasets
+#' @examples
+#'
+#' data("samplerw_inverse")
+#'
+NULL
+
+
 #' Internal Hadron Functions
 #' 
 #' Internal hadron functions

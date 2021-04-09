@@ -663,11 +663,15 @@ readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.
 
   return (invisible(ret))
 }
+
 #' @title reading reweighting factors from a list of gauge configurations
 #'        and random samples from ASCII files
 #' @param file_names_to_read list of filenames for the reweighting factors
 #' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
 #' @param nsamples number of stochastic samples used for computing the reweighting factors
+#' @param monomial_id integer ID of the monomial
+#'
+#' @export
 read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
 {
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
