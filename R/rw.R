@@ -9,7 +9,7 @@
 #' is defined for this class, as well as increasing statistics and \link{is.rw}.
 #'
 #' @details
-#'#'
+#'
 #' @family rw constructors
 #'
 #' @export
@@ -88,6 +88,7 @@ rw_unit <- function (.rw = rw(), conf.index) {
 #' # The empty rw object must be empty:
 #' is_empty.rw(rw())
 #'
+#' @export
 is_empty.rw <- function (.rw) {
   setequal(class(.rw), class(rw())) &&
     is.null(names(.rw))
