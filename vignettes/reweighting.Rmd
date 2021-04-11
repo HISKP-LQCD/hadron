@@ -1,0 +1,140 @@
+---
+title: "Reweighting for correlation functions"
+author: "Ferenc Pittler"
+output:
+  rmarkdown::html_vignette
+#pdf_document:
+#    #citation_package: biblatex
+#    toc: yes
+    
+#bibliography: gevp.bib
+#link_citation: yes
+vignette: >
+  %\VignetteIndexEntry{Reweighting for correlation functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(hadron)
+```
+# Definition of reweighting factors
+
+The configurations produced in lattice simulation
+have the Boltzmann weight $e^{-S_g}D_f$ with:
+
+$$
+D_f(\kappa,\mu_l,m_s,m_c)=\mathrm{det}[D_l^2(\kappa,\mu_l)]\mathrm{det}[D_{ND}(\kappa,m_s,m_c)],
+$$
+where $D_l$ and $D_{ND}$ is the light and non-degenerate twisted mass Wilson Dirac operator respectively, $\kappa$ is related to the bare quark mass and determined by the condition of maximal-twist, $\mu_l,\mu_s,\mu_c$ are the twisted quark masses.  
+
+
+To compute for example the pion correlation function we compute
+
+$$
+C(t)=\langle \mathrm{Tr}\left(D_lD_l^{\dagger}(\kappa,\mu_l)\right)^{-1}(t,t_{src})\rangle,
+$$
+where the average $\langle\rangle$ is taken with 
+respect to the Boltzmann measure defined above and the trace is taken in Dirac, Color and spatial indices.
+
+The way we organize the computation is to first produce configurations and then compute various correlation functions as measurements. In case we want to change slightly the mass parameters we have to 
+
+1. Change $\kappa$,$\mu_l$ is the correlation function (cheap)
+
+2. Change $\kappa$,$\mu_l$ in the Boltzmann weight (expensive).
+
+To avoid generating brand-new configurations we estimate the following ratios of determinants called the reweighting factor:
+
+$$
+R(\kappa,\mu_l,\tilde{\kappa},\mu_l,\tilde{\mu_l})
+=
+1/\mathrm{det}[
+D_l^{\dagger}(\kappa,\mu_l)
+\left(D_l(\tilde{\kappa},\tilde{\mu_l})
+      D_l(\tilde{\kappa},\tilde{\mu_l})^{\dagger}\right)^{-1}
+D_l(\kappa,\mu_l)
+]
+$$
+from parameter set $\kappa,\mu_l$ to ${\tilde \kappa},{\tilde \mu_l}$.
+
+The $R$ factor can be computed stochastically using the tmLQCD software package.
+
+# Apply reweighting factors to correlation functions
+
+The aim is to compute for example the pion correlator at the parameter set ${\tilde \kappa},{\tilde \mu_l}$ using ensembles of configurations at $\kappa, \mu_l$. As an input we need
+
+1. Pion correlator at ${\tilde \kappa},{\tilde \mu_l}$ on the configurations with parameters $\kappa, \mu_l$.
+
+2. The stochastically computed reweighting factor R
+
+The application of the reweighting factor proceeds in the following way:
+
+$$
+C_{rew}=\langle{\mathcal O}
+\left({\tilde \kappa},{\tilde \mu_l}\right)
+\rangle_{{\tilde \kappa},{\tilde \mu_l}}=
+\langle{\mathcal O}\left({\tilde \kappa},{\tilde \mu_l}\right)R\rangle_{\kappa,\mu_l}/
+\langle R\rangle_{\kappa,\mu_l},
+$$
+
+where ${\mathcal O}$ is the pion correlator for a given gauge configuration.
+
+# Data Type `rw` for Correlation Functions
+
+`hadron` provides a class for reweighting factors, which 
+is called `rw`.  There is a routine called `read.rw`, which 
+reads in the reweighting factors produced using the `tmLQCD`
+code package in a simple text format.
+
+# Producing reweighted correlation function
+
+
+1. Step:
+
+Reading reweighting factors for a particular set of gauge 
+configurations and monomial ids (represents the light doublet or non-degenerate heavy-doublet Dirac operators).
+
+```{r,eval=FALSE}
+
+reweightingdata_1 <- read.rw(filename_list, 
+                             seq(configuration_id_start,
+                                 configuration_id_end,
+                                 configuration_id_step),
+                             n_stochastic_samples,
+                             monomial_id)
+```
+Note that filename_list can be generated as described in the `GEVP`
+vignette. Note that the stochastic averaging is done automatically. 
+
+2. Step:
+
+Combination of reweighting factors in case we reach the target
+parameters ($\tilde{\kappa},\tilde{\mu_l}$) using intermediate steps as well. 
+To perform this we implemented the unit reweighting factor 
+and the multiplication of two reweighting factors.
+
+```{r, eval=FALSE}
+ret  <- rw_unit(unit, rewfactor[[1]]$conf.index)
+for (step in 1:nsteps){
+  ret <- multiply.rw(ret, rewfactor[[step]])
+}
+```
+
+3. Step:
+
+Application of the reweighting factor to a `cf` object with 
+attributes `cf_indexed` and `cf_orig`. We check explicitely 
+whether the reweighting factors and the correlators are computed
+for exactly the same set of configurations in the same order. 
+
+```{r,eval=FALSE}
+cf_pp_reweighted <-  bootstrap_rw.cf (ppcorrelator, 
+                                      rewfactor, 
+                                      boot_R)
+```
+
+Note that it is not possible to resample the reweighted correlation function after it is determined so we invalidate the attribute `cf_orig` of the reweighted correlation function.
+
+Note that after the three steps are completed you can use `hadron` routines like `new_matrixfit` in the same way as for the objects `cf_boot`.
+
