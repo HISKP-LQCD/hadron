@@ -568,6 +568,7 @@ bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom",
                 boot.l = boot.l,
                 seed = seed,
                 sim = sim,
+                endcorr = endcorr,
                 cf.tsboot = rwcf.tsboot,
                 resampling_method= "bootstrap")
 
@@ -821,6 +822,7 @@ jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
                 boot.l = cf.tsboot$l,
                 seed = 0,
                 sim = 'geom',
+                endcorr = FALSE,
                 cf.tsboot = cf.tsboot,
                 resampling_method = 'jackknife')
 
