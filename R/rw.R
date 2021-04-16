@@ -145,7 +145,10 @@ is_empty.rw <- function (.rw) {
 #'
 #'
 #' @examples
-#' # product_of_rew_factors <- multiply.rw(rew_factor1, rew_factor2 )
+#' data(samplerw)
+#' ## the following is not useful, but
+#' ## explains the usage
+#' product_of_rew_factors <- multiply.rw(rw1=samplerw, rw2=samplerw)
 #'
 #'
 #' @return
