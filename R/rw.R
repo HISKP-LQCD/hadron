@@ -145,7 +145,7 @@ is_empty.rw <- function (.rw) {
 #'
 #'
 #' @examples
-#' product_of_rew_factors <- multiply.rw(rew_factor1, rew_factor2 )
+#' # product_of_rew_factors <- multiply.rw(rew_factor1, rew_factor2 )
 #'
 #'
 #' @return
