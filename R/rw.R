@@ -105,15 +105,9 @@ rw_orig <- function (.rw = rw(), rw, conf.index, max_value, stochastic_error) {
 rw_unit <- function (.rw = rw(), conf.index) {
   stopifnot(inherits(.rw, 'rw'))
 
-  .rw$conf.index <- conf.index
-  .rw$rw <- rep(1.0,length(conf.index))
-  .rw$max_value <- 1.0
-  #unit rw factor does not have error from the stochastic samples
-  .rw$stochastic_error <- rep(0.0, length(conf.index))
+  #we set the stochastic error to zero
+  .rw <- rw_orig (.rw, rep(1.0, length(conf.index)), conf.index, 1.0, rep(0.0, length(conf.index)))
 
-  class(.rw) <- append(class(.rw), 'rw_orig')
-  class(.rw) <- append(class(.rw), 'rw_meta')
-  class(.rw) <- append(class(.rw), 'rw_norm')
   return (.rw)
 }
 
