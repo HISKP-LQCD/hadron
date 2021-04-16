@@ -13,7 +13,10 @@
 #'
 #' @examples
 #' x <- rw()
-#' 
+#'
+#' @return
+#' returns an object of S3 class \code{rw} derived from a \code{list}
+#'
 #' @export
 rw <- function() {
   rw <- list()
@@ -28,6 +31,15 @@ rw <- function() {
 #'
 #' @family rw constructors
 #'
+#'
+#' @return 
+#' returns the input object of class \code{rw} with the meta data mixin added
+#'
+#'
+#' @example
+#' newrw <- rw_meta(rw, conf.index=gauge_conf_list)
+#'
+#' 
 #' @export
 rw_meta <- function (.rw = rw(), conf.index ) {
    stopifnot(inherits(.rw, 'rw'))
@@ -47,6 +59,15 @@ rw_meta <- function (.rw = rw(), conf.index ) {
 #' @param max_value value used to be for normalization
 #' @param stochastic_error error coming from the stochastic samples for each gauge conf
 #' @family rw constructors
+#'
+#'
+#' @return
+#' returns the input object of class \code{rw} with the original data mixin added
+#'
+#'
+#' @examples
+#' rw_factor <- rw_orig(rw_factor, rw = rw_data, conf.index=gauge_conf_list, max_value = max(rw_data), stochastic_error=rw_data_error)
+#'
 #'
 #' @export
 rw_orig <- function (.rw = rw(), rw, conf.index, max_value, stochastic_error) {
@@ -104,6 +125,9 @@ rw_unit <- function (.rw = rw(), conf.index) {
 #' # The empty rw object must be empty:
 #' is_empty.rw(rw())
 #'
+#' @return 
+#' returns \code{FALSE} if \code{.rw} contains no data, \code{TRUE} otherwise
+#'
 #' @export
 is_empty.rw <- function (.rw) {
   setequal(class(.rw), class(rw())) &&
@@ -124,6 +148,11 @@ is_empty.rw <- function (.rw) {
 #' Note that in the process of multiplication we do not take
 #' care of the normalization of the reweighting objects, since
 #' it will drop out, when applying it to a correlation function.
+#'
+#'
+#' @examples
+#' product_of_rew_factors <- multiply.rw(rew_factor1, rew_factor2 )
+#'
 #'
 #' @return
 #' The value is
@@ -167,6 +196,10 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 #' @param rw1 `rw_orig` object
 #' @param rw2 `rw_orig` object
 #'
+#' @return 
+#' The value is
+#' \deqn{rw1 * rw2 \,.}
+#
 #' @export
 '*.rw' <- function (rw1, rw2) {
   multiply.rw(rw1, rw2, nf1 = 1, nf2 = 1)
@@ -180,6 +213,9 @@ multiply.rw <- function(rw1, rw2, nf1 = 1, nf2 = 1) {
 #' @examples
 #' x <- c()
 #' is.rw(x)
+#'
+#' @return
+#' Returns TRUE if the input object is of class `rw`, FALSE otherwise.
 #' 
 #' @export
 is.rw <- function (x) {
@@ -193,10 +229,14 @@ is.rw <- function (x) {
 #' @param ... Generic graphical parameter to be passed on to \link{plotwitherror}
 #' @param rep See \code{\link{plotwitherror}}.
 #'
+#' @return
+#' Invisibly returns a data.frame with named columns `idx` with the indices of the gauge configurations , `rw` the mean values of the reweighting factor and `Err` its standard error calculated from the available stochastic samples.
+#'
 #' @export
 plot.rw <- function(x, ..., rep = FALSE) {
   rw <- x
   stopifnot(inherits(rw, 'rw'))
+  stopifnot(inherits(rw, 'rw_meta'))
   negs <- which(rw$rw < 0)
   neg.vec <- rep(1,times=length(rw$rw))
   neg.vec[negs] <- -1
@@ -207,11 +247,11 @@ plot.rw <- function(x, ..., rep = FALSE) {
   val <- rw$rw/mean(rw$rw)
   err <- rw$stochastic_error
 
-  df <- data.frame(t = c(1:length(val)),
-                   CF = val,
+  df <- data.frame(idx = rw$conf.index,
+                   rw = val,
                    Err = err)
 
-  plotwitherror(x = c(1:length(val)), y = neg.vec * df$CF, dy = df$Err, col=colneg, rep = rep, ...)
+  plotwitherror(x = df$idx, y = neg.vec * df$rw, dy = df$Err, col=colneg, rep = rep, ...)
 
   return(invisible(df))
 }
@@ -236,6 +276,10 @@ plot.rw <- function(x, ..., rep = FALSE) {
 #' # which means
 #' # combined=(rw500 from B, rw496 from B,...,rw004 from B, rw000 from A, ..
 #' # rw500 from A) 
+#'
+#' @return an object of class \code{rw} with the statistics of the two input
+#' \code{rw} objects combined
+#'
 #' @export
 addStat.rw <- function(rw1, rw2, reverse1=FALSE, reverse2=FALSE) {
   stopifnot(inherits(rw1, 'rw'))
