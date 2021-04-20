@@ -66,8 +66,8 @@ rw_meta <- function (.rw = rw(), conf.index ) {
 #'
 #'
 #' @examples
-#' rw_factor <- rw_orig(rw_factor, rw = rw_data, conf.index=gauge_conf_list, max_value = max(rw_data), stochastic_error=rw_data_error)
-#'
+#' rw_data <- rnorm(20,100,2) #synthetic data for rw factors
+#' rw_factor <- rw_orig( rw=rw_data, conf.index=seq(1,20), max_value= max(rw_data),stochastic_error=rep(0,20))
 #'
 #' @export
 rw_orig <- function (.rw = rw(), rw, conf.index, max_value, stochastic_error) {
