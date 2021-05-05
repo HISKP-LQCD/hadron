@@ -1358,6 +1358,40 @@ shift.cf <- function(cf, places) {
   return(invisible(cf))
 }
 
+
+avg.sparsify.cf <- function(cf, avg, sparsity){
+  if(!any(class(cf) == "cf")) {
+    stop("avg.sparsify.cf: Input must be of class 'cf'\n")
+  }
+  if( sparsity > 1 ){
+    stop("avg.sparsify.cf: Sparsification has not been implemented yet, only sparsity = 1 supported for now.\n")
+  }
+
+  Lt <- cf$Time
+  if(cf$symmetrised){
+    Lt <- cf$Time/2 + 1
+  }
+  nmeas <- length(cf$cf) / Lt
+  targetstats <- nmeas / avg
+
+  cf2 <- invalidate.samples.cf(cf)
+  cf2$cf <- cf$cf[(1:targetstats),]
+  cf2$icf <- cf$icf[(1:targetstats),]
+  
+  for( m_idx in 1:targetstats ){
+    from <- (m_idx-1)*avg + 1
+    to <- m_idx*avg
+    avg_idx <- c(from:to)
+    cf2$cf[m_idx,] <- apply(X = cf$cf[avg_idx,],
+                            MARGIN = 2,
+                            FUN = sum)/avg
+    cf2$icf[m_idx,] <- apply(X = cf$icf[avg_idx,],
+                             MARGIN = 2,
+                             FUN = sum)/avg
+  }
+  return(cf2)
+}
+
 #' Invalidate samples
 #'
 #' When a correlation function is modified, any resampling should be

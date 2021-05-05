@@ -88,6 +88,7 @@ tex.catwitherror <- function(x, dx, digits=1, with.dollar=TRUE, human.readable=T
   }
 
   if(missing(dx) && lx < 2) {
+    if( is.na(x) ) x <- 0.0
     ## just a number without error
     N <- absolute.number.digits(x, digits)
     tmp <- paste(format(round(x, digits=N), nsmall=N), sep="")
