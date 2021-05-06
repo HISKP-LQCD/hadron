@@ -581,6 +581,8 @@ processcf <- function(dat, Lt, sym, ind.vector, symmetrise, sparsity, avg, Nmin,
   ret <- list(cf=t(Re(dat[ii,])), icf=t(Im(dat[ii,])), Time=Lt, nrStypes=1, nrObs=1, boot.samples=FALSE, jackknife.samples=FALSE,
               symmetrised=symmetrise)
   attr(ret, "class") <- c("cf", class(ret))
+  attr(ret, "class") <- c("cf_orig", class(ret))
+  attr(ret, "class") <- c("cf_meta", class(ret))
   return(invisible(ret))
 }
 #' @title reading reweighting factors for a list of gauge configuration 
@@ -1218,6 +1220,8 @@ read_bsm_temporal_phifield <- function(file, Lt, sym, path, scalars,
                    autotruncate = autotruncate)
 
   ret$scalars <- scalars
+
+  str(ret)
 
   return(invisible(ret))
 }

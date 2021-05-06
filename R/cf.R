@@ -1015,6 +1015,21 @@ add.cf <- function(cf1, cf2, a = 1.0, b = 1.0) {
   add.cf(cf1, cf2, a = 1.0, b = -1.0)
 }
 
+#' Arithmetically multiply correlators
+#'
+#' @param cf1,cf2 `cf_orig` objects.
+#'
+#' @export
+'*.cf' <- function(cf1, cf2) {
+  if(all(dim(cf1$cf) == dim(cf2$cf)) && cf1$Time == cf2$Time ) {
+    cf <- cf1
+    cf$cf <- cf1$cf * cf2$cf
+    cf <- invalidate.samples.cf(cf)
+
+    return(cf)
+  }
+}
+
 #' Divide two cf objects by each other measurement by measurement
 #'
 #' Note that no complex arithmetic is used, real and imaginary parts are 
@@ -1385,9 +1400,9 @@ avg.sparsify.cf <- function(cf, avg, sparsity){
     cf2$cf[m_idx,] <- apply(X = cf$cf[avg_idx,],
                             MARGIN = 2,
                             FUN = sum)/avg
-    cf2$icf[m_idx,] <- apply(X = cf$icf[avg_idx,],
-                             MARGIN = 2,
-                             FUN = sum)/avg
+    #cf2$icf[m_idx,] <- apply(X = cf$icf[avg_idx,],
+    #                         MARGIN = 2,
+    #                         FUN = sum)/avg
   }
   return(cf2)
 }
