@@ -1126,7 +1126,6 @@ apply_elementwise.cf <- function(cf1, cf2, `%op%` = `/`) {
     stopifnot(cf1$Time == cf2$Time)
 
     cf$cf <- cf1$cf %op% cf2$cf
-
     if( has_icf(cf1) | has_icf(cf2) ){
       stopifnot(has_icf(cf1) & has_icf(cf2))
       cf$icf <- cf1$icf %op% cf2$icf

@@ -559,7 +559,7 @@ readoutputdata <- function(filename) {
 processcf <- function(dat, Lt, sym, ind.vector, symmetrise, sparsity, avg, Nmin, autotruncate, Nmax){
   i1 <- c(2:(Lt/2))
   i2 <- c(T:(Lt/2+2))
-  ii <- c(1:(Lt/2+1))
+  ii <- c(1:(Lt))
   sign <- +1
   if(!sym) sign <- -1
 
@@ -609,7 +609,7 @@ processcf <- function(dat, Lt, sym, ind.vector, symmetrise, sparsity, avg, Nmin,
     }
   }
 
-  ret <- cf_meta(nrObs = 1, Time=Time, nrStypes = 1)
+  ret <- cf_meta(nrObs = 1, Time=Lt, nrStypes = 1)
   ret <- cf_orig(ret, cf = t(Re(dat[ii,])), icf = t(Im(dat[ii,])))
 
   if (symmetrise) {
@@ -1275,8 +1275,6 @@ read_bsm_temporal_phifield <- function(file, Lt, sym, path, scalars,
                    autotruncate = autotruncate)
 
   ret$scalars <- scalars
-
-  str(ret)
 
   return(invisible(ret))
 }
