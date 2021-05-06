@@ -20,7 +20,7 @@
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @return returns a numeric value representing the finite size correction or
 #' in case of \code{fs.a0} the corrected value for a0.
@@ -47,13 +47,15 @@ fs.qcotdelta <- function(mps, L) {
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @param a0 scattering length at finite L
 #' @return returns a numeric value representing the finite size correction or
 #' in case of \code{fs.a0} the corrected value for a0.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @references For the original formula see Eq. (31) from hep-lat/0601033
+#' @examples
+#' fs.a0(a0=1., mps=0.123, L=24)
 #' @export
 fs.a0 <- function(a0, mps, L) {
   delta <- fs.qcotdelta(mps, L)
@@ -72,13 +74,15 @@ fs.a0 <- function(a0, mps, L) {
 #' using the Gasser Leutwyler result from \eqn{M_\pi}{Mpi}.
 #' 
 #' 
-#' @param L spatial lattice extend as a scalar variable (must not be a vector)
+#' @param L spatial lattice extent as a scalar variable (must not be a vector)
 #' @param mps pion mass as a scalar variable (must not be a vector)
 #' @param fps pion decay constant as a scalar variable (must not be a vector)
 #' @return returns a numeric value representing the finite size correction or
 #' in case of \code{fs.a0} the corrected value for a0.
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
 #' @references For the original formula see Eq. (31) from hep-lat/0601033
+#' @examples
+#' fs.mpia0(mps=0.123, fps=0.2, L=24)
 #' @export
 fs.mpia0 <- function(mps, fps, L) {
 

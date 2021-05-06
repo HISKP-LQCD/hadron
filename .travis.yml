@@ -5,7 +5,7 @@
 #   https://docs.travis-ci.com/user/languages/r/
 
 language: r
-dist: trusty
+dist: bionic
 sudo: required
 cache: packages
 warnings_are_errors: true
@@ -17,8 +17,7 @@ notifications:
     on_failure: change
           
 r:
-  - oldrel
-#- release 
+  - release 
 
 r_packages:
   - tikzDevice

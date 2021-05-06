@@ -32,8 +32,10 @@
 #' hep-lat/9412087
 #' @keywords covariance matrix correlated chisqr
 #' @examples
-#' 
-#' \dontrun{M <- invertCovMatrix(effMass.tsboot, boot.samples=TRUE)}
+#' X <- array(rnorm(4000), dim=c(1000, 4))
+#' invertCovMatrix(cf=X, boot.samples=TRUE)
+#' M <- invertCovMatrix(cf=X, boot.samples=TRUE) 
+#' M
 #' 
 #' @export invertCovMatrix
 invertCovMatrix <- function(cf, boot.l=1, boot.samples=FALSE, cov_fn = cov) {
