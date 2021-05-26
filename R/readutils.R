@@ -677,6 +677,7 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
   ret <- rw_meta(conf.index=gauge_conf_list)
   tmp <- read.table(file=file_names_to_read)
+  monomialid <- NULL
   names(tmp)[1] <- "monomialid"
   names(tmp)[2] <- "stochastic_index"
   names(tmp)[3] <- "kappa_target"
@@ -691,7 +692,7 @@ read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id 
   if( !dplyr_avail ){
     stop("read.rw, The 'dplyr' package is required to use this function!\n")
   }
- 
+
   tmp <- dplyr::filter(tmp,monomialid==monomial_id)
   if (nrow(tmp) == 0){
     stop("read.rw, there is no monomial.id in reweighting data file, aborting...\n")
