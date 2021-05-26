@@ -664,6 +664,64 @@ readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.
   return (invisible(ret))
 }
 
+#' @title reading reweighting factors from a list of gauge configurations
+#'        and random samples from ASCII files
+#' @param file_names_to_read list of filenames for the reweighting factors
+#' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
+#' @param nsamples number of stochastic samples used for computing the reweighting factors
+#' @param monomial_id integer ID of the monomial
+#'
+#' @export
+read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
+{
+  stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
+  ret <- rw_meta(conf.index=gauge_conf_list)
+  tmp <- read.table(file=file_names_to_read)
+  monomialid <- NULL
+  names(tmp)[1] <- "monomialid"
+  names(tmp)[2] <- "stochastic_index"
+  names(tmp)[3] <- "kappa_target"
+  names(tmp)[4] <- "kappa_original"
+  names(tmp)[5] <- "light_quark_mass_target"
+  names(tmp)[6] <- "light_quark_mass_original"
+  names(tmp)[7] <- "reweightingfactor"
+
+# Select the reweighting factor for a particular monomial
+
+  dplyr_avail <- requireNamespace("dplyr")
+  if( !dplyr_avail ){
+    stop("read.rw, The 'dplyr' package is required to use this function!\n")
+  }
+
+  tmp <- dplyr::filter(tmp,monomialid==monomial_id)
+  if (nrow(tmp) == 0){
+    stop("read.rw, there is no monomial.id in reweighting data file, aborting...\n")
+  }
+
+# Number of reweighted determinants for each gauge configuration
+
+  n_rew_factors <- length(tmp$reweightingfactor)/(nsamples*length(gauge_conf_list))
+  stopifnot(n_rew_factors == 1)
+  
+
+# Exponentianing and Averaging over the stochastic samples
+  
+  tmp2 <- matrix(tmp$reweightingfactor,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
+  tmp3 <- apply(exp(-tmp2),2,mean)
+
+# Determine the standard error for each gauge configuration over the 
+# stochastic samples
+
+  tmp5 <- sqrt(apply(exp(-2*tmp2),2,mean)-tmp3^2)/sqrt(nsamples-1)/max(tmp3)
+
+# Normalize the largest reweighting factor to be one and storing this factor
+# this is neccessary due to the large value of the reweighting factor 
+# after exponentiating
+  tmp4 <- tmp3/max(tmp3)
+  
+  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3), stochastic_error=tmp5)
+
+}
 #' @title reader for Nissa text format correlation functions
 #' @param file_basenames_to_read Character vector of file names without the
 #'                              smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
