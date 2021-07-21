@@ -82,6 +82,22 @@ uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
 }
 
 #' @export
+apply_uwerrprimary <- function(X, S=1.5){
+  stopifnot(length(dim(X)) == 2)
+  tmp <- t(apply(
+    X = X,
+    MARGIN = 2L,
+    FUN = function(x){
+      uw <- uwerrprimary(data = x, S = S, pl = FALSE)
+      return( c(uw$value, uw$dvalue, uw$ddvalue, uw$tauint, uw$dtauint) )
+    }
+  ))
+  colnames(tmp) <- c("value", "dvalue", "ddvalue", "tauint", "dtauint")
+  return(invisible(as.data.frame(tmp)))
+}
+
+
+#' @export
 uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   
   N = length(data)

@@ -63,7 +63,9 @@ Imports:
 LinkingTo: 
     Rcpp
 Suggests: 
-    dplyr,
+    dplyr (>= 1.0.0),
+    grr,
+    pbmcapply,
     minpack.lm,
     parallel,
     rhdf5,

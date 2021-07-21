@@ -197,4 +197,66 @@ p <- ggplot2::ggplot(data.frame(t = gf_ratios$central$t,
 plot(p)
 ```
 
-# Bootstrapping the $w_0$ determination
+# Bootstrapping the determination of gradient flow scales
+
+Now that we have bootstrapped our gradient flow time series, bootstrapping the determination is basically trivial using the `apply_reduction_plan.tseries` function.
+
+```{r}
+# we define a reduction plan
+plan <- list()
+plan[["t0plaq"]] <- expression( approx(x = tsqEplaq, y = t, xout = 0.3)$y )
+plan[["t0sym"]] <- expression( approx(x = tsqEsym, y = t, xout = 0.3)$y )
+plan[["w0sq"]] <- expression( approx(x = Wsym, y = t, xout = 0.3)$y )
+plan[["w0"]] <- expression( sqrt(approx(x = Wsym, y = t, xout = 0.3)$y) )
+
+# and apply it to our gradient flow time series 
+gf_scales <- apply_reduce_plan.tseries(
+  ts = gf_tseries,
+  reduce_vars = c("t"),
+  plan = plan
+)
+
+str(gf_scales)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "The gradient flow scales on cA211b.12.48"}
+require(reshape2)
+plotdat <- cbind(reshape2::melt(gf_scales$central),
+                 error = reshape2::melt(gf_scales$se)$value*20 )
+
+p <- ggplot2::ggplot(plotdat, aes(x = factor(variable), y = value)) +
+       ggplot2::geom_point() +
+       ggplot2::geom_errorbar(aes(ymin = value - error, ymax = value + error),
+                     width = 0) +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+# Gradient flow scale ratios
+
+```{r}
+# define a mutation plan
+plan <- list()
+plan[["t0plaq_ov_w0"]] <- expression( t0plaq / w0 )
+plan[["t0sym_ov_w0"]] <- expression( t0sym / w0 )
+
+gf_scale_ratios <- apply_transmute_plan.tseries(
+  ts = gf_scales,
+  plan = plan
+)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratios of the gradient flow scales on cA211b.12.48"}
+require(reshape2)
+
+central <- reshape2::melt(gf_scale_ratios$central, measure.vars = names(gf_scale_ratios$central))
+se <- reshape2::melt(gf_scale_ratios$se, measure.vars = names(gf_scale_ratios$se))
+plotdat <- cbind(central, error = se$value )
+p <- ggplot2::ggplot(plotdat, aes(x = factor(variable), y = value)) +
+       ggplot2::geom_point() +
+       ggplot2::geom_errorbar(aes(ymin = value - error, ymax = value + error),
+                              width = 0) +
+       ggplot2::theme_bw()
+plot(p)
+```
+

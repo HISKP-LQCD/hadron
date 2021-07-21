@@ -285,9 +285,9 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
            ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
            ybottom=result$obs$mpcac_mc["val",]-result$obs$mpcac_mc["dval",],border=FALSE,col=errorband_color2)
       abline(h=result$obs$mpcac_mc["val",],lwd=2,col="blue")
-      legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), 
+      legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), cex = 0.8,
             legend=c("$ M_\\mathrm{PS} |G_A| / 2|G_P| $ from 3-param ground-state fit",
-                      sprintf("$ \\partial_0 \\langle A_0 P \\rangle / 2 \\langle P P \\rangle $ averaged from t=%d to t=%d",t1,t2) )
+                      sprintf("$ \\partial_0 \\langle A_0 P \\rangle / 2 \\langle P P \\rangle $ averaged from t=%d to t=%d",t1,t2))
             )
       tikz.finalize(tikzfiles)
       
@@ -326,7 +326,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
            col=errorband_color2)
       abline(h=onlineout$uwerrresultmps$value[1],col="red")
       abline(h=onlineout$uwerrresultpp$value[1],col="blue")
-      legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), 
+      legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), cex = 0.8, 
             legend=c("$aM_{\\mathrm{PS}}$ from 3-param fit to PP and PA correls",
                      "$aM_{\\mathrm{PS}}$ from 2-param fit to PP correl only")
             )

@@ -736,3 +736,58 @@ pointswithslantederror <- function(x, y, dx, dy, cor, col="black", bcol="black",
          x1=x+fac*dx, y1=y+dy,
          col=bcol)
 }
+
+#' make make a colour transparent
+#'
+#' @param col Single value of any of the three kinds of R color specifications,
+#'  i.e., either a color name (as listed by ‘colors()’), a
+#'  hexadecimal string of the form ‘"#rrggbb"’ or ‘"#rrggbbaa"’
+#'  (see ‘rgb’), or a positive integer ‘i’ meaning
+#'  ‘palette()[i]’.
+#' @param alpha Numeric in \code{range(0,1.0)} giving the level of transparency.
+#' 1.0 corresponds to full opacity, while 0.0 corresponds to complete transparency.
+#' @export
+col2rgba <- function(col, alpha = 1.0){
+  stopifnot( length(col) == 1 )
+  stopifnot( length(alpha) == 1)
+  col_rgb <- as.vector(col2rgb(col))
+  col_rgba <- rgb(red = col_rgb[1]/255.0,
+                  green = col_rgb[2]/255.0,
+                  blue = col_rgb[3]/255.0,
+                  alpha = alpha)
+  return(col_rgba)
+}
+
+#' draw an error band using `polygon`
+#'
+#' @param x Numeric vector of x values.
+#' @param ymin Numeric vector of lower bounds.
+#' @param ymax Numeric vector of upper bounds.
+#' @param col Single value of any of the three kinds of R color specifications,
+#'  i.e., either a color name (as listed by ‘colors()’), a
+#'  hexadecimal string of the form ‘"#rrggbb"’ or ‘"#rrggbbaa"’
+#'  (see ‘rgb’), or a positive integer ‘i’ meaning
+#'  ‘palette()[i]’.
+#' @param alpha Numeric in \code{range(0,1.0)} giving the level of transparency.
+#' 1.0 corresponds to full opacity, while 0.0 corresponds to complete transparency.
+#' @param the colour to draw the border, see \link{polygon} for details.
+#' @param ... Further parameters to be passed to \link{polygon}
+#' 
+#' @details
+#' \code{x}, \code{ymin}, \code{ymax} must all be of the same length. The
+#' polygon is drawn to the current plotting device.
+#'
+#' @export
+draw_errorband <- function(x, ymin, ymax, col, alpha, border = NA, ...){
+  stopifnot( length(x) == length(ymin) )
+  stopifnot( length(x) == length(ymax) )
+  stopifnot( alpha >= 0.0 & alpha <= 1.0 )
+  stopifnot( length(alpha) == 1 )
+  stopifnot( length(col) == 1 )
+
+  poly_col <- col2rgba(col, alpha)
+
+  poly_x <- c(x,rev(x))
+  poly_y <- c(ymin,rev(ymax))
+  polygon(x = poly_x, y = poly_y, col = poly_col, border = border, ...)
+}

@@ -1161,15 +1161,15 @@ readcmidisc <- function(files, obs=9, ind.vec=c(2,3,4,5,6,7,8),
 #' definition (at flow time t) \item tsqEplaq - flow time squared multiplied by
 #' plaquette energy density \item tsqEsym - flow time squared multiplied by
 #' clover energy density \item Wsym - BMW 'w(t)' observable }.
-#' @author Bartosz Kostrzewa, \email{bartosz.kostrzewa@@desy.de}
+#' @author Bartosz Kostrzewa, \email{kostrzewab@@informatik.uni-bonn.de}
 #' @keywords file
 #' @examples
 #' 
 #' path <- system.file("extdata/", package="hadron")
-#' raw.gf <- readgradflow(path)
+#' raw.gf <- read_tmlqcd_gradflow(path)
 #' 
-#' @export readgradflow
-readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
+#' @export
+read_tmlqcd_gradflow <- function(path, skip=0, basename="gradflow", col.names) {
   files <- getorderedfilelist(path=path, basename=basename, last.digits=6)
   # the trajectory numbers deduced from the filename
   gaugeno <- getconfignumbers(files, basename=basename, last.digits=6)
@@ -1211,6 +1211,9 @@ readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
     # are complete 
     if( dim( tmp )[1] != fLength ) {
       warning(sprintf("For file %s, number of rows is not correct: %d instead of %d\n",files[i],dim(tmp)[1],fLength) )
+      ldata[((i-1)*fLength+1):(i*fLength),] <- NA
+    } else if ( dim(tmp)[2] != nCols ){
+      warning(sprintf("For file %s, number of cols is not correct: %d instead of %d\n",files[i],dim(tmp)[2],nCols) )
       ldata[((i-1)*fLength+1):(i*fLength),] <- NA
     } else {
       ldata[((i-1)*fLength+1):(i*fLength),] <- tmp
