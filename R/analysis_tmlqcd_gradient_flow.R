@@ -248,7 +248,7 @@ gf_plot_flow <- function(obs_uwerr, tlim, intersection, ...){
                             intersection$label,
                             tex.catwitherror(x = intersection$tval,
                                              dx = intersection$tse,
-                                             digits = 1,
+                                             digits = 2,
                                              with.dollar = FALSE)))
   }
   # all lines on top of the error bands
