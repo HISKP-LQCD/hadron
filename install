@@ -4,4 +4,4 @@ set -e
 set -u
 
 ./document
-R CMD INSTALL .
+R --vanilla CMD INSTALL .
