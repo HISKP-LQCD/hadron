@@ -9,9 +9,9 @@ devtools::load_all()
 x <- c(1, 2, 3, 4)
 y <- c(1, 2, 3, 4)
 dy <- c(0.1, 0.2, 0.3, 0.1)
-bsamples <- parametric_bootstrap(300, y, dy)
+bsamples <- parametric.bootstrap(300, y, dy)
 
-fitfn <- function (x, par) {
+fitfn <- function (x, par, boot.r) {
     par * sin(x / 1000)
 }
 
