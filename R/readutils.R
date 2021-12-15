@@ -282,7 +282,6 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
       out_idx_start <- (i-1)*fLength + 1
       out_idx_stop <- i*fLength
       for(j in seq(i+1,i+avg-1)){
-        print(j)
         avg_idx_start <- (j-1)*fLength + 1
         avg_idx_stop <- j*fLength
         # add the next sample to the sample that we use as an output base
