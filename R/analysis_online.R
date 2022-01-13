@@ -57,6 +57,13 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #'                           will include `stat_skip` measurements,
 #'                           but these will be skipped in the corresponding statistical analysis.
 #'                           This maybe useful, for example, to visualise thermalisation.
+#' @param omeas.offset integer. Offset to be added to the trajectory counter for the online measurements.
+#'                              This is useful, for example, when `output.data` contains thermalisation
+#'                              but online measurements were only performed once thermalised
+#'                              with a starting configuration filename of `conf.xxxx`, where `xxxx`
+#'                              gets translated to the trajectory ID for the online measurement
+#'                              and thus goes out of step with the trajectory ID of the data in
+#'                              `output.data`.
 #' @param omeas.samples integer. number of stochastic samples per online measurement
 #' @param omeas.stride integer. stride length in the reading of online measurements
 #' @param omeas.avg integer. Block average over this many subsequent measurements.
@@ -92,7 +99,8 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
-                            stat_skip=0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
+                            stat_skip=0,
+                            omeas.offset = 0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
                             omeas.stepsize=1, 
                             evals.stepsize=1,
                             boot.R=1500, boot.l=2,
@@ -135,6 +143,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
   result <- list(params=data.frame(L=L,Time=Time,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
                                    mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
                                    musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,
+                                   omeas.samples=omeas.samples, omeas.avg=omeas.avg,
                                    stat_skip=stat_skip,stringsAsFactors=FALSE),
                  obs=data.frame(mpcac_fit=navec, 
                                 mpcac_mc=navec, 
@@ -180,8 +189,9 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     # read online measurements
     # get all omeas files that exist (hopefully in a consistent stepping)
     omeas.files <- getorderedfilelist(path=rundir, basename="onlinemeas", last.digits=6)
-    # extract the trajectory numbers
-    omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6)
+    # extract the trajectory numbers, taking into account a possible offset between
+    # online measurements and `output.data`
+    omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6) + omeas.offset
     # when the online measurements start later than traj 0 and we want to skip 'skip'
     # trajectories, the following should correspond to the correact indexing
     omeas.idx <- which(omeas.cnums > skip)
