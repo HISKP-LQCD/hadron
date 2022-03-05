@@ -211,6 +211,22 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 #' @export readcmifiles
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
                          colClasses, obs=NULL, obs.index, avg=1, stride=1) {
+
+  # use lapply as our default and switch to pbmclapply if available below
+  my_lapply <- lapply
+
+  pbmcapply_avail <- requireNamespace('pbmcapply')
+  if(pbmcapply_avail){
+    # when verbose output is desired, we disable the progress bar and run with a single thread
+    if(!verbose) {
+      my_lapply <- function(...){ pbmcapply::pbmclapply(ignore.interactive=TRUE, mc.preschedule=TRUE, ...) }
+    } else {
+      message("readcmifiles called with `verbose=TRUE`, I/O will be single-threaded!\n")
+    }
+  } else {
+    warning("pbmcapply package not found, I/O will be single-threaded!\n")
+  }
+
   if(missing(files)) {
     stop("readcmifiles: filelist missing, aborting...\n")
   }
@@ -227,72 +243,65 @@ readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
   # when stride is > 1, we only read a subset of files
   nFilesToLoad <- as.integer(nFiles/stride)
   nCols <- length(tmpdata)
-  ## we generate the full size data.frame first
-  tmpdata[,] <- NA
-  ldata <- tmpdata
-  ldata[((nFilesToLoad-1)*fLength+1):(nFilesToLoad*fLength),] <- tmpdata
-  # create a progress bar
   
-  pb <- NULL
-  if(!verbose) {
-    pb <- txtProgressBar(min = 0, max = nFiles, style = 3)
-  }
-  for(i in c(1:nFiles)) {
-    # update progress bar
-    if(!verbose) {
-      setTxtProgressBar(pb, i)
-    }
-    if( !(files[i] %in% excludelist) && file.exists(files[i]) && (i-1) %% stride == 0) {
-      
-      if(verbose) {
-        message("Reading from file ", files[i], "\n")
+  dat <- my_lapply(
+    X=1:nFiles,
+    FUN=function(i){
+      if( !(files[i] %in% excludelist) && file.exists(files[i]) && (i-1) %% stride == 0) {
+        
+        if(verbose) {
+          message("Reading from file ", files[i], "\n")
+        }
+        ## read the data
+        tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
+        if(reduce) {
+          tmpdata <- tmpdata[tmpdata[,obs.index] %in% obs,]
+        }
+        ## sanity checks
+        if(fLength < length(tmpdata$V1)) {
+          warning(paste("readcmifiles: file ", files[i], " does not have the same length as the other files. We will cut and hope...\n"))
+        }
+        else if(fLength > length(tmpdata$V1)) {
+          stop(paste("readcmifiles: file", files[i], "is too short. Aborting...\n"))
+        }
+        if(nCols != length(tmpdata)) {
+          stop(paste("readcmifiles: file", files[i], "does not have the same number of columns as the other files. Aborting...\n"))
+        }
+        
+        dat_idx_start <- ((i-1)/stride*fLength) + 1
+        dat_idx_stop <- dat_idx_start+fLength-1
+        return(tmpdata)
       }
-      ## read the data
-      tmpdata <- read.table(files[i], colClasses=colClasses, skip=skip)
-      if(reduce) {
-        tmpdata <- tmpdata[tmpdata[,obs.index] %in% obs,]
+      else if(!file.exists(files[i])) {
+        stop(paste("readcmifiles: dropped file", files[i], "because it's missing\n"))
       }
-      ## sanity checks
-      if(fLength < length(tmpdata$V1)) {
-        warning(paste("readcmifiles: file ", files[i], " does not have the same length as the other files. We will cut and hope...\n"))
-      }
-      else if(fLength > length(tmpdata$V1)) {
-        stop(paste("readcmifiles: file", files[i], "is too short. Aborting...\n"))
-      }
-      if(nCols != length(tmpdata)) {
-        stop(paste("readcmifiles: file", files[i], "does not have the same number of columns as the other files. Aborting...\n"))
-      }
-      
-      dat_idx_start <- ((i-1)/stride*fLength) + 1
-      dat_idx_stop <- dat_idx_start+fLength-1
-      ldata[dat_idx_start:dat_idx_stop,] <- tmpdata
-      rm(tmpdata)
-    }
-    else if(!file.exists(files[i])) {
-      warning(paste("readcmifiles: dropped file", files[i], "because it's missing\n"))
-    }
-  }
-  if(!verbose) {
-    close(pb)
-  }
+    })
+
+  # bind the data together
+  ldata <- do.call(rbind, dat)
 
   # if we want to average over successive samples, we do this here
   if(avg > 1){
-    for(i in seq(1,nFilesToLoad,by=avg)){
-      out_idx_start <- (i-1)*fLength + 1
-      out_idx_stop <- i*fLength
-      for(j in seq(i+1,i+avg-1)){
-        avg_idx_start <- (j-1)*fLength + 1
-        avg_idx_stop <- j*fLength
-        # add the next sample to the sample that we use as an output base
-        ldata[out_idx_start:out_idx_stop,] <- ldata[out_idx_start:out_idx_stop,] +
-                                              ldata[avg_idx_start:avg_idx_stop,]
-        # invalidate the sample that we just added
-        ldata[avg_idx_start:avg_idx_stop,] <- NA 
+    dat <- my_lapply(
+      X=seq(1,nFilesToLoad,by=avg),
+      FUN=function(i){
+        out_idx_start <- (i-1)*fLength + 1
+        out_idx_stop <- i*fLength
+        tmpdata <- ldata[out_idx_start:out_idx_stop,]
+        for(j in seq(i+1,i+avg-1)){
+          avg_idx_start <- (j-1)*fLength + 1
+          avg_idx_stop <- j*fLength
+          # add the next sample to the sample that we use as an output base
+          tmpdata <- tmpdata +
+                     ldata[avg_idx_start:avg_idx_stop,]
+        }
+        # take the average over the samples
+        tmpdata <- tmpdata/avg
+        return(tmpdata)
       }
-      # take the average over the samples
-      ldata[out_idx_start:out_idx_stop,] <- ldata[out_idx_start:out_idx_stop,]/avg
-    }
+    )
+    # bind the data together
+    ldata <- do.call(rbind,dat)
   }
   ## remove NAs from missing files
   ldata <- na.omit(ldata)
