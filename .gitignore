@@ -2,6 +2,7 @@
 *.so
 *~
 ..Rcheck/
+.configure
 .RData
 .Rhistory
 .Rproj.user
@@ -14,11 +15,12 @@ hadron.Rcheck
 hadron_*.tar.gz
 man/*.Rd
 man/.Rhistory
-src/symbols.rds
 NAMESPACE
 R/RcppExports.R
 src/RcppExports.cpp
-vignettes/*.pdf
+src/symbols.rds
+tags
 vignettes/*.html
 vignettes/*.log
-tags
+vignettes/*.pdf
+configure
