@@ -1183,9 +1183,21 @@ read_tmlqcd_gradflow <- function(path, skip=0, basename="gradflow", col.names) {
   gaugeno <- getconfignumbers(files, basename=basename, last.digits=6)
   files <- files[(skip+1):length(files)]
   if(length(files)==0) stop(sprintf("readgradflow: no tmlqcd gradient flow files found in path %s",path))
+ 
+  missing_colnames <- missing(col.names)
+
+  # use lapply as our default and switch to pbmclapply if available below
+  my_lapply <- lapply
+
+  pbmcapply_avail <- requireNamespace('pbmcapply')
+  if(pbmcapply_avail){
+    my_lapply <- function(...){ pbmcapply::pbmclapply(ignore.interactive=TRUE, mc.preschedule=TRUE, ...) }
+  } else {
+    warning("pbmcapply package not found, I/O will be single-threaded!\n")
+  }
 
   tmpdata <- data.frame()
-  if(missing(col.names)) {
+  if(missing_colnames) {
     tmpdata <- read.table(file=files[1],colClasses="numeric",header=TRUE,stringsAsFactors=FALSE)
   }
   else {
@@ -1197,37 +1209,43 @@ read_tmlqcd_gradflow <- function(path, skip=0, basename="gradflow", col.names) {
   fLength <- length(tmpdata$t)
   nFiles <- length(files)
   nCols <- ncol(tmpdata)
-  ## we generate the full size data.frame first
+
+  ## keep around tmpdata for reasons which will become apparent below
   tmpdata[,] <- NA
-  ldata <- tmpdata
-  ldata[((nFiles-1)*fLength+1):(nFiles*fLength),] <- tmpdata
-  rm(tmpdata)
   
-  pb <- NULL
-  pb <- txtProgressBar(min = 0, max = length(files), style = 3)
-  for( i in 1:length(files) ){
-    setTxtProgressBar(pb, i)
-    tmp <- data.frame()
-    if(missing(col.names)) {
-      tmp <- read.table(file=files[i], colClasses="numeric", header=TRUE, stringsAsFactors=FALSE)
-    }
-    else {
-      tmp <- read.table(file=files[i], colClasses="numeric", col.names=col.names, stringsAsFactors=FALSE)
-    }
-    if(is.null(tmp$traj)) tmp$traj <- gaugeno[i]
-    # the tmlqcd gradient flow routine has the tendency to crash, so we check if the files
-    # are complete 
-    if( dim( tmp )[1] != fLength ) {
-      warning(sprintf("For file %s, number of rows is not correct: %d instead of %d\n",files[i],dim(tmp)[1],fLength) )
-      ldata[((i-1)*fLength+1):(i*fLength),] <- NA
-    } else if ( dim(tmp)[2] != nCols ){
-      warning(sprintf("For file %s, number of cols is not correct: %d instead of %d\n",files[i],dim(tmp)[2],nCols) )
-      ldata[((i-1)*fLength+1):(i*fLength),] <- NA
-    } else {
-      ldata[((i-1)*fLength+1):(i*fLength),] <- tmp
+  dat <- my_lapply(
+    X=1:nFiles,
+    FUN=function(i){
+      tmp <- data.frame()
+      if(missing_colnames) {
+        tmp <- read.table(file=files[i], colClasses="numeric", header=TRUE, stringsAsFactors=FALSE)
+      }
+      else {
+        tmp <- read.table(file=files[i], colClasses="numeric", col.names=col.names, stringsAsFactors=FALSE)
+      }
+      if(is.null(tmp$traj)) tmp$traj <- gaugeno[i]
+      # the tmlqcd gradient flow routine has the tendency to crash, so we check if the files
+      # are complete and return an array containing NAs if they are not
+      if( dim( tmp )[1] != fLength ) {
+        tmpdata$traj <- gaugeno[i]
+        return(tmpdata)
+      } else if ( dim(tmp)[2] != nCols ){
+        tmpdata$traj <- gaugeno[i]
+        return(tmpdata)
+      } else {
+        return(tmp)
+      }
+    })
+  ## issue post-fact warnings on dimensions to not mess up return value of lapply above
+  for( i in 1:nFiles ){
+    if( any(is.na(dat[[i]])) ){
+      warning(sprintf("For file %s, number of rows and columns did not match expectations (should be: %d rows, %d columns)! The file was skipped.", 
+                      files[i], fLength, nCols))
     }
   }
-  close(pb)
+
+  ## paste data together
+  ldata <- do.call(rbind,dat)
 
   # keep only rows which contain all data
   ldata <- ldata[complete.cases(ldata),]
