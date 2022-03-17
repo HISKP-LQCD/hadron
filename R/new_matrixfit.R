@@ -564,6 +564,8 @@ SingleConstantModel <- R6::R6Class(
 #'   the `higher_states` parameter to restrict the thermal states with priors to
 #'   stabilize the fit.
 #'
+#' @importFrom R6 R6Class
+#' 
 #' @return
 #' See \link{bootstrap.nlsfit}.
 #' 

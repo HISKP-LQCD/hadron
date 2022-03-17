@@ -131,6 +131,8 @@ computeDisc <- function(cf, cf2,
   }
   ## now the more general case case of cross-correlators
   else {
+    stopifnot(inherits(cf, 'cf_meta'))
+    stopifnot(inherits(cf, 'cf_orig'))
     sign <- +1
     if(type != "cosh") sign <- -1
     
