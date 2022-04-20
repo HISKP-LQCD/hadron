@@ -145,6 +145,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                    mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
                                    musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,
                                    skip_output_data=skip_output_data, traj_from=traj_from,
+                                   omeas.offset=omeas.offset,
                                    omeas.samples=omeas.samples, omeas.avg=omeas.avg,
                                    stat_skip=stat_skip,stringsAsFactors=FALSE),
                  obs=data.frame(mpcac_fit=navec, 
@@ -198,7 +199,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     omeas.idx <- which(omeas.cnums >= traj_from)
     
     if( length(omeas.idx) < 1 ){
-      stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left!\n", traj_from))
+      stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left (omeas.offset was %d)!\n", traj_from), omeas.offset)
     }
 
 
