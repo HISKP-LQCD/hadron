@@ -36,7 +36,8 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' @param mudelta numeric. splitting 1+1 sea twisted quark mass
 #' @param muh numeric. "heavy" twisted mass in the case of a `n_f=2+2` run
 #' @param addon string. addon to output filenames
-#' @param skip integer. number of initial measurements to skip in analysis
+#' @param skip_output_data integer. number of lines to skip in reading of `output.data`, usually not necessary
+#' @param traj_from integer. first trajectory id to be considered in the analysis
 #' @param rectangle boolean. If true, rectangle plaquettes are analysed
 #' @param plaquette boolean. If true, square plaquettes are analysed
 #' @param dH boolean. If true, delta H is analysed
@@ -95,7 +96,7 @@ append_pdf_filename <- function(basename, pdf_filenames){
 analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             cg_col, evals_id, rundir, cg.ylim,
                             type="", csw=0, musigma=0, mudelta=0, muh=0, addon="",
-                            skip=0, rectangle=TRUE,
+                            skip_output_data=0, traj_from = 0, rectangle=TRUE,
                             plaquette=TRUE, dH=TRUE, acc=TRUE, trajtime=TRUE, omeas=TRUE,
                             plotsize=5, debug=FALSE, trajlabel=FALSE, title=FALSE,
                             pl=FALSE, method="uwerr", fit.routine="optim", oldnorm=FALSE, S=1.5,
@@ -142,7 +143,8 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
   # set up data structure for analysis results 
   result <- list(params=data.frame(L=L,Time=Time,t1=t1,t2=t2,type=type,beta=beta,kappa=kappa,csw=csw,
                                    mul=mul,muh=muh,boot.l=boot.l,boot.R=boot.R,
-                                   musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,skip=skip,
+                                   musigma=musigma,mudelta=mudelta,N.online=0,N.plaq=0,
+                                   skip_output_data=skip_output_data, traj_from=traj_from,
                                    omeas.samples=omeas.samples, omeas.avg=omeas.avg,
                                    stat_skip=stat_skip,stringsAsFactors=FALSE),
                  obs=data.frame(mpcac_fit=navec, 
@@ -192,19 +194,18 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     # extract the trajectory numbers, taking into account a possible offset between
     # online measurements and `output.data`
     omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6) + omeas.offset
-    # when the online measurements start later than traj 0 and we want to skip 'skip'
-    # trajectories, the following should correspond to the correact indexing
-    omeas.idx <- which(omeas.cnums > skip)
+    # consider only the trajectory indices that we want to include in the analysis
+    omeas.idx <- which(omeas.cnums >= traj_from)
     
     if( length(omeas.idx) < 1 ){
-      stop(sprintf("After skipping %d trajectories, no online measurements are left!\n"))
+      stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left!\n", traj_from))
     }
 
 
     omeas.files <- omeas.files[omeas.idx]
     omeas.cnums <- omeas.cnums[omeas.idx]
-    pioncor <- readcmidatafiles( files=omeas.files, skip=0, 
-                                 avg=omeas.avg, stride=omeas.stride, verbose=verbose )
+    pioncor <- readcmidatafiles(files=omeas.files, skip=0, 
+                                avg=omeas.avg, stride=omeas.stride, verbose=verbose )
 
     # when dealing with multi-sample online measurements, we need to thin out
     # the configuration numbers extracted above by stepping through them
@@ -380,21 +381,15 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     }
   } # if(omeas)
 
-  # something in the skip computation is odd, let's just solve it like this
-  if(skip==0){
-    shift <- 1
-  } else {
-    shift <- 0
-  }
-
   outdat <- NULL
   tidx <- NULL
   if( plaquette || dH || trajtime || acc ) {
     # read output.data
     
-    # skip 'skip' lines. Hopefully the trajectory counter doesn't start at something much larger than 0
+    # skip 'skip_output_data' lines in reading of output.data.
+    # Hopefully the trajectory counter doesn't start at something much larger than 0
     # because otherwise we'll probably miss trajectories in the filtering below
-    outdat <- read.table(outfile, skip=skip, fill=TRUE)
+    outdat <- read.table(outfile, skip=skip_output_data, fill=TRUE)
     no_rows <- nrow(outdat)
 
     # count the number of columns in the penultimate line of output.data
@@ -402,7 +397,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     # (when the mass preconditioning is changed,
     # the number of columns may change so we need to be able to deal with that)
     no_columns <- max(count.fields(outfile,
-                                   skip=skip+no_rows-1))
+                                   skip=skip_output_data+no_rows-1))
     
     # restrict any outliers in outdat. Inconsistent lines will almost certainly
     # be filtered out below 
@@ -430,7 +425,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
 
     # restrict to the lines which are definitely the trajectories we want to 
     # analyse
-    tidx <- which(outdat$traj > skip)
+    tidx <- which(outdat$traj >= traj_from)
     if(debug) print(outdat)
   }
 
@@ -523,7 +518,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                     col.names=c("traj","min_ev","max_ev","ev_range_min","ev_range_max") ), 
                          error=function(e){ stop(sprintf("Reading of %s failed!",ev_filename)) } )
 
-    eval.tidx <- which(evaldata$traj > skip)
+    eval.tidx <- which(evaldata$traj >= traj_from)
 
     temp <- plot_eigenvalue_timeseries(dat=evaldata[eval.tidx,],
                                        stat_range=c( 1+stat_skip, length(eval.tidx) ),
