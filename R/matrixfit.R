@@ -386,6 +386,9 @@ matrixfit <- function(cf, t1, t2,
     mSize <- dim(cf$cf)[2]/Thalfp1
   else
     mSize <- dim(cf$cf.tsboot$t)[2]/Thalfp1
+  if (cf$symmetrised==FALSE){
+    mSize <- dim(cf$cf.tsboot$t)[2]/cf$Time
+  }
   
   if(pcmodel && mSize != 1) {
     stop('for model pc only a 1x1 matrix is allowd.')
