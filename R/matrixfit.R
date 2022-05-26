@@ -376,6 +376,9 @@ matrixfit <- function(cf, t1, t2,
   N <- dim(cf$cf)[1]
   Thalfp1 <- cf$Time/2+1
   t <- c(0:(cf$Time/2))
+  if (cf$symmetrised == FALSE){
+    t <- c(0:(dim(cf$cf)[2]-1))
+  }
   deltat <- 1
   if(model == "shifted" && any(names(cf) == "deltat")) {
     deltat <- cf$deltat
