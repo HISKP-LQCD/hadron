@@ -1100,6 +1100,30 @@ num.cf <- function(cf, n=1.) {
   return (cf)
 }
 
+#' FHT ratio
+#'
+#' @description
+#' Computes Feynman-Hellmann theorem (FHT) ratio for given
+#' 2-point and 3-point cf objects.
+#'
+#' @param cf2pt `cf_orig` object.
+#' @param cf3pt `cf_orig` object.
+#' @param tau Numeric.
+#'
+#' @return
+#' returns the FHT ratio in form of a cf object.
+#' 
+#' @export
+fht_ratio.cf <- function(cf2pt, cf3pt, tau) {
+  z <- ( shift.cf(cf2pt, tau) + shift.cf(cf2pt, -tau) ) / ( mul.cf(cf2pt, 2) )
+  pre <- z / pow.cf(z*z - num.cf(z), n=0.5)
+  
+  r <- ( (shift.cf(cf3pt, tau) + shift.cf(cf3pt, -tau)) / (shift.cf(cf2pt, tau) + shift.cf(cf2pt, -tau)) - cf3pt/cf2pt )
+  res <- mul.cf( pre, (1/tau) ) * r
+  
+  return(res)
+}
+
 
 
 #' extract one single correlator object as \code{cf} object from a large
