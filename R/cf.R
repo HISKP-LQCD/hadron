@@ -1062,6 +1062,44 @@ pow.cf <- function(cf, n=1.) {
   return (cf)
 }
 
+#' Assign numeric values n to entries of cf objects
+#'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent, such that the real part of cf is
+#' divided by itself and multiplied with n and similarly for the imaginary part.
+#'
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
+#' 
+#' @param cf `cf_orig` object.
+#' @param n Numeric.
+#'
+#' @return
+#' The value is
+#' \deqn{n*cf/cf \,.}
+#' @export
+num.cf <- function(cf, n=1.) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  if(inherits(cf, 'cf_orig')) {
+    cf$cf <- n*(cf$cf/cf$cf)
+    
+    if( has_icf(cf) ){
+      stopifnot(has_icf(cf))
+      cf$icf <- n*(cf$icf/cf$icf)
+    }
+  }
+  
+  if(inherits(cf, 'cf_boot')) {
+    cf$cf.tsboot$t  <- n*(cf$cf.tsboot$t/cf$cf.tsboot$t)
+    cf$cf.tsboot$t0 <- n*(cf$cf.tsboot$t0/cf$cf.tsboot$t0)
+    cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = cf$error_fn)
+    cf$cf0 <- cf$cf.tsboot$t0
+  }
+  else cf <- invalidate.samples.cf(cf)
+  return (cf)
+}
+
 
 
 #' extract one single correlator object as \code{cf} object from a large
