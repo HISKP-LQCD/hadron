@@ -1024,6 +1024,44 @@ mul.cf <- function(cf, a=1.) {
   return (cf)
 }
 
+#' Exponentiate cf objects
+#'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent, such that the real part of cf is
+#' raised to the power of n and similarly for the imaginary part.
+#'
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
+#' 
+#' @param cf `cf_orig` object.
+#' @param n Numeric.
+#'
+#' @return
+#' The value is
+#' \deqn{cf^n \,.}
+#' @export
+pow.cf <- function(cf, n=1.) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  if(inherits(cf, 'cf_orig')) {
+    cf$cf <- (cf$cf)^n
+    
+    if( has_icf(cf) ){
+      stopifnot(has_icf(cf))
+      cf$icf <- (cf$icf)^n
+    }
+  }
+  
+  if(inherits(cf, 'cf_boot')) {
+    cf$cf.tsboot$t  <- (cf$cf.tsboot$t)^n
+    cf$cf.tsboot$t0 <- (cf$cf.tsboot$t0)^n
+    cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = cf$error_fn)
+    cf$cf0 <- cf$cf.tsboot$t0
+  }
+  else cf <- invalidate.samples.cf(cf)
+  return (cf)
+}
+
 
 
 #' extract one single correlator object as \code{cf} object from a large
