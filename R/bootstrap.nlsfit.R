@@ -429,7 +429,7 @@ set.wrapper <- function (fn, gr, dfn, par.guess, errormodel, useCov, W, x, ipx, 
 #' NLS fit with without bootstrap
 #'
 #' @inheritParams bootstrap.nlsfit
-#' @param errormodel Either "yerror" or "xyerror", depending on the x-values having
+#' @param errormodel Either "yerrors" or "xyerrors", depending on the x-values having
 #' errors or not.
 #' @param boot.R If larger than 0, \code{boot.R} paramtetric bootstrap samples are
 #' generated on the fit results after fit and error calculation are finished.
