@@ -279,13 +279,13 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
       for(level in rng){
         start <- y+cumul.err[,(level-1)]
         end <- y+cumul.err[,level]
-        proper.val <- !is.na(start) & !is.na(end)
+        proper.val <- is.finite(start) & is.finite(end)
         start <- start[proper.val]
         end <- end[proper.val]
 
         if(par("ylog")){
-          ## logarithmic scaling means distances are multiplicative
-          dy.in.inches <- ifelse(start > 0 & end > 0, abs(log10(end/start))*y.to.inches, 0)
+          ## logarithmic scaling means distances are multiplicative (the inner abs() is just supposed to prevent irrelevant warnings)
+          dy.in.inches <- ifelse(start > 0 & end > 0, abs(log10(abs(end/start)))*y.to.inches, 0)
           ## An arrow can only be plotted if it is longer than 1/1000 inches.
           ## We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
           start <- ifelse(dy.in.inches <= 1/1000, y[proper.val] / 10^(1.01/2000/y.to.inches), start)
@@ -336,12 +336,12 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
       for(level in rng){
         start <- x+cumul.err[,(level-1)]
         end <- x+cumul.err[,level]
-        proper.val <- !is.na(start) & !is.na(end)
+        proper.val <- is.finite(start) & is.finite(end)
         start <- start[proper.val]
         end <- end[proper.val]
 
         if(par("xlog")){
-          dx.in.inches <- ifelse(start > 0 & end > 0, abs(log10(end/start))*x.to.inches, 0)
+          dx.in.inches <- ifelse(start > 0 & end > 0, abs(log10(abs(end/start)))*x.to.inches, 0)
           start <- ifelse(dx.in.inches <= 1/1000, x[proper.val] / 10^(1.01/2000/x.to.inches), start)
           end <- ifelse(dx.in.inches <= 1/1000, x[proper.val] * 10^(1.01/2000/x.to.inches), end)
         }else{
