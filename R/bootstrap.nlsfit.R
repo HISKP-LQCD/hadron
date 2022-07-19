@@ -1222,6 +1222,8 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #' @param ribbon.on.top Logical, controls whether the ribbon should be in
 #'   front of the data points. This is recommended when there are very many data
 #'   points and a highly constrained model.
+#' @param rep If set to \code{TRUE}, operate like "replot" in gnuplot. Allows
+#' plotting the fit result on top of existing plot.
 #'
 #' @importFrom stats predict
 #' 
