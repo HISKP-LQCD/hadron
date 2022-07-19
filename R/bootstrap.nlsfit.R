@@ -1229,7 +1229,7 @@ print.bootstrapfit <- function(x, ..., digits = 2) {
 #'
 #' @export
 #' @family NLS fit functions
-plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function, ribbon.on.top = TRUE) {
+plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity.band=0.65, lty=c(1), lwd=c(1), supports=1000, plot.range, error=x$error.function, ribbon.on.top = TRUE, rep=FALSE) {
   # The plot object might not have a mask, we want to have one in either case.
   if (is.null(x$mask)) {
     x$mask <- rep(TRUE, length(x$x))
@@ -1253,7 +1253,7 @@ plot.bootstrapfit <- function(x, ..., col.line="black", col.band="gray", opacity
   }
   
   # We plot all the data first to get the xlim and ylim right.
-  limits <- plot_data(rep = FALSE)
+  limits <- plot_data(rep = rep)
   
   # Plot the ribbon.
   if(!is.null(prediction$err)) {
