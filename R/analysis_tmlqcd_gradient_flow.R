@@ -92,7 +92,7 @@ analysis_tmlqcd_gradient_flow <- function(path, outputbasename, basename="gradfl
                  dplyr_version_required))
   }
 
-	reshape2_avail <- requireNamespace("reshape2")
+  reshape2_avail <- requireNamespace("reshape2")
   if( !reshape2_avail ){
     stop("The 'reshape2' package is required to use this function!\n")
   }
@@ -128,7 +128,7 @@ analysis_tmlqcd_gradient_flow <- function(path, outputbasename, basename="gradfl
                                        intersection = 0.3)
 
         gf_scale_ratios_uwerr <- list()
-        if( !is.na(gf_scale$ratios) ){
+        if( !any(is.na(gf_scale$ratios)) ){
           for( ratio_i in 1:length(gf_scale$ratios) ){
             ratio_denom_vars <- c('t', 'traj', gf_scale$ratio_denom_obs[ratio_i])
             ratio_name <- gf_scale$ratios[ratio_i]
