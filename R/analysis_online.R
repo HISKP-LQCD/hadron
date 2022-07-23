@@ -70,8 +70,10 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #' @param omeas.avg integer. Block average over this many subsequent measurements.
 #' @param omeas.stepsize integer. Number of trajectories between online measurements. Autocorrelation
 #'                                times of online measurement data will be scaled by this factor.
-#' @param evals.stepsize integer. Numer of trajectories between (strange-charm Dirac opertoar) eigenvalue measurements.
+#' @param evals.stepsize integer. Number of trajectories between (strange-charm Dirac operator) eigenvalue measurements.
 #'                                Autocorrelation times of eigenvalues will be scaled by this factor.
+#' @param trajectory_length numeric. Trajectory length. All autocorrelation times will be scaled by this factor
+#'                                   such that they are expressed in terms of unit length trajectories.
 #' @param boot.R integer. number of bootstrap samples to use in bootstrap-based parts of analysis.
 #' @param boot.l integer. bootstrap block size
 #' @param outname_suffix string. suffix for output files
@@ -104,6 +106,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             omeas.offset = 0, omeas.samples=1, omeas.stride=1, omeas.avg=1,
                             omeas.stepsize=1, 
                             evals.stepsize=1,
+                            trajectory_length=1.0,
                             boot.R=1500, boot.l=2,
                             outname_suffix="", verbose=FALSE)
 {
@@ -250,6 +253,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
       result$obs$mpcac_mc <- plot_timeseries(dat=data.frame(y=onlineout$MChist.dpaopp,
                                                             t=omeas.cnums),
                                              stat_range=c( stat_skip+1, length(onlineout$MChist.dpaopp) ),
+                                             time_factor=omeas.stepsize*trajectory_length,
                                              pdf.filename=dpaopp_filename,
                                              ylab="$am_\\mathrm{PCAC}$",
                                              name="am_PCAC (MC history)",
@@ -259,9 +263,6 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                              errorband_color=errorband_color,
                                              smooth_density = TRUE)
       
-      # adjust autocorrelation times to be in terms of trajectories
-      result$obs$mpcac_mc[3:5] <- result$obs$mpcac_mc[3:5]*omeas.stepsize
-
       lengthdpaopp <- length(onlineout$MChist.dpaopp)
       mindpaopp <- min(onlineout$MChist.dpaopp)
       maxdpaopp <- max(onlineout$MChist.dpaopp)
@@ -346,16 +347,16 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
 
       result$obs$mpi <- t(data.frame(val=onlineout$uwerrresultmps$value[1],
                                      dval=onlineout$uwerrresultmps$dvalue[1],
-                                     tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize,
-                                     dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize,
-                                     Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
+                                     tauint=onlineout$uwerrresultmps$tauint[1]*omeas.stepsize*trajectory_length,
+                                     dtauint=onlineout$uwerrresultmps$dtauint[1]*omeas.stepsize*trajectory_length,
+                                     Wopt=onlineout$uwerrresultmps$Wopt[[1]]*omeas.stepsize*trajectory_length, stringsAsFactors=FALSE) )
 
       result$obs$fpi <- t(data.frame(val=2*kappa*2*mul/sqrt(2)*abs(onlineout$fitresultpp$par[1])/
                                          (sqrt(onlineout$fitresultpp$par[2])*sinh(onlineout$fitresultpp$par[2])),
                                      dval=2*kappa*2*mul/sqrt(2)*onlineout$uwerrresultfps$dvalue[1],
-                                     tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize,
-                                     dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize,
-                                     Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize, stringsAsFactors=FALSE) )
+                                     tauint=onlineout$uwerrresultfps$tauint[1]*omeas.stepsize*trajectory_length,
+                                     dtauint=onlineout$uwerrresultfps$dtauint[1]*omeas.stepsize*trajectory_length,
+                                     Wopt=onlineout$uwerrresultfps$Wopt[[1]]*omeas.stepsize*trajectory_length, stringsAsFactors=FALSE) )
 
       if(method=="boot" | method=="all"){
         mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/
@@ -440,6 +441,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$P <- plot_timeseries(dat=data.frame(y=outdat$P[tidx],
                                                    t=outdat$traj[tidx]),
                                     stat_range=c( 1+stat_skip, length( tidx ) ),
+                                    time_factor=trajectory_length,
                                     pdf.filename=plaquette_filename,
                                     ylab="$ \\langle P \\rangle$" ,
                                     name="plaquette",
@@ -458,6 +460,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$dH <- plot_timeseries(dat=data.frame(y=outdat$dH[tidx],
                                                     t=outdat$traj[tidx]),
                                      stat_range=c( 1+stat_skip, length(tidx) ),
+                                     time_factor=trajectory_length,
                                      pdf.filename=dH_filename,
                                      ylab="$ \\delta H $",
                                      name="dH",
@@ -477,6 +480,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$expdH <- plot_timeseries(dat=data.frame(y=outdat$expdH[tidx],
                                                        t=outdat$traj[tidx]),
                                         stat_range=c( 1+stat_skip, length(tidx) ),
+                                        time_factor=trajectory_length,
                                         pdf.filename=expdH_filename,
                                         ylab="$ \\exp(-\\delta H) $",
                                         name="exp(-dH)",
@@ -498,6 +502,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$CG.iter <- plot_timeseries(dat=data.frame(y=outdat[tidx,cg_col],
                                                          t=outdat$traj[tidx]),
                                           stat_range=c( 1+stat_skip, length(tidx) ),
+                                          time_factor=trajectory_length,
                                           pdf.filename=cg_filename,
                                           ylab="$N^\\mathrm{iter}_\\mathrm{CG}$",
                                           name="CG iterations",
@@ -523,15 +528,13 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
 
     temp <- plot_eigenvalue_timeseries(dat=evaldata[eval.tidx,],
                                        stat_range=c( 1+stat_skip, length(eval.tidx) ),
+                                       time_factor=evals_stepsize*trajectory_length,
                                        pdf.filename = ev_pdf_filename,
                                        ylab = "eigenvalue",
                                        plotsize=plotsize,
                                        filelabel=filelabel,
                                        titletext=titletext,
                                        errorband_color=errorband_color )
-    temp$obs$mineval[3:5] <- temp$mineval[3:5]*evals.stepsize
-    temp$obs$maxeval[3:5] <- temp$maxeval[3:5]*evals.stepsize
-    
     result$obs$mineval <- temp$mineval
     result$obs$maxeval <- temp$maxeval
   }
@@ -545,6 +548,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$accrate <- plot_timeseries(dat=data.frame(y=outdat$acc[tidx],
                                                          t=outdat$traj[tidx]),
                                           stat_range=c( 1+stat_skip, length(tidx) ),
+                                          time_factor=trajectory_length,
                                           pdf.filename=accrate_filename,
                                           ylab="Accept / Reject" ,
                                           name="accrate",
@@ -565,6 +569,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     result$obs$trajtime <- plot_timeseries(data.frame(y=outdat$trajtime[tidx],
                                                       t=outdat$traj[tidx]),
                                            stat_range=c( 1+stat_skip, length(tidx) ),
+                                           time_factor=trajectory_length,
                                            pdf.filename=trajtime_filename,
                                            ylab="Traj. time [s]" ,
                                            name="trajtime",

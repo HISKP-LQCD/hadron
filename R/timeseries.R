@@ -760,6 +760,9 @@ subset.tseries <- function(x, subset) {
 #' @param errorband_color String. Colour of the error band.
 #' @param type String. Plot type, see \link{plot} for details.
 #' @param uwerr.S Numeric. `S` of the \link{uwerr} method to be used.
+#' @param time_factor Numeric. Factor by which any auto-correlation times shoud be
+#'                             multiplied. Used, for example, when running non-unit-length 
+#'                             trajectories or employing strided measurements.
 #' @param periodogram Boolean. Whether to show a periodogram.
 #' @param debug Boolean. Generate debug output.
 #' @param uw.summary Boolean. Generate an \link{uwerr} summary plot.
@@ -778,6 +781,7 @@ plot_timeseries <- function(dat,
                             hist.probs=c(0.0,1.0), errorband_color=rgb(0.6,0.0,0.0,0.6),
                             type='l',
                             uwerr.S=2,
+                            time_factor=1.0,
                             smooth_density=FALSE,
                             periodogram=FALSE,debug=FALSE,uw.summary=TRUE,...) {
 
@@ -787,7 +791,9 @@ plot_timeseries <- function(dat,
   yrange <- range(dat$y)
 
   stat_y <- dat$y[ seq(stat_range[1], stat_range[2]) ]
-  
+ 
+  dat$t <- dat$t*time_factor
+
   uw.data <- uwerrprimary(stat_y, S=uwerr.S)
   if(debug) {
     print(paste("uw.",name,sep=""))
@@ -895,8 +901,8 @@ plot_timeseries <- function(dat,
     tikz.finalize(tikzfiles)
   }
 
-  return(t(data.frame(val=uw.data$value, dval=uw.data$dvalue, tauint=uw.data$tauint, 
-                      dtauint=uw.data$dtauint, Wopt=uw.data$Wopt, stringsAsFactors=FALSE)))
+  return(t(data.frame(val=uw.data$value, dval=uw.data$dvalue, tauint=uw.data$tauint*time_factor, 
+                      dtauint=uw.data$dtauint*time_factor, Wopt=uw.data$Wopt*time_factor, stringsAsFactors=FALSE)))
 }
 
 #' plot_eigenvalue_timeseries
@@ -911,6 +917,9 @@ plot_timeseries <- function(dat,
 #' @param filelabel String. Label of the file.
 #' @param titletext Text in the plot title.
 #' @param stat_range range of statistics to use.
+#' @param time_factor Numeric. Factor by which any auto-correlation times shoud be
+#'                             multiplied. Used, for example, when running non-unit-length 
+#'                             trajectories or employing strided measurements.
 #' @param pdf.filename String. PDF filename.
 #' @param errorband_color String. Colour of the error band.
 #' @param debug Boolean. Generate debug output.
@@ -922,12 +931,15 @@ plot_timeseries <- function(dat,
 #' @export
 plot_eigenvalue_timeseries <- function(dat,
                                        stat_range,
+                                       time_factor = 1.0,
                                        ylab, plotsize, filelabel,titletext,
                                        pdf.filename,
                                        errorband_color=rgb(0.6,0.0,0.0,0.6),
                                        debug=FALSE) {
   if( missing(stat_range) ) { stat_range <- c(1,nrow(dat)) }
   yrange <- range(dat[,2:5])
+
+  dat$t <- dat$t*time_factor
 
   stat_min_ev <- dat[ seq(stat_range[1], stat_range[2]), "min_ev" ]
   stat_max_ev <- dat[ seq(stat_range[1], stat_range[2]), "max_ev" ]
@@ -982,10 +994,14 @@ plot_eigenvalue_timeseries <- function(dat,
     tikz.finalize(tikzfiles)
   }
 
-  return(list(mineval=t(data.frame(val=uw.min_ev$value, dval=uw.min_ev$dvalue, tauint=uw.min_ev$tauint, 
-                                   dtauint=uw.min_ev$dtauint, Wopt=uw.min_ev$Wopt, stringsAsFactors=FALSE)),
-              maxeval=t(data.frame(val=uw.max_ev$value, dval=uw.max_ev$dvalue, tauint=uw.max_ev$tauint, 
-                                   dtauint=uw.max_ev$dtauint, Wopt=uw.max_ev$Wopt, stringsAsFactors=FALSE)) ) )
+  return(list(mineval=t(data.frame(val=uw.min_ev$value, dval=uw.min_ev$dvalue,
+                                   tauint=uw.min_ev$tauint*time_factor, 
+                                   dtauint=uw.min_ev$dtauint*time_factor, 
+                                   Wopt=uw.min_ev$Wopt*time_factor, stringsAsFactors=FALSE)),
+              maxeval=t(data.frame(val=uw.max_ev$value, dval=uw.max_ev$dvalue,
+                                   tauint=uw.max_ev$tauint*time_factor, 
+                                   dtauint=uw.max_ev$dtauint*time_factor, 
+                                   Wopt=uw.max_ev$Wopt*time_factor, stringsAsFactors=FALSE)) ) )
               
 }
 
