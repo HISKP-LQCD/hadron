@@ -193,7 +193,6 @@ analysis_tmlqcd_gradient_flow <- function(path, outputbasename, basename="gradfl
     res[["Qsym_uwerr"]] <- Qsym_uwerr
   }
 
-  res[["summary"]] <- summarise_gf_results(res, md_scalefac)
 
   # now we interpolate all observables in the gradient flow to the flow times
   # corresponding to the various gradient flow scales
@@ -204,11 +203,16 @@ analysis_tmlqcd_gradient_flow <- function(path, outputbasename, basename="gradfl
   target_ts[["tmax"]] <- list(name = "tmax", val = max(raw_gradflow$t) )
   res[["interpolations"]] <- gf_interpolate(raw_gradflow, target_ts)
   res[["t"]] <- sort(unique(raw_gradflow$t))
+  
+  res[["summary"]] <- summarise_gf_results(res, md_scalefac)
 
   if(make_plots) gf_make_plots(res, outputbasename, plotsize)
 
 	gradflow_resultsum[[outputbasename]] <- res$summary
   save(gradflow_resultsum, file=gf_summaries_db_file)
+
+  gf_analysis <- res
+  save(gf_analysis, file = sprintf("%s_gf_analysis.Rdata", outputbasename))
 
   return(invisible(res))
 }
@@ -328,13 +332,24 @@ gf_make_plots <- function(gf_analysis_results, outputbasename, plotsize){
   }
   if( gf_analysis_results$have_Qsym ){
     obslabel <- dplyr::filter(gf_analysis_results$summary, name == "Qsym_tmax")$obslabel
-    md_label <- paste(obslabel, "$|_{t = t_{\\mathrm{max}}}$")
+
+    # plot the gradient flow evolution of the topological charge
     gf_plot_flow(obs_uwerr = gf_analysis_results$Qsym_uwerr,
                  tlim = c(0.01, max(gf_analysis_results$t)),
                  ylim = range(c(gf_analysis_results$Qsym_uwerr$value - gf_analysis_results$Qsym_uwerr$dvalue,
                                 gf_analysis_results$Qsym_uwerr$value + gf_analysis_results$Qsym_uwerr$dvalue)),
                  log = 'x',
                  ylab = obslabel)
+
+    # and the MD history of the topological charge at flow time w_0^2
+    md_label <- paste(obslabel, "$|_{t = (w_0^{\\mathrm{sym}}/a)^2}$")
+    Qsym_w0_uw <- plot_timeseries(dat = data.frame(y = gf_analysis_results$interpolations$w0$Qsym_w0,
+                                                   t = gf_analysis_results$md_idx_scalefac * 
+                                                       unique(gf_analysis_results$raw_gradflow$traj)),
+                                  ylab = md_label, titletext = "")
+    add_tauint_legend(tauint = gf_analysis_results$md_scalefac * Qsym_w0_uw['tauint',1],
+                      dtauint = gf_analysis_results$md_scalefac * Qsym_w0_uw['dtauint',1],
+                      obslabel = md_label)
 
     # now extract and plot the MD history of the topoligical charge at maximum flow time
     Qsym_tmax_dat <- dplyr::transmute(  
@@ -346,6 +361,7 @@ gf_make_plots <- function(gf_analysis_results, outputbasename, plotsize){
                        y = Qsym
                      )
 
+    md_label <- paste(obslabel, "$|_{t = t_{\\mathrm{max}}}$")
     Qsym_tmax_uw <- plot_timeseries(dat = Qsym_tmax_dat, ylab = md_label, titletext = "")
     add_tauint_legend(tauint = gf_analysis_results$md_scalefac * Qsym_tmax_uw["tauint",1],
                       dtauint = gf_analysis_results$md_scalefac * Qsym_tmax_uw["dtauint",1],
@@ -462,8 +478,20 @@ summarise_gf_results <- function(gf_analysis_results, md_scalefac) {
 
   )
   if( gf_analysis_results$have_Qsym ){
+    Qsym_w0_uwerr <- uwerrprimary(data = gf_analysis_results$interpolations$w0$Qsym_w0, S = 1.5, pl = FALSE)
+
     tmax_idx <- nrow(gf_analysis_results$Qsym_uwerr)
     sum_res <- rbind(sum_res,
+                     data.frame(name = "Qsym_w0",
+                                label = "$Q_{\\mathrm{sym}}(t=w_0^2)$",
+                                obslabel = paste("$\\langle \\varepsilon_{\\mu \\nu \\rho \\gamma}^{\\mathrm{(eucl)}}",
+                                                 "\\mathrm{Tr} [F_{\\mu \\nu} F_{\\rho \\gamma}](t) \\rangle$"),
+                                val = Qsym_w0_uwerr$value,
+                                dval = Qsym_w0_uwerr$dvalue,
+                                dvalbs = NA,
+                                tauint = md_scalefac*Qsym_w0_uwerr$tauint,
+                                dtauint = md_scalefac*Qsym_w0_uwerr$dtauint,
+                                ddval = Qsym_w0_uwerr$ddvalue),
                      data.frame(name = "Qsym_tmax",
                                 label = "$Q_{\\mathrm{sym}}(t_{\\mathrm{max}})$",
                                 obslabel = paste("$\\langle \\varepsilon_{\\mu \\nu \\rho \\gamma}^{\\mathrm{(eucl)}}",
