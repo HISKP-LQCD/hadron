@@ -200,7 +200,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     omeas.cnums <- getorderedconfignumbers(path=rundir, basename="onlinemeas", last.digits=6) + omeas.offset
     # consider only the trajectory indices that we want to include in the analysis
     omeas.idx <- which(omeas.cnums >= traj_from)
-    
+   
     if( length(omeas.idx) < 1 ){
       stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left (omeas.offset was %d)!\n", traj_from), omeas.offset)
     }
@@ -288,15 +288,19 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                     ylab="$am_\\mathrm{PCAC}$",
                     xlab="$t/a$",
                     main=titletext)
-      rect(xleft=t1,
-           xright=t2,
-           ytop=mpcac_fit$val+mpcac_fit$dval,
-           ybottom=mpcac_fit$val-mpcac_fit$dval,border=FALSE,col=errorband_color)
+      if( mpcac_fit$dval < 1.0 ){
+        rect(xleft=t1,
+             xright=t2,
+             ytop=mpcac_fit$val+mpcac_fit$dval,
+             ybottom=mpcac_fit$val-mpcac_fit$dval,border=FALSE,col=errorband_color)
+      }
       abline(h=mpcac_fit$val,col="red",lwd=2)
-      rect(xleft=t1,
-           xright=t2,
-           ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
-           ybottom=result$obs$mpcac_mc["val",]-result$obs$mpcac_mc["dval",],border=FALSE,col=errorband_color2)
+      if( result$obs$mpcac_mc["dval",] < 1.0 ){
+        rect(xleft=t1,
+             xright=t2,
+             ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
+             ybottom=result$obs$mpcac_mc["val",]-result$obs$mpcac_mc["dval",],border=FALSE,col=errorband_color2)
+      }
       abline(h=result$obs$mpcac_mc["val",],lwd=2,col="blue")
       legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), cex = 0.8,
             legend=c("$ M_\\mathrm{PS} |G_A| / 2|G_P| $ from 3-param ground-state fit",
@@ -400,7 +404,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     # the number of columns may change so we need to be able to deal with that)
     no_columns <- max(count.fields(outfile,
                                    skip=skip_output_data+no_rows-1))
-    
+ 
     # restrict any outliers in outdat. Inconsistent lines will almost certainly
     # be filtered out below 
     outdat <- outdat[,1:no_columns]
