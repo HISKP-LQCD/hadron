@@ -38,3 +38,10 @@ foldr1 <- function (f, xs) {
   else
     return (Reduce(f, xs[2:l], xs[[1]]))
 }
+
+#' @export
+auto_full_join <- function(a, b){
+  common_vars <- dplyr::intersect(colnames(a), colnames(b))
+  dplyr::full_join(a, b, by = common_vars)
+}
+

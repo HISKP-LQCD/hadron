@@ -1,0 +1,262 @@
+---
+title: "Applying the `tseries` class to gradient flow observables"
+author: "Bartosz Kostrzewa"
+output: 
+  rmarkdown::html_vignette
+  
+vignette: >
+  %\VignetteIndexEntry{Applying the `tseries` class to gradient flow observables}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=TRUE, results = "hide", warning = FALSE, message = FALSE}
+require(hadron)
+require(ggplot2)
+require(latex2exp)
+require(knitr)
+require(parallel)
+require(dplyr)
+```
+
+# Introduction
+
+```{r}
+boot.R <- 3*length(unique(sample_raw_gradflow$traj))
+boot.l <- 42
+
+gf_tseries <- tseries_orig(data = data.frame(md_idx = sample_raw_gradflow$traj,
+                                             t = sample_raw_gradflow$t,
+                                             P = sample_raw_gradflow$P,
+                                             Wsym = sample_raw_gradflow$Wsym,
+                                             tsqEplaq = sample_raw_gradflow$tsqEplaq,
+                                             tsqEsym = sample_raw_gradflow$tsqEsym,
+                                             Qsym = sample_raw_gradflow$Qsym),
+                             explanatory_vars = c("t"))
+
+gf_tseries <- bootstrap.tseries(gf_tseries,
+                                boot.R = boot.R,
+                                boot.l = boot.l,
+                                seed = 12345,
+                                sim = 'geom',
+                                endcorr = TRUE,
+                                serial = FALSE)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Observables to compute $(w_0/a)^2$, error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = gf_tseries$central$t, 
+                                se = gf_tseries$se$Wsym,
+                                val = gf_tseries$central$Wsym),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::coord_cartesian(ylim = c(0,0.4),
+                              xlim = c(0,5.0)) +
+     ggplot2::geom_hline(yintercept = 0.3, colour = "blue") +
+     ggplot2::labs(y = TeX("$< t \\frac{d}{dt} (t^2 E(t)) >$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "MD history of observable to compute $(w_0/a)^2$ at a discrete flow time close to $t = (w_0/a)^2$"}
+t_val <- 3.35
+p <- ggplot2::ggplot(dplyr::filter(gf_tseries$data, t == t_val),
+                     aes(x = 4*md_idx, y = Wsym)) +
+     ggplot2::geom_line() +
+     ggplot2::labs(y = TeX(sprintf("$t \\frac{d}{dt} (t^2 E(t=%.2f))$",t_val)),
+                   x = TeX("$t_{MD}$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+# Applying an element-wise transformation
+
+Element-wise transformations can be applied using `apply_unary_elementwise.tseries`, with the `tseries` class taking care of applying the transformation only to the central values and samples and not the `explanatory_vars`.
+If a `data` member exists, it will be set to `NULL` and the `tseries_orig` mixin will be removed.
+
+```{r}
+three_gf_tseries <- apply_unary_elementwise.tseries(gf_tseries, function(x){ pi*x })
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Observables to compute $(w_0/a)^2$, multiplied by $\\pi$, error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = three_gf_tseries$central$t, 
+                                se = three_gf_tseries$se$Wsym,
+                                val = three_gf_tseries$central$Wsym),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::coord_cartesian(ylim = c(0,1.2),
+                              xlim = c(0,5.0)) +
+     ggplot2::labs(y = TeX("$\\pi \\times < t \\frac{d}{dt} (t^2 E(t)) >$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+# Extracting a subset of observables from a `tseries`
+
+```{r}
+names(gf_tseries$data)
+Wsym_tsqE_tseries <- subset(x = gf_tseries, subset = c("Wsym", "tsqEplaq", "tsqEsym"))
+names(Wsym_tsqE_tseries$data)
+```
+
+# Ratios of defining observables of gradient flow scales as a function of flow time
+
+The ratios
+
+\begin{equation}
+  \frac{\langle t^2 E(t) \rangle}{\langle d \frac{d}{dt} ( t^2 e(t) ) \rangle}
+\end{equation
+
+and its inverse
+
+\begin{equation}
+  \frac{\langle d \frac{d}{dt} ( t^2 e(t) ) \rangle}{\langle t^2 E(t) \rangle}
+\end{equation}
+
+may serve as statistically and systematically *much* more precise defining relations for the gradient flow scale, if they behave reasonably in the continuum limit.
+
+
+```{r}
+gf_ratios <- div(x = Wsym_tsqE_tseries,
+                 y = Wsym_tsqE_tseries,
+                 plan = data.frame(vars_out = c("tsqEplaq_ov_Wsym", "tsqEsym_ov_Wsym", "Wsym_ov_tsqEplaq", "Wsym_ov_tsqEsym"),
+                                   x_vars = c("tsqEplaq", "tsqEsym", "Wsym", "Wsym"),
+                                   y_vars = c("Wsym", "Wsym", "tsqEplaq", "tsqEsym")))
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratio of defining observable for $t_0/a^2$ and $(w_0/a)^2$ ($E(t)$ for $t_0$ in the plaquette definition), error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = gf_ratios$central$t, 
+                                se = gf_ratios$se$tsqEplaq_ov_Wsym,
+                                val = gf_ratios$central$tsqEplaq_ov_Wsym),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::labs(y = TeX("$ \\frac{< t^2 E(t) >}{< t \\frac{d}{dt} (t^2 E(t)) >}$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratio of defining observable for $t_0/a^2$ and $(w_0/a)^2$ ($E(t)$ for $t_0$ in the symmetric definition), error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = gf_ratios$central$t, 
+                                se = gf_ratios$se$tsqEsym_ov_Wsym,
+                                val = gf_ratios$central$tsqEsym_ov_Wsym),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::labs(y = TeX("$ \\frac{< t^2 E(t) >}{< t \\frac{d}{dt} (t^2 E(t)) >}$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratio of defining observable for $t_0/a^2$ and $(w_0/a)^2$ ($E(t)$ for $t_0$ in the plaquette definition), error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = gf_ratios$central$t, 
+                                se = gf_ratios$se$Wsym_ov_tsqEplaq,
+                                val = gf_ratios$central$Wsym_ov_tsqEplaq),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::labs(y = TeX("$ \\frac{< t \\frac{d}{dt} (t^2 E(t)) >}{< t^2 E(t) >}$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratio of defining observable for $t_0/a^2$ and $(w_0/a)^2$ ($E(t)$ for $t_0$ in the symmetric definition), error exaggerated by a factor 20"}
+p <- ggplot2::ggplot(data.frame(t = gf_ratios$central$t, 
+                                se = gf_ratios$se$Wsym_ov_tsqEsym,
+                                val = gf_ratios$central$Wsym_ov_tsqEsym),
+                     aes(x = t, y = val)) +
+     ggplot2::geom_ribbon(aes(ymin = val - 20*se, ymax = val + 20*se),
+                          colour = "red",
+                          fill = "red",
+                          alpha = 0.2) +
+     ggplot2::geom_line() +
+     ggplot2::labs(y = TeX("$ \\frac{< t \\frac{d}{dt} (t^2 E(t)) >}{< t^2 E(t) >}$"),
+                   x = TeX("$t / a^2$")) +
+     ggplot2::theme_bw()
+plot(p)
+```
+
+# Bootstrapping the determination of gradient flow scales
+
+Now that we have bootstrapped our gradient flow time series, bootstrapping the determination is basically trivial using the `apply_reduction_plan.tseries` function.
+
+```{r}
+# we define a reduction plan
+plan <- list()
+plan[["t0plaq"]] <- expression( approx(x = tsqEplaq, y = t, xout = 0.3)$y )
+plan[["t0sym"]] <- expression( approx(x = tsqEsym, y = t, xout = 0.3)$y )
+plan[["w0sq"]] <- expression( approx(x = Wsym, y = t, xout = 0.3)$y )
+plan[["w0"]] <- expression( sqrt(approx(x = Wsym, y = t, xout = 0.3)$y) )
+
+# and apply it to our gradient flow time series 
+gf_scales <- apply_reduce_plan.tseries(
+  ts = gf_tseries,
+  reduce_vars = c("t"),
+  plan = plan
+)
+
+str(gf_scales)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "The gradient flow scales on cA211b.12.48"}
+require(reshape2)
+plotdat <- cbind(reshape2::melt(gf_scales$central),
+                 error = reshape2::melt(gf_scales$se)$value*20 )
+
+p <- ggplot2::ggplot(plotdat, aes(x = factor(variable), y = value)) +
+       ggplot2::geom_point() +
+       ggplot2::geom_errorbar(aes(ymin = value - error, ymax = value + error),
+                     width = 0) +
+       ggplot2::theme_bw()
+plot(p)
+```
+
+# Gradient flow scale ratios
+
+```{r}
+# define a mutation plan
+plan <- list()
+plan[["t0plaq_ov_w0"]] <- expression( t0plaq / w0 )
+plan[["t0sym_ov_w0"]] <- expression( t0sym / w0 )
+
+gf_scale_ratios <- apply_transmute_plan.tseries(
+  ts = gf_scales,
+  plan = plan
+)
+```
+
+```{r fig.width=7, fig.height=5, echo = FALSE, fig.cap = "Ratios of the gradient flow scales on cA211b.12.48"}
+require(reshape2)
+
+central <- reshape2::melt(gf_scale_ratios$central, measure.vars = names(gf_scale_ratios$central))
+se <- reshape2::melt(gf_scale_ratios$se, measure.vars = names(gf_scale_ratios$se))
+plotdat <- cbind(central, error = se$value )
+p <- ggplot2::ggplot(plotdat, aes(x = factor(variable), y = value)) +
+       ggplot2::geom_point() +
+       ggplot2::geom_errorbar(aes(ymin = value - error, ymax = value + error),
+                              width = 0) +
+       ggplot2::theme_bw()
+plot(p)
+```
+

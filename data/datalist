@@ -3,3 +3,5 @@ pscor.sample
 samplecf
 correlatormatrix
 loopdata
+sample_raw.gradflow
+ref_gf_scales
