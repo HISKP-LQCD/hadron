@@ -112,25 +112,23 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
 #' 
 #' where, from left to right:
-#' \itemize{
-#'  \item 'u' is the flavour of the "backward" propagator
-#'  \item 'd' is the flavour of the "sequential" propagator
-#'  \item '+' indicates that 'sud' is daggered
-#'  \item 'g' indicates a gamma insertion 
-#'  \item 'u' is the flavour of the foward propagator
-#'  \item 'g' indicates a Dirac structure at the source
-#'  \item 'tXX' is the source time slice
-#'  \item 'dtYY' is the source-sink separation
-#'  \item 'gfN' gamma structure at the sink in CVC indexing
-#'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
-#'  \item 'gcN' gamma structure at the current insertion point in CVC indexing
-#'  \item 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
+#' * 'u' is the flavour of the "backward" propagator
+#' * 'd' is the flavour of the "sequential" propagator
+#' * '+' indicates that 'sud' is daggered
+#' * 'g' indicates a gamma insertion 
+#' * 'u' is the flavour of the foward propagator
+#' * 'g' indicates a Dirac structure at the source
+#' * 'tXX' is the source time slice
+#' * 'dtYY' is the source-sink separation
+#' * 'gfN' gamma structure at the sink in CVC indexing
+#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#' * 'gcN' gamma structure at the current insertion point in CVC indexing
+#' * 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most
 #'         displacement is the one applied first.
-#'  \item [...]
-#'  \item 'giN' gamma structure at the souce in CVC indexing
-#'  \item 'pixXpiyYpizZ' at the source in CVC convention
-#' }
+#' * [...]
+#' * 'giN' gamma structure at the souce in CVC indexing
+#' * 'pixXpiyYpizZ' at the source in CVC convention
 #'
 #' @param fwd_flav String, "forward" quark flavour identifier.
 #' @param bwd_flav String, "backward" quark flavour identifier.
@@ -215,25 +213,23 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
 #' 
 #' where, from left to right:
-#' \itemize{
-#'  \item 'u' is the flavour of the "backward" propagator
-#'  \item 'd' is the flavour of the "sequential" propagator
-#'  \item '+' indicates that 'sud' is daggered
-#'  \item 'g' indicates a gamma insertion 
-#'  \item 'u' is the flavour of the foward propagator
-#'  \item 'g' indicates a Dirac structure at the source
-#'  \item 'tXX' is the source time slice
-#'  \item 'dtYY' is the source-sink separation
-#'  \item 'gfN' gamma structure at the sink in CVC indexing
-#'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
-#'  \item 'gcN' gamma structure at the current insertion point in CVC indexing
-#'  \item 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
+#' * 'u' is the flavour of the "backward" propagator
+#' * 'd' is the flavour of the "sequential" propagator
+#' * '+' indicates that 'sud' is daggered
+#' * 'g' indicates a gamma insertion 
+#' * 'u' is the flavour of the foward propagator
+#' * 'g' indicates a Dirac structure at the source
+#' * 'tXX' is the source time slice
+#' * 'dtYY' is the source-sink separation
+#' * 'gfN' gamma structure at the sink in CVC indexing
+#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#' * 'gcN' gamma structure at the current insertion point in CVC indexing
+#' * 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most
 #'         displacement is the one applied first.
-#'  \item [...]
-#'  \item 'giN' gamma structure at the souce in CVC indexing
-#'  \item 'pixXpiyYpizZ' at the source in CVC convention
-#' }
+#' * [...]
+#' * 'giN' gamma structure at the souce in CVC indexing
+#' * 'pixXpiyYpizZ' at the source in CVC convention
 #'
 #' @param fwd_flav String, "forward" quark flavour identifier.
 #' @param bwd_flav String, "backward" quark flavour identifier.
