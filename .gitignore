@@ -24,3 +24,5 @@ vignettes/*.html
 vignettes/*.log
 vignettes/*.pdf
 configure
+/doc/
+/Meta/
