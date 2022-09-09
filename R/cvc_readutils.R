@@ -106,7 +106,8 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 }
 
 #' @title Generate HDF5 key for CVC 'correlators' meson 3pt function with a local or derivative insertion
-#' 
+#'
+#' @description
 #' The key for a meson three-point function has the form:
 #' 
 #'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
@@ -207,7 +208,8 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 }
 
 #' @title Generate HDF5 key for CVC 'correlators' meson 3pt function with a local or derivative insertion
-#' 
+#'
+#' @description
 #' The key for a meson three-point function has the form:
 #' 
 #'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
