@@ -262,8 +262,8 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
     plot(x, y, col=col, ...)
   }
 
-  ## We will need some langth in inches, so let's define the proportionality factor as
-  ## size of the output in inches devided by the differnce of boundary coordinates.
+  ## We will need some length in inches, so let's define the proportionality factor as
+  ## size of the output in inches divided by the difference of boundary coordinates.
   x.to.inches <- par("pin")[1]/diff(par("usr")[1:2])
   y.to.inches <- par("pin")[2]/diff(par("usr")[3:4])
 
@@ -272,52 +272,58 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
       rng <- 2:ncol(cumul.err)
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
       ## this loop is necessary because the "length" parameter of "arrows" is not vectorial...
-      ## so to accomodate the generalisations below, we need to draw the error for each point
+      ## so to accommodate the generalisations below, we need to draw the error for each point
       ## individually, it doesn't make it much slower
-      for(rw in 1:length(y)){
-        ## the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
-        arwhd.len <- 0.02
-        clr <- col
-        if(length(col)>1) clr <- col[rw]
-        for(level in rng){
-          start <- y[rw]+cumul.err[rw,(level-1)]
-          end <- y[rw]+cumul.err[rw,level]
-          if (!is.na(start) && !is.na(end)){
-            if(par("ylog")){
-              ## logarithmic scaling means distances are multiplicative
-              if(start > 0 && end > 0){
-                dy.in.inches <- abs(log10(end/start))*y.to.inches
-                ## An arrow can only be plotted if it is longer than 1/1000 inches.
-                if(dy.in.inches <= 1/1000) {
-                  ## We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
-                  start <- y[rw] / 10^(1.01/2000/y.to.inches)
-                  end <- y[rw] * 10^(1.01/2000/y.to.inches)
-                }
-              }else{
-                dy.in.inches <- 0
-              }
-            }else{
-              dy.in.inches <- abs(end-start)*y.to.inches
-              if(dy.in.inches <= 1/1000) {
-                start <- y[rw] - 1.01/2000/y.to.inches
-                end <- y[rw] + 1.01/2000/y.to.inches
-              }
-            }
+      ## the length of the arrowhead lines will depend on the "level" (the more errors, the longer the arrowhead lines)
+      arwhd.len <- 0.02
+      for(level in rng){
+        start <- y+cumul.err[,(level-1)]
+        end <- y+cumul.err[,level]
+        proper.val <- is.finite(start) & is.finite(end)
+        start <- start[proper.val]
+        end <- end[proper.val]
 
-            if(dy.in.inches > 1/1000) {
-              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=2, col=clr)
-            }else if(dy.in.inches > 0){
-              arrows(x[rw], start, x[rw], end, length=arwhd.len, angle=90, code=3, col=clr)
-            }
-            arwhd.len <- arwhd.len + 0.01
+        if(par("ylog")){
+          ## logarithmic scaling means distances are multiplicative (the inner abs() is just supposed to prevent irrelevant warnings)
+          dy.in.inches <- ifelse(start > 0 & end > 0, abs(log10(abs(end/start)))*y.to.inches, 0)
+          ## An arrow can only be plotted if it is longer than 1/1000 inches.
+          ## We want to plot an errorbar of minimum size anyway, so as to show the point is plotted with an error.
+          start <- ifelse(dy.in.inches <= 1/1000, y[proper.val] / 10^(1.01/2000/y.to.inches), start)
+          end <- ifelse(dy.in.inches <= 1/1000, y[proper.val] * 10^(1.01/2000/y.to.inches), end)
+        }else{
+          dy.in.inches <- abs(end-start)*y.to.inches
+          start <- ifelse(dy.in.inches <= 1/1000, y[proper.val] - 1.01/2000/y.to.inches, start)
+          end <- ifelse(dy.in.inches <= 1/1000, y[proper.val] + 1.01/2000/y.to.inches, end)
+        }
+
+        if(length(col) == 1){
+          rw <- which(dy.in.inches > 1/1000)
+          arrows(x[proper.val][rw], start[rw], x[proper.val][rw], end[rw], length=arwhd.len, angle=90, code=2, col=col)
+          rw <- which(dy.in.inches > 0)
+          arrows(x[proper.val][rw], start[rw], x[proper.val][rw], end[rw], length=arwhd.len, angle=90, code=3, col=col)
+        }else{
+          ## this loop is necessary because the "col" parameter of "arrows" is not vectorial...
+          ## it does make it much slower
+          for(rw in seq(proper.val)){
+            if(dy.in.inches[rw] > 1/1000)
+              arrows(x[proper.val][rw], start[rw], x[proper.val][rw], end[rw], length=arwhd.len, angle=90, code=2, col=col[proper.val][rw])
+            else if(dy.in.inches[rw] > 0)
+              arrows(x[proper.val][rw], start[rw], x[proper.val][rw], end[rw], length=arwhd.len, angle=90, code=3, col=col[proper.val][rw])
           }
-        } 
-        ## for the linear.quadrature method, show the total error as a line of triple thickness
-        ## without drawing any "arrowstems"
-        if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
-          ## to be consistent, drawX/Ybars uses inches just like arrows
-          arwhd.len <- arwhd.len + 0.02
-          drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
+        }
+
+        arwhd.len <- arwhd.len + 0.01
+      } 
+      ## for the linear.quadrature method, show the total error as a line of triple thickness
+      ## without drawing any "arrowstems"
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
+        ## to be consistent, drawX/Ybars uses inches just like arrows
+        arwhd.len <- arwhd.len + 0.02
+        if(length(col) == 1)
+          drawYbars(x=x,y=y,dy=cumul.err[,ncol(cumul.err)],length=arwhd.len,lwd=3,col=col)
+        else{
+          for(rw in seq(y))
+            drawYbars(x=x[rw],y=y[rw],dy=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=col[rw])
         }
       }
     }
@@ -326,43 +332,48 @@ plotwitherror <- function(x, y, dy, ylim = NULL, dx, xlim = NULL, mdx, mdy, errs
     for(cumul.err in list(cumul.dx,cumul.mdx)){
       rng <- 2:ncol(cumul.err)
       if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature") rng <- 2:(ncol(cumul.err)-1)
-      for(rw in 1:length(x)){
-        arwhd.len <- 0.02
-        clr <- col
-        if(length(col)>1) clr <- col[rw]
-        for(level in rng){
-          start <- x[rw]+cumul.err[rw,(level-1)]
-          end <- x[rw]+cumul.err[rw,level]
-          if (!is.na(start) && !is.na(end)){
-            if(par("xlog")){
-              if(start > 0 && end > 0){
-                dx.in.inches <- abs(log10(end/start))*x.to.inches
-                if(dx.in.inches <= 1/1000) {
-                  start <- x[rw] / 10^(1.01/2000/x.to.inches)
-                  end <- x[rw] * 10^(1.01/2000/x.to.inches)
-                }
-              }else{
-                dx.in.inches <- 0
-              }
-            }else{
-              dx.in.inches <- abs(end-start)*x.to.inches
-              if(dx.in.inches <= 1/1000) {
-                start <- x[rw] - 1.01/2000/x.to.inches
-                end <- x[rw] + 1.01/2000/x.to.inches
-              }
-            }
+      arwhd.len <- 0.02
+      for(level in rng){
+        start <- x+cumul.err[,(level-1)]
+        end <- x+cumul.err[,level]
+        proper.val <- is.finite(start) & is.finite(end)
+        start <- start[proper.val]
+        end <- end[proper.val]
 
-            if(dx.in.inches > 1/1000) {
-              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=2, col=clr)
-            }else if(dx.in.inches > 0){
-              arrows(start, y[rw], end, y[rw], length=arwhd.len, angle=90, code=3, col=clr)
-            }
-            arwhd.len <- arwhd.len + 0.01
+        if(par("xlog")){
+          dx.in.inches <- ifelse(start > 0 & end > 0, abs(log10(abs(end/start)))*x.to.inches, 0)
+          start <- ifelse(dx.in.inches <= 1/1000, x[proper.val] / 10^(1.01/2000/x.to.inches), start)
+          end <- ifelse(dx.in.inches <= 1/1000, x[proper.val] * 10^(1.01/2000/x.to.inches), end)
+        }else{
+          dx.in.inches <- abs(end-start)*x.to.inches
+          start <- ifelse(dx.in.inches <= 1/1000, x[proper.val] - 1.01/2000/x.to.inches, start)
+          end <- ifelse(dx.in.inches <= 1/1000, x[proper.val] + 1.01/2000/x.to.inches, end)
+        }
+
+        if(length(col) == 1){
+          rw <- which(dx.in.inches > 1/1000)
+          arrows(start[rw], y[proper.val][rw], end[rw], y[proper.val][rw], length=arwhd.len, angle=90, code=2, col=col)
+          rw <- which(dx.in.inches > 0)
+          arrows(start[rw], y[proper.val][rw], end[rw], y[proper.val][rw], length=arwhd.len, angle=90, code=3, col=col)
+        }else{
+          for(rw in seq(proper.val)){
+            if(dx.in.inches[rw] > 1/1000)
+              arrows(start[rw], y[proper.val][rw], end[rw], y[proper.val][rw], length=arwhd.len, angle=90, code=2, col=col[proper.val][rw])
+            else if(dx.in.inches[rw] > 0)
+              arrows(start[rw], y[proper.val][rw], end[rw], y[proper.val][rw], length=arwhd.len, angle=90, code=3, col=col[proper.val][rw])
           }
         }
-        if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
-          arwhd.len <- arwhd.len + 0.02
-          drawXbars(x=x[rw],y=y[rw],dx=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=clr)
+
+        arwhd.len <- arwhd.len + 0.01
+      } 
+      if(ncol(cumul.err)>2 && errsum.method=="linear.quadrature"){
+        ## to be consistent, drawX/Ybars uses inches just like arrows
+        arwhd.len <- arwhd.len + 0.02
+        if(length(col) == 1)
+          drawXbars(x=x,y=y,dx=cumul.err[,ncol(cumul.err)],length=arwhd.len,lwd=3,col=col)
+        else{
+          for(rw in seq(x))
+            drawXbars(x=x[rw],y=y[rw],dx=cumul.err[rw,ncol(cumul.err)],length=arwhd.len,lwd=3,col=col[rw])
         }
       }
     } 
@@ -663,7 +674,7 @@ plot.outputdata <- function (x, skip = 0, ...) {
 
 ## draw Y (X) error bars at coordinates y+dy (x+dx) (where dy (dx) can be negative)
 ## like for arrows, the bar width is specified in inches
-## and additonal parameters (like lwd and col) can be passed
+## and additional parameters (like lwd and col) can be passed
 ## to segments
 drawYbars <- function(x,y,dy,length=0.01,...) {
   x.inch <- grconvertX(x=x,from="user",to="inches")
