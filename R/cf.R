@@ -469,7 +469,6 @@ resampling_is_concatenable <- function(cf1, cf2){
   }
 
   return(res)
-
 }
 
 #' Checks whether the cf object contains an imaginary part
@@ -1220,7 +1219,7 @@ concat.cf <- function (left, right) {
 #' t-values, `CF` the mean values of the correlation function and `Err` its standard error.
 #' 
 #' @export
-plot.cf <- function(x, neg.vec = rep(1, times = length(cf$cf0)), rep = FALSE, ...) {
+plot.cf <- function(x, neg.vec = rep(1, times = length(x$cf0)), rep = FALSE, ...) {
   cf <- x
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_meta'))
