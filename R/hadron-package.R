@@ -35,8 +35,9 @@ NULL
 #'
 NULL
 
-#' Internal Hadron Functions
-#' 
+#' @title Internal Hadron Functions
+#' @name InternalHadronFunctions
+#' @description
 #' Internal hadron functions
 #' 
 #' These are not to be called by the user (or in some cases are just waiting
@@ -46,7 +47,7 @@ NULL
 #' getNxNmatrix ChiSqr.1mass ChiSqr.2mass ChiSqr.3mass fitmasses.vector
 #' fitmasses.vector.boot fitmasses.pion fitmasses.pion.boot fitmasses.b1
 #' fitmasses.b1.boot fitmasses.a0 fitmasses.a0.boot fitf.pion mean.index
-#' fitmpcac.pion effectivemass effmass effmass2 read_nissa_textcf_kernel
+#' fitmpcac.pion read_nissa_textcf_kernel
 #' compute.qtildesq compute.qtildesq.contdisp
 #' @keywords internal
 NULL
@@ -90,8 +91,9 @@ NULL
 #' @keywords package
 NULL
 
-#' jackknife-after-bootstrap analysis
-#' 
+#' @title jackknife-after-bootstrap analysis
+#' @name jackknife-after-bootstrap
+#' @description
 #' jackknife-after-bootstrap (JAB) analysis for errors of errors of correlation
 #' functions of class \code{cf}.
 #' 
