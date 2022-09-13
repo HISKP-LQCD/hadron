@@ -1,5 +1,5 @@
 Package: hadron
-Version: 3.2.0
+Version: 3.2.1
 Date: 2022-09-09
 Title: Analysis Framework for Monte Carlo Simulation Data
     in Physics
@@ -80,6 +80,7 @@ Suggests:
 License: GPL-3
 URL: https://github.com/HISKP-LQCD/hadron
 BugReports: https://github.com/HISKP-LQCD/hadron/issues
+NeedsCompilation: yes
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
 RoxygenNote: 7.2.1
