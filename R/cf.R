@@ -1098,14 +1098,27 @@ num.cf <- function(cf, n=1.) {
   return (cf)
 }
 
-#' FHT ratio
+#' Feynman-Hellmann theorem ratio
 #'
 #' @description
-#' Computes Feynman-Hellmann theorem (FHT) ratio for given
+#' Computes the Feynman-Hellmann theorem (FHT) ratio for given
 #' 2-point and 3-point cf objects.
+#' 
+#' The FHT ratio R has its origin in the symmetrized effective mass and
+#' is given by
+#' 
+#'   R(t, tau) = ( 1/tau )( z/sqrt(z^2-1) )( (C3pt(t+tau) + C3pt(t-tau)) /
+#'               (C2pt(t+tau) + C2pt(t-tau)) - C3pt(t) / C2pt(t) ),
+#'   
+#'   where
+#'               
+#'   z = ( C2pt(t+tau) + C2pt(t-tau) ) / ( 2 C2pt(t) ).
+#'   
+#' For example, in the large t limit, R can be used to estimate nucleon-nucleon
+#' matrix elements <N|O4q|N> where O4q is a four-quark interpolating operator.
 #'
-#' @param cf2pt `cf_orig` object, 2-point correlation function.
-#' @param cf3pt `cf_orig` object, 3-point correlation function.
+#' @param cf2pt `cf_orig` object, 2-point correlation function C2pt.
+#' @param cf3pt `cf_orig` object, 3-point correlation function C3pt.
 #' @param tau Numeric, offset parameter for the displacement of t.
 #'
 #' @return
