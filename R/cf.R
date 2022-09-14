@@ -1045,11 +1045,7 @@ pow.cf <- function(cf, n=1.) {
   stopifnot(inherits(cf, 'cf_meta'))
   if(inherits(cf, 'cf_orig')) {
     cf$cf <- (cf$cf)^n
-    
-    if( has_icf(cf) ){
-      stopifnot(has_icf(cf))
-      cf$icf <- (cf$icf)^n
-    }
+    cf$icf <- (cf$icf)^n
   }
   
   if(inherits(cf, 'cf_boot')) {
