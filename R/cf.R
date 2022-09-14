@@ -1058,12 +1058,14 @@ pow.cf <- function(cf, n=1.) {
   return (cf)
 }
 
-#' Assign numeric values n to entries of cf objects
+#' Assign a numeric value n to the real and imaginary part of cf objects
+#' 
+#' To do this, the real part cf$cf is divided by itself and multiplied by n.
+#' This is done analogously for the imaginary part cf$icf.
 #'
 #' Note that no complex arithmetic is used, real and imaginary parts are 
-#' treated as seperate and indepenent, such that the real part of cf is
-#' divided by itself and multiplied with n and similarly for the imaginary part.
-#'
+#' treated as seperate and indepenent.
+#' 
 #' Note that this is generally only allowed on bootstrap samples and mean values,
 #' although it makes sense in some exeptional circumstances. Don't use this
 #' function unless you're certain that you should!
