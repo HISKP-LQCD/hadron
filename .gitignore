@@ -26,3 +26,4 @@ vignettes/*.pdf
 configure
 /doc/
 /Meta/
+src/Makevars

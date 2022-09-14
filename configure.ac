@@ -3,17 +3,18 @@ AC_CONFIG_SRCDIR([src/alpha_s.c])
 
 # This is from example from "writing R extensions"
 # Now find the compiler and compiler flags to use
-: ${R_HOME=`R RHOME`}
-if test -z "${R_HOME}"; then
-  echo "could not determine R_HOME"
-  exit 1
-fi
-CC=`"${R_HOME}/bin/R" CMD config CC`
-CXX=`"${R_HOME}/bin/R" CMD config CXX`
-CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
-CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
+#: ${R_HOME=`R RHOME`}
+#if test -z "${R_HOME}"; then
+#  echo "could not determine R_HOME"
+#  exit 1
+#fi
+#CC=`"${R_HOME}/bin/R" CMD config CC`
+#CXX=`"${R_HOME}/bin/R" CMD config CXX`
+#CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
+#CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
 
-# Following lines kindly supplied by Dirk Eddelbuettel
+## Following lines kindly supplied by Dirk Eddelbuettel for the
+## gsl package, which we took over
 ## Use gsl-config to find arguments for compiler and linker flags
 ##
 ## Check for non-standard programs: gsl-config(1)
@@ -28,13 +29,7 @@ else
    AC_MSG_ERROR([gsl-config not found, is GSL installed?])
 fi
 
-
-#AC_CHECK_LIB(gsl, gsl_sf_airy_Ai_e,
-#             [LIBS="${LIBS} -lgsl -lgslcblas"], 
-#             [AC_MSG_ERROR([Cannot find Gnu Scientific Library.])],
-#             [-lgslcblas])
-#AC_CHECK_HEADER([gsl/gsl_version.h], ,
-#             [AC_MSG_ERROR([Cannot find GSL headers.])])
+# Check for GSL Version
 AC_MSG_CHECKING([if GSL version >= 1.8])
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>

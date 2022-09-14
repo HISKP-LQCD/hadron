@@ -1,4 +1,5 @@
-# Kindly supplied by Dirk Eddelbuettel
+## Kindly supplied by Dirk Eddelbuettel for
+## the gsl package, which we took over
 # set by configure
 GSL_CFLAGS = @GSL_CFLAGS@
 GSL_LIBS   = @GSL_LIBS@
