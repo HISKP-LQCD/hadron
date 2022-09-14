@@ -1104,9 +1104,9 @@ num.cf <- function(cf, n=1.) {
 #' Computes Feynman-Hellmann theorem (FHT) ratio for given
 #' 2-point and 3-point cf objects.
 #'
-#' @param cf2pt `cf_orig` object.
-#' @param cf3pt `cf_orig` object.
-#' @param tau Numeric.
+#' @param cf2pt `cf_orig` object, 2-point correlation function.
+#' @param cf3pt `cf_orig` object, 3-point correlation function.
+#' @param tau Numeric, offset parameter for the displacement of t.
 #'
 #' @return
 #' returns the FHT ratio in form of a cf object.
