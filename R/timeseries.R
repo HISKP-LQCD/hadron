@@ -818,11 +818,13 @@ plot_timeseries <- function(dat,
        xlab=xlab,
        main=titletext, ...)
 
-  rect(xleft=dat$t[ stat_range[1] ],
-       xright=dat$t[ stat_range[2] ],
-       ytop=uw.data$value+uw.data$dvalue,
-       ybottom=uw.data$value-uw.data$dvalue,
-       border=FALSE, col=errorband_color)
+  if( abs(uw.data$dvalue) < 5*abs(uw.data$value) ){
+    rect(xleft=dat$t[ stat_range[1] ],
+         xright=dat$t[ stat_range[2] ],
+         ytop=uw.data$value+uw.data$dvalue,
+         ybottom=uw.data$value-uw.data$dvalue,
+         border=FALSE, col=errorband_color)
+  }
   abline(h=uw.data$value,col="black",lwd=2)
 
   legend(x="topright",
@@ -876,11 +878,13 @@ plot_timeseries <- function(dat,
     ytop <- max(hist.data$counts)
     ybottom <- 0.0
   }
-  rect(ytop=ytop,
-       ybottom=0,
-       xright=uw.data$value+uw.data$dvalue,
-       xleft=uw.data$value-uw.data$dvalue,
-       border=FALSE, col=errorband_color)
+  if( abs(uw.data$dvalue) < 5*abs(uw.data$value) ){
+    rect(ytop=ytop,
+         ybottom=0,
+         xright=uw.data$value+uw.data$dvalue,
+         xleft=uw.data$value-uw.data$dvalue,
+         border=FALSE, col=errorband_color)
+  }
   abline(v=uw.data$value, col="black", lwd=2) 
 
   # and a periodogram
@@ -977,17 +981,21 @@ plot_eigenvalue_timeseries <- function(dat,
   
   # plot the corresponding histograms with error bands and mean values
   hist.min_ev <- hist(stat_min_ev, main=paste("min. eval",titletext),xlab="min. eval",tcl=0.02)
-  rect(ytop=max(hist.min_ev$counts),
-       ybottom=0,
-       xright=uw.min_ev$value+uw.min_ev$dvalue,
-       xleft=uw.min_ev$value-uw.min_ev$dvalue,border=FALSE,col=errorband_color)
+  if( abs(uw.min_ev$dvalue) < 5*abs(uw.min_ev$value) ){
+    rect(ytop=max(hist.min_ev$counts),
+         ybottom=0,
+         xright=uw.min_ev$value+uw.min_ev$dvalue,
+         xleft=uw.min_ev$value-uw.min_ev$dvalue,border=FALSE,col=errorband_color)
+  }
   abline(v=uw.min_ev$value,col="black")                                                                                                   
 
   hist.max_ev <- hist(stat_max_ev, main=paste("max. eval",titletext), xlab="max. eval")
-  rect(ytop=max(hist.max_ev$counts),
-       ybottom=0,
-       xright=uw.max_ev$value+uw.max_ev$dvalue,
-       xleft=uw.max_ev$value-uw.max_ev$dvalue,border=FALSE,col=errorband_color)
+  if( abs(uw.max_ev$dvalue) < 5*abs(uw.max_ev$value) ){
+    rect(ytop=max(hist.max_ev$counts),
+         ybottom=0,
+         xright=uw.max_ev$value+uw.max_ev$dvalue,
+         xleft=uw.max_ev$value-uw.max_ev$dvalue,border=FALSE,col=errorband_color)
+  }
   abline(v=uw.max_ev$value,col="black")                                                                                                   
 
   if(!missing(pdf.filename)){

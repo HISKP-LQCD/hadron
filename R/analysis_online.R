@@ -288,14 +288,14 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                     ylab="$am_\\mathrm{PCAC}$",
                     xlab="$t/a$",
                     main=titletext)
-      if( mpcac_fit$dval < 1.0 ){
+      if( mpcac_fit$dval < 0.5 ){
         rect(xleft=t1,
              xright=t2,
              ytop=mpcac_fit$val+mpcac_fit$dval,
              ybottom=mpcac_fit$val-mpcac_fit$dval,border=FALSE,col=errorband_color)
       }
       abline(h=mpcac_fit$val,col="red",lwd=2)
-      if( result$obs$mpcac_mc["dval",] < 1.0 ){
+      if( result$obs$mpcac_mc["dval",] < 0.5 ){
         rect(xleft=t1,
              xright=t2,
              ytop=result$obs$mpcac_mc["val",]+result$obs$mpcac_mc["dval",],
@@ -329,18 +329,22 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
       if(inherits(ploterror,"try-error")) {
         plot(x=onlineout$effmass$t,y=onlineout$effmass$m)
       }
-      rect(xleft=t1,
-           xright=t2,
-           ytop=onlineout$uwerrresultmps$value[1]+onlineout$uwerrresultmps$dvalue[1],
-           ybottom=onlineout$uwerrresultmps$value[1]-onlineout$uwerrresultmps$dvalue[1],
-           border=FALSE,
-           col=errorband_color)
-      rect(xleft=t1,
-           xright=t2,
-           ytop=onlineout$uwerrresultpp$value[1]+onlineout$uwerrresultpp$dvalue[1],
-           ybottom=onlineout$uwerrresultpp$value[1]-onlineout$uwerrresultpp$dvalue[1],
-           border=FALSE,
-           col=errorband_color2)
+      if( abs(onlineout$uwerrresultmps$dvalue[1]) < 5*abs(onlineout$uwerrresultmps$value[1]) ){
+        rect(xleft=t1,
+             xright=t2,
+             ytop=onlineout$uwerrresultmps$value[1]+onlineout$uwerrresultmps$dvalue[1],
+             ybottom=onlineout$uwerrresultmps$value[1]-onlineout$uwerrresultmps$dvalue[1],
+             border=FALSE,
+             col=errorband_color)
+      }
+      if( abs(onlineout$uwerrresultpp$dvalue[1]) < 5*abs(onlineout$uwerrresultpp$value[1]) ){
+        rect(xleft=t1,
+             xright=t2,
+             ytop=onlineout$uwerrresultpp$value[1]+onlineout$uwerrresultpp$dvalue[1],
+             ybottom=onlineout$uwerrresultpp$value[1]-onlineout$uwerrresultpp$dvalue[1],
+             border=FALSE,
+             col=errorband_color2)
+      }
       abline(h=onlineout$uwerrresultmps$value[1],col="red")
       abline(h=onlineout$uwerrresultpp$value[1],col="blue")
       legend(x="topright", bty='n', lty=1, lwd=4, col=c("red","blue"), cex = 0.8, 
