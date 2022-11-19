@@ -556,114 +556,115 @@ readoutputdata <- function(filename) {
   return(invisible(data))
 }
 
+processcf <- function(dat, Lt, sym, ind.vector, symmetrise, sparsity, avg, Nmin, autotruncate, Nmax){
+  i1 <- c(2:(Lt/2))
+  i2 <- c(T:(Lt/2+2))
+  ii <- c(1:(Lt))
+  sign <- +1
+  if(!sym) sign <- -1
 
+  dat <- array(dat[[ ind.vector[1] ]] + 1i*dat[[ ind.vector[2] ]], dim=c(Lt, length(dat[[ ind.vector[1] ]])/Lt))
 
-#' Read correlator data from single file
-#' 
-#' Reads arbitrary number of samples for a complex correlation function from a
-#' text file.
-#' 
-#' 
-#' @param file filename of file to read from.
-#' @param Time time extent of the correlation function
-#' @param sym if \code{TRUE} average C(+t) and C(-t), otherwise C(+t) and
-#' -C(-t). Averaging can be switched off using the \code{symmetrise} option.
-#' @param skip number of lines to skip at beginning of file
-#' @param check.t if set to an integer value larger than zero the function will
-#' assume that in the corresponding column of the file the Euclidean time is
-#' counted and it will check whether the maximum in this column is identical to
-#' Time-1.
-#' @param ind.vector index vector of length 2 with the indices of real and
-#' imaginary values of correlator, respectivley.
-#' @param symmetrise if set to \code{TRUE}, the correlation function will be
-#' averaged for \code{t} and \code{Time-t}, with the sign depending on the value
-#' of \code{sym}. Note that currently the correlator with t-values larger than
-#' \code{Time/2} will be discarded.
-#' @param path the path to the files.
-#' @param autotruncate Boolean. Whether to autotruncate or not
-#' @param avg Integer. Average over successive number samples
-#' @param stride Integer. Read only subset of files with corresponding stride.
-#' @param Nmin Integer. Minimal number of measurements that must remain after
-#' sparsification and averaging. Default equals to 4.
-#' @return returns a list with two arrays \code{cf} and \code{icf} with real
-#' and imaginary parts of the correlator, and integers \code{Time},
-#' \code{nrStypes=1} and \code{nrObs=1}. Both of the arrays have dimension
-#' \code{c(N, (Time/2+1))}, where \code{N} is the number of measurements
-#' (gauges).  \code{Time} is the time extent, \code{nrStypes} the number of
-#' smearing levels and \code{nrObs} the number of operators, both of which are
-#' currently fixed to 1.
-#' @author Carsten Urbach, \email{curbach@@gmx.de}
-#' @seealso \code{\link{readcmidatafiles}}, \code{\link{readbinarydisc}},
-#' \code{\link{readcmidisc}}, \code{\link{readcmicor}},
-#' \code{\link{readbinarycf}}
-#' @keywords file
-#' @export readtextcf
-readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
-                       stride=1, avg=1, Nmin=4, autotruncate=TRUE) {
-  stopifnot(!missing(file))
-  stopifnot(Time >= 1)
-
-  tmp <- read.table(paste(path, file, sep=""), skip=skip)
-  stopifnot(!((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)))
-  
-  if(check.t > 0 && max(tmp[[check.t]]) != Time-1) {
-    stop("Time in function call does not match the one in the file, aborting...\n")
+  ## remove unwanted measurements
+  if( Nmax != -1 ){
+    if( ncol(dat) > Nmax ){
+      cat(sprintf("[processcf] Reducing the number of total measurements to %d from %d\n",Nmax,ncol(dat)))
+      dat <- dat[,1:Nmax]
+    }
   }
 
-  if(length(tmp[[ind.vector[1]]]) %% Time != 0) {
-    stop("Time does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
-  }
-  
-  ii <- c(1:(Time/2+1))
-
-  tmp <- array(tmp[[ind.vector[1]]] + 1i*tmp[[ind.vector[2]]], dim=c(Time, length(tmp[[ind.vector[1]]])/Time))
-  if( (stride > 1 | avg > 1) & (ncol(tmp) %% (stride*avg) != 0) ){
+  ## make sure that the number of measurements is compatible with any sparsification
+  ## and/or averaging requested
+  if( (sparsity > 1 | avg > 1) & (ncol(dat) %% (sparsity*avg) != 0) ){
     if(autotruncate){
-      warning(sprintf("stride=%d, avg=%d, ncol=%d\n",stride,avg,ncol(tmp)))
-      warning("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
-      warning("readtextcf: Reducing the number of total measurements to fit!\n")
-      nmeas <- as.integer( (stride*avg)*floor( ncol(tmp)/(stride*avg) ))
-      if( nmeas/(stride*avg) >= Nmin ){
-        tmp <- tmp[,1:nmeas]
+      cat(sprintf("[processcf] sparsity=%d, avg=%d, ncol=%d\n",sparsity,avg,ncol(dat)))
+      cat("[processcf] Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      cat("[processcf] Reducing the number of total measurements to fit!\n")
+      nmeas <- as.integer( (sparsity*avg)*floor( ncol(dat)/(sparsity*avg) ))
+      if( nmeas/(sparsity*avg) >= Nmin ){
+        dat <- dat[,1:nmeas]
       } else {
-        warning(sprintf("readtextcf: After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
-        stride <- 1
+        cat(sprintf("[processcf] After sparsification and averaging, less than %d measurements remain, disabling sparsification and averaging!\n",Nmin))
+        sparsity <- 1
         avg <- 1
       }
     } else {
-      stop("readtextcf: Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
+      stop("[processcf] Sparsification and/or averaging requested, but their product does not divide the number of measurements!\n")
     }
   }
 
-  ## sparsify data
-  if(stride > 1){
-    sp.idx <- seq(from=1,to=ncol(tmp),by=stride)
-    tmp <- tmp[,sp.idx]
+  ## sparsify dat
+  if(sparsity > 1){
+    sp.idx <- seq(from=1,to=ncol(dat),by=sparsity)
+    dat <- dat[,sp.idx]
   } 
   # average over 'avg' measurements sequentially
   if(avg > 1){
-    tmp2 <- tmp
-    tmp <- array(0, dim=c(Time,ncol(tmp2)/avg))
-    for( i in c(1:ncol(tmp)) ){
-      tmp[,i] <- (1.0/avg)*apply(X=tmp2[,((i-1)*avg+1):(i*avg)],
-                                 MARGIN=1,
-                                 FUN=sum)
+    dat2 <- dat
+    dat <- array(0, dim=c(Lt,ncol(dat2)/avg))
+    for( i in c(1:ncol(dat)) ){
+      dat[,i] <- (1.0/avg)*apply(X=dat2[,((i-1)*avg+1):(i*avg)],
+                                  MARGIN=1,
+                                  FUN=sum)
     }
   }
-  
-  ret <- cf_meta(nrObs = 1, Time=Time, nrStypes = 1)
-  ret <- cf_orig(ret, cf = t(Re(tmp)), icf = t(Im(tmp)))
+
+  ret <- cf_meta(nrObs = 1, Time=Lt, nrStypes = 1)
+  ret <- cf_orig(ret, cf = t(Re(dat[ii,])), icf = t(Im(dat[ii,])))
 
   if (symmetrise) {
     sign <- +1
     if (!sym) sign <- -1
-
+    ## average +-t
     ret <- symmetrise.cf(ret, sign)
   }
-
-  return (invisible(ret))
+  
+  return(invisible(ret))
 }
+#' @title reading reweighting factors for a list of gauge configuration 
+#'        and random samples from ASCII files
+#' @param file_names_to_read list of filenames for the reweighting factors
+#' @param gauge_conf_list <- a list of integers with the indices of the gauge configs
+#' @param nsamples number of stochastic samples used for computing the reweighting factors
+read.rw <- function( file_names_to_read, gauge_conf_list, nsamples, monomial_id ) 
+{
+  stopifnot(length(gauge_conf_list)==length(file_names_to_read)) 
+  ret <- rw_meta(conf.index=gauge_conf_list)
+  tmp <- readcmidatafiles(files=file_names_to_read,skip=0,verbose=TRUE,colClasses=c("integer","integer","numeric","numeric","numeric","numeric","numeric"))
+  names(tmp)[1] <- "monomialid"
+  names(tmp)[2] <- "stochastic_index"
+  names(tmp)[3] <- "kappa_target"
+  names(tmp)[4] <- "kappa_original"
+  names(tmp)[5] <- "light_quark_mass_target"
+  names(tmp)[6] <- "light_quark_mass_original"
+  names(tmp)[7] <- "reweightingfactor"
 
+# Select the reweighting factor for a particular monomial
+
+  dplyr_avail <- requireNamespace("dplyr")
+  stopifnot(dplyr_avail)
+  
+  tmp <- dplyr::filter(tmp,monomialid==monomial_id)
+
+# Number of reweighted determinants for each gauge configuration
+
+  n_rew_factors <- length(tmp$reweightingfactor)/(nsamples*length(gauge_conf_list))
+  stopifnot(n_rew_factors == 1)
+  
+
+# Exponentianing and Averaging over the stochastic samples
+  
+  tmp2 <- matrix(tmp$reweightingfactor,nrow=nsamples,ncol=length(gauge_conf_list)*n_rew_factors)
+  tmp3 <- apply(exp(-tmp2),2,mean)
+
+# Normalize the largest reweighting factor to be one and storing this factor
+# this is neccessary due to the large value of the reweighting factor 
+# after exponentiating
+  tmp4 <- tmp3/max(tmp3)
+  
+  ret <- rw_orig(ret, rw = tmp4, conf.index=gauge_conf_list, max_value = max(tmp3))
+
+}
 #' @title reader for Nissa text format correlation functions
 #' @param file_basenames_to_read Character vector of file names without the
 #'                              smearing combination suffixes (such as 'll', 'ls', 'sl', 'ss')
@@ -786,6 +787,7 @@ readnissatextcf <- function(file_basenames_to_read,
 #' X$cf
 #' 
 #' @export readbinarycf
+
 readbinarycf <- function(files, 
                          Time, 
                          obs=5, 
@@ -1227,3 +1229,151 @@ readgradflow <- function(path, skip=0, basename="gradflow", col.names) {
   return(invisible(ldata))
 }
 
+
+read_bsm_temporal_phifield <- function(file, Lt, sym, path, scalars,
+                                       symmetrise=FALSE,
+                                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE,
+                                       Nmax=-1)
+{
+  if(missing(file)){
+    stop("files must be given!")
+  }
+  if(missing(Lt)){
+    stop("Lt time extent must be passed!")
+  }
+  if(missing(sym)){
+    stop("Symmetry must be passed!")
+  }
+  
+  cat(sprintf("[read_bsm_temporal_phifield] Attempting to read spatially averaged phi field %s\n",
+              file))
+
+  tmp <- read.table(file = sprintf("%s/%s", path, file),
+                    header = FALSE,
+                    skip = 0,
+                    col.names = c("t","re","sidx")
+                    )
+
+  # use only the requested scalars in the right order 
+  tmp <- tmp[ which( tmp$sidx %in% scalars ), ]
+  if( any( unique(tmp$sidx) != scalars ) ){
+    stop(sprintf("[read_bsm_temporal_phifield] It was not possible to extract the requested set of scalars from %s\n",file))
+  }
+  
+  tmp <- cbind(tmp,tmp[,3])
+  tmp[,3] <- 0
+
+  ret <- processcf(dat = tmp,
+                   Lt = Lt,
+                   sparsity = sparsity,
+                   avg = avg,
+                   Nmin = Nmin,
+                   Nmax = Nmax,
+                   sym = sym,
+                   symmetrise = symmetrise,
+                   ind.vector = c(2,3),
+                   autotruncate = autotruncate)
+
+  ret$scalars <- scalars
+
+  return(invisible(ret))
+}
+
+readbsmcf <- function(file, Lt, sym, path, nscalars, 
+                      symmetrise=FALSE, skip=1,
+                      sparsity=1, avg=1, Nmin=4, autotruncate=TRUE,
+                      Nmax=-1){
+  if(missing(file)){
+    stop("files must be given!")
+  }
+  if(missing(Lt)){
+    stop("Lt time extent must be passed!")
+  }
+  if(missing(sym)){
+    stop("Symmetry must be passed!")
+  }
+  if(missing(nscalars)){
+    stop("nscalars must be passed!")
+  }
+
+  tmp <- read.table(file = sprintf("%s/%s", path, file),
+                    header = FALSE,
+                    skip = skip,
+                    col.names = c("t","re","im","gidx","sidx")
+                    )
+
+  gidx <- unique(tmp$gidx)
+  sidx <- unique(tmp$sidx)
+
+  meas_gauges            <- length(unique(tmp$gidx))
+  meas_total             <- nrow(tmp)/Lt
+  meas_scalars_per_gauge <- meas_total / meas_gauges
+
+  cat(sprintf("[readbsmcf] Data has %d scalars per gauge, %d gauges and %d scalars per gauge were requested\n",
+              meas_scalars_per_gauge, meas_gauges, nscalars))
+  if ( meas_scalars_per_gauge > nscalars ){
+    if( meas_scalars_per_gauge %% nscalars != 0 ){
+      stop(sprintf("The requested number of scalars per gauge %d does not divide the actual %d in %s",
+                   nscalars,
+                   meas_scalars_per_gauge))
+    } else {
+      # we use every 'scalar_step' measurement to get the correct number of scalars
+      cat(sprintf("[readbsmcf] Adjusting the number of scalars per gauge from %d to %d as requested\n",meas_scalars_per_gauge,nscalars))
+      scalar_step <- meas_scalars_per_gauge / nscalars
+      sidx <- sidx[ seq(1, length(sidx), scalar_step) ]
+      tmp <- tmp[ which( tmp$sidx %in% sidx ), ]
+    }
+  } else if ( meas_scalars_per_gauge < nscalars ){
+    stop(sprintf("It seems that the number of scalars per gauge in %s does not match the requested %d",
+                 file,
+                 nscalars))
+  }
+  ret <- processcf(dat = tmp,
+                   Lt = Lt, 
+                   ind.vector = c(2,3), 
+                   sym = sym,
+                   symmetrise = symmetrise,
+                   sparsity = sparsity,
+                   avg = avg,
+                   Nmin = Nmin,
+                   autotruncate = autotruncate,
+                   Nmax = Nmax
+                   )
+  ret$scalars <- sidx[1:Nmax]
+  ret$gauges <- gidx[1:as.integer(Nmax/avg)]
+  return(invisible(ret))
+}
+
+readtextcf <- function(file, T=48, sym=TRUE, path="", skip=1, check.t=0, ind.vector=c(2,3), symmetrise=TRUE,
+                       sparsity=1, avg=1, Nmin=4, autotruncate=TRUE, Nmax=-1) {
+  if(missing(file)) {
+    stop("files must be given! Aborting...\n")
+  }
+  if(T < 1) {
+    stop("T must be larger than 0 and integer, aborting...\n")
+  }
+
+  tmp <- read.table(paste(path, file, sep=""), skip=skip)
+  if((length(ind.vector) < 2) || (max(ind.vector) > length(tmp)) || (min(ind.vector) < 1)){
+    stop("index vector too short or out of range\n")
+  }
+  
+  if(check.t > 0 && max(tmp[[check.t]]) != T-1) {
+    stop("T in function call does not match the one in the file, aborting...\n")
+  }
+
+  if(length(tmp[[ind.vector[1]]]) %% T != 0) {
+    stop("T does not devide the number of rows in file, aborting... check value of paramter skip to readtextcf!\n")
+  }
+  
+  return(invisible(processcf(dat = tmp,
+                             Lt = T,
+                             sym = sym,
+                             ind.vector = ind.vector,
+                             symmetrise = symmetrise,
+                             sparsity = sparsity,
+                             avg = avg,
+                             Nmin = Nmin,
+                             autotruncate = autotruncate,
+                             Nmax = Nmax)))
+}

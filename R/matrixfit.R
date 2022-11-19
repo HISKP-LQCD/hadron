@@ -359,9 +359,9 @@ matrixfit <- function(cf, t1, t2,
   if(pcmodel) {
     stopifnot(inherits(cf, 'cf_principal_correlator'))
   }
-  if(cf$symmetrised == FALSE){
-    stop('You must symmetrize and bootstrap the function before fitting.')
-  }
+  #if(cf$symmetrised == FALSE){
+  #  stop('You must symmetrize and bootstrap the function before fitting.')
+  #}
 
   t1p1 <- t1 + 1
   t2p1 <- t2 + 1
@@ -443,7 +443,8 @@ matrixfit <- function(cf, t1, t2,
       stop("not all parameters are used in the fit! Aborting\n")
     }
   }
-  
+  print(mSize)
+  print(dim(parlist)[2]) 
   if(dim(parlist)[2] != mSize) {
     warning(mSize, " ", dim(parlist)[2], "\n")
     stop("parlist has not the correct length! Aborting! Use e.g. extractSingleCor.cf or c to bring cf to correct number of observables\n")

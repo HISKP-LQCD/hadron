@@ -122,13 +122,17 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   cM <- cM + t(cM)
   ## check for positive definiteness
   ev.cM <- eigen(cM, symmetric=TRUE, only.values = TRUE)
+  symmetric_problem <- TRUE
   if(any(ev.cM$values < 0)) {
-    stop("gevp: matrix at t0 is not positive definite. Aborting...\n")
+    #stop("gevp: matrix at t0 is not positive definite. Aborting...\n")
+    symmetric_problem <- FALSE
+    cM_orig <- cM
   }
-  ## compute Cholesky factorisation
-  L <- chol(cM)
-  invL <- solve(L)
-  
+  else {
+    ## compute Cholesky factorisation
+    L <- chol(cM)
+    invL <- solve(L)
+  }
   ## now the time dependence for t != t0
   ## we need to multiply from the left with t(invL) and from the right with invL
   for(t in c((t0 + 1):(Thalf), (t0-1):0)) {
@@ -150,14 +154,21 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
     }
     else {
       ## determine eigenvalues and vectors
-      
-      variational.solve <- eigen(t(invL) %*% cM %*% invL,
+      if (symmetric_problem == TRUE){
+         variational.solve <- eigen(t(invL) %*% cM %*% invL,
                                  symmetric=TRUE, only.values = FALSE, EISPACK=FALSE)
+      }
+      else {
+	 variational.solve <- geigen(cM, cM_orig,
+                                 symmetric=FALSE, only.values = FALSE)
+	 variational.solve$values <- sqrt(Re(variational.solve$values)**2+Im(variational.solve$values)**2)
+	 print(variational.solve$values)
+      }
       ## sort depending on input by values or vectors
       sortindex <- integer(matrix.size)
       decreasing <- (t >= t0)
       if(sort.type == "values" || t == t0+1) {
-        sortindex <- order(variational.solve$values, decreasing=decreasing)
+        sortindex <- order(Re(variational.solve$values), decreasing=decreasing)
       }
       else if(sort.type == "vectors") {
         ## compute the scalar product of eigenvectors with those at t.sort
@@ -193,18 +204,24 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
         sortindex <- Perms[which.max(DMp),]
         ##if(!decreasing) sortindex <- rev(sortindex)
       }
+      print(sortindex)
       evalues[t+1,] <- variational.solve$values[sortindex]
       evectors[t+1,,] <- variational.solve$vectors[, sortindex]
     }
   }
   for(t in c((0:(t0-1)), (t0 + 1):(Thalf))) {
-    evectors[t+1,,] <- invL %*% evectors[t+1,,]
+    if (symmetric_problem == TRUE){
+      evectors[t+1,,] <- invL %*% evectors[t+1,,]
+    }
     tmp <- matrix(Cor[ii+t], nrow=matrix.size, ncol=matrix.size) %*% evectors[t+1,,]
     ## t(evectors[t+1,,]) %*% tmp must be proportional to delta_ij
     ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
     ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
     ## we set them to NA first
     d <- diag(t(evectors[t+1,,]) %*% tmp)
+    if (symmetric_problem == FALSE){
+      d <- Re(d)
+    }
     d[d < 0] <- NA
     amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
     rm(tmp)
@@ -218,6 +235,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
   }
   
   return(invisible(list(evalues=evalues, evectors=evectors, amplitudes=amplitudes)))
+  
 }
 
 

@@ -19,6 +19,7 @@ compute.plotlims <- function(val, logscale, cumul.dval, cumul.mdval){
     tmp <- val+2*apply(X=cumul.mdval,MARGIN=1,FUN=min,na.rm=TRUE)
     tmpp <- val+2*apply(X=cumul.dval,MARGIN=1,FUN=max,na.rm=TRUE)
   }
+  # remove negative values if we're working on a log scale
   if(logscale) {
     tmp <- tmp[ tmp > 0 ]
     tmpp <- tmpp[ tmpp > 0 ]

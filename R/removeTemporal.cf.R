@@ -151,9 +151,26 @@ old_removeTemporal.cf <- function(cf,
   # hold and that no new fields have been added that we are not aware of.
   ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
                  symmetrised = cf$symmetrised)
-  ret <- cf_orig(ret,
-                 cf = cf$cf)
-  ret <- cf_boot(ret,
+  if (has_icf(cf)){
+    ret <- cf_orig(ret,
+                 cf = cf$cf,
+                 icf= cf$icf)
+    ret <- cf_boot(ret,
+                 boot.R = cf$boot.R,
+                 boot.l = cf$boot.l,
+                 seed = cf$seed,
+                 sim = cf$sim,
+                 endcorr = cf$endcorr,
+                 cf.tsboot = cf$cf.tsboot,
+                 icf.tsboot = cf$icf.tsboot,
+                 resampling_method = cf$resampling_method)
+
+  }
+  else{
+    ret <- cf_orig(ret,
+                 cf = cf$cf)  
+  
+    ret <- cf_boot(ret,
                  boot.R = cf$boot.R,
                  boot.l = cf$boot.l,
                  seed = cf$seed,
@@ -161,6 +178,7 @@ old_removeTemporal.cf <- function(cf,
                  endcorr = cf$endcorr,
                  cf.tsboot = cf$cf.tsboot,
                  resampling_method = cf$resampling_method)
+  }
   ret <- cf_shifted(ret,
                     deltat = cf$deltat,
                     forwardshift = cf$forwardshift)
@@ -227,6 +245,11 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
   if( inherits(cf, 'cf_orig') ) {
     cf$cf[,tlhs] <- cf$cf[,trhs1]-cf$cf[,trhs2]
     cf$cf[,-tlhs] <- NA
+    print(has_icf(cf))
+    if (has_icf(cf)){
+      cf$icf[,tlhs] <- cf$icf[,trhs1]-cf$icf[,trhs2]
+      cf$icf[,-tlhs] <- NA
+    }
   }
 
   # now the bootstrap samples
@@ -235,16 +258,44 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
     cf$cf.tsboot$t0[-tlhs] <- NA
     cf$cf.tsboot$t[,tlhs] <- cf$cf.tsboot$t[,trhs1]-cf$cf.tsboot$t[,trhs2]
     cf$cf.tsboot$t[,-tlhs] <- NA
+    if (has_icf(cf)){
+      cf$icf.tsboot$t0[tlhs] <- cf$icf.tsboot$t0[trhs1]-cf$icf.tsboot$t0[trhs2]
+      cf$icf.tsboot$t0[-tlhs] <- NA
+      cf$icf.tsboot$t[,tlhs] <- cf$icf.tsboot$t[,trhs1]-cf$icf.tsboot$t[,trhs2]
+      cf$icf.tsboot$t[,-tlhs] <- NA
+
+    }
   }
 
   # We perform a new construction in order to have only the fields defined that
   # we want and also to make sure that invariants are holding.
   ret <- cf_meta(nrObs = cf$nrObs, Time = cf$Time, nrStypes = cf$nrStypes,
                  symmetrised = cf$symmetrised)
-  ret <- cf_orig(ret,
+  if (has_icf(cf)){
+    ret <- cf_orig(ret,
+                 cf = cf$cf,
+                 icf= cf$icf)
+  }
+  else{
+    ret <- cf_orig(ret,
                  cf = cf$cf)
+  }
+  
   if (inherits(cf, 'cf_boot')) {
-    ret <- cf_boot(ret,
+    if (has_icf(cf)){
+      ret <- cf_boot(ret,
+                   boot.R = cf$boot.R,
+                   boot.l = cf$boot.l,
+                   seed = cf$seed,
+                   sim = cf$sim,
+                   endcorr = cf$endcorr,
+                   cf.tsboot = cf$cf.tsboot,
+                   icf.tsboot = cf$icf.tsboot,
+                   resampling_method = cf$resampling_method)
+
+    }
+    else {
+      ret <- cf_boot(ret,
                    boot.R = cf$boot.R,
                    boot.l = cf$boot.l,
                    seed = cf$seed,
@@ -252,6 +303,7 @@ takeTimeDiff.cf <- function (cf, deltat = 1, forwardshift = FALSE) {
                    endcorr = cf$endcorr,
                    cf.tsboot = cf$cf.tsboot,
                    resampling_method = cf$resampling_method)
+    }
   }
   ret <- cf_shifted(ret,
                     deltat = deltat,

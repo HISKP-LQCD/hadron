@@ -60,7 +60,8 @@ cf_meta <- function (.cf = cf(), nrObs = 1, Time = NA, nrStypes = 1, symmetrised
   return (.cf)
 }
 
-#' Bootstrapped CF mixin constructor
+
+#' Bootstrapped CF mixin constructor 
 #'
 #' @param .cf `cf` object to extend.
 #' @param boot.R Integer, number of bootstrap samples used.
@@ -125,6 +126,7 @@ cf_boot <- function (.cf = cf(), boot.R, boot.l, seed, sim, endcorr, cf.tsboot, 
   class(.cf) <- append(class(.cf), 'cf_boot')
   return (.cf)
 }
+
 
 #' Estimates error from jackknife samples
 #'
@@ -496,10 +498,78 @@ gen.block.array <- function(n, R, l, endcorr=TRUE) {
   return(list(starts = st, lengths = lens))
 }
 
+#' Computes the samples for reweighted correlation function
+#'
+#' @param cf `cf` object.
+#' @param rw `rw` object.
+#' @param boot.R Integer
+#' @param boot.l Integer
+#' @param seed Integer
+#' @param sim string
+#' @param endcorr boolean
+#' @export
+bootstrap_rw.cf <- function(cf, rw, boot.R=400, boot.l=2, seed=1234, sim="geom", endcorr=TRUE) {
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(inherits(rw, 'rw_orig'))
+  stopifnot(inherits(rw, 'rw_meta'))
+  stopifnot(inherits(cf, 'cf_indexed'))
 
 
-#' bootstrap a set of correlation functions
-#' 
+  ##We should also check that the cf object and the rw object contains the same gauge configurations
+
+  stopifnot(rw$conf.index == cf$conf.index)
+ 
+  stopifnot( nrow(cf$cf) == length(rw$conf.index) )
+
+  boot.l <- ceiling(boot.l)
+  boot.R <- floor(boot.R)
+
+  stopifnot(boot.l >= 1)
+  stopifnot(boot.l <= nrow(cf$cf))
+  stopifnot(boot.R >= 1)
+
+  ##Construct correlation function for the reweighting samples
+  rw_cf <- cf
+  rw_cf$cf <- replicate(ncol(cf$cf), rw$rw)
+
+  ## we set the seed for reproducability and correlation
+  old_seed <- swap_seed(seed)
+
+  ## now we bootstrap the correlators*reweighting factor
+  rwcf.tsboot <- boot::tsboot(cf$cf*rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+
+
+  restore_seed(old_seed)
+
+  ## we set the seed for reproducability and correlation
+  old_seed <- swap_seed(seed)
+
+  ## now we bootstrap the reweighting factor
+  rw.tsboot <- boot::tsboot(rw_cf$cf, statistic = function(x){ return(apply(x, MARGIN=2L, FUN=mean))},
+                            R = boot.R, l=boot.l, sim=sim, endcorr=endcorr)
+
+
+  rwcf.tsboot$t0<- rwcf.tsboot$t0/rw.tsboot$t0
+  rwcf.tsboot$t <- rwcf.tsboot$t/rw.tsboot$t
+
+  cf <- cf_boot(cf,
+                boot.R = boot.R,
+                boot.l = boot.l,
+                seed = seed,
+                sim = sim,
+                cf.tsboot = rwcf.tsboot)
+
+  class(cf) <- append(class(cf), 'cfrw_boot')
+
+  class(cf) <- setdiff(class(cf), 'cf_orig')
+
+
+  restore_seed(old_seed)
+
+  return(invisible(cf))
+}
+
 #' bootstrap a set of correlation functions
 #' 
 #' 
@@ -573,9 +643,6 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 }
 
 
-
-#' jackknife a set of correlation functions
-#' 
 #' jackknife a set of correlation functions
 #' 
 #' 
@@ -665,8 +732,83 @@ jackknife.cf <- function(cf, boot.l = 1) {
                 resampling_method = 'jackknife')
 
   return (invisible(cf))
+
 }
 
+#' Computes the jackknife samples for reweighted correlation function
+#'
+#' @param cf `cf` object.
+#' @param rw `rw` object.
+#' @param boot.l Integer
+#' @export
+jackknife_rw.cf <- function(cf, rw, boot.l = 1) {
+  stopifnot(inherits(cf, 'cf_orig'))
+  stopifnot(inherits(rw, 'rw_orig'))
+  stopifnot(inherits(rw, 'rw_meta'))
+  stopifnot(inherits(cf, 'cf_indexed'))
+
+  stopifnot(rw1$conf.index == rw2$conf.index)
+
+  ##We should also check that the cf object and the rw object contains the same gauge configurations
+
+  stopifnot( nrow(cf$cf) == length(rw$conf.index) )
+
+
+  stopifnot(boot.l >= 1)
+  boot.l <- ceiling(boot.l)
+
+  ##Construct correlation function for the reweighting samples
+  rw_cf <- cf
+  rw_cf$cf <- replicate(ncol(cf$cf), rw$rw)
+
+
+  ## blocking with fixed block length, but overlapping blocks
+  ## number of observations
+  n <- nrow(cf$cf)
+  ## number of overlapping blocks
+  N <- n-boot.l+1
+
+  
+  numerator <- apply(cf$cf*rw_cf$cf, 2, mean)
+  denominator <- apply(rw_cf$cf, 2, mean)
+  t0 <- numerator/denominator
+
+  t <- array(NA, dim = c(N, ncol(cf$cf)))
+  for (i in 1:N) {
+    ## The measurements that we are going to leave out.
+    ii <- c(i:(i+boot.l-1))
+    ## jackknife replications of the mean
+    t[i, ] <- 
+
+    numerator <- apply(cf$cf[-ii, ]* rw_cf$cf[ ii, ], 2L, mean)
+    denominator <- apply( rw_cf$cf[ ii, ] , 2L, mean )
+    t[i, ] < numerator/denominator 
+  }
+
+
+  cf <- invalidate.samples.cf(cf)
+
+  cf.tsboot <- list(t = t,
+                    t0 = t0,
+                    R = N,
+                    l = boot.l)
+
+
+  cf <- cf_boot(cf,
+                boot.R = cf.tsboot$R,
+                boot.l = cf.tsboot$l,
+                seed = 0,
+                sim = 'geom',
+                cf.tsboot = cf.tsboot,
+                resampling_method = 'jackknife')
+
+  class(cf) <- append(class(cf), 'cfrw_boot')
+
+  class(cf) <- setdiff(class(cf), 'cf_orig')
+
+  return (invisible(cf))
+}
+# Gamma method analysis on all time-slices in a 'cf' object
 #' uwerr.cf
 #' @description
 #' Gamma method analysis on all time-slices in a 'cf' object
@@ -737,26 +879,20 @@ addConfIndex2cf <- function(cf, conf.index) {
   if(is.null(cf$conf.index)) {
     cf$conf.index <- conf.index
   }
+  class(cf) <- append(class(cf), 'cf_indexed')
   return(cf)
 }
 
-
-
-#' Combine statistics of two cf objects
+#' Combine correlation function from different replicas
 #' 
-#' \code{addStat.cf} takes the raw data of two \code{cf} objects and combines
-#' them into one
-#' 
-#' Note that the two \code{cf} objects to be combined need to be compatible.
-#' Otherwise, \code{addStat.cf} will abort with an error.
-#' 
-#' @param cf1 the first of the two \code{cf} objects to be combined
-#' @param cf2 the second of the two \code{cf} objects to be combined
-#' @return an object of class \code{cf} with the statistics of the two input
-#' \code{cf} objects combined
-#' @author Carsten Urbach, \email{curbach@@gmx.de}
-#' @seealso \code{\link{cf}}
-#' @keywords correlation function
+#' @param cf1 `cf` object: correlation function for replicum A
+#' @param cf2 `cf` object: correlation function for replicum B
+#' @param reverse1 `boolean` After the bifurcation point one of
+#'                           the replicas (chain of correlation 
+#'                           functions in simulation time) has  
+#'                           to be reversed.
+#' @param reverse2 `boolean`
+#'
 #' @examples
 #'
 #' data(samplecf)
@@ -765,7 +901,7 @@ addConfIndex2cf <- function(cf, conf.index) {
 #' cfnew <- addStat.cf(cf1=samplecf, cf2=samplecf)
 #' 
 #' @export
-addStat.cf <- function(cf1, cf2) {
+addStat.cf <- function(cf1, cf2, reverse1=TRUE,reverse2=FALSE) {
   stopifnot(inherits(cf1, 'cf'))
   stopifnot(inherits(cf2, 'cf'))
 
@@ -779,6 +915,9 @@ addStat.cf <- function(cf1, cf2) {
   stopifnot(inherits(cf1, 'cf_meta'))
   stopifnot(inherits(cf2, 'cf_meta'))
 
+  ##Either both should have an index or none of them
+  stopifnot(inherits(cf1, 'cf_indexed') == inherits(cf1, 'cf_indexed') )
+
   stopifnot(cf1$Time == cf2$Time)
   stopifnot(dim(cf1$cf)[2] == dim(cf2$cf)[2])
   stopifnot(cf1$nrObs == cf2$nrObs )
@@ -786,8 +925,37 @@ addStat.cf <- function(cf1, cf2) {
 
   cf <- cf1
 
-  cf$cf <- rbind(cf1$cf, cf2$cf)
-  cf$icf <- rbind(cf1$icf, cf2$icf)
+  cf1_temp<- cf1$cf
+  icf1_temp <- cf1$icf
+  if (reverse1 == TRUE){
+    apply(cf1_temp,2,rev)
+    if ( has_icf(cf1)){
+      apply(icf1_temp,2,rev)
+    }
+  }
+  cf2_temp <- cf2$cf
+  icf2_temp <- cf2$icf
+  if (reverse2 == TRUE){
+    apply(cf2_temp,2,rev)
+    if ( has_icf(cf2)){
+      apply(icf2_temp,2,rev)
+    }
+  }
+  if (inherits(cf1, 'cf_indexed')){
+    conflist_temp1 <- cf1$conf.index 
+    if (reverse1 == TRUE){
+      conflist_temp1 <- rev(conflist_temp1) 
+    }
+    conflist_temp2 <- cf2$conf.index
+    if (reverse2 == TRUE){
+      conflist_temp2 <- rev(conflist_temp2)
+    }
+    cf$conf.index <- c(conflist_temp1,conflist_temp2)
+  }
+     
+
+  cf$cf <- rbind(cf1_temp, cf2_temp)
+  cf$icf <- rbind(icf1_temp, icf2_temp)
 
   cf <- invalidate.samples.cf(cf)
 
@@ -957,7 +1125,6 @@ apply_elementwise.cf <- function(cf1, cf2, `%op%` = `/`) {
     stopifnot(cf1$Time == cf2$Time)
 
     cf$cf <- cf1$cf %op% cf2$cf
-
     if( has_icf(cf1) | has_icf(cf2) ){
       stopifnot(has_icf(cf1) & has_icf(cf2))
       cf$icf <- cf1$icf %op% cf2$icf
@@ -1314,6 +1481,40 @@ shift.cf <- function(cf, places) {
                   resampling_method = cf$resampling_method)
   }
   return(invisible(cf))
+}
+
+
+avg.sparsify.cf <- function(cf, avg, sparsity){
+  if(!any(class(cf) == "cf")) {
+    stop("avg.sparsify.cf: Input must be of class 'cf'\n")
+  }
+  if( sparsity > 1 ){
+    stop("avg.sparsify.cf: Sparsification has not been implemented yet, only sparsity = 1 supported for now.\n")
+  }
+
+  Lt <- cf$Time
+  if(cf$symmetrised){
+    Lt <- cf$Time/2 + 1
+  }
+  nmeas <- length(cf$cf) / Lt
+  targetstats <- nmeas / avg
+
+  cf2 <- invalidate.samples.cf(cf)
+  cf2$cf <- cf$cf[(1:targetstats),]
+  cf2$icf <- cf$icf[(1:targetstats),]
+  
+  for( m_idx in 1:targetstats ){
+    from <- (m_idx-1)*avg + 1
+    to <- m_idx*avg
+    avg_idx <- c(from:to)
+    cf2$cf[m_idx,] <- apply(X = cf$cf[avg_idx,],
+                            MARGIN = 2,
+                            FUN = sum)/avg
+    #cf2$icf[m_idx,] <- apply(X = cf$icf[avg_idx,],
+    #                         MARGIN = 2,
+    #                         FUN = sum)/avg
+  }
+  return(cf2)
 }
 
 #' Invalidate samples
