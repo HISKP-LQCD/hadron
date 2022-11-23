@@ -110,7 +110,7 @@ parametric.nlsfit <- function (fn, par.guess, boot.R, y, dy, x, dx,
                                lower = rep(x = -Inf, times = length(par.guess)),
                                upper = rep(x = +Inf, times = length(par.guess)),
                                ..., bootstrap=TRUE) {
-  stopifnot(length(x) == length(y))
+  stopifnot(length(x) %% length(y) == 0)
   stopifnot(missing(dx) || length(dx) == length(x))
   stopifnot(missing(dy) || length(dy) == length(y))
   stopifnot(length(lower) == length(par.guess))
@@ -156,7 +156,7 @@ parametric.nlsfit.cov <- function (fn, par.guess, boot.R, y, x, cov,
                                    lower = rep(x = -Inf, times = length(par.guess)),
                                    upper = rep(x = +Inf, times = length(par.guess)),
                                    ..., bootstrap=TRUE, na.rm = FALSE) {
-  stopifnot(length(x) == length(y))
+  stopifnot(length(x) %% length(y) == 0)
   stopifnot(length(lower) == length(par.guess))
   stopifnot(length(upper) == length(par.guess))
 
