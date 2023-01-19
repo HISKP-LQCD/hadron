@@ -536,7 +536,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
 
     temp <- plot_eigenvalue_timeseries(dat=evaldata[eval.tidx,],
                                        stat_range=c( 1+stat_skip, length(eval.tidx) ),
-                                       time_factor=evals_stepsize*trajectory_length,
+                                       time_factor=evals.stepsize*trajectory_length,
                                        pdf.filename = ev_pdf_filename,
                                        ylab = "eigenvalue",
                                        plotsize=plotsize,
