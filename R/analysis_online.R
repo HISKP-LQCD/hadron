@@ -202,7 +202,8 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     omeas.idx <- which(omeas.cnums >= traj_from)
    
     if( length(omeas.idx) < 1 ){
-      stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left (omeas.offset was %d)!\n", traj_from), omeas.offset)
+      stop(sprintf("Considering only trajectories with ids >= %d, no online measurements are left (omeas.offset was %d)!\n",
+                   traj_from, omeas.offset))
     }
 
 
