@@ -702,12 +702,17 @@ readnissatextcf <- function(file_basenames_to_read,
                             combs_to_read,
                             nts = Time, 
                             sym.vec = c(1),
-                            symmetrise = FALSE)
+                            symmetrise = FALSE, 
+                            corrtype="2pt")
 {
+  if (corrtype == "2pt") { corrtypenum=1}
+  else if (corrtype == "newcorr") { corrtypenum=2}
+  else { stop("invalid correlation type given! must be either 2pt or newcorr") }
   tmp <- read_nissa_textcf_kernel(file_basenames_to_read,
                                   smear_combs_to_read,
                                   nts,
-                                  combs_to_read)
+                                  combs_to_read, 
+                                  corrtypenum)
 
   total_nts <- nts*length(smear_combs_to_read)*nrow(combs_to_read)
 
