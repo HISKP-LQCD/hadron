@@ -105,7 +105,6 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
   std::string::size_type comment_pos;
 
   if(corrtype==1){
-      //~ std::cout << "corrtype 2pt" << std::endl;
     // currently the key for a two-point function consists of four unsigned integers (two mass and two r indices)
     // and the name of the spin combination stored in the correlator
     // a generalisation of the reader will have to modify this as well as the key construction
@@ -155,8 +154,7 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
     } //while good
   } // if corrtype==1
   if(corrtype==2){
-      //~ std::cout << "corrtype newcorr" << std::endl;
-    // currently the key for any correlator is the name of the first and the second correlator, separated by a "^ \dag and "
+    // currently the key for any correlator is the name of the first and the second correlator,
     // and the name of the spin combination stored in the correlator
     std::string key_components[2];
     while( ifs.good() ){
@@ -164,7 +162,6 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
       // we search for commented lines
       comment_pos = linebuf.find("#");
       if( comment_pos != std::string::npos ){
-          //~ std::cout << linebuf.c_str() << std::endl;
         // in these commented lines, we extract either
         // the current operators
         // or the current spin combination
@@ -175,17 +172,19 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
           unsigned int key_components_counter = 0;
           std::string token;
           std::string delimiter (" \0");
-          size_t pos = linebuf.find_first_of(delimiter, 0);// = linebuf.find(' ');
+          size_t pos = linebuf.find_first_of(delimiter, 0);
           // The different parts of the string are separated by spaces
           // Take the part of the string until the first space.
           // See if it contains an underscore. 
-          // If it does, this is the name of an operator
+          //    If it does, this is the name of an operator
           // delete first part of line and restart search
-        // https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+          // https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
+          // If the search reaches the end of the line, 
+          //     check if the last part of the line is the name of a correlator by doing the loop one more time
+          // look through at most 50 words, so the programm exits if there is no operator on the line
           size_t last_part=0, j = 0;
           while( key_components_counter != 2 &&  last_part < 2 && j < 50) {
             token = linebuf.substr(0, pos);
-            //~ std::cout << key_components_counter << " " << pos << " " << token << std::endl;
             if( token.find("_") != std::string::npos){
               key_components[key_components_counter] = (std::string)token;
               key_components_counter++;
@@ -211,14 +210,13 @@ inline void map_file(std::ifstream &ifs, std::map<std::string, std::iostream::po
           // now we can build the key
           std::string key = make_key_newcorr(key_components[0], key_components[1], spin_comb);
           
-        //~ std::cout << key << std::endl;
           // and store the position after the current newline as the starting point
           // of the present correlator
           filemap[ key ] = ifs.tellg();
         }
       } // found commented line
     } //while good
-  } // if corrtype==2pt
+  } // if corrtype==2
 }
 
 /**
@@ -234,7 +232,6 @@ NumericMatrix read_nissa_textcf_kernel(
     DataFrame combs_to_read, 
     size_t corrtype = 1)
 {
-//~ std::cout << "Hello\n";
   if (corrtype != 1 && corrtype != 2){
         char message[200];
         snprintf(message, 200, "No valid corrtype was given! You gave %lu, valid corrtypes are 1 for 2pt and 2 for newcorr", corrtype);
@@ -271,12 +268,11 @@ NumericMatrix read_nissa_textcf_kernel(
 
       std::string filename;
       
-      //for type 2: use smeaar_comb to indicate file ending
+      //for type 2: use smear_comb to indicate file ending
       if(corrtype == 1) filename = (std::string)(file_basenames_to_read[ifile]) + std::string("_") + 
                              (std::string)(smear_combs_to_read[ismear_comb]);
       if(corrtype == 2) filename = (std::string)(file_basenames_to_read[ifile]) + std::string("/") + 
                              (std::string)(smear_combs_to_read[ismear_comb]);
-      //~ std::cout << filename << std::endl;
 
       std::ifstream ifs(filename.c_str(), std::ios::in);
       if( ! ifs.is_open() ){
