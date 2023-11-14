@@ -675,6 +675,10 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #' @param cf Object of type `cf` containing `cf_orig`
 #' @param S initial guess for the ratio tau/tauint, with tau the exponetial
 #' autocorrelation length.
+#' @param pl logical: if TRUE, the autocorrelation function, the integrated
+#' autocorrelation time as function of the integration cut-off and (for primary
+#' quantities) the time history of the observable are plotted with plot.uwerr
+#' @param main character, title of the plots
 #'
 #' @return A list with a named element `uwcf` which contains a data frame
 #'         with six columns, `value`, `dvalue`, `ddvalue`, `tauint`, `dtauint`
@@ -692,24 +696,24 @@ jackknife.cf <- function(cf, boot.l = 1) {
 #' uwerr.cf(samplecf)
 #' 
 #' @export
-uwerr.cf <- function(cf, S=1.5){
+uwerr.cf <- function(cf, S=1.5, pl=FALSE, main=""){
   stopifnot(inherits(cf, 'cf_orig'))
 
-  uw_wrapper <- function(x, S){
-    uw_tmp <- try(uwerrprimary(data=x, S=S), silent=TRUE)
+  uw_wrapper <- function(x, S, pl, main){
+    uw_tmp <- try(uwerrprimary(data=x, S=S, pl=pl, main=main), silent=TRUE)
     if( any(class(uw_tmp) == "try-error") ){
-      c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA)
+      c(value=NA, dvalue=NA, ddvalue=NA, tauint=NA, dtauint=NA, S=S)
     } else {
       c(value=uw_tmp$value, dvalue=uw_tmp$dvalue, ddvalue=uw_tmp$ddvalue,
-        tauint=uw_tmp$tauint, dtauint=uw_tmp$dtauint)
+        tauint=uw_tmp$tauint, dtauint=uw_tmp$dtauint, S=S)
     }
   }
 
   res <- list()
-  res[["uwcf"]] <- cbind(as.data.frame(t(apply(X=cf$cf, MARGIN=2L, FUN=uw_wrapper, S=S))),
+  res[["uwcf"]] <- cbind(as.data.frame(t(apply(X=cf$cf, MARGIN=2L, FUN=uw_wrapper, S=S, pl=pl, main=main))),
                          t=(1:ncol(cf$cf)))
   if( has_icf(cf) ){
-    res[["uwicf"]] <- cbind(as.data.frame(t(apply(X=cf$icf, MARGIN=2L, FUN=uw_wrapper, S=S))),
+    res[["uwicf"]] <- cbind(as.data.frame(t(apply(X=cf$icf, MARGIN=2L, FUN=uw_wrapper, S=S, pl=pl, main=main))),
                             t=(1:ncol(cf$icf)))
   }
   return(res)
