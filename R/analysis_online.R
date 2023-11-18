@@ -261,6 +261,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                              plotsize=plotsize,
                                              filelabel=filelabel,
                                              titletext=titletext,
+                                             uwerr.S = S,
                                              errorband_color=errorband_color,
                                              smooth_density = TRUE)
       
@@ -370,7 +371,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
       if(method=="boot" | method=="all"){
         mpi_ov_fpi <- onlineout$tsboot$t[,1]/(2*kappa*2*mul/
                       sqrt(2)*(onlineout$tsboot$t[,3]/(sinh(onlineout$tsboot$t[,1])*sqrt(onlineout$tsboot$t[,1]))))
-        result$obs$mpi_ov_fpi <- t(data.frame(val=mean(mpi_ov_fpi),
+        result$obs$mpi_ov_fpi <- t(data.frame(val=result$obs$mpi[1,1]/result$obs$fpi[1,1],
                                               dval=sd(mpi_ov_fpi),
                                               tauint=NA,
                                               dtauint=NA,
@@ -457,6 +458,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                     plotsize=plotsize,
                                     filelabel=filelabel,
                                     titletext=titletext,
+                                    uwerr.S = S,
                                     errorband_color=errorband_color,
                                     smooth_density = TRUE)
   }
@@ -478,6 +480,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                      titletext=titletext,
                                      errorband_color=errorband_color,
                                      smooth_density = TRUE,
+                                     uwerr.S = S,
                                      ylim=c(-2,3),
                                      hist.probs=c(0.01,0.99))
 
@@ -499,6 +502,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                         errorband_color=errorband_color,
                                         hist.xlim=c(-2,4),
                                         smooth_density = TRUE,
+                                        uwerr.S = S,
                                         ylim=c(0,6),
                                         hist.probs=c(0.01,0.99))
   }
@@ -519,6 +523,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                           filelabel=filelabel,
                                           titletext=titletext,
                                           errorband_color=errorband_color,
+                                          uwerr.S = S,
                                           smooth_density = TRUE
                                           )
   }
@@ -565,6 +570,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                           filelabel=filelabel,
                                           titletext=titletext,
                                           errorband_color=errorband_color,
+                                          uwerr.S = S,
                                           hist.by=0.5,
                                           smooth_density = FALSE)
   }
@@ -587,6 +593,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                                            titletext=titletext,
                                            errorband_color=errorband_color,
                                            smooth_density = TRUE,
+                                           uwerr.S = S,
                                            hist.probs = c(0.01,0.99))
   }
 
