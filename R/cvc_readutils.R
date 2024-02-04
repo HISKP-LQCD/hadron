@@ -22,7 +22,7 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #' @title Generate key to identify a momentum and spin-projected loop 
 #' @param loop_type String, loop type.
 #' @param istoch Integer, index of the stochastic sample.
-#' @param gamma Integer, CVC convention gamma matrix identifier.
+#' @param gamma Integer or string, gamma matrix identifier.
 #' @param p Integer vector of length 3, (x,y,z) components of the momentum
 #'          vector in lattice units.
 #' @return
@@ -40,33 +40,55 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
           p[1], p[2], p[3])
 }
 
-#' @title Generate HDF5 key for CVC 'correlators' meson 2pt function
+#' @title Generate HDF5 key for meson 2pt functions labelled with CVC-like pathnames.
+#'
+#' @details
+#' The key for a meson two-point function has the form:
+#' 
+#'  /u+-g-d-g/s1/t10/gf5/pfx0pfy0pfz0/gi5/pix0piy0piz0
+#' 
+#' where, from left to right:
+#' \itemize{
+#'  \item 'u' is the flavour of the "backward" propagator
+#'  \item '+' indicates that 'u' is daggered
+#'  \item 'g' indicates a gamma insertion 
+#'  \item 'd' is the flavour of the "forward" propagator
+#'  \item 'g' indicates a Dirac structure at the source
+#'  \item 'sN' is an optional stochastic sample identifier
+#'  \item 'tXX' is the source time slice
+#'  \item 'gfN' gamma structure at the sink
+#'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#'  \item 'giN' gamma structure at the souce in CVC indexing
+#'  \item 'pixXpiyYpizZ' at the source in CVC convention
+#' }
+#'
 #' @param fwd_flav String, "forward" quark flavour identifier.
 #' @param bwd_flav String, "backward" quark flavour identifier.
 #' @param src_ts Integer, source time slice.
-#' @param snk_gamma Integer, CVC convention gamma matrix identifier at the source.
-#' @param src_gamma Integer, CVC convention gamma matrix identified at the sink.
+#' @param snk_gamma Integer or string, gamma matrix identifier at the source.
+#' @param src_gamma Integer or string, gamma matrix identifier at the sink.
 #' @param src_p Integer vector of length 3. (x,y,z) components of the source momentum
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @param sample Integer, optional stochastic sample identifier.
 #' @return
-#' A character vector with the HDF5 key.
+#' A character vector with the HDF5 pathname.
 #' 
 #' @export
-correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p)
+correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p, sample = NA)
 {
   stopifnot( length(snk_p) == 3 )
   stopifnot( length(src_p) == 3 )
   stopifnot( is.character(fwd_flav) )
   stopifnot( is.character(bwd_flav) )
   stopifnot( is.integer(src_ts) )
-  stopifnot( is.integer(snk_gamma) )
-  stopifnot( is.integer(src_gamma) )
+  if( !is.na(sample) ){ stopifnot( is.integer(sample) ) }
 
-  sprintf("/%s+-g-%s-g/t%d/gf%d/pfx%dpfy%dpfz%d/gi%d/pix%dpiy%dpiz%d",
+  sprintf("/%s+-g-%s-g/%st%d/gf%s/pfx%dpfy%dpfz%d/gi%s/pix%dpiy%dpiz%d",
           bwd_flav,
           fwd_flav,
+          ifelse(is.na(sample), "", sprintf("s%d/", sample)),
           src_ts,
           snk_gamma,
           snk_p[1],snk_p[2],snk_p[3],
@@ -74,17 +96,35 @@ correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src
           src_p[1],src_p[2],src_p[3])
 }
 
-#' @title Generate key string to identify a meson 2pt function
+#' @title Generate identifier string to identify a meson 2pt function with a CVC-like pathname
+#'
+#' @details
+#' The identifier string for a meson two-point function has the form:
+#' 
+#'  /u+-g-d-g/gf5/pfx0pfy0pfz0/gi5/pix0piy0piz0
+#' 
+#' where, from left to right:
+#' \itemize{
+#'  \item 'u' is the flavour of the "backward" propagator
+#'  \item '+' indicates that 'u' is daggered
+#'  \item 'g' indicates a gamma insertion 
+#'  \item 'd' is the flavour of the "forward" propagator
+#'  \item 'g' indicates a Dirac structure at the source
+#'  \item 'gfN' gamma structure at the sink
+#'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#'  \item 'giN' gamma structure at the souce in CVC indexing
+#'  \item 'pixXpiyYpizZ' at the source in CVC convention
+#' }
 #' @param fwd_flav String, "forward" quark flavour identifier.
 #' @param bwd_flav String, "backward" quark flavour identifier.
-#' @param snk_gamma Integer, CVC convention gamma matrix identifier at the source.
-#' @param src_gamma Integer, CVC convention gamma matrix identified at the sink.
+#' @param snk_gamma Integer or string, gamma matrix identifier at the source.
+#' @param src_gamma Integer or string, gamma matrix identifier at the sink.
 #' @param src_p Integer vector of length 3. (x,y,z) components of the source momentum
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
 #' @return
-#' A character vector with the HDF5 key.
+#' A character vector with the identifier string.
 #' 
 #' @export
 cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, snk_p)
@@ -93,10 +133,8 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
   stopifnot( length(src_p) == 3 )
   stopifnot( is.character(fwd_flav) )
   stopifnot( is.character(bwd_flav) )
-  stopifnot( is.integer(snk_gamma) )
-  stopifnot( is.integer(src_gamma) )
   
-  sprintf("/%s+-g-%s-g/gf%d/pfx%dpfy%dpfz%d/gi%d/pix%dpiy%dpiz%d",
+  sprintf("/%s+-g-%s-g/gf%s/pfx%dpfy%dpfz%d/gi%s/pix%dpiy%dpiz%d",
           bwd_flav,
           fwd_flav,
           snk_gamma,
@@ -105,11 +143,12 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
           src_p[1],src_p[2],src_p[3])
 }
 
-#' @title Generate HDF5 key for CVC 'correlators' meson 3pt function with a local or derivative insertion
+#' @title Generate HDF5 key for meson 3pt function with a local or derivative insertion
 #' 
+#' @details
 #' The key for a meson three-point function has the form:
 #' 
-#'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
+#'  /sud+-g-u-g/s1/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
 #' 
 #' where, from left to right:
 #' \itemize{
@@ -119,11 +158,12 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'  \item 'g' indicates a gamma insertion 
 #'  \item 'u' is the flavour of the foward propagator
 #'  \item 'g' indicates a Dirac structure at the source
+#'  \item 'sN' is an optional stochastic sample identifier
 #'  \item 'tXX' is the source time slice
 #'  \item 'dtYY' is the source-sink separation
-#'  \item 'gfN' gamma structure at the sink in CVC indexing
+#'  \item 'gfN' gamma structure at the sink
 #'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
-#'  \item 'gcN' gamma structure at the current insertion point in CVC indexing
+#'  \item 'gcN' gamma structure at the current insertion point in
 #'  \item 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most
 #'         displacement is the one applied first.
@@ -137,8 +177,8 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #' @param seq_flav String, "sequential" quark flavour identifier.
 #' @param src_ts Integer, source time slice.
 #' @param dt Integer, source-sink separation.
-#' @param snk_gamma Integer, CVC convention gamma matrix identifier at the source.
-#' @param cur_gamma Integer, CVC convention gamma matrix identified at the insertion.
+#' @param snk_gamma Integer or string, gamma matrix identifier at the sink.
+#' @param cur_gamma Integer or string, gamma matrix identifier at the insertion.
 #' @param cur_displ_dim Integer vector of dimensions (0,1,2,3 <-> t,x,y,z) in which
 #'                      covariant displacements have been applied. This vector will be
 #'                      parsed in reverse order, such that the first element here
@@ -150,11 +190,12 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'                      which the covariant displacements have been applied. Parsing
 #'                      as for 'cur_displ_dim'. Length must be matched to 'cur_displ_dim'.
 #'                      Defaults to 'NA' for no displacements.
-#' @param src_gamma Integer, CVC convention gamma matrix identified at the sink.
+#' @param src_gamma Integer or string, gamma matrix identifier at the source.
 #' @param src_p Integer vector of length 3. (x,y,z) components of the source momentum
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
+#' @param sample Integer, optional stochastic sample identifier.
 #' @return
 #' A character vector with the HDF5 key.
 #' 
@@ -164,7 +205,8 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                                       snk_gamma,
                                       cur_gamma, cur_displ_dim = NA, cur_displ_dir = NA,
                                       src_gamma, 
-                                      src_p, snk_p)
+                                      src_p, snk_p,
+                                      sample = NA)
 {
   stopifnot( length(snk_p) == 3 )
   stopifnot( length(src_p) == 3 )
@@ -172,9 +214,7 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
   stopifnot( is.character(bwd_flav) )
   stopifnot( is.integer(src_ts) )
   stopifnot( is.integer(dt) )
-  stopifnot( is.integer(snk_gamma) )
-  stopifnot( is.integer(src_gamma) )
-  
+  if( !is.na(sample) ){ stopifnot( is.integer(sample) ) } 
   if( !is.na(cur_displ_dim) | !is.na(cur_displ_dir) ){
     stopifnot( all(cur_displ_dim %in% c(0:3)) )
     stopifnot( all(cur_displ_dir %in% c(0,1)) )
@@ -208,11 +248,12 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
   return(key)
 }
 
-#' @title Generate HDF5 key for CVC 'correlators' meson 3pt function with a local or derivative insertion
+#' @title Generate an identifier string for a meson 3pt function labelled with a CVC-like pathname with a local or derivative insertion
 #' 
-#' The key for a meson three-point function has the form:
+#' @details
+#' The identifier string for a meson three-point function has the form:
 #' 
-#'  /sud+-g-u-g/t10/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
+#'  /sud+-g-u-g/dt12/gf5/pfx0pfy0pfz0/gc0/Ddim0_dir0/Ddim1_dir1/D[...]/gi5/pix0piy0piz0
 #' 
 #' where, from left to right:
 #' \itemize{
@@ -222,16 +263,15 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'  \item 'g' indicates a gamma insertion 
 #'  \item 'u' is the flavour of the foward propagator
 #'  \item 'g' indicates a Dirac structure at the source
-#'  \item 'tXX' is the source time slice
 #'  \item 'dtYY' is the source-sink separation
-#'  \item 'gfN' gamma structure at the sink in CVC indexing
+#'  \item 'gfN' gamma structure at the sink in CVC indexing ('N' can be numeric or a string)
 #'  \item 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
-#'  \item 'gcN' gamma structure at the current insertion point in CVC indexing
+#'  \item 'gcN' gamma structure at the current insertion point ('N' can be numeric or a string)
 #'  \item 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most
 #'         displacement is the one applied first.
 #'  \item [...]
-#'  \item 'giN' gamma structure at the souce in CVC indexing
+#'  \item 'giN' gamma structure at the source ('N' can be numeric or a string)
 #'  \item 'pixXpiyYpizZ' at the source in CVC convention
 #' }
 #'
@@ -239,8 +279,8 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #' @param bwd_flav String, "backward" quark flavour identifier.
 #' @param seq_flav String, "sequential" quark flavour identifier.
 #' @param dt Integer, source-sink separation.
-#' @param snk_gamma Integer, CVC convention gamma matrix identifier at the source.
-#' @param cur_gamma Integer, CVC convention gamma matrix identified at the insertion.
+#' @param snk_gamma Integer or string, gamma matrix identifier at the sink.
+#' @param cur_gamma Integer or string, gamma matrix identifier at the insertion.
 #' @param cur_displ_dim Integer vector of dimensions (0,1,2,3 <-> t,x,y,z) in which
 #'                      covariant displacements have been applied. This vector will be
 #'                      parsed in reverse order, such that the first element here
@@ -252,13 +292,13 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #'                      which the covariant displacements have been applied. Parsing
 #'                      as for 'cur_displ_dim'. Length must be matched to 'cur_displ_dim'.
 #'                      Defaults to 'NA' for no displacements.
-#' @param src_gamma Integer, CVC convention gamma matrix identified at the sink.
+#' @param src_gamma Integer or string, gamma matrix identifier at the source.
 #' @param src_p Integer vector of length 3. (x,y,z) components of the source momentum
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
 #' @return
-#' A character vector with the HDF5 key.
+#' A character vector with the identifier string.
 #' 
 #' @export
 cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
@@ -273,8 +313,6 @@ cf_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
   stopifnot( is.character(fwd_flav) )
   stopifnot( is.character(bwd_flav) )
   stopifnot( is.integer(dt) )
-  stopifnot( is.integer(snk_gamma) )
-  stopifnot( is.integer(src_gamma) )
   if( !is.na(cur_displ_dim) | !is.na(cur_displ_dir) ){
     stopifnot( all(cur_displ_dim %in% c(0:3)) )
     stopifnot( all(cur_displ_dir %in% c(0,1)) )
@@ -337,7 +375,7 @@ cvc_to_raw_cf <- function(cf_dat, dims = c(1,1))
   # internal dimensions and time in the 'wrong' order
   cf_dat <- array(complex(real = cf_dat[ridcs],
                           imaginary = cf_dat[iidcs]),
-                          dim = c(1,dims,nts))
+                  dim = c(1,dims,nts))
   cf_dims <- dim(cf_dat)
   # reshape the array, ordering 'measurement' (a single one), 'time',
   # internal dimensions
