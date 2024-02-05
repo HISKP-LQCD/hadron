@@ -71,24 +71,24 @@ cvc_local_loop_key <- function(loop_type, istoch, gamma, p)
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
-#' @param sample Integer, optional stochastic sample identifier.
+#' @param istoch Integer, optional stochastic sample identifier.
 #' @return
 #' A character vector with the HDF5 pathname.
 #' 
 #' @export
-correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p, sample = NA)
+correlators_key_meson_2pt <- function(fwd_flav, bwd_flav, src_ts, snk_gamma, src_gamma, src_p, snk_p, istoch = NA)
 {
   stopifnot( length(snk_p) == 3 )
   stopifnot( length(src_p) == 3 )
   stopifnot( is.character(fwd_flav) )
   stopifnot( is.character(bwd_flav) )
   stopifnot( is.integer(src_ts) )
-  if( !is.na(sample) ){ stopifnot( is.integer(sample) ) }
+  if( !is.na(istoch) ){ stopifnot( is.integer(istoch) ) }
 
   sprintf("/%s+-g-%s-g/%st%d/gf%s/pfx%dpfy%dpfz%d/gi%s/pix%dpiy%dpiz%d",
           bwd_flav,
           fwd_flav,
-          ifelse(is.na(sample), "", sprintf("s%d/", sample)),
+          ifelse(is.na(istoch), "", sprintf("s%d/", istoch)),
           src_ts,
           snk_gamma,
           snk_p[1],snk_p[2],snk_p[3],
@@ -195,7 +195,7 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #'              vector in lattice units.
 #' @param snk_p Integer vector of length 3. (x,y,z) components of the sink momentum
 #'              vector in lattice units.
-#' @param sample Integer, optional stochastic sample identifier.
+#' @param istoch Integer, optional stochastic sample identifier.
 #' @return
 #' A character vector with the HDF5 key.
 #' 
@@ -206,7 +206,7 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
                                       cur_gamma, cur_displ_dim = NA, cur_displ_dir = NA,
                                       src_gamma, 
                                       src_p, snk_p,
-                                      sample = NA)
+                                      istoch = NA)
 {
   stopifnot( length(snk_p) == 3 )
   stopifnot( length(src_p) == 3 )
@@ -214,7 +214,7 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
   stopifnot( is.character(bwd_flav) )
   stopifnot( is.integer(src_ts) )
   stopifnot( is.integer(dt) )
-  if( !is.na(sample) ){ stopifnot( is.integer(sample) ) } 
+  if( !is.na(istoch) ){ stopifnot( is.integer(istoch) ) } 
   if( !is.na(cur_displ_dim) | !is.na(cur_displ_dir) ){
     stopifnot( all(cur_displ_dim %in% c(0:3)) )
     stopifnot( all(cur_displ_dir %in% c(0,1)) )
