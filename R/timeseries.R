@@ -775,16 +775,18 @@ subset.tseries <- function(x, subset) {
 #' @export
 plot_timeseries <- function(dat, 
                             ylab, plotsize, titletext, hist.by,
-                            stat_range = c(1.0, length(dat$y)),
+                            stat_range = c(1, length(dat$y)),
                             pdf.filename,
                             name="", xlab="$t_\\mathrm{MD}$", 
                             hist.probs=c(0.0,1.0), errorband_color=rgb(0.6,0.0,0.0,0.6),
                             type='l',
-                            uwerr.S=2,
+                            uwerr.S=1.5,
                             time_factor=1.0,
                             smooth_density=FALSE,
                             periodogram=FALSE,debug=FALSE,uw.summary=TRUE,...) {
-
+  
+  stopifnot( ! is.null(dat$y) )
+  stopifnot( ! is.null(dat$t) )
   stopifnot(length(stat_range) == 2)
   stopifnot(length(hist.probs) == 2)
 
