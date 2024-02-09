@@ -31,7 +31,6 @@
 #'   The number of bootstrap samples is set to thrice the number of measurements.
 #' @param plotsize numeric. Plot sidelength, this is passed to
 #'   \code{tikz.init}.
-#' @param dbg boolean. If set to `TRUE` debugging output will be provided.
 #' @param scale_definition numeric. Default \eqn{0.3}. This is the value which is used to define
 #'   the gluonic scales. For example, for \eqn{t_0}, \eqn{t^2 E = 0.3} is used and this parameter
 #'   can be used to set this to any other value.
@@ -100,7 +99,7 @@
 analysis_tmlqcd_gradient_flow <- function(path, outputbasename, basename="gradflow",
                                           read_files = TRUE, make_plots = FALSE, plotsize = 4,
                                           skip=0,
-                                          md_scalefac=1, md_idx_scalefac=1, dbg=FALSE,
+                                          md_scalefac=1, md_idx_scalefac=1,
                                           do_bootstrap = FALSE,
                                           scale_definition = 0.3) {
 
