@@ -34,8 +34,8 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
 #' @family lanczos
 lanczos.solve <- function(cf, N) {
   ## container for the eigenvalues per m
-  evs <- rep(NA, times=N)
-  for(m in c(1:N)) {
+  evs <- rep(NA, times=N/2)
+  for(m in c(1:(N/2))) {
     Aj <- cf[2:N]/cf[1]
     Bj <- rep(0, times=length(Aj))
     Bjp1 <- Bj
@@ -95,18 +95,21 @@ lanczos.solve <- function(cf, N) {
       evs[m] <- alpha[1]
     }
     else{
+      ##cat("m= ", m, "\n\n")
       ## construct mxm tridiagonal matrix
       M <- diag(alpha[1:m])
       ii <- c(1:(m-1))
       M[row(M) - col(M) == -1] <- beta[2:m]
       M[row(M) - col(M) == +1] <- gamma[2:m]
+      ##print(M)
+      
       ## eigensolve and extract the lowest eigenvalue
       eigvalues <- eigen(M, symmetric=FALSE, only.values = TRUE, EISPACK = FALSE)$values
-      cat("m= ", m, "\n\n")
-      print(M)
-      cat("\n")
-      print(eigvalues)
-      evs[m] <- sort(eigvalues[eigvalues > 0])[1]
+      ##cat("\n")
+      eigvalues <- Re(eigvalues[Im(eigvalues) == 0])
+      eigvalues <- eigvalues[eigvalues > 0 & eigvalues < 1]
+      ##print(eigvalues)
+      evs[m] <- sort(eigvalues, decreasing=TRUE)[1]
     }
   }
   return(evs)
