@@ -16,7 +16,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
 
-  res <- lanczos.solve(cf=cf0, N=N)
+  res <- lanczos.solve(cf=cf$cf0, N=N)
   return(res)
 }
 
@@ -33,16 +33,16 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
 #' 
 #' @family lanczos
 lanczos.solve <- function(cf, N) {
-  Aj <- cf[2:N]/cf[1]
   ## container for the eigenvalues per m
   evs <- rep(NA, times=N)
   for(m in c(1:N)) {
-    B <- rep(0, times=length(Aj))
-    Bjp1 <- B
-    G <- B
-    Gjp1 <- G
-    Ajm1 <- B
-    Ajp1 <- B
+    Aj <- cf[2:N]/cf[1]
+    Bj <- rep(0, times=length(Aj))
+    Bjp1 <- Bj
+    Gj <- Bj
+    Gjp1 <- Gj
+    Ajm1 <- Bj
+    Ajp1 <- Bj
     
     alpha <- rep(NA, times=m)
     beta <- alpha
@@ -102,6 +102,10 @@ lanczos.solve <- function(cf, N) {
       M[row(M) - col(M) == +1] <- gamma[2:m]
       ## eigensolve and extract the lowest eigenvalue
       eigvalues <- eigen(M, symmetric=FALSE, only.values = TRUE, EISPACK = FALSE)$values
+      cat("m= ", m, "\n\n")
+      print(M)
+      cat("\n")
+      print(eigvalues)
       evs[m] <- sort(eigvalues[eigvalues > 0])[1]
     }
   }
