@@ -54,7 +54,7 @@ lanczos.solve <- function(cf, N) {
     if(m > 1) {
       for(j in c(1:(m-1))) {
         ## eq.(53) suppl. mat.
-        sr <- Aj[2]-alpha[j]-beta[j]*gamma[j]
+        sr <- Aj[2]-alpha[j]^2-beta[j]*gamma[j]
         ## eq.(41) suppl. mat.
         rhojp1 <- sqrt(abs(sr))
         taujp1 <- sr/rhojp1
