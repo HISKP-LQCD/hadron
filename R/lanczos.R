@@ -1,3 +1,11 @@
+remove_outliers <- function(x, probs=c(0.25,0.75)) {
+  Q <- quantile(x, probs=probs, na.rm=TRUE)
+  iqr <- Q[2]-Q[1]
+  x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
+  return(invisible(x))
+}
+
+
 #' @title Lanczos method for LQCD correlators
 #' 
 #' @description
@@ -11,13 +19,45 @@
 #' 
 #' @family lanczos
 #' @export
+#' @examples
+#' data(pscor.sample)
+#' newcf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(48, 316))))
+#' newcf <- cf_meta(newcf, nrObs=1, Time=48, symmetrised=FALSE)
+#' newcf.boot <- bootstrap.cf(newcf)
+#' ncf.boot <- symmetrise.cf(newcf.boot)
+#' ncf.effmass <- bootstrap.effectivemass(ncf.boot)
+#' plot(ncf.effmass, ylim=c(0.1,0.2))
+#' res <- bootstrap.lanczos(newcf.boot, N=newcf$Time)
+#' plot(res, rep=TRUE, col="red", pch=22)
 bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(inherits(cf, 'cf_orig'))
+
+  seed <- cf$seed
+  boot.R <- cf$boot.R
+  boot.l <- cf$boot.l
 
   res <- lanczos.solve(cf=cf$cf0, N=N)
-  return(res)
+
+  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N))
+  lanczos.tsboot <- apply(lanczos.tsboot.orig, 2, remove_outliers)
+  effMass=-log(res)
+  deffMass=apply(-log(lanczos.tsboot), 2L, cf$error_fn, na.rm=TRUE)
+  ret <- list(t.idx=c(1:(length(res))), cf=cf, res.lanczos=res,
+              lanczos.tsboot.orig=lanczos.tsboot.orig, lanczos.tsboot=lanczos.tsboot,
+              effMass=effMass, deffMass=deffMass, effMass.tsboot=-log(lanczos.tsboot),
+              opt.res=NULL, t1=NULL, t2=NULL, type=NA, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
+              boot.R = boot.R, boot.l = boot.l, seed = seed,
+              massfit.tsboot=NULL, Time=cf$Time, nrObs=1, dof=NULL,
+              chisqr=NULL, Qval=NULL
+             )
+  ret$t0 <- effMass
+  ret$t <- ret$effMass.tsboot
+  ret$se <- deffMass
+  attr(ret, "class") <- c("effectivemass", "lanczos", class(ret))
+  return(invisible(ret))
 }
 
 #' @title Lanczos solver
@@ -114,3 +154,4 @@ lanczos.solve <- function(cf, N) {
   }
   return(evs)
 }
+
