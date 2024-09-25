@@ -1,4 +1,17 @@
-bootstrap.lanczos <- function(cf, m = 2, N = (cf$Time/2+1)) {
+#' @title Lanczos method for LQCD correlators
+#' 
+#' @description
+#'   blub ...
+#'
+#' @param cf object of type \link{cf}
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Lanczos analysis
+#' @return
+#'   tbw
+#' 
+#' @family lanczos
+#' @export
+bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -7,11 +20,22 @@ bootstrap.lanczos <- function(cf, m = 2, N = (cf$Time/2+1)) {
   return(res)
 }
 
+#' @title Lanczos solver
+#' 
+#' @description
+#'   blub ...
+#'
+#' @param cf Numeric vector (this will generally be a correlation function or a bootstrap sample thereof).
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Lanczos analysis
+#' @return
+#'   tbw
+#' 
+#' @family lanczos
 lanczos.solve <- function(cf, N) {
-  N <- length(cf)
   Aj <- cf[2:N]/cf[1]
   ## container for the eigenvalues per m
-  evs <- rep(NA, times=Time/2)
+  evs <- rep(NA, times=N)
   for(m in c(1:N)) {
     B <- rep(0, times=length(Aj))
     Bjp1 <- B
@@ -28,36 +52,36 @@ lanczos.solve <- function(cf, N) {
     gamma[1] <- 0.
 
     if(m > 1) {
-      for(jp1 in c(2:m)) {
+      for(j in c(1:(m-1))) {
         ## eq.(53) suppl. mat.
-        sr <- A[2]-alpha[jp1-1]-beta[jp1-1]*gamma[jp1-1]
+        sr <- Aj[2]-alpha[j]-beta[j]*gamma[j]
         ## eq.(41) suppl. mat.
         rhojp1 <- sqrt(abs(sr))
         taujp1 <- sr/rhojp1
         ## below eq.(28) suppl. mat.
-        kmax <- 2*(m-jp1) + 1
+        kmax <- 2*(m-j) + 1
         ## B_{j+1}^k and G_{j+1}^k
-        for(k in c(2:kmax)) {
+        for(k in c(1:kmax)) {
           ## eqs. (44) and (45) suppl. mat.
-          Gjp1[k] <- Aj[k+1] - alpha[jp1-1]*Aj[k] - gamma[jp1-1]*Bj[k]
-          Bjp1[k] <- Aj[k+1] - alpha[jp1-1]*Aj[k] - beta[jp1-1]*Gj[k]
+          Gjp1[k] <- Aj[k+1] - alpha[j]*Aj[k] - gamma[j]*Bj[k]
+          Bjp1[k] <- Aj[k+1] - alpha[j]*Aj[k] - beta[j]*Gj[k]
         }
         Gjp1 <- Gjp1/taujp1
         Bjp1 <- Bjp1/rhojp1
         ## A_{j+1}^k eq. (46) suppl. mat.
-        for(k in c(2:kmax)) {
-          Ajp1[k] <-  Aj[k+2] - 2*alpha[jp1-1]*Aj[k+1] + alpha[jp1-1]^2*Aj[k] +
-            alpha[jp1-1]*(beta[jp1-1]*Gj[k] + gamma[jp1-1]*Bj[k]) -
-            (beta[jp1-1]*Gj[k+1] + gamma[jp1-1]*Bj[k+1]) +
-            gamma[jp1-1]*beta[jp1-1]*Ajm1[k]
+        for(k in c(1:kmax)) {
+          Ajp1[k] <-  Aj[k+2] - 2*alpha[j]*Aj[k+1] + alpha[j]^2*Aj[k] +
+            alpha[j]*(beta[j]*Gj[k] + gamma[j]*Bj[k]) -
+            (beta[j]*Gj[k+1] + gamma[j]*Bj[k+1]) +
+            gamma[j]*beta[j]*Ajm1[k]
         }
         Ajp1 <- Ajp1/rhojp1/taujp1
         ## eq. (38) suppl. mat.
-        alpha[jp1] <- Ajp1[1]
-        beta[jp1] <- Bjp1[1]
-        gamma[jp1] <- Gjp1[1]
+        alpha[j + 1] <- Ajp1[1]
+        beta[j + 1] <- Bjp1[1]
+        gamma[j + 1] <- Gjp1[1]
         ## don't do the copying if not needed
-        if(jp1 == m) break
+        if(j == m-1) break
         Ajm1 <- Aj
         Aj <- Ajp1
         Bjm1 <- Bj
