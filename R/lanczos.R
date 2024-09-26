@@ -5,6 +5,10 @@ remove_outliers <- function(x, probs=c(0.25,0.75)) {
   return(invisible(x))
 }
 
+error_fn <- function(x, probs=c(0.32, 0.68)) {
+  Q <- quantile(x, probs=probs)
+  return(Q[2]-Q[1])
+}
 
 #' @title Lanczos method for LQCD correlators
 #' 
@@ -14,6 +18,22 @@ remove_outliers <- function(x, probs=c(0.25,0.75)) {
 #' @param cf object of type \link{cf}
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Lanczos analysis
+#' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
+#'   distribution is used as estimator for the energy values.
+#' @param errortype string. Determines the treatment of the bootstrap
+#'   histograms to determine the statistical error on eigenvalues. Can
+#'   be: 1. 'outlier-removal' for which outliers are removed according to
+#'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
+#'   i.e. only values are kept which are in the interval
+#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   and the error is computed from the standard deviation of the bootstrap distribution.
+#'   2. 'quantiles' for which the error is estimated from the difference
+#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#' @param pivot boolean. If set to 'TRUE', the eigenvalues on the original data are used
+#'   to find the "correct" eigenvalue on the bootstrap sample by the
+#'   smallest distance.
+#' @param probs numeric. Vector of probabilities for the error estimation method
+#'   'quantiles'.
 #' @return
 #'   tbw
 #' 
@@ -29,23 +49,35 @@ remove_outliers <- function(x, probs=c(0.25,0.75)) {
 #' plot(ncf.effmass, ylim=c(0.1,0.2))
 #' res <- bootstrap.lanczos(newcf.boot, N=newcf$Time)
 #' plot(res, rep=TRUE, col="red", pch=22)
-bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
+bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, errortype="outlier-removal", pivot=FALSE, probs=c(0.32,0.68)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_orig'))
-
+  stopifnot(errortype %in% c("outlier-removal", "quantiles"))
+  
   seed <- cf$seed
   boot.R <- cf$boot.R
   boot.l <- cf$boot.l
 
-  res <- lanczos.solve(cf=cf$cf0, N=N)
-
-  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N))
-  lanczos.tsboot <- apply(lanczos.tsboot.orig, 2, remove_outliers)
-  effMass=-log(res)
-  deffMass=apply(-log(lanczos.tsboot), 2L, cf$error_fn, na.rm=TRUE)
-  ret <- list(t.idx=c(1:(length(res))), cf=cf, res.lanczos=res,
+  res <- lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
+  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
+  lanczos.tsboot <- lanczos.tsboot.orig
+  effMass <- -log(res)
+  deffMass <- rep(NA, length(effMass))
+  effMassMedian <- deffMass
+  if(errortype=="outlier-removal") {
+    lanczos.tsboot <- apply(lanczos.tsboot.orig, 2, remove_outliers)
+    deffMass <- apply(-log(lanczos.tsboot), 2L, cf$error_fn, na.rm=TRUE)
+  }
+  else if(errortype == "quantiles") {
+    deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs)
+  }
+  bias <- effMass - apply(-log(lanczos.tsboot), 2L, median, na.rm=TRUE)
+  if(bias_correction) {
+    effMass <- effMass - bias
+  }
+  ret <- list(t.idx=c(1:(length(res))), cf=cf, res.lanczos=res, bias=bias,
               lanczos.tsboot.orig=lanczos.tsboot.orig, lanczos.tsboot=lanczos.tsboot,
               effMass=effMass, deffMass=deffMass, effMass.tsboot=-log(lanczos.tsboot),
               opt.res=NULL, t1=NULL, t2=NULL, type=NA, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
@@ -72,7 +104,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1)) {
 #'   tbw
 #' 
 #' @family lanczos
-lanczos.solve <- function(cf, N) {
+lanczos.solve <- function(cf, N, pivot=FALSE, pivot_elements=NULL) {
   ## container for the eigenvalues per m
   evs <- rep(NA, times=N/2)
   for(m in c(1:(N/2))) {
@@ -148,8 +180,16 @@ lanczos.solve <- function(cf, N) {
       ##cat("\n")
       eigvalues <- Re(eigvalues[Im(eigvalues) == 0])
       eigvalues <- eigvalues[eigvalues > 0 & eigvalues < 1]
-      ##print(eigvalues)
-      evs[m] <- sort(eigvalues, decreasing=TRUE)[1]
+      ##if(m==10)
+      ##  print(eigvalues)
+      if(length(eigvalues) == 0) eigvalues[1] <- 0.01
+      if(pivot) {
+        ## find the eigenvalue closest to pivot_elements[m]
+        evs[m] <- eigvalues[which.min(abs(eigvalues-pivot_elements[m]))]
+      }
+      else{
+        evs[m] <- max(eigvalues, na.rm=TRUE)
+      }
     }
   }
   return(evs)
