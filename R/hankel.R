@@ -578,6 +578,18 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #' @inheritParams hankel2cf
 #' @param type Character vector. Type of effective mass to use.
 #' Must be in \code{c("log", "acosh")}
+#' @param probs numeric. Bector of probabilities.
+#' @param errortype string. Determines the treatment of the bootstrap
+#'   histograms to determine the statistical error on eigenvalues. Can
+#'   be: 1. 'outlier-removal' for which outliers are removed according to
+#'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
+#'   i.e. only values are kept which are in the interval
+#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   and the error is computed from the standard deviation of the bootstrap distribution.
+#'   2. 'quantiles' for which the error is estimated from the difference
+#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
+#'   distribution is used as estimator for the energy values.
 #' 
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.hankel}
@@ -590,7 +602,9 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #' @export
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
                                   range=c(0,1), eps=1.e-16,
-                                  sort.type="values", sort.t0=TRUE) {
+                                  sort.type="values", sort.t0=TRUE,
+                                  probs=c(0.32, 0.68), errortype="normal",
+                                  bias_correction=FALSE) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)
   stopifnot((id <= hankel$n && id >= 1))
@@ -622,19 +636,41 @@ hankel2effectivemass  <- function(hankel, id=c(1), type="log",
     effMass <- -log(pc$cf.tsboot$t0)/deltat
     effMass.tsboot <- -log(pc$cf.tsboot$t)/deltat
   }
-  deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
+  if(errortype == "outlier-removal") {
+    .remove_outliers <- function(x, probs=c(0.25,0.75)) {
+      Q <- quantile(x, probs=probs, na.rm=TRUE)
+      iqr <- Q[2]-Q[1]
+      x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
+      return(invisible(x))
+    }
+    deffMass <- apply(apply(effMass.tsboot, 2L, .remove_outliers), 2L, hankel$cf$error_fn, na.rm=TRUE)
+  }
+  else if(errortype == "quantiles") {
+    error_fn <- function(x, probs=c(0.32, 0.68)) {
+      Q <- quantile(x, probs=probs, na.rm=TRUE)
+      return(Q[2]-Q[1])
+    }
+    deffMass <- apply(effMass.tsboot, 2L, error_fn, probs=probs)
+  }
+  else {
+    deffMass <- apply(effMass.tsboot, 2, hankel$cf$error_fn, na.rm=TRUE)
+  }
+  bias <- effMass - apply(effMass.tsboot, 2L, median, na.rm=TRUE)
+  if(bias_correction) {
+    effMass <- effMass - bias
+  }
 
   ret <- list(t.idx=c(1:(tmax+1)),
               effMass=effMass, deffMass=deffMass, effMass.tsboot=effMass.tsboot,
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed,
+              boot.R = hankel$boot.R, boot.l = hankel$boot.l, seed = hankel$seed, bias=bias,
               massfit.tsboot=NULL, Time=hankel$cf$Time, N=1, nrObs=1, dof=NULL,
-              chisqr=NULL, Qval=NULL
+              chisqr=NULL, Qval=NULL, errortype=errortype
              )
   ret$cf <- hankel$cf
   ret$t0 <- effMass
   ret$t <- effMass.tsboot
-  ret$se <- apply(ret$t, MARGIN=2L, FUN=hankel$cf$error_fn, na.rm=TRUE)
+  ret$se <- deffMass ##apply(ret$t, MARGIN=2L, FUN=hankel$cf$error_fn, na.rm=TRUE)
   attr(ret, "class") <- c("effectivemass", class(ret))
   return(ret)
 }

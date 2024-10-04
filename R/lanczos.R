@@ -1,14 +1,4 @@
-remove_outliers <- function(x, probs=c(0.25,0.75)) {
-  Q <- quantile(x, probs=probs, na.rm=TRUE)
-  iqr <- Q[2]-Q[1]
-  x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
-  return(invisible(x))
-}
 
-error_fn <- function(x, probs=c(0.32, 0.68)) {
-  Q <- quantile(x, probs=probs)
-  return(Q[2]-Q[1])
-}
 
 #' @title Lanczos method for LQCD correlators
 #' 
@@ -35,7 +25,7 @@ error_fn <- function(x, probs=c(0.32, 0.68)) {
 #' @param probs numeric. Vector of probabilities for the error estimation method
 #'   'quantiles'.
 #' @return
-#'   tbw
+#'   Returns an object of S3 class `effectivemass`.
 #' 
 #' @family lanczos
 #' @export
@@ -67,10 +57,20 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
   deffMass <- rep(NA, length(effMass))
   effMassMedian <- deffMass
   if(errortype=="outlier-removal") {
+    remove_outliers <- function(x, probs=c(0.25,0.75)) {
+      Q <- quantile(x, probs=probs, na.rm=TRUE)
+      iqr <- Q[2]-Q[1]
+      x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
+      return(invisible(x))
+    }
     lanczos.tsboot <- apply(lanczos.tsboot.orig, 2, remove_outliers)
     deffMass <- apply(-log(lanczos.tsboot), 2L, cf$error_fn, na.rm=TRUE)
   }
   else if(errortype == "quantiles") {
+    error_fn <- function(x, probs=c(0.32, 0.68)) {
+      Q <- quantile(x, probs=probs)
+      return(Q[2]-Q[1])
+    }
     deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs)
   }
   bias <- effMass - apply(-log(lanczos.tsboot), 2L, median, na.rm=TRUE)
@@ -80,7 +80,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
   ret <- list(t.idx=c(1:(length(res))), cf=cf, res.lanczos=res, bias=bias,
               lanczos.tsboot.orig=lanczos.tsboot.orig, lanczos.tsboot=lanczos.tsboot,
               effMass=effMass, deffMass=deffMass, effMass.tsboot=-log(lanczos.tsboot),
-              opt.res=NULL, t1=NULL, t2=NULL, type=NA, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
+              opt.res=NULL, t1=NULL, t2=NULL, type="log", useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = boot.R, boot.l = boot.l, seed = seed,
               massfit.tsboot=NULL, Time=cf$Time, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL
