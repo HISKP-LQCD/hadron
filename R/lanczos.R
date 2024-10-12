@@ -3,9 +3,11 @@
 #' @title Lanczos method for LQCD correlators
 #' 
 #' @description
-#'   blub ...
+#'   Taking a single correlation function as input, the method
+#'   determines the ground state energy plus its bootstrap uncertainty.
 #'
-#' @param cf object of type \link{cf}
+#' @param cf object of type \link{cf}, optimally returned by
+#'   \code{\link{bootstrap.cf}}
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Lanczos analysis
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
@@ -24,6 +26,9 @@
 #'   smallest distance.
 #' @param probs numeric. Vector of probabilities for the error estimation method
 #'   'quantiles'.
+#' @seealso \code{\link{plot.effectivemass}}, \code{\link{bootstrap.effectivemass}}
+#' @references M. Wagman, 'Lanczos, the transfer matrix, and the signal-to-noise problem',
+#'   arXiv:2406.20009 
 #' @return
 #'   Returns an object of S3 class `effectivemass`.
 #' 
@@ -38,7 +43,7 @@
 #' ncf.effmass <- bootstrap.effectivemass(ncf.boot)
 #' plot(ncf.effmass, ylim=c(0.1,0.2))
 #' res <- bootstrap.lanczos(newcf.boot, N=newcf$Time)
-#' plot(res, rep=TRUE, col="red", pch=22)
+#' plot(res, rep=TRUE, col="red", pch=22, xshift=0.2)
 bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, errortype="outlier-removal", pivot=FALSE, probs=c(0.32,0.68)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))

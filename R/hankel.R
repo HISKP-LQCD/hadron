@@ -383,11 +383,11 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   tmp[Re(tmp) > 1] <- NA
   tmp <- Re(-log(tmp[, tt, ])/deltat)
   tmp[tmp > 1]  <- NA
-  new_window_if_appropriate()
+  hadron:::new_window_if_appropriate()
   hist(tmp, xlim=c(0, 1), main="Histogram of Samples",
        xlab="E", breaks=seq(0, 1, 0.02))
   mode<-density(tmp, na.rm=TRUE)$x[which.max(density(tmp, na.rm=TRUE)$y)]
-  new_window_if_appropriate()
+  hadron:::new_window_if_appropriate()
   plot(density(tmp, na.rm=TRUE))
   message("Mode of this density:", mode, "deltat:", deltat, "\n")
 }

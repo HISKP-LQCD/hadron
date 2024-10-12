@@ -574,25 +574,26 @@ print.effectivemassfit <- function (x, ..., verbose = FALSE) {
 #' @param ref.value Numeric. A reference value to be plotted as a horizontal line
 #' @param col String. Colour of the data points.
 #' @param col.fitline String. Colour of the fitted line.
+#' @param xshift Numeric. Shift to be applied to the x-values.
 #'
 #' @return
 #' No return value.
 #' 
 #' @export
-plot.effectivemass <- function (x, ..., ref.value, col, col.fitline) {
+plot.effectivemass <- function (x, ..., ref.value, col, col.fitline, xshift=0) {
   effMass <- x
   if(missing(col)) {
     col <- c("black", rainbow(n=(effMass$nrObs-1)))
   }
   if(missing(col.fitline)) {
-	col.fitline <- col[1]
+    col.fitline <- col[1]
   }
-  # BaKo: is this also valid for acosh type effective masses?
+                                        # BaKo: is this also valid for acosh type effective masses?
   t <- effMass$t.idx
-  suppressWarnings(plotwitherror(x=t-1, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...))
+  suppressWarnings(plotwitherror(x=t-1+xshift, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...))
   if(effMass$nrObs > 1) {
     for(i in 1:(effMass$nrObs-1)) {
-      suppressWarnings(plotwitherror(x=t-1, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...))
+      suppressWarnings(plotwitherror(x=t-1+xshift, y=effMass$t0[t+i*length(t)], dy=effMass$se[t+i*length(t)], rep=TRUE, col=col[i+1], ...))
     }
   }
   if(!missing(ref.value)) {
