@@ -211,12 +211,19 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     M <- try(qr.coef(qr.cM1, cM2), TRUE)
   }
   if(inherits(M, "try-error")) {
-    return(rep(NA, times=(n+n^2)))
+    warning("QR decomposition failed in gevp.hankel\n")
+    return(invisible(rep(NA, times=(n+n^2))))
   }
 
   M.eigen <- try(eigen(M, symmetric=positive, only.values=FALSE), TRUE)
   if(inherits(M.eigen, "try-error")) {
-    return(rep(NA, times=(n+n^2)))
+    warning("eigen failed in gevp.hankel\n")
+    M.svd <- try(svd(M))
+    if(inherits(M.svd, "try-error")) {
+      warning("also SVD failed in gevp.hankel\n")
+      return(invisible(rep(NA, times=(n+n^2))))
+    }
+    return(invisible(c(M.svd$d, as.vector(M.svd$u))))
   }
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }

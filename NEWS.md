@@ -1,3 +1,11 @@
+# Version 3.3.1
+
+* added the oblique Lanczos method 'bootstrap.lanczos' for the
+  analysis of Euclidean correlation functions
+* 'gevp.hankel' received some more functionality
+* 'plot.effectivemass' has a new optional parameter 'xshift' to shift
+  data points in x-direction for legibility.
+  
 # Version 3.2.1
 
 * fix problems in 'configure.ac'
