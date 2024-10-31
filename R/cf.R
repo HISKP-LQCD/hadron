@@ -573,6 +573,82 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 }
 
 
+#' double bootstrap a set of correlation functions
+#' 
+#' double bootstrap a set of correlation functions
+#' 
+#' @param cf bootstrapped correlation matrix of class \code{cf} obtained
+#' by a call to \code{bootstrap.cf}
+#' @param dbboot.R number of double bootstrap samples per original bootstrap sample 
+#' @return returns an object of class \code{cf} unchanged from input but
+#' with double bootstrap samples added
+#' for the correlation function called \code{doubleboot$cf}. Moreover, 'dbboot.R' is
+#' stored in the element \code{doubleboot$dbboot.R}.
+#' Note that dbboot.R operations need to be performed per original bootstrap sample,
+#' so large dbboot.R might lead to very long execution time.
+#' The error of the error of the correlation function is computed
+#' and stored as \code{tsboot.sse} in \code{cf}.
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @seealso \code{\link[boot]{tsboot}}, \code{jab.cf}, \code{bootstrap.cf}
+#' @keywords bootstrap
+#' @examples
+#' 
+#' data(samplecf)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
+#' samplecf <- double_bootstrap.cf(cf=samplecf, boot.R2=10)
+#' 
+#' @export double_bootstrap.cf
+double_bootstrap.cf <- function(cf, dbboot.R=99) {
+  stopifnot(inherits(cf, 'cf'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(cf$resampling_method == 'bootstrap')
+
+  make.ends <- function (a, n) {
+    mod <- function(i, n) 1 + (i - 1)%%n
+    if (a[2L] == 0) 
+      numeric()
+    else mod(seq.int(a[1L], a[1L] + a[2L] - 1, length.out = a[2L]), n)
+  }
+
+  sim <- cf$cf.tsboot$sim
+  endcor <- cf$cf.tsboot$endcor
+  boot.R <- cf$boot.R
+
+  old_seed <- hadron:::swap_seed(cf$seed)
+  ## the resampling block indices
+  ## here we have to reverse engeneer a bit
+  ## the tsboot procedure
+  i.a <- hadron:::boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
+                       R=boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
+
+  n.sim <- NROW(cf$cf)
+  n <- n.sim
+
+  ## can we reuse these ii resampling indices, I think yes!
+  ii <- array(sample.int(n=n.sim, size=dbboot.R*n.sim, replace=TRUE), dim=c(dbboot.R, n.sim))
+  cf$doubleboot <- list(cf = array(NA, dim=c(boot.R, dbboot.R, NCOL(cf$cf))))
+
+  for(r in seq_len(boot.R)) {
+    if (sim == "geom") 
+      ends <-  cbind(i.a$starts[r, ], i.a$lengths[r, ])
+    if (sim != "geom") 
+      ends <- cbind(i.a$starts[r, ], i.a$lengths)
+    inds <- apply(ends, 1L, make.ends, n)
+    inds <- if (is.list(inds)) 
+              matrix(unlist(inds)[1L:n.sim], n.sim, 1L)
+            else matrix(inds, n.sim, 1L)
+    cf$doubleboot$cf[r,,] <- t(apply(ii, MARGIN=1,
+                                     FUN=function(x, cf) {apply(cf[x,], MARGIN=2, FUN=mean)},
+                                     cf=cf$cf[inds,]))
+  }
+  cf$doubleboot$dbboot.R <- dbboot.R
+  ## estimate error or the error
+  cf$tsboot.sse <- apply(apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=sd), MARGIN=2L, FUN=sd)
+  hadron:::restore_seed(old_seed)
+  class(cf) <- append(class(cf), 'cf_dbboot')
+  return(invisible(cf))
+}
+
 
 #' jackknife a set of correlation functions
 #' 

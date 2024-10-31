@@ -166,17 +166,19 @@ summary.hankel_summed <- function(object, ...) {
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
-#' 
+#' @param only.values boolean. If 'TRUE', return only the eigenvalues, not the eigenvectors.
 #' @return
 #' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
-#' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements.
+#' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements. Unless
+#' 'only.values=TRUE' is set, when only the 'n' eigenvalues are returned in a complex vector 
+#' of length \code{n}.
 #' 
-#' A vector of NAs of \code{n + n^2} is returend in case the QR decomposition fails.
+#' A vector of NAs of \code{n + n^2} or \code{n} is returend in case the QR decomposition fails.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
                         submatrix.size=1, element.order=c(1,2,3,4),
-                        Delta=1) {
+                        Delta=1, only.values=FALSE) {
   stopifnot(t0 >= 0 && n > 0 && N > 0 && Delta > 0)
   stopifnot(t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat <= N)
   t0p1 <- t0+1
@@ -210,9 +212,13 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     qr.cM1 <- qr(cM1)
     M <- try(qr.coef(qr.cM1, cM2), TRUE)
   }
+  retl <- n+n^2
+  if(only.values) {
+    retl <- n
+  }
   if(inherits(M, "try-error")) {
     warning("QR decomposition failed in gevp.hankel\n")
-    return(invisible(rep(NA, times=(n+n^2))))
+    return(invisible(rep(NA, times=retl)))
   }
 
   M.eigen <- try(eigen(M, symmetric=positive, only.values=FALSE), TRUE)
@@ -221,10 +227,12 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     M.svd <- try(svd(M))
     if(inherits(M.svd, "try-error")) {
       warning("also SVD failed in gevp.hankel\n")
-      return(invisible(rep(NA, times=(n+n^2))))
+      return(invisible(rep(NA, times=retl)))
     }
+    if(only.values) return(invisible(M.svd$d))
     return(invisible(c(M.svd$d, as.vector(M.svd$u))))
   }
+  if(only.values) return(invisible(M.eigen$values))
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
 
@@ -343,6 +351,242 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   class(ret) <- c("hankel", class(ret))
   return(invisible(ret))
 }
+
+#' @title PGEVM 
+#' 
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   then. This is the function to call. It will perform a bootstrap
+#'   analysis. 
+#'
+#' @param cf object of type \link{cf}
+#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
+#'    \code{Time/2-n}. Default is 1. Used when \code{t0fixed=TRUE}.
+#' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1. Used
+#'   \code{t0fixed=FALSE}
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices. Submatrix.size > 1 is experimental.
+#' @param n.ax Integer. Maximal Size of the Hankel matrices to generate
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
+#'    for example.
+#' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' 
+#' @details
+#' tbw
+#'
+#' @return
+#' List object of class "PGEVM". The eigenvalues are stored in a
+#' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
+#' time \code{t0} is stored as \code{reference_time} in the returned list.
+#'
+#' @family hankel
+#' @export
+bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
+                            n.max = floor(((N - 1 - t0 - deltat)/Delta + 1)/2),
+                            submatrix.size=1, element.order=1) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  dbboot <- inherits(cf, 'cf_dbboot')
+  
+  t0p1 <- t0 + 1
+  boot.R <- cf$boot.R
+  
+  ## the last correlator element entering H(t+delta t) is
+  ## C(t0+delta t + (2n-1)Delta)
+  ## the last available element is N-1
+  ## thus see n.max in argument list
+  if(n.max < 1) n.max <- 1
+
+  evs <- array(NA, dim=c(n.max, n.max + n.max^2))
+  evs.tsboot <- array(NA, dim=c(boot.R, n.max, n.max + n.max^2))
+  evs.dbboot <- array()
+  dbboot.R <- c()
+  if(dbboot) {
+    dbboot.R <- cf$doubleboot$dbboot.R
+    evs.dbboot <- array(NA, dim=c(boot.R, dbboot.R, n.max, n.max))
+  }
+  for(n in c(1:n.max)) {
+    ii <- c(1:(n+n^2))
+    evs[n, ii] <- hadron:::gevp.hankel(cf$cf0, t0=t0,
+                              n=n, N=N, deltat=deltat,
+                              submatrix.size=submatrix.size, element.order=element.order,
+                              Delta=Delta)
+    evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=hadron:::gevp.hankel, t0=t0,
+                                   n=n, N=N, deltat=deltat,
+                                   submatrix.size=submatrix.size, element.order=element.order,
+                                   Delta=Delta))
+    if(dbboot) {
+      evs.dbboot[,,n,c(1:n)] <- t(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
+                                        n=n, N=N, deltat=deltat,
+                                        submatrix.size=submatrix.size, element.order=element.order,
+                                        Delta=Delta, only.values=TRUE))
+    }
+  }
+
+  ret <- list(cf=cf,
+              evs=evs,
+              evs.tsboot=evs.tsboot,
+              evs.dbboot=evs.dbboot,
+              boot.R=boot.R,
+              boot.l=cf$boot.l,
+              seed=cf$seed,
+              t0=t0,
+              submatrix.size=submatrix.size,
+              element.order=element.order,
+              Delta=Delta,
+              deltat=deltat,
+              n=c(1:n.max),
+              N=N)
+  class(ret) <- c("PGEVM", class(ret))
+  return(invisible(ret))
+}
+
+#' @title pgevm2effectivemass
+#'
+#' @param pgevm an object of class 'PGEVM' generated by 'bootstrap.pgevm'
+#' @param id integer. The id of the state to be determined
+#' @param type Character vector. Type of effective mass to use.
+#' Must be in \code{c("log")}
+#' @param eps numeric. threshold for zero
+#' @param n.max integer. The maximal value of 'n' to consider
+#' @param errortype string. Determines the treatment of the bootstrap
+#'   histograms to determine the statistical error on eigenvalues. Can
+#'   be: 1. 'outlier-removal' for which outliers are removed according to
+#'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
+#'   i.e. only values are kept which are in the interval
+#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   and the error is computed from the standard deviation of the bootstrap distribution.
+#'   2. 'quantiles' for which the error is estimated from the difference
+#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#' @param probs numeric. The probabilities for errortype quantiles, default is \code{c(0.16,0.84)}. 
+#' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
+#'   distribution is used as estimator for the energy values.
+#' 
+#' @family hankel
+#' @seealso input is generated via \link{bootstrap.pgevm}
+#' See also \link{bootstrap.effectivemass}
+#'
+#' @return
+#' Returns an object of S3 class `effectivemass`.
+#' 
+#' @export
+pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
+                                 eps=1.e-16, n.max, probs=c(0.16, 0.84),
+                                 errortype="outlier-removal",
+                                 bias_correction=FALSE) {
+  
+  stopifnot(inherits(pgevm, "PGEVM"))
+  stopifnot(length(id) == 1)
+  if(missing(n.max)) n.max <- max(pgevm$n)
+  n.max <- min(n.max, max(pgevm$n))
+  deltat <- pgevm$deltat
+  dbboot <- inherits(pgevm$cf, 'cf_dbboot')
+  range <- c(0,1)
+  
+  effMass <- c()
+  effMass.tsboot <- array(NA, dim=c(pgevm$boot.R, max(pgevm$n)))
+  effMass.dbboot <- array()
+  if(dbboot) {
+    effMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$doubleboot$dbboot.R, max(pgevm$n)))
+  }
+  .fn <- function(evs, range=c(0,1), eps, n) {
+    ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
+                & Re(evs) < range[2])
+    x <- Re(evs[ii])
+    N <- length(x)
+    return(c(x, rep(NA, times=n-N)))
+  }
+  
+  .closest <- function(x, ref) {
+    y <- x[which.min(abs(x-ref))]
+    if(length(y) == 0) return(NA)
+    return(y)
+  }
+
+  tmpdbboot <- array()
+  for(n in c(1:n.max)) {
+    ii <- c(1:n)
+    tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n)
+    tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
+                     MARGIN=1, FUN=.fn,
+                     range=range, eps=eps, n=n)
+    if(dbboot) {
+      tmpdbboot <- apply(X=pgevm$evs.dbboot[, , n, ii, drop = FALSE],
+                         MARGIN=1, FUN=.fn,
+                         range=range, eps=eps, n=n)
+    }
+    if(n == 1) {
+      effMass[n] <- tmp
+      effMass.tsboot[,n] <- tmpboot
+      if(dbboot) effMass.dbboot[,,n] <- tmpdbboot
+    }
+    else{
+      med <- median(c(tmp[id], tmpboot[id,]))
+      effMass[n] <- .closest(tmp, ref=med)
+      effMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
+                                  ref=med)
+      if(dbboot) {
+        effMass.dbboot[,,n] <- t(apply(tmpdbboot, MARGIN=c(2L, 3L),
+                                       FUN=.closest, ref=med))
+      }
+    }
+  }
+  effMass <- -log(effMass)/deltat
+  effMass.tsboot <- -log(effMass.tsboot)/deltat
+  if(dbboot) effMass.dbboot <- -log(effMass.dbboot)/deltat
+  deffMass <- apply(effMass.tsboot, 2, sd, na.rm=TRUE)
+  bias <- effMass - apply(effMass.tsboot, 2, median, na.rm=TRUE)
+  if(bias_correction) {
+    effMass <- effMass - bias
+  }
+  
+  if(errortype=="outlier-removal") {
+    remove_outliers <- function(x, probs=c(0.25,0.75)) {
+      Q <- quantile(x, probs=probs, na.rm=TRUE)
+      iqr <- Q[2]-Q[1]
+      x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
+      return(invisible(x))
+    }
+    effMass.tsboot <- apply(effMass.tsboot, 2, remove_outliers)
+    deffMass <- apply(-log(effMass.tsboot), 2L, pgevm$cf$error_fn, na.rm=TRUE)
+  }
+  else if(errortype == "quantiles") {
+    error_fn <- function(x, probs=c(0.16, 0.84)) {
+      Q <- quantile(x, probs=probs, na.rm=TRUE)
+      return(Q[2]-Q[1])
+    }
+    deffMass <- apply(-log(effMass.tsboot), 2L, error_fn, probs=probs)
+  }
+  else if(errortype == "dbboot" & dbboot) {
+    deffMass <- apply(apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median), MARGIN=1L, sd)
+  }
+
+  
+  ret <- list(t.idx=c(1:n.max),
+              pgevm=pgevm,
+              cf=pgevm$cf,
+              effMass=effMass,
+              effMass.tsboot=effMass.tsboot,
+              effMass.dbboot=effMass.dbboot,
+              deffMass=deffMass,
+              n.max=n.max,
+              type="log",
+              opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
+              boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias,
+              massfit.tsboot=NULL, Time=pgevm$cf$Time, N=1, nrObs=1, dof=NULL,
+              chisqr=NULL, Qval=NULL, errortype=NULL)
+  attr(ret, "class") <- c("effectivemass", class(ret))
+  return(invisible(ret))
+}
+
 
 #' @title plot_hankel_spectrum
 #'
@@ -594,7 +838,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #'   [Q_25-1.5IQR, Q_75+1.5IQR]
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
-#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#'   between the 0.16 and 0.84 quantile of the original bootstrap distribution
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
 #' 
@@ -610,7 +854,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 hankel2effectivemass  <- function(hankel, id=c(1), type="log",
                                   range=c(0,1), eps=1.e-16,
                                   sort.type="values", sort.t0=TRUE,
-                                  probs=c(0.32, 0.68), errortype="normal",
+                                  probs=c(0.16, 0.84), errortype="normal",
                                   bias_correction=FALSE) {
   stopifnot(inherits(hankel, "hankel"))
   stopifnot(length(id) == 1)

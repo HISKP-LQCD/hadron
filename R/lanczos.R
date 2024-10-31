@@ -20,7 +20,7 @@
 #'   [Q_25-1.5IQR, Q_75+1.5IQR]
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
-#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#'   between the 0.16 and 0.84 quantile of the original bootstrap distribution
 #' @param pivot boolean. If set to 'TRUE', the eigenvalues on the original data are used
 #'   to find the "correct" eigenvalue on the bootstrap sample by the
 #'   smallest distance.
@@ -44,12 +44,12 @@
 #' plot(ncf.effmass, ylim=c(0.1,0.2))
 #' res <- bootstrap.lanczos(newcf.boot, N=newcf$Time)
 #' plot(res, rep=TRUE, col="red", pch=22, xshift=0.2)
-bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, errortype="outlier-removal", pivot=FALSE, probs=c(0.32,0.68)) {
+bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, errortype="outlier-removal", pivot=FALSE, probs=c(0.16,0.84)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_orig'))
-  stopifnot(errortype %in% c("outlier-removal", "quantiles"))
+  stopifnot(errortype %in% c("outlier-removal", "quantiles", "median-db"))
   
   seed <- cf$seed
   boot.R <- cf$boot.R
@@ -58,6 +58,9 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
   res <- lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
   lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
   lanczos.tsboot <- lanczos.tsboot.orig
+  if(errortype == "media-db") {
+    ## double bootstrap
+  }
   effMass <- -log(res)
   deffMass <- rep(NA, length(effMass))
   effMassMedian <- deffMass
@@ -72,7 +75,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
     deffMass <- apply(-log(lanczos.tsboot), 2L, cf$error_fn, na.rm=TRUE)
   }
   else if(errortype == "quantiles") {
-    error_fn <- function(x, probs=c(0.32, 0.68)) {
+    error_fn <- function(x, probs=c(0.16, 0.84)) {
       Q <- quantile(x, probs=probs)
       return(Q[2]-Q[1])
     }
