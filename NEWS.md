@@ -1,5 +1,12 @@
 # Version 3.3.1
 
+* added a double bootstrap routine for 'cf' called
+  double_bootstrap.cf
+* added a new interface for 'gevp.hankel' which evaluates as a function
+  of 'n', the matrix size. The new interface is called
+  'bootstrap.pgevm', which also acts on the double bootstrap data, if available
+* 'pgevm2effectivemass' can also deal with the double bootstrap data
+  to estimate the uncertainty for the media.
 * added the oblique Lanczos method 'bootstrap.lanczos' for the
   analysis of Euclidean correlation functions
 * 'gevp.hankel' received some more functionality

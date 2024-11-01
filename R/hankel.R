@@ -224,13 +224,13 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   M.eigen <- try(eigen(M, symmetric=positive, only.values=FALSE), TRUE)
   if(inherits(M.eigen, "try-error")) {
     warning("eigen failed in gevp.hankel\n")
-    M.svd <- try(svd(M))
-    if(inherits(M.svd, "try-error")) {
-      warning("also SVD failed in gevp.hankel\n")
+    #3M.svd <- try(svd(M))
+    ##if(inherits(M.svd, "try-error")) {
+      ##warning("also SVD failed in gevp.hankel\n")
       return(invisible(rep(NA, times=retl)))
-    }
-    if(only.values) return(invisible(M.svd$d))
-    return(invisible(c(M.svd$d, as.vector(M.svd$u))))
+    ##}
+    ##if(only.values) return(invisible(M.svd$d))
+    ##return(invisible(c(M.svd$d, as.vector(M.svd$u))))
   }
   if(only.values) return(invisible(M.eigen$values))
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
@@ -424,10 +424,19 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
                                    submatrix.size=submatrix.size, element.order=element.order,
                                    Delta=Delta))
     if(dbboot) {
-      evs.dbboot[,,n,c(1:n)] <- t(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
+      if(n==1) {
+        evs.dbboot[,,n,c(1:n)] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
                                         n=n, N=N, deltat=deltat,
                                         submatrix.size=submatrix.size, element.order=element.order,
-                                        Delta=Delta, only.values=TRUE))
+                                        Delta=Delta, only.values=TRUE)
+      }
+      else {
+        evs.dbboot[,,n,c(1:n)] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
+                                              n=n, N=N, deltat=deltat,
+                                              submatrix.size=submatrix.size, element.order=element.order,
+                                              Delta=Delta, only.values=TRUE),
+                                        perm=c(2,3,1))
+      }
     }
   }
 
@@ -495,7 +504,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   effMass.tsboot <- array(NA, dim=c(pgevm$boot.R, max(pgevm$n)))
   effMass.dbboot <- array()
   if(dbboot) {
-    effMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$doubleboot$dbboot.R, max(pgevm$n)))
+    effMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$cf$doubleboot$dbboot.R, max(pgevm$n)))
   }
   .fn <- function(evs, range=c(0,1), eps, n) {
     ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
@@ -520,7 +529,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
                      range=range, eps=eps, n=n)
     if(dbboot) {
       tmpdbboot <- apply(X=pgevm$evs.dbboot[, , n, ii, drop = FALSE],
-                         MARGIN=1, FUN=.fn,
+                         MARGIN=c(1L,2L), FUN=.fn,
                          range=range, eps=eps, n=n)
     }
     if(n == 1) {
@@ -534,8 +543,8 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       effMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
                                   ref=med)
       if(dbboot) {
-        effMass.dbboot[,,n] <- t(apply(tmpdbboot, MARGIN=c(2L, 3L),
-                                       FUN=.closest, ref=med))
+        effMass.dbboot[,,n] <- apply(tmpdbboot, MARGIN=c(2L, 3L),
+                                           FUN=.closest, ref=med)
       }
     }
   }
@@ -566,7 +575,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     deffMass <- apply(-log(effMass.tsboot), 2L, error_fn, probs=probs)
   }
   else if(errortype == "dbboot" & dbboot) {
-    deffMass <- apply(apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median), MARGIN=1L, sd)
+    deffMass <- apply(apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE), MARGIN=2L, sd, na.rm=TRUE)
   }
 
   
