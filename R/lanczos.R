@@ -12,6 +12,7 @@
 #'                   Lanczos analysis
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
+#'   This will be set to TRUE for errortyp is equal 'dbboot'
 #' @param errortype string. Determines the treatment of the bootstrap
 #'   histograms to determine the statistical error on eigenvalues. Can
 #'   be: 1. 'outlier-removal' for which outliers are removed according to
@@ -21,6 +22,8 @@
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
 #'   between the 0.16 and 0.84 quantile of the original bootstrap distribution
+#'   3. 'dbboot' which works only, if the 'cf' is double bootstrapped. It will
+#'   estimate the error from the true error of the median
 #' @param pivot boolean. If set to 'TRUE', the eigenvalues on the original data are used
 #'   to find the "correct" eigenvalue on the bootstrap sample by the
 #'   smallest distance.
@@ -44,26 +47,37 @@
 #' plot(ncf.effmass, ylim=c(0.1,0.2))
 #' res <- bootstrap.lanczos(newcf.boot, N=newcf$Time)
 #' plot(res, rep=TRUE, col="red", pch=22, xshift=0.2)
-bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, errortype="outlier-removal", pivot=FALSE, probs=c(0.16,0.84)) {
+bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
+                              errortype="outlier-removal", pivot=FALSE, probs=c(0.16,0.84)) {
   ## wrapper function, not yet bootstrapping...
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(inherits(cf, 'cf_orig'))
-  stopifnot(errortype %in% c("outlier-removal", "quantiles", "median-db"))
+  stopifnot(errortype %in% c("outlier-removal", "quantiles", "dbboot"))
+
+  dbboot <- inherits(cf, 'cf_dbboot')
+  if(errortype == "dbboot" & (!dbboot)) {
+    cat("errortype dbboot needs a doubly bootstrapped cf\n")
+    stopifnot(dbboot)
+  }
+  if(errortype == "dbboot") bias_correction = TRUE
+  else(dbboot = FALSE)
   
   seed <- cf$seed
   boot.R <- cf$boot.R
   boot.l <- cf$boot.l
 
-  res <- lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
-  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
+  res <- hadron:::lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
+  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, hadron:::lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
   lanczos.tsboot <- lanczos.tsboot.orig
-  if(errortype == "media-db") {
-    ## double bootstrap
+  lanczos.dbboot <- array()
+  if(dbboot) {
+    lanczos.dbboot <- -log(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::lanczos.solve, N=N,
+                                       pivot=pivot, pivot_elements=res),
+                                 perm=c(2,3,1)))
   }
   effMass <- -log(res)
   deffMass <- rep(NA, length(effMass))
-  effMassMedian <- deffMass
   if(errortype=="outlier-removal") {
     remove_outliers <- function(x, probs=c(0.25,0.75)) {
       Q <- quantile(x, probs=probs, na.rm=TRUE)
@@ -79,7 +93,11 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
       Q <- quantile(x, probs=probs)
       return(Q[2]-Q[1])
     }
-    deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs)
+    deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs, na.rm=TRUE)
+  }
+  else if(errortype == "dbboot") {
+    deffMass <- apply(apply(lanczos.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE),
+                      MARGIN=2L, sd, na.rm=TRUE)
   }
   bias <- effMass - apply(-log(lanczos.tsboot), 2L, median, na.rm=TRUE)
   if(bias_correction) {
@@ -88,6 +106,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE, erro
   ret <- list(t.idx=c(1:(length(res))), cf=cf, res.lanczos=res, bias=bias,
               lanczos.tsboot.orig=lanczos.tsboot.orig, lanczos.tsboot=lanczos.tsboot,
               effMass=effMass, deffMass=deffMass, effMass.tsboot=-log(lanczos.tsboot),
+              effMass.dbboot=lanczos.dbboot,
               opt.res=NULL, t1=NULL, t2=NULL, type="log", useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
               boot.R = boot.R, boot.l = boot.l, seed = seed,
               massfit.tsboot=NULL, Time=cf$Time, nrObs=1, dof=NULL,
@@ -184,19 +203,22 @@ lanczos.solve <- function(cf, N, pivot=FALSE, pivot_elements=NULL) {
       ##print(M)
       
       ## eigensolve and extract the lowest eigenvalue
-      eigvalues <- eigen(M, symmetric=FALSE, only.values = TRUE, EISPACK = FALSE)$values
-      ##cat("\n")
-      eigvalues <- Re(eigvalues[Im(eigvalues) == 0])
-      eigvalues <- eigvalues[eigvalues > 0 & eigvalues < 1]
-      ##if(m==10)
-      ##  print(eigvalues)
-      if(length(eigvalues) == 0) eigvalues[1] <- 0.01
-      if(pivot) {
-        ## find the eigenvalue closest to pivot_elements[m]
-        evs[m] <- eigvalues[which.min(abs(eigvalues-pivot_elements[m]))]
+      eigvalues <- try(eigen(M, symmetric=FALSE, only.values = TRUE, EISPACK = FALSE)$values, TRUE)
+      if(inherits(eigvalues, "try-error")) {
+        warning("eigen failed in lanczos.solve\n")
+        evs[m] <- NA
       }
-      else{
-        evs[m] <- max(eigvalues, na.rm=TRUE)
+      else {
+        eigvalues <- Re(eigvalues[Im(eigvalues) == 0])
+        eigvalues <- eigvalues[eigvalues > 0 & eigvalues < 1]
+        if(length(eigvalues) == 0) eigvalues[1] <- 0.01
+        if(pivot) {
+          ## find the eigenvalue closest to pivot_elements[m]
+          evs[m] <- eigvalues[which.min(abs(eigvalues-pivot_elements[m]))]
+        }
+        else{
+          evs[m] <- max(eigvalues, na.rm=TRUE)
+        }
       }
     }
   }

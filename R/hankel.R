@@ -475,6 +475,8 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
 #'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#'   3. 'dbboot' which works only, if the 'cf' is double bootstrapped. It will
+#'   estimate the error from the true error of the median
 #' @param probs numeric. The probabilities for errortype quantiles, default is \code{c(0.16,0.84)}. 
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
@@ -493,12 +495,19 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
                                  bias_correction=FALSE) {
   
   stopifnot(inherits(pgevm, "PGEVM"))
+  stopifnot(errortype %in% c("outlier-removal", "quantiles", "dbboot"))
   stopifnot(length(id) == 1)
   if(missing(n.max)) n.max <- max(pgevm$n)
   n.max <- min(n.max, max(pgevm$n))
   deltat <- pgevm$deltat
-  dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   range <- c(0,1)
+  dbboot <- inherits(pgevm$cf, 'cf_dbboot')
+  if(errortype == "dbboot") {
+    cat("errortype dbboot needs a doubly bootstrapped cf\n")
+    stopifnot(dbboot)
+  }
+  if(errortype == "dbboot") bias_correction = TRUE
+  else dbboot=FALSE
   
   effMass <- c()
   effMass.tsboot <- array(NA, dim=c(pgevm$boot.R, max(pgevm$n)))
@@ -574,7 +583,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     }
     deffMass <- apply(-log(effMass.tsboot), 2L, error_fn, probs=probs)
   }
-  else if(errortype == "dbboot" & dbboot) {
+  else if(errortype == "dbboot") {
     deffMass <- apply(apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE), MARGIN=2L, sd, na.rm=TRUE)
   }
 
