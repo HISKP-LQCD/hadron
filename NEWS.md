@@ -9,6 +9,7 @@
   to estimate the uncertainty for the media.
 * added the oblique Lanczos method 'bootstrap.lanczos' for the
   analysis of Euclidean correlation functions
+  'bootstrap.lanczos' also works with double bootstrap
 * 'gevp.hankel' received some more functionality
 * 'plot.effectivemass' has a new optional parameter 'xshift' to shift
   data points in x-direction for legibility.
