@@ -377,13 +377,14 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
   ## if not symmetrised even in the range 0 - Time-1
   ii <- c()
   if(missing(every)){
-	  for(i in 1:cf$nrObs) {
-		ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
-	  }
-  }else{
-	  for(i in 1:cf$nrObs) {
-		ii <- c(ii, seq((i-1)*tmax+t1+1, (i-1)*tmax+t2+1, by=every))
-	  }
+    for(i in 1:cf$nrObs) {
+      ii <- c(ii, ((i-1)*tmax+t1+1):((i-1)*tmax+t2+1))
+    }
+  }
+  else{
+    for(i in 1:cf$nrObs) {
+      ii <- c(ii, seq((i-1)*tmax+t1+1, (i-1)*tmax+t2+1, by=every))
+    }
   }
 
   ## get rid of the NAs for the fit, if there are any
@@ -453,7 +454,7 @@ fit.effectivemass <- function(cf, t1, t2, useCov=FALSE, replace.na=TRUE, boot.fi
     if( length( ii.remove ) > 0 ) {
       ## if the matrix is diagonal, we simply restrict it
       M <- M[ -ii.remove, -ii.remove]
-	  M <- diag(M)
+      M <- diag(M)
     }
   }
 

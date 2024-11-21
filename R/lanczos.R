@@ -57,7 +57,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
 
   dbboot <- inherits(cf, 'cf_dbboot')
   if(errortype == "dbboot" & (!dbboot)) {
-    cat("errortype dbboot needs a doubly bootstrapped cf\n")
+    if(!dbboot) cat("errortype dbboot needs a doubly bootstrapped cf\n")
     stopifnot(dbboot)
   }
   if(errortype == "dbboot") bias_correction = TRUE
@@ -93,11 +93,11 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
       Q <- quantile(x, probs=probs)
       return(Q[2]-Q[1])
     }
-    deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs, na.rm=TRUE)
+    deffMass <- apply(-log(lanczos.tsboot), 2L, error_fn, probs=probs)
   }
   else if(errortype == "dbboot") {
-    deffMass <- apply(apply(lanczos.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE),
-                      MARGIN=2L, sd, na.rm=TRUE)
+    lanczos.tsboot <- apply(lanczos.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
+    deffMass <- apply(lanczos.tsboot, MARGIN=2L, sd, na.rm=TRUE)
   }
   bias <- effMass - apply(-log(lanczos.tsboot), 2L, median, na.rm=TRUE)
   if(bias_correction) {
