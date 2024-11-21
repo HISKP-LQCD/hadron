@@ -1,5 +1,6 @@
 # Version 3.3.1
 
+* improvements of PGEVM for periodic correlators
 * added a double bootstrap routine for 'cf' called
   double_bootstrap.cf
 * added a new interface for 'gevp.hankel' which evaluates as a function
