@@ -574,7 +574,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   for(n in c(1:n.max)) {
     ii <- c(1:n)
     tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n)
-    if(is.na(tmp)) next
+    if(all(is.na(tmp))) next
     tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
                      MARGIN=1, FUN=.fn,
                      range=range, eps=eps, n=n)
