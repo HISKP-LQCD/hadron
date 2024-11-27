@@ -196,7 +196,8 @@ dmatrixChi.shifted <- function(par, t, y, L, Time, parind, sign.vec, ov.sign.vec
 }
 
 
-# the calling code must supply the correct three parameters 
+#' the calling code must supply the correct three parameters
+#' @keywords internal
 deriv.CExp <- function(par, t, Time, sign) {
   res <- array(0.,dim=c(length(par),length(t)))
 
@@ -207,6 +208,7 @@ deriv.CExp <- function(par, t, Time, sign) {
   return(res)
 }
 
+#' @keywords internal
 deriv.CExp.shifted <- function(par, t, Time, sign, deltat=1) {
   res <- array(0.,dim=c(length(par),length(t)))
   
@@ -217,6 +219,7 @@ deriv.CExp.shifted <- function(par, t, Time, sign, deltat=1) {
   return(res)
 }
 
+#' @keywords internal
 deriv.pcModel <- function(par, t, Time, reference_time) {
   res <- array(0.,dim=c(length(par),length(t)))
   res[1, ] <- -(t-reference_time)*exp(-par[1]*(t-reference_time))*(par[3]+(1-par[3])*exp(-par[2]*(t-reference_time)))

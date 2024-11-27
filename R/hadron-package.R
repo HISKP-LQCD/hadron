@@ -76,7 +76,7 @@ NULL
 #' In addition, input/output and plotting routines are available.
 #' 
 #' @name hadron
-#' @docType package
+#' @aliases hadron-package
 #' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #'
 #' @importFrom grDevices col2rgb dev.cur dev.new dev.off rainbow rgb

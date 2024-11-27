@@ -1,10 +1,12 @@
-## sum_i (a_i cosh(m_i*t))
-## a_i are the amplitudes, m_i the masses and t is a vector of times
+#' sum_i (a_i cosh(m_i*t))
+#' a_i are the amplitudes, m_i the masses and t is a vector of times
+#' @keywords internal
 sum.cosh <- function(masses, amplitudes, t){
   colSums(amplitudes*cosh(masses%o%t))
 }
 
-## extract the effective mass from the sum of coshs
+#' extract the effective mass from the sum of coshs
+#' @keywords internal
 cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
   if(type == "solve"){
     sapply(t, FUN=function(x) {invcosh(sum.cosh(masses, amplitudes, x-Thalf)/sum.cosh(masses, amplitudes, x+1-Thalf), timeextent=2*Thalf, t=x+1)})
