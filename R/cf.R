@@ -573,7 +573,7 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 }
 
 
-#' double bootstrap a set of correlation functions
+#' double bootstrap function for cf
 #' 
 #' double bootstrap a set of correlation functions
 #' 
@@ -594,10 +594,10 @@ bootstrap.cf <- function(cf, boot.R=400, boot.l=2, seed=1234, sim="geom", endcor
 #' @examples
 #' 
 #' data(samplecf)
-#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=99, boot.l=2, seed=1442556)
-#' samplecf <- double_bootstrap.cf(cf=samplecf, boot.R2=10)
+#' samplecf <- bootstrap.cf(cf=samplecf, boot.R=10, boot.l=2, seed=1442556)
+#' samplecf <- double_bootstrap.cf(cf=samplecf, dbboot.R=10)
 #' 
-#' @export double_bootstrap.cf
+#' @export
 double_bootstrap.cf <- function(cf, dbboot.R=99) {
   stopifnot(inherits(cf, 'cf'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -614,11 +614,11 @@ double_bootstrap.cf <- function(cf, dbboot.R=99) {
   endcor <- cf$cf.tsboot$endcor
   boot.R <- cf$boot.R
 
-  old_seed <- hadron:::swap_seed(cf$seed)
+  old_seed <- swap_seed(cf$seed)
   ## the resampling block indices
   ## here we have to reverse engeneer a bit
   ## the tsboot procedure
-  i.a <- hadron:::boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
+  i.a <- boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
                        R=boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
 
   n.sim <- NROW(cf$cf)
@@ -644,7 +644,7 @@ double_bootstrap.cf <- function(cf, dbboot.R=99) {
   cf$doubleboot$dbboot.R <- dbboot.R
   ## estimate error or the error
   cf$tsboot.sse <- apply(apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=sd), MARGIN=2L, FUN=sd)
-  hadron:::restore_seed(old_seed)
+  restore_seed(old_seed)
   class(cf) <- append(class(cf), 'cf_dbboot')
   return(invisible(cf))
 }

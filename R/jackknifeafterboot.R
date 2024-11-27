@@ -50,8 +50,8 @@ jab.cf <- function(cf, m = 1) {
 
   old_seed <- swap_seed(cf$seed)
   ## the resampling block indices
-  cf$blockind <- boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
-                               R=cf$boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
+  cf$blockind <- hadron:::boot_ts_array(n=cf$cf.tsboot$n, n.sim=cf$cf.tsboot$n.sim,
+                                        R=cf$boot.R, l=cf$boot.l, sim=cf$sim, endcorr=cf$cf.tsboot$endcorr)
   restore_seed(old_seed)
 
   cf$jack.boot.se <- jab(t=cf$cf.tsboot$t, t0=cf$tsboot.se, starts=cf$blockind$starts, m=m, fn=sd)
@@ -83,8 +83,8 @@ jab.cf.derived <- function(cf, m=1) {
 
   if(is.null(cf$cf$blockind)) {
     old_seed <- swap_seed(cf$seed)
-    cf$cf$blockind <- boot_ts_array(n=cf$cf$cf.tsboot$n, n.sim=cf$cf$cf.tsboot$n.sim,
-                                    R=cf$cf$boot.R, l=cf$cf$boot.l, sim=cf$cf$sim, endcorr=cf$cf$cf.tsboot$endcorr)
+    cf$cf$blockind <- hadron:::boot_ts_array(n=cf$cf$cf.tsboot$n, n.sim=cf$cf$cf.tsboot$n.sim,
+                                             R=cf$cf$boot.R, l=cf$cf$boot.l, sim=cf$cf$sim, endcorr=cf$cf$cf.tsboot$endcorr)
     restore_seed(old_seed) 
   }
   jack.boot.se <- jab(t=cf$t[,c(1:length(cf$se))], t0=cf$se, starts=cf$cf$blockind$starts, m=m, fn=sd)

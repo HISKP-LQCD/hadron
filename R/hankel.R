@@ -377,7 +377,7 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #'   \code{t0fixed=FALSE}
 #' @param submatrix.size Integer. Submatrix size to be used in build
 #'   of Hankel matrices. Submatrix.size > 1 is experimental.
-#' @param n.ax Integer. Maximal Size of the Hankel matrices to generate
+#' @param n.max Integer. Maximal Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
 #' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
@@ -387,7 +387,10 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' @param ndep.Delta boolean. If set to 'TRUE', Delta will be chosen 'n' dependent to cover the largest
+#'   possible range in the correlator.
 #' 
+#' @references arXiv:2411.14981, Ostmeyer, Sen, Urbach
 #' @details
 #' tbw
 #'
@@ -441,23 +444,23 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
       Deltan <- Delta
     }
     ii <- c(1:(n+n^2))
-    evs[n, ii] <- hadron:::gevp.hankel(cf$cf0, t0=t0,
+    evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
                               n=n, N=N, deltat=deltat,
                               submatrix.size=submatrix.size, element.order=element.order,
                               Delta=Deltan)
-    evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=hadron:::gevp.hankel, t0=t0,
+    evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=gevp.hankel, t0=t0,
                                    n=n, N=N, deltat=deltat,
                                    submatrix.size=submatrix.size, element.order=element.order,
                                    Delta=Deltan))
     if(dbboot) {
       if(n==1) {
-        evs.dbboot[,,n,c(1:n)] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
+        evs.dbboot[,,n,c(1:n)] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                         n=n, N=N, deltat=deltat,
                                         submatrix.size=submatrix.size, element.order=element.order,
                                         Delta=Deltan, only.values=TRUE)
       }
       else {
-        evs.dbboot[,,n,c(1:n)] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::gevp.hankel, t0=t0,
+        evs.dbboot[,,n,c(1:n)] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                               n=n, N=N, deltat=deltat,
                                               submatrix.size=submatrix.size, element.order=element.order,
                                               Delta=Deltan, only.values=TRUE),
@@ -500,7 +503,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
 #'   be: 1. 'outlier-removal' for which outliers are removed according to
 #'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
 #'   i.e. only values are kept which are in the interval
-#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   \eqn{[Q_25-1.5IQR, Q_75+1.5IQR]}
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
 #'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
@@ -714,11 +717,11 @@ plot_hankel_spectrum <- function(hankel, deltat=1, id=c(1:hankel$n)) {
   tmp[Re(tmp) > 1] <- NA
   tmp <- Re(-log(tmp[, tt, ])/deltat)
   tmp[tmp > 1]  <- NA
-  hadron:::new_window_if_appropriate()
+  new_window_if_appropriate()
   hist(tmp, xlim=c(0, 1), main="Histogram of Samples",
        xlab="E", breaks=seq(0, 1, 0.02))
   mode<-density(tmp, na.rm=TRUE)$x[which.max(density(tmp, na.rm=TRUE)$y)]
-  hadron:::new_window_if_appropriate()
+  new_window_if_appropriate()
   plot(density(tmp, na.rm=TRUE))
   message("Mode of this density:", mode, "deltat:", deltat, "\n")
 }
@@ -915,7 +918,7 @@ hankel2cf <- function(hankel, id=c(1), range=c(0,1), eps=1.e-16,
 #'   be: 1. 'outlier-removal' for which outliers are removed according to
 #'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
 #'   i.e. only values are kept which are in the interval
-#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   \eqn{[Q_25-1.5IQR, Q_75+1.5IQR]}
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
 #'   between the 0.16 and 0.84 quantile of the original bootstrap distribution

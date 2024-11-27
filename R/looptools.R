@@ -2,7 +2,7 @@
 #' @description Computes the quark-line disconnected contribution to a three-point function
 #'              of the form
 #'                \deqn{ C_3(t, \Delta t = t_{snk} - t_{src}) = C_2(t_{snk}, t_{src}) * L(t) }
-#'              \eqn{\forall t} considering only the case t_{snk} > t_{src}.
+#'              \eqn{\forall t} considering only the case \eqn{t_{snk} > t_{src}}.
 #' @param cf_2pt 'raw_cf' container holding two-point part of three-point function
 #'               in lattice-absolute coordinates (not relative to source!)         
 #' @param loop 'raw_cf' container holding loop contribution, suitably spin-projected

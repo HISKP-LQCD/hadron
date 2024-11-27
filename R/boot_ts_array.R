@@ -1,3 +1,6 @@
+#' boot_ts_array
+#'
+#' @description
 #' Copy of boot:::ts.array
 #'
 #' The function `ts.array` of the `boot` package is not exported, yet we depend
@@ -33,6 +36,7 @@
 #'
 #' @return
 #' Returns a list with named elements `starts` and `lengths`.
+#' @export
 boot_ts_array <- function (n, n.sim, R, l, sim, endcorr) 
 {
     endpt <- if (endcorr) 

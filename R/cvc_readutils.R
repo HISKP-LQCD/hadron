@@ -122,7 +122,7 @@ cf_key_meson_2pt <- function(fwd_flav, bwd_flav, snk_gamma, src_gamma, src_p, sn
 #' * 'tXX' is the source time slice
 #' * 'dtYY' is the source-sink separation
 #' * 'gfN' gamma structure at the sink in CVC indexing
-#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both exp(ipx))
 #' * 'gcN' gamma structure at the current insertion point in CVC indexing
 #' * 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most
@@ -224,7 +224,7 @@ correlators_key_meson_3pt <- function(fwd_flav, bwd_flav, seq_flav,
 #' * 'tXX' is the source time slice
 #' * 'dtYY' is the source-sink separation
 #' * 'gfN' gamma structure at the sink in CVC indexing
-#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both e^{ipx})
+#' * 'pfxXpfyYpfzZ' is the sink momentum in CVC convention (sink and source phases are both exp(ipx))
 #' * 'gcN' gamma structure at the current insertion point in CVC indexing
 #' * 'DdimJ_dirK' covariant displacement applied in dimension 'J', direction 'K'
 #'         where it should be noted that this is. in operator notation, i.e., the right-most

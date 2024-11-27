@@ -18,7 +18,7 @@
 #'   be: 1. 'outlier-removal' for which outliers are removed according to
 #'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
 #'   i.e. only values are kept which are in the interval
-#'   [Q_25-1.5IQR, Q_75+1.5IQR]
+#'   \eqn{[Q_25-1.5IQR, Q_75+1.5IQR]}
 #'   and the error is computed from the standard deviation of the bootstrap distribution.
 #'   2. 'quantiles' for which the error is estimated from the difference
 #'   between the 0.16 and 0.84 quantile of the original bootstrap distribution
@@ -67,12 +67,12 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
   boot.R <- cf$boot.R
   boot.l <- cf$boot.l
 
-  res <- hadron:::lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
-  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, hadron:::lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
+  res <- lanczos.solve(cf=cf$cf0, N=N, pivot=FALSE)
+  lanczos.tsboot.orig <- t(apply(cf$cf.tsboot$t, 1, lanczos.solve, N=N, pivot=pivot, pivot_elements=res))
   lanczos.tsboot <- lanczos.tsboot.orig
   lanczos.dbboot <- array()
   if(dbboot) {
-    lanczos.dbboot <- -log(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=hadron:::lanczos.solve, N=N,
+    lanczos.dbboot <- -log(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=lanczos.solve, N=N,
                                        pivot=pivot, pivot_elements=res),
                                  perm=c(2,3,1)))
   }
@@ -127,6 +127,8 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
 #' @param cf Numeric vector (this will generally be a correlation function or a bootstrap sample thereof).
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Lanczos analysis
+#' @param pivot boolean. whether or not to use a pivot element.
+#' @param pivot_elements numeric. the value(s) of the pivot elements.
 #' @return
 #'   tbw
 #' 
