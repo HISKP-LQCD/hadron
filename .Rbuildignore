@@ -35,6 +35,6 @@ exec/rho-phaseshift
 exec/averx
 exec/put*
 R/jackknifeafterboot.R
-R/boot_ts_array.R
+#R/boot_ts_array.R
 ^doc$
 ^Meta$

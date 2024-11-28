@@ -34,6 +34,8 @@
 #'          ‘"scramble"’ (phase scrambling).
 #' @param endcorr boolean. whether or not to apply end correction
 #'
+#' @author Angelo Canty and Brian Ripley
+#' @keywords internal
 #' @return
 #' Returns a list with named elements `starts` and `lengths`.
 #' @export
