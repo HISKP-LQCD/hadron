@@ -1,5 +1,3 @@
-
-
 #' @title Lanczos method for LQCD correlators
 #' 
 #' @description
@@ -72,9 +70,9 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
   lanczos.tsboot <- lanczos.tsboot.orig
   lanczos.dbboot <- array()
   if(dbboot) {
-    lanczos.dbboot <- -log(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=lanczos.solve, N=N,
-                                       pivot=pivot, pivot_elements=res),
-                                 perm=c(2,3,1)))
+    lanczos.dbboot <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=lanczos.solve, N=N,
+                                  pivot=pivot, pivot_elements=res),
+                            perm=c(2,3,1))
   }
   effMass <- -log(res)
   deffMass <- rep(NA, length(effMass))
@@ -97,7 +95,7 @@ bootstrap.lanczos <- function(cf, N = (cf$Time/2+1), bias_correction=FALSE,
   }
   else if(errortype == "dbboot") {
     lanczos.tsboot <- apply(lanczos.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
-    deffMass <- apply(lanczos.tsboot, MARGIN=2L, sd, na.rm=TRUE)
+    deffMass <- apply(-log(lanczos.tsboot), MARGIN=2L, sd, na.rm=TRUE)
   }
   bias <- effMass - apply(-log(lanczos.tsboot), 2L, median, na.rm=TRUE)
   if(bias_correction) {
