@@ -535,6 +535,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   n.max <- min(n.max, max(pgevm$n))
   deltat <- pgevm$deltat
   range <- c(0,1)
+  if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
   if(!pgevm$ndep.Delta) average.negE <- FALSE
   if(average.negE) range <- c(0,3)
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
@@ -612,24 +613,18 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       }
     }
   }
-  effMass <- -log(effMass)/deltat
-  effMass.tsboot <- -log(effMass.tsboot)/deltat
-  if(dbboot) effMass.dbboot <- -log(effMass.dbboot)/deltat
-  if(average.negE) {
-    effMass <- mean(c(effMass, log(neffMass)/deltat), na.rm=TRUE)
-    effMass.tsboot <- -log(effMass.tsboot)/deltat
-    if(dbboot) effMass.dbboot <- -log(effMass.dbboot)/deltat
+  
+  if(dbboot) {
+    effMass.tsboot <- apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
-  deffMass <- apply(effMass.tsboot, 2, sd, na.rm=TRUE)
-  bias <- effMass - apply(effMass.tsboot, 2, median, na.rm=TRUE)
+  effMass <- -log(effMass)/deltat
+  bias <- effMass - apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=median, na.rm=TRUE)
   if(bias_correction) {
     effMass <- effMass - bias
-    if(dbboot) {
-      effmass.tsboot <- apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
-    }
   }
-  
-  if(errortype=="outlier-removal") {
+
+  deffMass  <- c()
+  if(errortype == "outlier-removal") {
     remove_outliers <- function(x, probs=c(0.25,0.75)) {
       Q <- quantile(x, probs=probs, na.rm=TRUE)
       iqr <- Q[2]-Q[1]
@@ -637,20 +632,18 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       return(invisible(x))
     }
     effMass.tsboot <- apply(effMass.tsboot, 2, remove_outliers)
-    deffMass <- apply(-log(effMass.tsboot), 2L, pgevm$cf$error_fn, na.rm=TRUE)
+    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=pgevm$cf$error_fn, na.rm=TRUE)
   }
   else if(errortype == "quantiles") {
     error_fn <- function(x, probs=c(0.16, 0.84)) {
       Q <- quantile(x, probs=probs, na.rm=TRUE)
       return(Q[2]-Q[1])
     }
-    deffMass <- apply(-log(effMass.tsboot), 2L, error_fn, probs=probs)
+    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=error_fn, probs=probs)
   }
-  else if(errortype == "dbboot") {
-    deffMass <- apply(effMass.tsboot, MARGIN=2L, sd, na.rm=TRUE)
+  else {
+    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
   }
-
-  
   ret <- list(t.idx=c(1:n.max),
               pgevm=pgevm,
               cf=pgevm$cf,
