@@ -589,6 +589,9 @@ plot.effectivemass <- function (x, ..., ref.value, col, col.fitline, xshift=0) {
   if(missing(col.fitline)) {
     col.fitline <- col[1]
   }
+  if(inherits(x, "PGEVM") | inherits(x, "lanczos")) {
+    xshift = xshift + 1
+  }
                                         # BaKo: is this also valid for acosh type effective masses?
   t <- effMass$t.idx
   suppressWarnings(plotwitherror(x=t-1+xshift, y=effMass$effMass[t], dy=effMass$deffMass[t], col=col[1], ...))

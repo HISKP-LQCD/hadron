@@ -1,0 +1,105 @@
+---
+title: "PGEVM and Lanczos with double bootstrap"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+  
+#  pdf_document:
+#    #citation_package: biblatex
+
+#bibliography: hankel.bib
+#link_citation: yes
+vignette: >
+  %\VignetteIndexEntry{PGEVM method for energy level extraction}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, echo=FALSE}
+library(hadron)
+```
+
+# The Standard Effective Mass analysis
+
+'hadron' ships with a pion correlation function, which we load now
+first. Then we store it in an object of class 'cf' (the hadron
+correlation function class) for further treatment.
+
+```{r}
+data(pscor.sample)
+pioncf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(48, 316))))
+pioncf <- cf_meta(pioncf, nrObs=1, Time=48, symmetrised=FALSE)
+```
+
+Next we (block) bootstrap and double bootstrap this correlation
+functions. Note that depending on the choice of 'boot.R' and
+'dbboot.R' the execution of the following lines might take long. For a
+fast test set both of them to for instance '20'.
+
+```{r}
+boot.R <- 29
+dbboot.R <- 19
+pioncf.boot <- bootstrap.cf(pioncf, boot.R=boot.R, boot.l=2)
+pioncf.boot <- double_bootstrap.cf(pioncf.boot, dbboot.R=dbboot.R)
+```
+
+For the standard effective mass 
+
+```{r}
+pion.efm <- bootstrap.effectivemass(pioncf.boot, type="solve")
+pion.efm <- fit.effectivemass(pion.efm, t1=8, t2=17, useCov=TRUE)
+```
+
+which looks as follows
+
+```{r}
+plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,24), ylim=c(0.1,0.2))
+```
+
+# PGEVM
+
+Based on the (double) bootstrap correlation function data, the PGEVM
+is called as follows for double bootstrap:
+
+```{r}
+pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-2)
+pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot", bias_correction=TRUE)
+```
+
+Plotting this works in an identical manner as the effective mass before
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
+```
+
+Also otherwise 'pion.pgevm.efm' can be treated like a class of type
+'effectivemass'. For instance, one can also fit:
+
+```{r}
+pion.pgevm.efm <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
+```
+
+where now 't1' and 't2' are interpreted as $n_1$ and $n_2$. The
+corresponding plot looks as follows
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
+```
+
+The fitresult reads $E =`r pion.pgevm.efm$effmassfit$t0[1]` \pm `r pion.pgevm.efm$effmassfit$se[1]`$.
+
+# Lanczos
+
+Lanczos works similarly. It is applied to the double bootstrapped
+correlation data with the function 'bootstrap.lanczos' as follows
+
+```{r}
+pion.lanczos <- bootstrap.lanczos(pioncf.boot, N=pioncf.boot$Time-2,
+                                  bias_correction=TRUE, errortype="dbboot", pivot=TRUE)
+```
+
+and can can be plotted similarly
+
+```{r}
+plot(pion.lanczos, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="red")
+```
