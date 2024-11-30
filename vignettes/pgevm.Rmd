@@ -15,15 +15,41 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-```{r setup, echo=FALSE}
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+This is a companion document for the manuscript
+[arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981). It
+explaines the implementation available in the `hadron` R package. It
+requires
+[version 3.3.1](https://github.com/HISKP-LQCD/hadron/tree/3.3.1) or newer of
+the `hadron` package.
+
+You first need to install the `hadron` package, and load it then as follows
+
+```{r}
 library(hadron)
 ```
 
+The code snippets given below can then be copied one-to-one to the R
+command line and executed. Alternatively, you may install the
+`rmarkdown` package and run the Rmd file, which was used to generate
+this PDF file as follows
+
+```{r, eval=FALSE}
+render("pgevm.Rmd", output_format="pdf_document")
+```
+
+
+
 # The Standard Effective Mass analysis
 
-'hadron' ships with a pion correlation function, which we load now
-first. Then we store it in an object of class 'cf' (the hadron
-correlation function class) for further treatment.
+`hadron` ships with a pion correlation function, which we load now
+first. This correlation function is also used as the pion example in
+the aformentioned manuscript. We store the correlator data in an
+object of class `cf` (the hadron correlation function class) for
+further treatment. 
 
 ```{r}
 data(pscor.sample)
@@ -32,9 +58,8 @@ pioncf <- cf_meta(pioncf, nrObs=1, Time=48, symmetrised=FALSE)
 ```
 
 Next we (block) bootstrap and double bootstrap this correlation
-functions. Note that depending on the choice of 'boot.R' and
-'dbboot.R' the execution of the following lines might take long. For a
-fast test set both of them to for instance '20'.
+function. Note that depending on the choice of `boot.R` and
+`dbboot.R` the execution of the following lines might take long.
 
 ```{r}
 boot.R <- 29
@@ -61,25 +86,30 @@ plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,24), ylim=c(0.1,0.2))
 Based on the (double) bootstrap correlation function data, the PGEVM
 is called as follows for double bootstrap:
 
-```{r}
+```{r, warn=FALSE}
 pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-2)
-pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot", bias_correction=TRUE)
+pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot",
+                                      bias_correction=TRUE)
 ```
 
+Note that you might get one or more warning from the above commands,
+which are due to the fact that for some combination of data the Hankel
+matrix cannot be inverted or the eigenvalue compuation fails. But this
+is taken into account in the analysis by missing values.
 Plotting this works in an identical manner as the effective mass before
 
 ```{r}
 plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
 ```
 
-Also otherwise 'pion.pgevm.efm' can be treated like a class of type
-'effectivemass'. For instance, one can also fit:
+Also otherwise `pion.pgevm.efm` can be treated like a class of type
+`effectivemass`. For instance, one can also fit:
 
 ```{r}
 pion.pgevm.efm <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
 ```
 
-where now 't1' and 't2' are interpreted as $n_1$ and $n_2$. The
+where now `t1` and `t2` are interpreted as $n_1$ and $n_2$. The
 corresponding plot looks as follows
 
 ```{r}
@@ -91,7 +121,7 @@ The fitresult reads $E =`r pion.pgevm.efm$effmassfit$t0[1]` \pm `r pion.pgevm.ef
 # Lanczos
 
 Lanczos works similarly. It is applied to the double bootstrapped
-correlation data with the function 'bootstrap.lanczos' as follows
+correlation data with the function `bootstrap.lanczos` as follows
 
 ```{r}
 pion.lanczos <- bootstrap.lanczos(pioncf.boot, N=pioncf.boot$Time-2,
