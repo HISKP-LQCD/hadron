@@ -1,5 +1,5 @@
 ---
-title: "PGEVM and Lanczos with double bootstrap"
+title: "PGEVM and Lanczos with double bootstrap in hadron"
 author: "Carsten Urbach"
 output:
   rmarkdown::html_vignette
@@ -10,7 +10,7 @@ output:
 #bibliography: hankel.bib
 #link_citation: yes
 vignette: >
-  %\VignetteIndexEntry{PGEVM method for energy level extraction}
+  %\VignetteIndexEntry{PGEVM and Lanczos with double bootstrap in hadron}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -21,10 +21,10 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 This is a companion document for the manuscript
 [arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981). It
-explaines the implementation available in the `hadron` R package. It
-requires
-[version 3.3.1](https://github.com/HISKP-LQCD/hadron/tree/3.3.1) or newer of
-the `hadron` package.
+explains the PGEVM and Lanczos implementations available in the
+`hadron` `R` package. The `hadron` package version required is
+[version 3.3.1](https://github.com/HISKP-LQCD/hadron/tree/3.3.1) or newer.
+It is available on `github` for download. 
 
 You first need to install the `hadron` package, and load it then as follows
 
@@ -32,32 +32,36 @@ You first need to install the `hadron` package, and load it then as follows
 library(hadron)
 ```
 
-The code snippets given below can then be copied one-to-one to the R
+The code snippets given below can be copied one-to-one to the `R`
 command line and executed. Alternatively, you may install the
-`rmarkdown` package and run the Rmd file, which was used to generate
-this PDF file as follows
+`rmarkdown` package and render the corresponding `Rmd` file, which was
+used to generate this PDF file as follows
 
 ```{r, eval=FALSE}
 render("pgevm.Rmd", output_format="pdf_document")
 ```
 
-
+`hadron` ships with a pion correlation function, which was also used
+as the pion example in the aforementioned manuscript.
 
 # The Standard Effective Mass analysis
 
-`hadron` ships with a pion correlation function, which we load now
-first. This correlation function is also used as the pion example in
-the aformentioned manuscript. We store the correlator data in an
-object of class `cf` (the hadron correlation function class) for
-further treatment. 
+After loading `hadron` as a library, one first needs to load the pion
+correlator data
 
 ```{r}
 data(pscor.sample)
+```
+
+and store it in an object of class `cf` (the hadron correlation
+function class) for further treatment:
+
+```{r}
 pioncf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(48, 316))))
 pioncf <- cf_meta(pioncf, nrObs=1, Time=48, symmetrised=FALSE)
 ```
 
-Next we (block) bootstrap and double bootstrap this correlation
+Next, we (block) bootstrap and double bootstrap this correlation
 function. Note that depending on the choice of `boot.R` and
 `dbboot.R` the execution of the following lines might take long.
 
@@ -68,23 +72,40 @@ pioncf.boot <- bootstrap.cf(pioncf, boot.R=boot.R, boot.l=2)
 pioncf.boot <- double_bootstrap.cf(pioncf.boot, dbboot.R=dbboot.R)
 ```
 
-For the standard effective mass 
+`hadron` provides functionality to compute the standard effective mass
+for a $\\cosh$-like correlation function (specified by the `type`
+argument to the function `bootstrap.effectivemass`)
 
 ```{r}
 pion.efm <- bootstrap.effectivemass(pioncf.boot, type="solve")
 pion.efm <- fit.effectivemass(pion.efm, t1=8, t2=17, useCov=TRUE)
 ```
 
-which looks as follows
+Note that you may get documentation on the different functions e.g. by
+
+```{r, eval=FALSE}
+?bootstrap.effectivemass
+```
+
+The such computed effective masses and the corresponding fit can be
+visualised as follows
 
 ```{r}
 plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,24), ylim=c(0.1,0.2))
 ```
 
+A call to 
+
+```{r, eval=FALSE}
+summary(pion.efm)
+```
+
+would also summarize the fit results.
+
 # PGEVM
 
-Based on the (double) bootstrap correlation function data, the PGEVM
-is called as follows for double bootstrap:
+Based on the (double) bootstrapped correlation function data, the PGEVM
+is applied as follows:
 
 ```{r, warn=FALSE}
 pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-2)
@@ -96,14 +117,17 @@ Note that you might get one or more warning from the above commands,
 which are due to the fact that for some combination of data the Hankel
 matrix cannot be inverted or the eigenvalue compuation fails. But this
 is taken into account in the analysis by missing values.
-Plotting this works in an identical manner as the effective mass before
+
+The second line translates the PGEVM result into an effective mass
+object. Thus, plotting it works in an identical manner as for the true
+effective mass
 
 ```{r}
 plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
 ```
 
-Also otherwise `pion.pgevm.efm` can be treated like a class of type
-`effectivemass`. For instance, one can also fit:
+Also otherwise, `pion.pgevm.efm` can be treated like a class of type
+`effectivemass`. For instance, one can also perform a plateau fit:
 
 ```{r}
 pion.pgevm.efm <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
@@ -116,7 +140,7 @@ corresponding plot looks as follows
 plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
 ```
 
-The fitresult reads $E =`r pion.pgevm.efm$effmassfit$t0[1]` \pm `r pion.pgevm.efm$effmassfit$se[1]`$.
+The fit result reads $E =`r pion.pgevm.efm$effmassfit$t0[1]` \pm `r pion.pgevm.efm$effmassfit$se[1]`$.
 
 # Lanczos
 
