@@ -1,6 +1,10 @@
 ---
 title: "PGEVM and Lanczos with double bootstrap in hadron"
-author: "Carsten Urbach"
+subtitle: "Companion document to arXiv:2411.14981"
+author: 
+- Johann Ostmeyer
+- Aniket Sen 
+- Carsten Urbach
 output:
   rmarkdown::html_vignette
   
