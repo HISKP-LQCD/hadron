@@ -5,6 +5,7 @@ author:
 - Johann Ostmeyer
 - Aniket Sen 
 - Carsten Urbach
+date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   rmarkdown::html_vignette
   
@@ -112,7 +113,7 @@ Based on the (double) bootstrapped correlation function data, the PGEVM
 is applied as follows:
 
 ```{r, warn=FALSE}
-pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-2)
+pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-1)
 pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot",
                                       bias_correction=TRUE)
 ```
@@ -152,7 +153,7 @@ Lanczos works similarly. It is applied to the double bootstrapped
 correlation data with the function `bootstrap.lanczos` as follows
 
 ```{r}
-pion.lanczos <- bootstrap.lanczos(pioncf.boot, N=pioncf.boot$Time-2,
+pion.lanczos <- bootstrap.lanczos(pioncf.boot, N=pioncf.boot$Time-1,
                                   bias_correction=TRUE, errortype="dbboot", pivot=TRUE)
 ```
 
@@ -160,4 +161,20 @@ and can can be plotted similarly
 
 ```{r}
 plot(pion.lanczos, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="red")
+```
+
+# PGEVM for periodic correlators
+
+```{r, warn=FALSE}
+pion.pgevm2 <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-1, ndep.Delta=TRUE)
+pion.pgevm.efm2 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
+                                       bias_correction=TRUE)
+pion.pgevm.efm3 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
+                                       bias_correction=TRUE, average.negE=TRUE)
+```
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue", pch=21)
+plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.2)
+plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.4)
 ```

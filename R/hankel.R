@@ -429,7 +429,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
   }
   for(n in c(1:n.max)) {
     if(ndep.Delta) {
-      if(Deltan == 2) {
+      if(Deltan == 2 & (floor((N-2)/(2*n-2)) < 2)) {
         n <- n.max
         Deltan <- 1
       }
@@ -537,7 +537,6 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   range <- c(0,1)
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
   if(!pgevm$ndep.Delta) average.negE <- FALSE
-  if(average.negE) range <- c(0,3)
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
     if(!dbboot) cat("errortype dbboot needs a doubly bootstrapped cf\n")
@@ -552,18 +551,20 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(dbboot) {
     effMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$cf$doubleboot$dbboot.R, max(pgevm$n)))
   }
+  neffMass <- c()
+  neffMass.tsboot <- array()
   if(average.negE) {
-    neffMass <- c()
     neffMass.tsboot <- array(NA, dim=c(pgevm$boot.R, max(pgevm$n)))
     neffMass.dbboot <- array()
     if(dbboot) {
       neffMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$cf$doubleboot$dbboot.R, max(pgevm$n)))
     }
   }
-  .fn <- function(evs, range=c(0,1), eps, n) {
+  .fn <- function(evs, range=c(0,1), eps, n, revert=FALSE) {
     ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
                 & Re(evs) < range[2])
     x <- Re(evs[ii])
+    if(revert) x <- rev(x)
     N <- length(x)
     return(c(x, rep(NA, times=n-N)))
   }
@@ -613,7 +614,6 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       }
     }
   }
-  
   if(dbboot) {
     effMass.tsboot <- apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
@@ -622,6 +622,48 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(bias_correction) {
     effMass <- effMass - bias
   }
+
+  nbias <- c()
+  if(average.negE) {
+    range <- c(1,3)
+    for(n in c(2:n.max)) {
+      ii <- c(1:n)
+      tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n, revert=TRUE)
+      if(all(is.na(tmp))) next
+      tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
+                       MARGIN=1, FUN=.fn,
+                       range=range, eps=eps, n=n, revert=TRUE)
+      if(dbboot) {
+        tmpdbboot <- apply(X=pgevm$evs.dbboot[, , n, ii, drop = FALSE],
+                           MARGIN=c(1L,2L), FUN=.fn,
+                           range=range, eps=eps, n=n, revert=TRUE)
+      }
+      if(n == 1) {
+        neffMass[n] <- tmp
+        neffMass.tsboot[,n] <- tmpboot
+        if(dbboot) neffMass.dbboot[,,n] <- tmpdbboot
+      }
+      else{
+        med <- median(c(tmp[id], tmpboot[id,]))
+        neffMass[n] <- .closest(tmp, ref=med)
+        neffMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
+                                     ref=med)
+        if(dbboot) {
+          neffMass.dbboot[,,n] <- apply(tmpdbboot, MARGIN=c(2L, 3L),
+                                        FUN=.closest, ref=med)
+        }
+      }
+    }
+    if(dbboot) {
+      neffMass.tsboot <- apply(neffMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
+    }
+    neffMass <- log(neffMass)/deltat
+    nbias <- neffMass - apply(log(neffMass.tsboot)/deltat, MARGIN=2L, FUN=median, na.rm=TRUE)
+    if(bias_correction) {
+      neffMass <- neffMass - nbias
+    }
+  }
+  
 
   deffMass  <- c()
   if(errortype == "outlier-removal") {
@@ -642,7 +684,15 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=error_fn, probs=probs)
   }
   else {
-    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
+    if(average.negE) {
+      deffMass <- apply((-log(effMass.tsboot)+log(neffMass.tsboot))/2/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
+    }
+    else {
+      deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
+    }
+  }
+  if(average.negE) {
+    effMass <- (effMass+neffMass)/2
   }
   ret <- list(t.idx=c(1:n.max),
               pgevm=pgevm,
@@ -651,6 +701,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               effMass.tsboot=effMass.tsboot,
               effMass.dbboot=effMass.dbboot,
               deffMass=deffMass,
+              neffMass=neffMass,
               t=effMass.tsboot,
               t0=effMass,
               se=deffMass,
