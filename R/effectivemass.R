@@ -26,6 +26,10 @@
 #' \code{removeTemporal.cf} and hence the ratio\cr \eqn{[C(t+1)] / [C(t)] =
 #' [\cosh(-m*(t))-\cosh(-m*(t+1))] / [\cosh(-m*(t-1))-\cosh(-m(t))]}\cr is
 #' numerically solved for \eqn{m(t)}.
+#'
+#' "solvesinh": numerically solving for m the equation
+#' \cr \eqn{[C(t+1) - exp(-m*(t+1))] / [C(t) - exp( -m*t)] =
+#' [\sinh(m*(t+1))] / [\sinh(m*t)]}\cr for \eqn{m(t)}
 #' 
 #' "weighted": like "subtracted", but now there is an additional weight factor
 #' \eqn{w} from \code{removeTemporal.cf} to be taken into account, such that
@@ -59,6 +63,7 @@
 #' @return Returns a vector of length \code{Thalf} with the effective mass
 #' values for t-values running from 0 to \code{Thalf-1}
 #' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' @author Alessio Negro, \email{alessio.negro@@hiskp.uni-bonn.de}
 #' @seealso \code{\link{bootstrap.effectivemass}}
 #' @references arXiv:1203.6041
 #' @examples
@@ -137,6 +142,15 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
     else if(type == "power") {
       tRat <- t/(t-1)
       effMass[t2] <- log(Ratio[t2])/log(tRat[t2])
+    }
+    else if(type == "solvesinh") {
+      fn <- function(m, t)
+        return( (Cor[t+1] - exp(-m*(t+1)))/(Cor[t] - exp(-m*t)) - sinh(m*(t+1))/sinh(m*t) )
+      for(i in t2) {
+        interval2 <- interval + (-1/i*log(Cor[i])) 
+        if (fn(interval2[1], t=(i %% (tmax+1)))*fn(interval2[2], t=(i %% (tmax+1))) >0) effMass[i] <- NA
+        else effMass[i] <- uniroot(fn, interval=interval2, t=(i %% (tmax+1)))$root
+      }
     }
     else {
       # note: for tmax > Thalf, this will produce NA
