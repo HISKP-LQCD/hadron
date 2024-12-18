@@ -147,8 +147,12 @@ effectivemass.cf <- function(cf, Thalf, type="solve", nrObs=1, replace.inf=TRUE,
       fn <- function(m, t)
         return( (Cor[t+1] - exp(-m*(t+1)))/(Cor[t] - exp(-m*t)) - sinh(m*(t+1))/sinh(m*t) )
       for(i in t2) {
-        interval2 <- interval + (-1/i*log(Cor[i])) 
-        if (fn(interval2[1], t=(i %% (tmax+1)))*fn(interval2[2], t=(i %% (tmax+1))) >0) effMass[i] <- NA
+        interval2 <- interval + (-1/i*log(Cor[i]))
+        if(is.na(Ratio[i])) effMass[i] <- NA
+        else if(is.na(interval2[1]) || is.na(interval2[2])) effMass[i] <- NA
+        else if(is.na(Cor[i])) effMass[i] <- NA
+        else if (is.na(Cor[i+1])) effMass[i] <- NA
+        else if (fn(interval2[1], t=(i %% (tmax+1)))*fn(interval2[2], t=(i %% (tmax+1))) >0) effMass[i] <- NA
         else effMass[i] <- uniroot(fn, interval=interval2, t=(i %% (tmax+1)))$root
       }
     }
