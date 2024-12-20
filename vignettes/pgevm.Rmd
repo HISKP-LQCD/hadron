@@ -135,17 +135,17 @@ Also otherwise, `pion.pgevm.efm` can be treated like a class of type
 `effectivemass`. For instance, one can also perform a plateau fit:
 
 ```{r}
-pion.pgevm.efm <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
+pion.pgevm.efm.fit <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
 ```
 
 where now `t1` and `t2` are interpreted as $n_1$ and $n_2$. The
 corresponding plot looks as follows
 
 ```{r}
-plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
+plot(pion.pgevm.efm.fit, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
 ```
 
-The fit result reads $E =`r pion.pgevm.efm$effmassfit$t0[1]` \pm `r pion.pgevm.efm$effmassfit$se[1]`$.
+The fit result reads $E =`r pion.pgevm.efm.fit$effmassfit$t0[1]` \pm `r pion.pgevm.efm.fit$effmassfit$se[1]`$.
 
 # Lanczos
 
@@ -174,7 +174,7 @@ pion.pgevm.efm3 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
 ```
 
 ```{r}
-plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue", pch=21)
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(0.1,0.2), col="blue", pch=21)
 plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.2)
 plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.4)
 ```
