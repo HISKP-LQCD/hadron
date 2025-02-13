@@ -168,14 +168,14 @@ summary.hankel_summed <- function(object, ...) {
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
 #' @param only.values boolean. If 'TRUE', return only the eigenvalues, not the eigenvectors.
 #' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
-#'    'Delta', 'deltat' and 't0'
+#'    'Delta' and 't0'
 #' @return
 #' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
 #' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements. Unless
 #' 'only.values=TRUE' is set, when only the 'n' eigenvalues are returned in a complex vector 
 #' of length \code{n}.
 #' 
-#' A vector of NAs of \code{n + n^2} or \code{n} is returend in case the QR decomposition fails.
+#' A vector of NAs of \code{n + n^2} or \code{n} is returned in case the QR decomposition fails.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
@@ -189,17 +189,25 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   cM2 <- cM1
   ii <- seq(from=1, to=n, by=submatrix.size)
 
-  cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
   if(all(!is.na(custom.indices))) {
-    cfii <- custom.indices
-    stopifnot(all(custom.indices < N))
-    stopifnot(all(custom.indices > 0))
+    n.max <- floor((N-deltat+1)/2)
+    stopifnot(all(custom.indices <= n.max))
+    stopifnot(all(custom.indices >= 1))
+    ## build full Hankel matrices, then truncate
+    hankel.dim <- n.max/submatrix.size
+    cfii <- 1:(N-deltat)
+    trunc <- custom.indices
+  }else{
+    ## build reduced Hankel matrices, don't truncate
+    hankel.dim <- n/submatrix.size
+    cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
+    trunc <- TRUE
   }
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[cfii + (cor.id-1)*N])
-      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[cfii + (cor.id-1)*N + deltat ])
+      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*N])[trunc,trunc]
+      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*N + deltat ])[trunc,trunc]
     }
   }
   if(submatrix.size > 1) {
