@@ -539,8 +539,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
 #' @param probs numeric. The probabilities for errortype quantiles, default is \code{c(0.16,0.84)}. 
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
-#' @param average.negE boolean. If set to TRUE and the original pgevm object was generated with
-#'   'ndep.Delta=TRUE' average over positive and negative energies
+#' @param average.negE boolean. If set to TRUE average over positive and negative energies
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.pgevm}
 #' See also \link{bootstrap.effectivemass}
