@@ -168,14 +168,14 @@ summary.hankel_summed <- function(object, ...) {
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
 #' @param only.values boolean. If 'TRUE', return only the eigenvalues, not the eigenvectors.
 #' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
-#'    'Delta', 'deltat' and 't0'
+#'    'Delta' and 't0'
 #' @return
 #' A complex vector of length \code{n + n^2} which contains the eigenvalues in the first
 #' \code{n} elements and the eigenvectors in the remaining \code{n^2} elements. Unless
 #' 'only.values=TRUE' is set, when only the 'n' eigenvalues are returned in a complex vector 
 #' of length \code{n}.
 #' 
-#' A vector of NAs of \code{n + n^2} or \code{n} is returend in case the QR decomposition fails.
+#' A vector of NAs of \code{n + n^2} or \code{n} is returned in case the QR decomposition fails.
 #' 
 #' @family hankel
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
@@ -189,17 +189,25 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   cM2 <- cM1
   ii <- seq(from=1, to=n, by=submatrix.size)
 
-  cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
   if(all(!is.na(custom.indices))) {
-    cfii <- custom.indices
-    stopifnot(all(custom.indices < N))
-    stopifnot(all(custom.indices > 0))
+    n.max <- floor((N-deltat+1)/2)
+    stopifnot(all(custom.indices <= n.max))
+    stopifnot(all(custom.indices >= 1))
+    ## build full Hankel matrices, then truncate
+    hankel.dim <- n.max/submatrix.size
+    cfii <- 1:(N-deltat)
+    trunc <- custom.indices
+  }else{
+    ## build reduced Hankel matrices, don't truncate
+    hankel.dim <- n/submatrix.size
+    cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
+    trunc <- TRUE
   }
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[cfii + (cor.id-1)*N])
-      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=n/submatrix.size, z=cf[cfii + (cor.id-1)*N + deltat ])
+      cM1[ii+i-1,ii+j-1] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*N])[trunc,trunc]
+      cM2[ii+i-1,ii+j-1] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*N + deltat ])[trunc,trunc]
     }
   }
   if(submatrix.size > 1) {
@@ -273,6 +281,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
+#'    'Delta' and 't0'
 #' 
 #' @details
 #' See `vignette(name="hankel", package="hadron")`
@@ -296,7 +306,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
 #' plot(hpc1, log="y")
 #' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
 bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
-                             t0fixed=TRUE, deltat=1, Delta=1,
+                             t0fixed=TRUE, deltat=1, Delta=1, custom.indices=NA,
                              submatrix.size=1, element.order=1) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -389,6 +399,10 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
 #' @param ndep.Delta boolean. If set to 'TRUE', Delta will be chosen 'n' dependent to cover the largest
 #'   possible range in the correlator.
+#' @param block.Delta boolean. If set to 'TRUE', the Hankel matrices will be built as connected blocks.
+#'   Should only be used for symmetric correlators, incompatible with \code{ndep.Delta}.
+#' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
+#'    'Delta' and 't0'
 #' 
 #' @references arXiv:2411.14981, Ostmeyer, Sen, Urbach
 #' @details
@@ -402,15 +416,17 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #' @family hankel
 #' @export
 bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
-                            n.max = floor(((N - 1 - t0 - deltat)/Delta + 1)/2),
-                            submatrix.size=1, element.order=1, ndep.Delta=FALSE) {
+                            n.max = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
+                            submatrix.size=1, element.order=1,
+                            ndep.Delta=FALSE, block.Delta=FALSE, custom.indices=NA) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot(!ndep.Delta || !block.Delta)
   dbboot <- inherits(cf, 'cf_dbboot')
   
   t0p1 <- t0 + 1
   boot.R <- cf$boot.R
-  
+
   ## the last correlator element entering H(t+delta t) is
   ## C(t0+delta t + (2n-1)Delta)
   ## the last available element is N-1
@@ -422,6 +438,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
   evs.dbboot <- array()
   Deltaofn <- c()
   Deltan <- 1
+  custom.indicesn <- custom.indices
   dbboot.R <- c()
   if(dbboot) {
     dbboot.R <- cf$doubleboot$dbboot.R
@@ -429,45 +446,52 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
   }
   for(n in c(1:n.max)) {
     if(ndep.Delta) {
-      if(Deltan == 2 & (floor((N-2)/(2*n-2)) < 2)) {
-        n <- n.max
-        Deltan <- 1
+      if(n > 1) {
+        Deltan <- floor((N-1-t0-deltat)/(2*n-2))
+      } else {
+        Deltan <- N-1-t0-deltat
       }
-      else {
-        if(n > 1) {
-          Deltan <- floor((N-2)/(2*n-2))
-        }
+      if(Deltan == 1) {
+        n <- n.max
       }
       Deltaofn[n] <- Deltan
     }
     else {
       Deltan <- Delta
     }
+    if(block.Delta) {
+      if(2*n > n.max) break
+      custom.indicesn <- c(1:n, (n.max-n+1):(n.max))
+      n <- 2*n
+    }
+    if(all(!is.na(custom.indices))) {
+      custom.indicesn <- sort(custom.indices[1:n])
+    }
     ii <- c(1:(n+n^2))
     evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
                               n=n, N=N, deltat=deltat,
                               submatrix.size=submatrix.size, element.order=element.order,
-                              Delta=Deltan)
+                              Delta=Deltan, custom.indices=custom.indicesn)
     evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=gevp.hankel, t0=t0,
                                    n=n, N=N, deltat=deltat,
                                    submatrix.size=submatrix.size, element.order=element.order,
-                                   Delta=Deltan))
+                                   Delta=Deltan, custom.indices=custom.indicesn))
     if(dbboot) {
       if(n==1) {
         evs.dbboot[,,n,c(1:n)] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                         n=n, N=N, deltat=deltat,
                                         submatrix.size=submatrix.size, element.order=element.order,
-                                        Delta=Deltan, only.values=TRUE)
+                                        Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE)
       }
       else {
         evs.dbboot[,,n,c(1:n)] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                               n=n, N=N, deltat=deltat,
                                               submatrix.size=submatrix.size, element.order=element.order,
-                                              Delta=Deltan, only.values=TRUE),
+                                              Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE),
                                         perm=c(2,3,1))
       }
     }
-    if(n == n.max) break
+    if(ndep.Delta & n == n.max) break
   }
   if(ndep.Delta) Delta <- NA
   ret <- list(cf=cf,
@@ -483,9 +507,12 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
               Delta=Delta,
               Deltaofn=Deltaofn,
               ndep.Delta=ndep.Delta,
+              block.Delta=block.Delta,
+              custom.indices=custom.indices,
               deltat=deltat,
               n=c(1:n.max),
               N=N)
+  if(block.Delta) ret$n <- 2*c(1:(floor(n.max/2)))
   class(ret) <- c("PGEVM", class(ret))
   return(invisible(ret))
 }
@@ -512,8 +539,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
 #' @param probs numeric. The probabilities for errortype quantiles, default is \code{c(0.16,0.84)}. 
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
-#' @param average.negE boolean. If set to TRUE and the original pgevm object was generated with
-#'   'ndep.Delta=TRUE' average over positive and negative energies
+#' @param average.negE boolean. If set to TRUE average over positive and negative energies
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.pgevm}
 #' See also \link{bootstrap.effectivemass}
@@ -536,7 +562,6 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   deltat <- pgevm$deltat
   range <- c(0,1)
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
-  if(!pgevm$ndep.Delta) average.negE <- FALSE
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
     if(!dbboot) cat("errortype dbboot needs a doubly bootstrapped cf\n")
@@ -694,7 +719,16 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(average.negE) {
     effMass <- (effMass+neffMass)/2
   }
-  ret <- list(t.idx=c(1:n.max),
+  if(pgevm$block.Delta) {
+    t.idx = pgevm$n/2
+    effMass = effMass[pgevm$n]
+    deffMass = deffMass[pgevm$n]
+    neffMass = neffMass[pgevm$n]
+    effMass.tsboot = effMass.tsboot[,pgevm$n]
+  } else {
+    t.idx=c(1:n.max)
+  }
+  ret <- list(t.idx=t.idx,
               pgevm=pgevm,
               cf=pgevm$cf,
               effMass=effMass,
@@ -711,7 +745,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias, nbias=nbias,
               massfit.tsboot=NULL, Time=pgevm$cf$Time, N=1, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL, errortype=NULL)
-  attr(ret, "class") <- c("effectivemass", class(ret))
+  attr(ret, "class") <- c("effectivemass", "PGEVM", class(ret))
   return(invisible(ret))
 }
 
