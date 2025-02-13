@@ -20,6 +20,7 @@
 #' @param pl logical: if TRUE, the autocorrelation function, the integrated
 #' autocorrelation time as function of the integration cut-off and (for primary
 #' quantities) the time history of the observable are plotted with plot.uwerr
+#' @param main character, title of the plots
 #' @param ...  arguments passed to function \code{f}.
 #' @return In case of a primary observable (\code{uwerrprimary}), an object of
 #' class \code{uwerr} with basis class \code{\link{list}} containing the
@@ -60,7 +61,7 @@
 #' plot(plaq.res)
 #' 
 #' @export uwerr
-uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
+uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, main="", ...) {
   # f: scalar function handle, needed for derived quantities
   # data: the matrix of data with dim. (Nalpha x N)
   #              N = total number of measurements
@@ -71,18 +72,18 @@ uwerr <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
     if(missing(nrep)) {
       nrep <- c(length(data))
     }
-    return(invisible(uwerrprimary(data=data, nrep=nrep, S=S, pl=pl)))
+    return(invisible(uwerrprimary(data=data, nrep=nrep, S=S, pl=pl, main=main)))
   }
   else {
     if(missing(nrep)) {
       nrep <- c(length(data[1,]))
     }
-    return(invisible(uwerrderived(f=f, data=data, nrep=nrep, S=S, pl=pl, ...)))
+    return(invisible(uwerrderived(f=f, data=data, nrep=nrep, S=S, pl=pl, main=main, ...)))
   }
 }
 
 #' @export
-uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
+uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE, main="") {
   
   N = length(data)
   if(missing(nrep)) {
@@ -202,14 +203,14 @@ uwerrprimary <- function(data, nrep, S=1.5, pl=FALSE) {
   attr(res, "class") <- c("uwerr", "list")
   
   if(pl) {
-    plot(res)
+    plot(res, main=main)
   }
   
   return(invisible(res))
 }
 
 #' @export
-uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
+uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, main="", ...) {
   Nalpha <- dim(data)[2]
   N <- dim(data)[1]
   if(missing(nrep)) {
@@ -392,7 +393,7 @@ uwerrderived <- function(f, data, nrep, S=1.5, pl=FALSE, ...) {
   attr(res, "class") <- c("uwerr", "list")
   
   if(pl) {
-    plot(res)
+    plot(res, main=main)
   }
 
   options(error = NULL)
