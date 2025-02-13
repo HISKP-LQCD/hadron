@@ -604,15 +604,15 @@ plot.effectivemass <- function (x, ..., ref.value, col, col.fitline, xshift=0) {
     abline(h=ref.value, col=c("darkgreen"), lwd=c(3))
   }
   if(!is.null(effMass$effmassfit)){
-    lines(x=c(effMass$t1,effMass$t2),
+    lines(x=c(effMass$t1,effMass$t2)+xshift,
           y=c(effMass$effmassfit$t0[1],effMass$effmassfit$t0[1]),
           col=col.fitline,
           lwd=1.3)
       pcol <- col2rgb(col.fitline,alpha=TRUE)/255                                                                                                   
       pcol[4] <- 0.65
       pcol <- rgb(red=pcol[1],green=pcol[2],blue=pcol[3],alpha=pcol[4])
-      rect(xleft=effMass$t1, ybottom=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
-           xright=effMass$t2, ytop=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
+      rect(xleft=effMass$t1+xshift, ybottom=effMass$effmassfit$t0[1]-effMass$effmassfit$se[1],
+           xright=effMass$t2+xshift, ytop=effMass$effmassfit$t0[1]+effMass$effmassfit$se[1],
            col=pcol,
            border=NA)
   }

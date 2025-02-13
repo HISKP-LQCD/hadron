@@ -733,7 +733,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               n.max=n.max,
               type="log",
               opt.res=NULL, t1=NULL, t2=NULL, type=type, useCov=NULL, CovMatrix=NULL, invCovMatrix=NULL,
-              boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias,
+              boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias, nbias=nbias,
               massfit.tsboot=NULL, Time=pgevm$cf$Time, N=1, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL, errortype=NULL)
   if(all(pgevm$n %% 2 == 0)) {
