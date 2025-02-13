@@ -719,7 +719,16 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(average.negE) {
     effMass <- (effMass+neffMass)/2
   }
-  ret <- list(t.idx=c(1:n.max),
+  if(pgevm$block.Delta) {
+    t.idx = pgevm$n/2
+    effMass = effMass[pgevm$n]
+    deffMass = deffMass[pgevm$n]
+    neffMass = neffMass[pgevm$n]
+    effMass.tsboot = effMass.tsboot[,pgevm$n]
+  } else {
+    t.idx=c(1:n.max)
+  }
+  ret <- list(t.idx=t.idx,
               pgevm=pgevm,
               cf=pgevm$cf,
               effMass=effMass,
@@ -736,11 +745,6 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias, nbias=nbias,
               massfit.tsboot=NULL, Time=pgevm$cf$Time, N=1, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL, errortype=NULL)
-  if(all(pgevm$n %% 2 == 0)) {
-    ret$t.idx = pgevm$n/2
-    ret$effMass = effMass[pgevm$n]
-    ret$deffMass = deffMass[pgevm$n]
-  }
   attr(ret, "class") <- c("effectivemass", "PGEVM", class(ret))
   return(invisible(ret))
 }
