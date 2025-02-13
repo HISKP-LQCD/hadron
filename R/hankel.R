@@ -563,7 +563,6 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   deltat <- pgevm$deltat
   range <- c(0,1)
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
-  if(!pgevm$ndep.Delta) average.negE <- FALSE
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
     if(!dbboot) cat("errortype dbboot needs a doubly bootstrapped cf\n")
@@ -738,7 +737,12 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               boot.R = pgevm$boot.R, boot.l = pgevm$boot.l, seed = pgevm$seed, bias=bias,
               massfit.tsboot=NULL, Time=pgevm$cf$Time, N=1, nrObs=1, dof=NULL,
               chisqr=NULL, Qval=NULL, errortype=NULL)
-  attr(ret, "class") <- c("effectivemass", class(ret))
+  if(all(pgevm$n %% 2 == 0)) {
+    ret$t.idx = pgevm$n/2
+    ret$effMass = effMass[pgevm$n]
+    ret$deffMass = deffMass[pgevm$n]
+  }
+  attr(ret, "class") <- c("effectivemass", "PGEVM", class(ret))
   return(invisible(ret))
 }
 
