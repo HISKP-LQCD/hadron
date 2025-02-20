@@ -634,7 +634,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       if(dbboot) effMass.dbboot[,,n] <- tmpdbboot
     }
     else{
-      med <- median(c(tmp[id], tmpboot[id,]))
+      med <- median(c(tmp[id], tmpboot[id,]), na.rm=TRUE)
       effMass[n] <- .closest(tmp, ref=med)
       effMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
                                   ref=med)
