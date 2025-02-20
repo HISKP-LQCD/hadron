@@ -638,19 +638,9 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       effMass[n] <- .closest(tmp, ref=med)
       effMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
                                   ref=med)
-      if(average.negE) {
-        nmed <- exp(-log(med)/deltat)
-        neffMass[n] <- .closest(tmp, ref=nmed)
-        neffMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
-                                     ref=nmed)
-      }
       if(dbboot) {
         effMass.dbboot[,,n] <- apply(tmpdbboot, MARGIN=c(2L, 3L),
                                      FUN=.closest, ref=med)
-        if(average.negE) {
-          neffMass.dbboot[,,n] <- apply(tmpdbboot, MARGIN=c(2L, 3L),
-                                        FUN=.closest, ref=nmed)
-        }
       }
     }
   }
@@ -665,7 +655,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
 
   nbias <- c()
   if(average.negE) {
-    range <- c(1,3)
+    range <- c(1,10)
     for(n in c(2:n.max)) {
       ii <- c(1:n)
       tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n, revert=TRUE)
@@ -684,7 +674,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
         if(dbboot) neffMass.dbboot[,,n] <- tmpdbboot
       }
       else{
-        med <- median(c(tmp[id], tmpboot[id,]))
+        med <- median(c(tmp[id], tmpboot[id,]), na.rm=TRUE)
         neffMass[n] <- .closest(tmp, ref=med)
         neffMass.tsboot[,n] <- apply(tmpboot, MARGIN=2L, FUN=.closest,
                                      ref=med)
