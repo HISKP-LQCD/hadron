@@ -200,7 +200,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     stopifnot(all(custom.indices <= n.max))
     stopifnot(all(custom.indices >= 1))
     ## build full Hankel matrices, then truncate
-    hankel.dim <- n.max/submatrix.size
+    hankel.dim <- n.max
     cfii <- 1:(N-deltat)
     trunc <- custom.indices
   }
