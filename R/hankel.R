@@ -244,7 +244,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     return(invisible(rep(NA, times=retl)))
   }
 
-  M.eigen <- try(eigen(M, symmetric=positive, only.values=FALSE), TRUE)
+  M.eigen <- try(eigen(M, symmetric=positive, only.values=only.values), TRUE)
   if(inherits(M.eigen, "try-error")) {
     warning("eigen failed in gevp.hankel\n")
     #3M.svd <- try(svd(M))
@@ -476,7 +476,8 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
     }
     if(block.Delta) {
       if(2*n > n.max) break
-      custom.indicesn <- c(1:n, (n.max-n+1):(n.max))
+      n.end <- floor(((N - 1 - t0 - deltat)/Delta)/2 + 1)
+      custom.indicesn <- c(1:n, (n.end-n+1):(n.end))
       n <- 2*n
     }
     if(all(!is.na(custom.indices))) {
@@ -575,7 +576,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(missing(n.max)) n.max <- max(pgevm$n)
   n.max <- min(n.max, max(pgevm$n))
   deltat <- pgevm$deltat
-  range <- c(0,1)
+  range <- c(0.1,1)
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
@@ -600,7 +601,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       neffMass.dbboot <- array(NA, dim=c(pgevm$boot.R, pgevm$cf$doubleboot$dbboot.R, max(pgevm$n)))
     }
   }
-  .fn <- function(evs, range=c(0,1), eps, n, revert=FALSE) {
+  .fn <- function(evs, range, eps, n=length(evs), revert=FALSE) {
     ii <- which(abs(Im(evs)) <= eps & Re(evs) > range[1]
                 & Re(evs) < range[2])
     x <- Re(evs[ii])
@@ -617,18 +618,19 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
 
   tmpdbboot <- array()
   for(n in c(1:n.max)) {
-    ii <- c(1:n)
-    tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n)
+    n.end <- n*pgevm$submatrix.size
+    ii <- c(1:n.end)
+    tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps)
     if(all(is.na(tmp))) next
     tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
                      MARGIN=1, FUN=.fn,
-                     range=range, eps=eps, n=n)
+                     range=range, eps=eps)
     if(dbboot) {
       tmpdbboot <- apply(X=pgevm$evs.dbboot[, , n, ii, drop = FALSE],
                          MARGIN=c(1L,2L), FUN=.fn,
-                         range=range, eps=eps, n=n)
+                         range=range, eps=eps)
     }
-    if(n == 1) {
+    if(n.end == 1) {
       effMass[n] <- tmp
       effMass.tsboot[,n] <- tmpboot
       if(dbboot) effMass.dbboot[,,n] <- tmpdbboot
@@ -657,16 +659,17 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(average.negE) {
     range <- c(1,10)
     for(n in c(2:n.max)) {
-      ii <- c(1:n)
-      tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, n=n, revert=TRUE)
+      n.end <- n*pgevm$submatrix.size
+      ii <- c(1:n.end)
+      tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, revert=TRUE)
       if(all(is.na(tmp))) next
       tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
                        MARGIN=1, FUN=.fn,
-                       range=range, eps=eps, n=n, revert=TRUE)
+                       range=range, eps=eps, revert=TRUE)
       if(dbboot) {
         tmpdbboot <- apply(X=pgevm$evs.dbboot[, , n, ii, drop = FALSE],
                            MARGIN=c(1L,2L), FUN=.fn,
-                           range=range, eps=eps, n=n, revert=TRUE)
+                           range=range, eps=eps, revert=TRUE)
       }
       if(n == 1) {
         neffMass[n] <- tmp
