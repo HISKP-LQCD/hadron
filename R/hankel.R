@@ -556,6 +556,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
 #' @param bias_correction boolean. If set to 'TRUE', the median of the bootstrap
 #'   distribution is used as estimator for the energy values.
 #' @param average.negE boolean. If set to TRUE average over positive and negative energies
+#' @param range numeric. Range of eigenvalues to consider for the effective mass.
 #' @family hankel
 #' @seealso input is generated via \link{bootstrap.pgevm}
 #' See also \link{bootstrap.effectivemass}
@@ -568,15 +569,15 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
                                  eps=1.e-16, n.max, probs=c(0.16, 0.84),
                                  errortype="outlier-removal",
                                  bias_correction=FALSE,
-                                 average.negE=FALSE) {
+                                 average.negE=FALSE, range=c(0.1,1)) {
   
   stopifnot(inherits(pgevm, "PGEVM"))
   stopifnot(errortype %in% c("outlier-removal", "quantiles", "dbboot"))
   stopifnot(length(id) == 1)
+  stopifnot(length(range) == 2)
   if(missing(n.max)) n.max <- max(pgevm$n)
   n.max <- min(n.max, max(pgevm$n))
   deltat <- pgevm$deltat
-  range <- c(0.1,1)
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
@@ -657,7 +658,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
 
   nbias <- c()
   if(average.negE) {
-    range <- c(1,10)
+    range <- rev(1/range)
     for(n in c(2:n.max)) {
       n.end <- n*pgevm$submatrix.size
       ii <- c(1:n.end)
