@@ -620,6 +620,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   tmpdbboot <- array()
   for(n in c(1:n.max)) {
     n.end <- n*pgevm$submatrix.size
+    if(id > n.end) next
     ii <- c(1:n.end)
     tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps)
     if(all(is.na(tmp))) next
@@ -661,6 +662,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     range <- rev(1/range)
     for(n in c(2:n.max)) {
       n.end <- n*pgevm$submatrix.size
+      if(id > n.end) next
       ii <- c(1:n.end)
       tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, revert=TRUE)
       if(all(is.na(tmp))) next
