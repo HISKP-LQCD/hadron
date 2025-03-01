@@ -376,7 +376,8 @@ gevp2cf <- function(gevp, id=1) {
   # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
   cf.tsboot <- list(t = gevp$gevp.tsboot[,tt],
-                    t0 = gevp$res.gevp$evalues[,id])
+                    t0 = gevp$res.gevp$evalues[,id],
+                    endcorr = gevp$cf.tsboot$endcorr)
 
   cf <- cf_boot(cf,
                 boot.R = gevp$boot.R,
@@ -513,7 +514,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
     m  <- mass$massfit.tsboot[,1]
   }
   else {
-    stop("gevp2amplitude requires a numeric vector or an object either of type effectivemassfit or matrixfit as input. Abortgin...\n")
+    stop("gevp2amplitude requires a numeric vector or an object either of type effectivemassfit or matrixfit as input. Aborting...\n")
   }
   Time <- gevp$cf$Time
   t <- c(0:(Time/2))
