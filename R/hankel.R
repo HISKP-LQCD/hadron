@@ -262,7 +262,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     M.eigen$vectors <- invL %*% M.eigen$vectors
   }
   ## now multiply with H(t), in cM2
-  ## now we should have elements of the chi-vectors, see arXiv:2004.10472
+  ## thereafter we should have elements of the chi-vectors, see arXiv:2004.10472
   M.eigen$vectors <- cM2 %*% M.eigen$vectors
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
