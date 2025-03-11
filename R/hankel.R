@@ -256,6 +256,14 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     ##return(invisible(c(M.svd$d, as.vector(M.svd$u))))
   }
   if(only.values) return(invisible(M.eigen$values))
+  ## if eigenvectors are being returned, we have to prepare appropriately
+  ## if Cholesky was used, first multiply with invL
+  if(positive) {
+    M.eigen$vectors <- invL %*% M.eigen$vectors
+  }
+  ## now multiply with H(t), in cM2
+  ## now we should have elements of the chi-vectors, see arXiv:2004.10472
+  M.eigen$vectors <- cM2 %*% M.eigen$vectors
   return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
 }
 
@@ -621,6 +629,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   for(n in c(1:n.max)) {
     n.end <- n*pgevm$submatrix.size
     if(id > n.end) next
+    ## this fitering with ii is needed, because also eigenvectors are stored in evs
     ii <- c(1:n.end)
     tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps)
     if(all(is.na(tmp))) next
