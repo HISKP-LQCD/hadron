@@ -204,7 +204,9 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
     ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
     ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
     ## we set them to NA first
-    d <- diag(t(evectors[t+1,,]) %*% tmp)
+    ## we need: d <- diag(t(evectors[t+1,,]) %*% tmp)
+    ## but faster and equivalent
+    d <- colSums(evectors[t+1,,] * tmp)
     d[d < 0] <- NA
     amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
     rm(tmp)
