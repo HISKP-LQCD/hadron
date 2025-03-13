@@ -261,10 +261,20 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   if(positive) {
     M.eigen$vectors <- invL %*% M.eigen$vectors
   }
-  ## now multiply with H(t), in cM2
+  ## now multiply with H(t) stored in cM2
+  ## and divide by the normlisation factor
   ## thereafter we should have elements of the chi-vectors, see arXiv:2004.10472
-  M.eigen$vectors <- cM2 %*% M.eigen$vectors
-  return(invisible(c(M.eigen$values, as.vector(M.eigen$vectors))))
+  tmp <- cM2 %*% M.eigen$vectors
+  ## compute only the diagonal elements
+  ## i.e. it would be: a_k <- diag(t(M.eigen$vectors) %*% tmp)
+  ## but like this we compute only the diagonal elements
+  a_k <- colSums(M.eigen$vectors * tmp)
+  ## avoid any negative values in a_k
+  a_k[abs(Im(a_k)) > 1.e-16] <- NA
+  a_k <- Re(a_k)
+  a_k[a_k < 0] <- NA
+  ##  return(invisible(c(M.eigen$values, as.vector(t(t(tmp[c(1:submatrix.size),])/sqrt(a_k))))))
+  return(invisible(c(M.eigen$values, as.vector(t(t(tmp)/sqrt(a_k))))))
 }
 
 #' @title GEVP method based on Hankel matrices. 
