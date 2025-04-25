@@ -100,8 +100,9 @@ dykstraIteration <- function(cf, N, verbose=FALSE, tol=1.e-15, niter=10, density
 #'   t.b.w.
 #' 
 #' @param cf object of type \link{cf}, which needs to be bootstrapped before
-#' @param N Integer. Maximal time index in correlation function to be used in
-#'                   Hankel matrix
+#' @param n Integer. dimension of Hankel matrix to be build from
+#'   2n-1 elements of cf. cf must have more than 2n-2 elements.
+#' 
 #' @param tol numeric. tolerance threshold for denoising
 #' @param niter integer. maximal number of Dykstra denoising iterations
 #' @param densityIndex integer vector. the (time) indices of the elements in cf
@@ -121,7 +122,7 @@ dykstraIteration <- function(cf, N, verbose=FALSE, tol=1.e-15, niter=10, density
 #' 
 #' @family hankel
 #' @export
-denoise.cf <- function(cf, N, tol=1.e-15, niter=10, densityIndex=c(1), errortype="dbboot") {
+denoise.cf <- function(cf, n, tol=1.e-15, niter=10, densityIndex=c(1), errortype="dbboot") {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(errortype %in% c("outlier-removal", "normal", "dbboot"))
@@ -129,18 +130,18 @@ denoise.cf <- function(cf, N, tol=1.e-15, niter=10, densityIndex=c(1), errortype
     stop("errortype dbboot requires double bootstrapped cf\n")
   }
   
-  
-  n <- length(cf$cf0)
-  neff <- 2*N-1
+  Nmax <- length(cf$cf0)
+  Neff <- 2*n-1
+  stopifnot(Nmax>Neff)
 
-  cf$cf0 <- dykstraIteration(cf$cf0, N=N, tol=tol, niter=niter, densityIndex=densityIndex)
+  cf$cf0 <- dykstraIteration(cf$cf0, N=n, tol=tol, niter=niter, densityIndex=densityIndex)
   if(errortype=="dbboot" ) {
-    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=N, tol=tol, niter=niter, densityIndex=densityIndex),
+    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, tol=tol, niter=niter, densityIndex=densityIndex),
                               perm=c(2,3,1))
     cf$cf.tsboot$t <- apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
   else {
-    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteration, N=N, tol=tol, niter=niter, densityIndex=densityIndex))
+    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteration, N=n, tol=tol, niter=niter, densityIndex=densityIndex))
   }
   
   if(errortype == "outlier-removal") {
