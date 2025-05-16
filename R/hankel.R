@@ -183,7 +183,7 @@ summary.hankel_summed <- function(object, ...) {
 #' A vector of NAs of \code{n + n^2} or \code{n} is returned in case the QR decomposition fails.
 #' 
 #' @family hankel
-gevp.hankel <- function(cf, t0=1, deltat=1, n, N, 
+gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
                         submatrix.size=1, element.order=c(1,2,3,4),
                         Delta=1, only.values=FALSE,
                         custom.indices=NA, effTime=N) {
@@ -222,19 +222,27 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     cM1 <- 0.5*(cM1 + t(cM1))
     cM2 <- 0.5*(cM2 + t(cM2))
   }
-  ev.cM <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
+  ev.cM <- eigen(cM1, symmetric=TRUE, only.values = truncation.dim >= n)
   positive <- TRUE
   if(any(ev.cM$values <= 0)) positive <- FALSE
   M <- matrix()
-  if(positive) {
+  if(positive & truncation.dim >= n) {
     ## compute Cholesky factorisation
     invL <- solve(chol(cM1))
     M <- t(invL) %*% cM2 %*% invL
   }
-  if(!positive) {
+  if(!positive & truncation.dim >= n) {
     ## QR decomposition
     qr.cM1 <- qr(cM1)
     M <- try(qr.coef(qr.cM1, cM2), TRUE)
+  }
+  if(truncation.dim < n) {
+    ev.cM2 <- eigen(cM2, symmetric=TRUE, only.values = FALSE)
+    ii1 <- rev(sort_by(1:n, abs(ev.cM$values)))[1:truncation.dim]
+    ii2 <- rev(sort_by(1:n, abs(ev.cM2$values)))[1:truncation.dim]
+    M <- t(ev.cM$vectors[,ii1]) %*% ev.cM2$vectors[,ii2] %*% diag(ev.cM2$values[ii2]) %*% t(ev.cM2$vectors[,ii2]) %*% ev.cM$vectors[,ii1]
+    if(positive) M <- diag(1/sqrt(ev.cM$values[ii1])) %*% M %*% diag(1/sqrt(ev.cM$values[ii1]))
+    else M <- diag(1/ev.cM$values[ii1]) %*% M
   }
   retl <- n+n*submatrix.size
   if(only.values) {
@@ -251,6 +259,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     return(invisible(rep(NA, times=retl)))
   }
   if(only.values) return(invisible(M.eigen$values))
+  return(invisible(c(M.eigen$values, rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
   ## if eigenvectors are being returned, we have to prepare appropriately
   ## if Cholesky was used, first multiply with invL
   if(positive) {
@@ -439,6 +448,7 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
                             n.max = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
                             submatrix.size=1, element.order=1,
+                            truncation.dim = n.max*submatrix.size,
                             ndep.Delta=FALSE, block.Delta=FALSE, custom.indices=NA) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
@@ -496,25 +506,26 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
     if(all(!is.na(custom.indices))) {
       custom.indicesn <- sort(custom.indices[1:n])
     }
-    ii <- c(1:(n*submatrix.size+n*submatrix.size^2))
+    eff.dim <- min(n*submatrix.size, truncation.dim)
+    ii <- c(1:(eff.dim+n*submatrix.size))
     evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
-                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime,
+                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
                               submatrix.size=submatrix.size, element.order=element.order,
                               Delta=Deltan, custom.indices=custom.indicesn)
     evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=gevp.hankel, t0=t0,
-                                   n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime,
+                                   n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
                                    submatrix.size=submatrix.size, element.order=element.order,
                                    Delta=Deltan, custom.indices=custom.indicesn))
     if(dbboot) {
       if(n==1) {
-        evs.dbboot[,,n,c(1:(n*submatrix.size))] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
-                                        n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime,
+        evs.dbboot[,,n,c(1:(eff.dim))] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
+                                        n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
                                         submatrix.size=submatrix.size, element.order=element.order,
                                         Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE)
       }
       else {
-        evs.dbboot[,,n,c(1:(n*submatrix.size))] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
-                                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime,
+        evs.dbboot[,,n,c(1:(eff.dim))] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
+                                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
                                               submatrix.size=submatrix.size, element.order=element.order,
                                               Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE),
                                         perm=c(2,3,1))
@@ -531,6 +542,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
               boot.l=cf$boot.l,
               seed=cf$seed,
               t0=t0,
+              truncation.dim=truncation.dim,
               submatrix.size=submatrix.size,
               element.order=element.order,
               Delta=Delta,
