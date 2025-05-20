@@ -1,7 +1,24 @@
-projectHankel <- function(X, N = dim(X)[1], verbose=FALSE) {
+projectHankel <- function(X, N = dim(X)[1], sN = 1, verbose=FALSE) {
+  stopifnot(sN > 0 & N %% sN != 0)
+  n <- N/sN
   Y <- X
-  for(j in c(2:(2*N-1))) {
-    Y[row(X) == j-col(X)] = mean(X[row(X) == j-col(X)])
+  if(sN == 1) {
+    for(j in c(2:(2*N-1))) {
+      Y[row(X) == j-col(X)] = mean(X[row(X) == j-col(X)])
+    }
+  }
+  else {
+    ii <- seq(from=1, to=N, by=sN)
+    for(i in c(1:sN)) {
+      for(j in c(1:sN)) {
+        Z <- X[ii+i-1, ii+j-1]
+        for(k in c(2:(2*n-1))) {
+          Z[row(Z) == k-col(Z)] = mean(Z[row(Z) == k-col(Z)])
+        }
+        Y[ii+i-1, ii+j-1] <- Z
+      }
+    }
+    Y <- 0.5(Y + t(Y))
   }
   if(verbose) {
     cat("Hankel projection diff:", sum(abs(X-Y)), "\n")
@@ -52,13 +69,27 @@ Hankel2cf <- function(H, N=dim(H)[1]) {
   return( c(H[1,], H[N, c(2:N)]))
 }
 
-dykstraIteration <- function(cf, N, verbose=FALSE, tol=1.e-15, niter=10, densityIndex=c(1)) {
-  ## n must be odd
+dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
+                             densityIndex=c(1), element.order=c(1,2,3,4), Lcf=NULL) {
+
   dens <- cf[densityIndex]
   n <- length(cf)
   stopifnot(n >= 2*N-1)
+  H <- array(NA, dim=c(N, N))
   neff <- 2*N-1
-  H <- hadron:::hankel.matrix(N, z=cf[1:neff])
+  if(sN == 1) {
+    H <- hadron:::hankel.matrix(n=N, z=cf[1:neff])
+  }
+  else {
+    for(i in c(1:sN)) {
+      for(j in c(1:sN)) {
+        cor.id <- element.order[(i-1)*sN + j]
+        H[ii+i-1,ii+j-1] <- hadron:::hankel.matrix(n=N/sN, z=cf[1 + (cor.id-1)*Lcf])
+      }
+    }
+    ## symmetrise
+    H <- 0.5*(H + t(H))
+  }
   X <- H
   Xtmp <- X
   Y <- array(0, dim=c(4, N, N))
@@ -72,7 +103,7 @@ dykstraIteration <- function(cf, N, verbose=FALSE, tol=1.e-15, niter=10, density
         X <- projectDensity(X=Xtmp-Y[p,,], density=dens, verbose=verbose)
       }
       if(p == 2) {
-        X <- projectHankel(X=Xtmp-Y[p,,], verbose=verbose)
+        X <- projectHankel(X=Xtmp-Y[p,,], verbose=verbose, sN=sN)
       }
       if(p == 3) {
         X <- projectPSD(X=Xtmp-Y[p,,], verbose=verbose)

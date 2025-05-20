@@ -153,9 +153,11 @@ summary.hankel_summed <- function(object, ...) {
 #' @param cf Numeric vector (this will generally be the time slices of a correlation function).
 #' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
 #'    \code{Time/2-2}. Default is 1.
-#' @param n Integer. Size of the Hankel matrices to generate
-#' @param N Integer. Maximal time index in correlation function to be used in
-#'                   Hankel matrix
+#' @param n Integer. Size of the nxn Hankel matrices to generate
+#' @param N Integer. For 'submatrix.size=1' the maximal time index in correlation function 'cf' to
+#'                   be used in the Hankel matrices.
+#'                   For 'submatrix.size>1' this must be the length of each sub correlation
+#'                   function.
 #' @param deltat Integer. Time shift to be used to build the Hankel matrix
 #' @param submatrix.size Integer. Submatrix size to be used in build
 #'   of Hankel matrices. Submatrix.size > 1 is experimental.
