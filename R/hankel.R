@@ -193,57 +193,52 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   t0p1 <- t0+1
   cM1 <- array(NA, dim=c(n, n))
   cM2 <- cM1
-  ii <- seq(from=1, to=n, by=submatrix.size)
-  trunc <- TRUE
+  n.full <- n + deltat*submatrix.size
+  cM0 <- array(NA, dim=c(n.full, n.full))
+  ii <- seq(from=1, to=n.full, by=submatrix.size)
   
-  if(all(!is.na(custom.indices))) {
-    n.max <- floor((N-deltat+1)/2)
-    stopifnot(all(custom.indices <= n.max))
-    stopifnot(all(custom.indices >= 1))
-    ## build full Hankel matrices, then truncate
-    hankel.dim <- n.max
-    cfii <- 1:(N-deltat)
-    trunc <- custom.indices
-  }
-  else {
-    ## build reduced Hankel matrices, don't truncate
-    hankel.dim <- n/submatrix.size
-    cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
-  }
+  hankel.dim <- n.full/submatrix.size
+  cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
+
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
       cor.id <- element.order[(i-1)*submatrix.size+j]
-      cM1[ii+(i-1), ii+(j-1)] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*effTime])[trunc,trunc]
-      cM2[ii+(i-1), ii+(j-1)] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*effTime + deltat ])[trunc,trunc]
+      cM0[ii+(i-1), ii+(j-1)] <- hankel.matrix(n=hankel.dim, z=cf[cfii + (cor.id-1)*effTime])
     }
   }
   if(submatrix.size > 1) {
     ## symmetrise
-    cM1 <- 0.5*(cM1 + t(cM1))
-    cM2 <- 0.5*(cM2 + t(cM2))
+    cM0 <- 0.5*(cM0 + t(cM0))
   }
-  ev.cM <- eigen(cM1, symmetric=TRUE, only.values = truncation.dim >= n)
-  positive <- TRUE
-  if(any(ev.cM$values <= 0)) positive <- FALSE
+
+  positive <- FALSE
   M <- matrix()
-  if(positive & truncation.dim >= n) {
-    ## compute Cholesky factorisation
-    invL <- solve(chol(cM1))
-    M <- t(invL) %*% cM2 %*% invL
+  ii0 <- 1:n
+  ii.shift <- ii0 + deltat*submatrix.size
+  if(truncation.dim >= n){
+    cM1 <- cM0[ii0, ii0]
+    cM2 <- cM0[ii.shift, ii0]
+    ev.cM <- eigen(cM0, symmetric=TRUE, only.values = TRUE)
+    ev.cM1 <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
+    positive <- all(ev.cM1$values > 0)
+    if(positive) {
+      ## compute Cholesky factorisation
+      invL <- solve(chol(cM1))
+      M <- t(invL) %*% cM2 %*% invL
+    } else{
+      ## QR decomposition
+      qr.cM1 <- qr(cM1)
+      M <- try(qr.coef(qr.cM1, cM2), TRUE)
+    }
+  } else {
+    ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
+    ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
+    M.bar <- ev.cM$vectors[ii0,ii1] + ev.cM$vectors[ii.shift,ii1]
+    M.00 <- t(M.bar) %*% ev.cM$vectors[ii0,ii1]
+    M.0t <- t(M.bar) %*% ev.cM$vectors[ii.shift,ii1]
+    M <- solve(M.00) %*% M.0t
   }
-  if(!positive & truncation.dim >= n) {
-    ## QR decomposition
-    qr.cM1 <- qr(cM1)
-    M <- try(qr.coef(qr.cM1, cM2), TRUE)
-  }
-  if(truncation.dim < n) {
-    ev.cM2 <- eigen(cM2, symmetric=TRUE, only.values = FALSE)
-    ii1 <- rev(sort_by(1:n, abs(ev.cM$values)))[1:truncation.dim]
-    ii2 <- rev(sort_by(1:n, abs(ev.cM2$values)))[1:truncation.dim]
-    M <- t(ev.cM$vectors[,ii1]) %*% ev.cM2$vectors[,ii2] %*% diag(ev.cM2$values[ii2]) %*% t(ev.cM2$vectors[,ii2]) %*% ev.cM$vectors[,ii1]
-    if(positive) M <- diag(1/sqrt(ev.cM$values[ii1])) %*% M %*% diag(1/sqrt(ev.cM$values[ii1]))
-    else M <- diag(1/ev.cM$values[ii1]) %*% M
-  }
+
   retl <- n+n*submatrix.size
   if(only.values) {
     retl <- n
@@ -507,7 +502,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
       custom.indicesn <- sort(custom.indices[1:n])
     }
     eff.dim <- min(n*submatrix.size, truncation.dim)
-    ii <- c(1:(eff.dim+n*submatrix.size))
+    ii <- c(1:(eff.dim+(n+deltat)*submatrix.size))
     evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
                               n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
                               submatrix.size=submatrix.size, element.order=element.order,
