@@ -1153,6 +1153,9 @@ extractSingleCor.cf <- function(cf, id=c(1)) {
       cf$icf.tsboot$data <- cf$icf.tsboot$data[,ii]
     }
   }
+  if(inherits(cf, 'cf_dbboot')) {
+    cf$doubleboot$cf <- cf$doubleboot$cf[,,ii]
+  }
   cf$nrObs <- 1
   cf$nsStypes <- 1
   return (cf)
