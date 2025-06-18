@@ -20,23 +20,21 @@ hankelise <- function(X, N = dim(X)[1], sN = 1, verbose=FALSE) {
   return(Y)
 }
 
-projectPSD <- function(X, N = dim(X)[1], verbose=FALSE) {
+projectPSD <- function(X, N = dim(X)[1], verbose=FALSE, cutNoise=TRUE) {
   ## symmetrise
   X <- 0.5*(X + t(X))
   X.eigen <- eigen(X, symmetric=TRUE)
-  ii <- which(X.eigen$values < abs(min(X.eigen$values)))
-  ##ii <- which(X.eigen$values < 0)
-  tmp <- min(X.eigen$values)
+  ii <- which(X.eigen$values < 0)
+  if(cutNoise) ii <- which(X.eigen$values < abs(min(X.eigen$values)))
+  tmp <- 
   nevsum <- sum(abs(X.eigen$values[ii]))
   if(verbose) {
-    ##  cat(X.eigen$values[ii], "\n")
-    cat("max", max(X.eigen$values[ii]), "min", min(X.eigen$values[ii]), "\n")
+    cat("PSD no removed evs:", length(ii), " min ", min(X.eigen$values), "max", max(X.eigen$values[ii]), "\n")
+    cat("PSD neg. ev sum:", nevsum, "\n")
   }
   X.eigen$values[ii] <- 0
   Z <- X.eigen$vectors %*% diag(X.eigen$values) %*% t(X.eigen$vectors)
   if(verbose) {
-    cat("no rem. evs:", length(ii), " min ", tmp, "\n")
-    cat("PSD neg. ev sum:", nevsum, "\n")
     cat("PSD diff norm:", sqrt(sum((Z-X)^2)), "\n")
   }
   return(Z)
@@ -62,29 +60,33 @@ projectDensity <- function(X, N=dim(X)[1], D, sN=1, verbose=FALSE) {
   return(X)
 }
 
-Hankel2cf <- function(H, N=dim(H)[1], sN=1, element.order=c(1,2,3,4), cf.orig=NULL) {
+Hankel2cf <- function(H, N=dim(H)[1], sN=1, element.order=c(1,2,3,4), cf.orig=NULL, Lcf, t0p1=1) {
   if(sN == 1) {
     return( c(H[1,], H[N, c(2:N)]))
   }
-  ii <- seq(from=1, to=N, by=sN)
+  neff <- 2*N/sN-1
+  ii <- seq(from=1, to=N, by=sN)-1
+  cfii1 <- seq(from=t0p1, to=t0p1-1+N/sN, by=1)
+  cfii2 <- seq(from=t0p1-1+N/sN, to=t0p1-1+2*N/sN-1, by=1)
   for(i in c(1:sN)) {
     for(j in c(1:sN)) {
       cor.id <- element.order[(i-1)*sN + j]
-      
+      ## take first and last block row of H
+      cf.orig[cfii1 + (cor.id-1)*Lcf] <- H[i, ii+j]
+      cf.orig[cfii2 + (cor.id-1)*Lcf] <- H[N-(sN-i), ii+j]
     }
   }
+  return(cf.orig)
 }
 
 dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
-                             element.order=c(1,2,3,4), Lcf=NULL, pmax=3) {
+                             element.order=c(1,2,3,4), Lcf=length(cf), pmax=3, cutNoise=TRUE, t0=0) {
 
-  t0 <- 0
   if(sN > 1 & is.null(Lcf)) {
     stop("In dykstraIteration: for sN>1, Lcf needs to be an integer\n")
   }
   stopifnot(length(element.order) >= sN^2)
-  n <- length(cf)
-  stopifnot(n-t0*sN^2 >= 2*N-1)
+  stopifnot(Lcf-t0*sN^2 >= 2*N/sN-1)
   H <- array(NA, dim=c(N, N))
   neff <- 2*N/sN-1
   t0p1 <- t0+1
@@ -123,7 +125,7 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
         X <- hankelise(X=Xtmp-Y[p,,], verbose=verbose, sN=sN)
       }
       if(p == 3) {
-        X <- projectPSD(X=Xtmp-Y[p,,], verbose=!verbose)
+        X <- projectPSD(X=Xtmp-Y[p,,], verbose=!verbose, cutNoise=cutNoise)
       }
       if(p == 4) {
         X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=verbose)
@@ -140,11 +142,11 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
       break
     }
   }
-  X <- hankelise(X=X, verbose=verbose, sN=sN)
-  if(n > neff) {
-    return(invisible(c(Hankel2cf(X), rep(NA, times=n-neff))))
-  }
-  return(invisible(Hankel2cf(X)))
+  X <- hankelise(X=X, verbose=TRUE, sN=sN)
+  ##if(Lcf > neff) {
+  ##  return(invisible(c(Hankel2cf(X, Lcf=Lcf), rep(NA, times=Lcf-neff))))
+  ##}
+  return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1)))
 }
 
 
