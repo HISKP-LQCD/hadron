@@ -60,10 +60,8 @@ projectDensity <- function(X, N=dim(X)[1], D, sN=1, verbose=FALSE) {
   return(X)
 }
 
-Hankel2cf <- function(H, N=dim(H)[1], sN=1, element.order=c(1,2,3,4), cf.orig=NULL, Lcf, t0p1=1) {
-  if(sN == 1) {
-    return( c(H[1,], H[N, c(2:N)]))
-  }
+Hankel2cf <- function(H, N=dim(H)[1], sN=1, element.order=c(1,2,3,4), cf.orig, Lcf, t0p1=1) {
+
   neff <- 2*N/sN-1
   ii <- seq(from=1, to=N, by=sN)-1
   cfii1 <- seq(from=t0p1, to=t0p1-1+N/sN, by=1)
@@ -79,6 +77,25 @@ Hankel2cf <- function(H, N=dim(H)[1], sN=1, element.order=c(1,2,3,4), cf.orig=NU
   return(cf.orig)
 }
 
+cf2Hankel <- function(cf, N, sN, t0p1=1, Lcf, element.order, symmetrise=TRUE) {
+  H <- array(NA, dim=c(N, N))
+  neff <- 2*N/sN-1
+  cfii <- seq(from=t0p1, to=neff, by=1)
+  if(sN == 1) {
+    return(hadron:::hankel.matrix(n=N, z=cf[cfii]))
+  }
+  ii <- seq(from=1, to=N, by=sN)
+  for(i in c(1:sN)) {
+    for(j in c(1:sN)) {
+      cor.id <- element.order[(i-1)*sN + j]
+      H[ii+i-1,ii+j-1] <- hadron:::hankel.matrix(n=N/sN, z=cf[cfii + (cor.id-1)*Lcf])
+    }
+  }
+  ## symmetrise
+  if(symmetrise) H <- 0.5*(H + t(H))
+  return(H)
+}
+
 dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
                              element.order=c(1,2,3,4), Lcf=length(cf), pmax=3, cutNoise=TRUE, t0=0) {
 
@@ -87,24 +104,9 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
   }
   stopifnot(length(element.order) >= sN^2)
   stopifnot(Lcf-t0*sN^2 >= 2*N/sN-1)
-  H <- array(NA, dim=c(N, N))
-  neff <- 2*N/sN-1
   t0p1 <- t0+1
-  cfii <- seq(from=t0p1, to=neff, by=1)
-  if(sN == 1) {
-    H <- hadron:::hankel.matrix(n=N, z=cf[cfii])
-  }
-  else {
-    ii <- seq(from=1, to=N, by=sN)
-    for(i in c(1:sN)) {
-      for(j in c(1:sN)) {
-        cor.id <- element.order[(i-1)*sN + j]
-        H[ii+i-1,ii+j-1] <- hadron:::hankel.matrix(n=N/sN, z=cf[cfii + (cor.id-1)*Lcf])
-      }
-    }
-    ## symmetrise
-    H <- 0.5*(H + t(H))
-  }
+  H <- cf2Hankel(cf=cf, N=N, sN=sN, t0p1=t0p1, Lcf=Lcf, element.order=element.order)
+
   ## build the zero timeslice matrix to fix
   D <- H[c(1:sN), c(1:sN)]
 
@@ -125,7 +127,7 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
         X <- hankelise(X=Xtmp-Y[p,,], verbose=verbose, sN=sN)
       }
       if(p == 3) {
-        X <- projectPSD(X=Xtmp-Y[p,,], verbose=!verbose, cutNoise=cutNoise)
+        X <- projectPSD(X=Xtmp-Y[p,,], verbose=verbose, cutNoise=cutNoise)
       }
       if(p == 4) {
         X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=verbose)
@@ -136,17 +138,14 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
       if(verbose) cat(p, " ", normsqr, "\n")
     }
     m <- m+1
-    if(!verbose) cat(m, "tol", normsqr, "correction", sum((Xtmp-X)^2), "\n")
+    if(verbose) cat(m, "tol", normsqr, "correction", sum((Xtmp-X)^2), "\n")
     if(m > niter & normsqr > 5*normsqrold) {
       X <- Xtmp
       break
     }
   }
-  X <- hankelise(X=X, verbose=TRUE, sN=sN)
-  ##if(Lcf > neff) {
-  ##  return(invisible(c(Hankel2cf(X, Lcf=Lcf), rep(NA, times=Lcf-neff))))
-  ##}
-  return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1)))
+  X <- hankelise(X=X, verbose=verbose, sN=sN)
+  return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
 }
 
 
@@ -201,7 +200,7 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   stopifnot(Nmax>Neff)
 
   cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N)
-  return(invisible(cf))
+
   if(errortype=="dbboot" ) {
     cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N),
                               perm=c(2,3,1))
