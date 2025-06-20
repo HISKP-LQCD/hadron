@@ -97,7 +97,9 @@ cf2Hankel <- function(cf, N, sN, t0p1=1, Lcf, element.order, symmetrise=TRUE) {
 }
 
 dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
-                             element.order=c(1,2,3,4), Lcf=length(cf), pmax=3, cutNoise=TRUE, t0=0) {
+                             element.order=c(1,2,3,4), Lcf=length(cf), pmax=3,
+                             cutNoise=TRUE, finalHankelisation=FALSE,
+                             t0=0) {
 
   if(sN > 1 & is.null(Lcf)) {
     stop("In dykstraIteration: for sN>1, Lcf needs to be an integer\n")
@@ -144,7 +146,9 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
       break
     }
   }
-  ##X <- hankelise(X=X, verbose=verbose, sN=sN)
+  if(finalHankelisation) {
+    X <- hankelise(X=X, verbose=verbose, sN=sN)
+  }
   return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
 }
 
@@ -182,6 +186,13 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #' @param verbose bool. triggers verbose output in iteration on original data
+#' @param cutNoise bool. if set to 'TRUE' also the smallest positive eigenvalues
+#'   will be removed from the spectrum. In detail, all eigenvalues with magnitude
+#'   smaller than 'abs(min(eigenvalues))' will be removed. If 'FALSE', only negative
+#'   eigenvalues will be removed.
+#' @param finalHankelisation bool. Apply one more 'hankelisation' as the final step
+#'   before conversion back to cf. Per default the last step would be the projection to a
+#'   positive semidefinite matrix.
 #' 
 #' @references "Denoising of imaginary time response functions with Hankel projections"
 #'       Yang Yu, Alexander F. Kemper, Chao Yang, Emanuel Gull,
@@ -198,7 +209,8 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
 #' @family hankel
 #' @export
 denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype="dbboot", 
-                       submatrix.size=1, element.order=c(1,2,3,4), verbose=FALSE) {
+                       submatrix.size=1, element.order=c(1,2,3,4), verbose=FALSE,
+                       cutNoise=TRUE, finalHankelisation=FALSE) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(errortype %in% c("outlier-removal", "normal", "dbboot"))
@@ -210,15 +222,15 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   Neff <- 2*n-1
   stopifnot(Nmax>Neff)
 
-  cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N)
+  cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
 
   if(errortype=="dbboot" ) {
-    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N),
+    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
                               perm=c(2,3,1))
     cf$cf.tsboot$t <- apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
   else {
-    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N))
+    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation))
   }
   if(errortype == "outlier-removal") {
     remove_outliers <- function(x, probs=c(0.25,0.75)) {
