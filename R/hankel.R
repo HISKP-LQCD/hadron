@@ -1,4 +1,17 @@
 ## creates a square Hankel matrix of size nxn
+#' @title Generate Hankel matrix from vector
+#'
+#' @description
+#' Takes a vector 'z', usually encoding a time series or a correlator and
+#'   generates a square Hankel matrix of dimension 'n'
+#'
+#' @param n Integer. Dimension of the nxn square Hankel matrix
+#' @param z vector of length at least 2n-1
+#'
+#' @family hankel
+#' @return
+#' nxn Hankel matrix
+#' 
 hankel.matrix <- function(n, z){
   outer(1:n,1:n,
         function(x,y) z[x+y-1])

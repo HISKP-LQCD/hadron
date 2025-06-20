@@ -82,13 +82,13 @@ cf2Hankel <- function(cf, N, sN, t0p1=1, Lcf, element.order, symmetrise=TRUE) {
   neff <- 2*N/sN-1
   cfii <- seq(from=t0p1, to=neff, by=1)
   if(sN == 1) {
-    return(hadron:::hankel.matrix(n=N, z=cf[cfii]))
+    return(hankel.matrix(n=N, z=cf[cfii]))
   }
   ii <- seq(from=1, to=N, by=sN)
   for(i in c(1:sN)) {
     for(j in c(1:sN)) {
       cor.id <- element.order[(i-1)*sN + j]
-      H[ii+i-1,ii+j-1] <- hadron:::hankel.matrix(n=N/sN, z=cf[cfii + (cor.id-1)*Lcf])
+      H[ii+i-1,ii+j-1] <- hankel.matrix(n=N/sN, z=cf[cfii + (cor.id-1)*Lcf])
     }
   }
   ## symmetrise
@@ -144,7 +144,7 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
       break
     }
   }
-  X <- hankelise(X=X, verbose=verbose, sN=sN)
+  ##X <- hankelise(X=X, verbose=verbose, sN=sN)
   return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
 }
 
@@ -164,6 +164,17 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
 #' @param niter integer. maximal number of Dykstra denoising iterations
 #' @param submatrix.size Integer. Submatrix size to be used in build
 #'   of Hankel matrices.
+#' @param errortype string. Determines the treatment of the bootstrap
+#'   histograms to determine the statistical error on eigenvalues. Can
+#'   be: 1. 'outlier-removal' for which outliers are removed according to
+#'   the 0.25 and 0.75 quantiles and the inter-quantile-range,
+#'   i.e. only values are kept which are in the interval
+#'   \eqn{[Q_25-1.5IQR, Q_75+1.5IQR]}
+#'   and the error is computed from the standard deviation of the bootstrap distribution.
+#'   2. 'quantiles' for which the error is estimated from the difference
+#'   between the 0.32 and 0.68 quantile of the original bootstrap distribution
+#'   3. 'dbboot' which works only, if the 'cf' is double bootstrapped. It will
+#'   estimate the error from the true error of the median
 #' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
 #'    correlators into the correlator
 #'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
