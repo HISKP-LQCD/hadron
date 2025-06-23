@@ -75,6 +75,7 @@ boot.R <- 29
 dbboot.R <- 19
 pioncf.boot <- bootstrap.cf(pioncf, boot.R=boot.R, boot.l=2)
 pioncf.boot <- double_bootstrap.cf(pioncf.boot, dbboot.R=dbboot.R)
+plot(pioncf.boot, ylab="C(t)", xlab="t/a", xlim=c(0,48), log="y")
 ```
 
 `hadron` provides functionality to compute the standard effective mass
@@ -113,7 +114,7 @@ Based on the (double) bootstrapped correlation function data, the PGEVM
 is applied as follows:
 
 ```{r, warn=FALSE}
-pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-1)
+pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time)
 pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot",
                                       bias_correction=TRUE)
 ```
@@ -155,6 +156,7 @@ correlation data with the function `bootstrap.lanczos` as follows
 ```{r}
 pion.lanczos <- bootstrap.lanczos(pioncf.boot, N=pioncf.boot$Time-1,
                                   bias_correction=TRUE, errortype="dbboot", pivot=TRUE)
+pion.lanczos <- fit.effectivemass(pion.lanczos, t1=10, t2=21, useCov=TRUE)
 ```
 
 and can can be plotted similarly
@@ -165,16 +167,60 @@ plot(pion.lanczos, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="re
 
 # PGEVM for periodic correlators
 
+For symmetric correlators it makes sense to include not only early but also late time slices starting from low dimensions. This can be done by setting `ndep.Delta=TRUE` in the `bootstrap.pgevm` function and thus distributing the correlator time slices entering the Hankel matrix equidistantly. The following code snippet demonstrates this:
+
 ```{r, warn=FALSE}
-pion.pgevm2 <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time-1, ndep.Delta=TRUE)
+pion.pgevm2 <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time, ndep.Delta=TRUE)
 pion.pgevm.efm2 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
                                        bias_correction=TRUE)
 pion.pgevm.efm3 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
                                        bias_correction=TRUE, average.negE=TRUE)
 ```
 
+In the last step the `average.negE=TRUE` option is used to average over the ''effective masses'' that are now symmetric around zero.
+
+An alternative way to include late time slices is to use the `block.Delta=TRUE` option in the `bootstrap.pgevm` function. This will use the first and last `n` rows and columns of the Hankel matrix.
+
+```{r, warn=FALSE}
+pion.pgevm.block <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time, block.Delta=TRUE)
+pion.pgevm.block.efm <- pgevm2effectivemass(pion.pgevm.block, errortype="dbboot",
+                                       bias_correction=TRUE)
+pion.pgevm.block.efm2 <- pgevm2effectivemass(pion.pgevm.block, errortype="dbboot",
+                                       bias_correction=TRUE, average.negE=TRUE)
+```
+
+We can now plot the different effective masses. Note that for the blocked version `n` denotes the dimension of a block, i.e. the full dimension is `2n`.
+
 ```{r}
-plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(0.1,0.2), col="blue", pch=21)
-plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.2)
-plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.4)
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+                     col="blue", pch=21, xshift=0)
+plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.15)
+plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
+plot(pion.pgevm.block.efm, rep=TRUE, col="green", pch=24, xshift=0.45)
+plot(pion.pgevm.block.efm2, rep=TRUE, col="brown", pch=25, xshift=0.6)
+```
+
+For noiseless data and infinite precision the best convergence is achieved by starting around half time `T/2` and expanding the Hankel matrix from there. We can define this order using `custom.indices`:
+
+```{r, warn=FALSE}
+n.half <- floor(pioncf.boot$Time/4)
+custom.indices <- c(rbind(n.half:1, (n.half+1):(2*n.half)))
+print(custom.indices)
+pion.pgevm.inout <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time, n.max=2*n.half,
+                                       custom.indices=custom.indices)
+pion.pgevm.inout.efm <- pgevm2effectivemass(pion.pgevm.inout, errortype="dbboot",
+                                       bias_correction=TRUE)
+pion.pgevm.inout.efm2 <- pgevm2effectivemass(pion.pgevm.inout, errortype="dbboot",
+                                       bias_correction=TRUE, average.negE=TRUE)
+```
+
+Even at the mild noise level of the pion this method is very unstable, as was to be expected.
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+                     col="blue", pch=21, xshift=0)
+plot(pion.pgevm.efm3, rep=TRUE, col="red", pch=22, xshift=0.15)
+plot(pion.pgevm.block.efm2, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
+plot(pion.pgevm.inout.efm, rep=TRUE, col="green", pch=24, xshift=0.45)
+plot(pion.pgevm.inout.efm2, rep=TRUE, col="brown", pch=25, xshift=0.6)
 ```
