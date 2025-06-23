@@ -257,7 +257,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     if(positive) M <- diag(1/sqrt(ev.cM$values[ii1])) %*% M %*% diag(1/sqrt(ev.cM$values[ii1]))
     else M <- diag(1/ev.cM$values[ii1]) %*% M
   }
-  retl <- n+n*submatrix.size
+  retl <- n+submatrix.size
   if(only.values) {
     retl <- n
   }
