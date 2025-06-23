@@ -3,22 +3,5 @@
 set -e
 set -u
 
-while getopts "qh" opt; do
-	case $opt in
-		q)
-			Rscript --vanilla -e "devtools::install(quick=TRUE)"
-			exit
-			;;
-		h)
-			echo -e "
-			Install hadron package\n
-			Usage: $0 [-q] [-h]\n
-			-q: quick install
-			-h: help\n"
-			exit
-			;;
-	esac
-done
-
 ./document
-Rscript --vanilla -e "devtools::install()"
+R --vanilla CMD INSTALL .

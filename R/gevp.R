@@ -204,9 +204,7 @@ gevp <- function(cf, Time, t0 = 1, element.order = 1:cf$nrObs,
     ## these are the amplitudes up to a factor sqrt(exp(-mt) \pm exp(-m(T-t)))
     ## diag(t(evectors[t+1,,]) %*% tmp) might get negative due to fluctuations
     ## we set them to NA first
-    ## we need: d <- diag(t(evectors[t+1,,]) %*% tmp)
-    ## but faster and equivalent
-    d <- colSums(evectors[t+1,,] * tmp)
+    d <- diag(t(evectors[t+1,,]) %*% tmp)
     d[d < 0] <- NA
     amplitudes[t+1,,] <- t(t(tmp)/sqrt(d))
     rm(tmp)
@@ -378,8 +376,7 @@ gevp2cf <- function(gevp, id=1) {
   # Add the `cf_boot` mixin.
   tt <- (id-1)*(cf$Time/2+1)+seq(1, cf$Time/2+1)
   cf.tsboot <- list(t = gevp$gevp.tsboot[,tt],
-                    t0 = gevp$res.gevp$evalues[,id],
-                    endcorr = gevp$cf.tsboot$endcorr)
+                    t0 = gevp$res.gevp$evalues[,id])
 
   cf <- cf_boot(cf,
                 boot.R = gevp$boot.R,
@@ -516,7 +513,7 @@ gevp2amplitude <- function(gevp, mass, id=1, op.id=1, type="cosh", t1, t2, useCo
     m  <- mass$massfit.tsboot[,1]
   }
   else {
-    stop("gevp2amplitude requires a numeric vector or an object either of type effectivemassfit or matrixfit as input. Aborting...\n")
+    stop("gevp2amplitude requires a numeric vector or an object either of type effectivemassfit or matrixfit as input. Abortgin...\n")
   }
   Time <- gevp$cf$Time
   t <- c(0:(Time/2))
