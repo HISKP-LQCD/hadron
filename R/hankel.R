@@ -257,7 +257,9 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     if(positive) M <- diag(1/sqrt(ev.cM$values[ii1])) %*% M %*% diag(1/sqrt(ev.cM$values[ii1]))
     else M <- diag(1/ev.cM$values[ii1]) %*% M
   }
-  retl <- n+submatrix.size
+  ## we would want to be able to recover from
+  ## eigen failure
+  retl <- 2*n ##why 2*n ??? n+submatrix.size
   if(only.values) {
     retl <- n
   }
