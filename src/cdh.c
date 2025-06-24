@@ -229,7 +229,6 @@ static R_INLINE void fscdhnew(double rev,
   lb2 = (double *)R_Calloc(n, double);
   lb3 = (double *)R_Calloc(n, double);
   lb4 = (double *)R_Calloc(n, double);
-
   for (i = 0; i < n; i++) {
     tmp = 1. / a2B0mu[i];
     lb1[i] = log(aLamb1 * aLamb1 * tmp);
