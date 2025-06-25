@@ -1,9 +1,9 @@
-## creates a square Block-Hankel matrix of size nxn
+## creates a square Block-Hankel matrix of size NxN
 #' @title hankelises a general NxN matrix with sub-block size sN
 #'
 #' @description
 #'   Takes a NxN matrix 'X' and transforms it into a Block-Hankel matrix
-#'   with sub-block size sN
+#'   with sub-block size sN. The sub-blocks are symmetrised in addition.
 #'
 #' @param X numeric matrix. NxN matrix
 #' @param N Integer. Dimension of the NxN square matrix. Must be a multiple
@@ -267,45 +267,8 @@ dykstraIteratecf <- function(cf, N, submatrix.size=1, verbose=FALSE, tol=1.e-15,
     cat(" -> sum of |cf - Hankel2cf(cf2Hankel(cf))| =", sum(abs(tmp-cf)), "\n")
   }
   ## build the zero timeslice matrix to fix
-  D <- H[c(1:sN), c(1:sN)]
-
-  X <- H
-  Xtmp <- X
-  Y <- array(0, dim=c(4, N, N))
-  normsqr <- 10000
-  m <- 0
-  while(normsqr > tol & m < niter) {
-    normsqrold <- normsqr
-    normsqr <- 0
-    for(p in c(1:pmax)) {
-      Xtmp <- X
-      if(p == 1) {
-        X <- projectDensity(X=Xtmp-Y[p,,], D=D, sN=sN, verbose=(verbose > 1))
-      }
-      if(p == 2) {
-        X <- hankelise(X=Xtmp-Y[p,,], verbose=(verbose > 1), sN=sN)
-      }
-      if(p == 3) {
-        X <- projectPSD(X=Xtmp-Y[p,,], verbose=(verbose > 1), cutNoise=cutNoise)
-      }
-      if(p == 4) {
-        X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=(verbose > 1))
-      }
-      Ytmp <- Y[p,,]
-      Y[p,,] <- X - (Xtmp - Ytmp)
-      normsqr <- normsqr + sum((Ytmp-Y[p,,])^2)
-      if(verbose > 1) cat(p, " ", normsqr, "\n")
-    }
-    m <- m+1
-    if(verbose) cat(m, "tol", normsqr, "correction", sum((Xtmp-X)^2), "\n")
-    if(m > niter & normsqr > 5*normsqrold) {
-      X <- Xtmp
-      break
-    }
-  }
-  if(finalHankelisation) {
-    X <- hankelise(X=X, verbose=(verbose > 1), sN=sN)
-  }
+  X <- dykstraIterateH(H=H, submatrix.size=sN, verbose=verbose, tol=tol,
+                       niter=niter, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
   return(invisible(Hankel2cf(H=X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
 }
 
@@ -380,17 +343,22 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   stopifnot(Nmax>Neff)
 
   cf$cf0 <- dykstraIteratecf(cf$cf0, N=n, submatrix.size=submatrix.size, element.order=element.order,
-                             tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
-  
+                             tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise,
+                             finalHankelisation=finalHankelisation)
+
   if(errortype=="dbboot" ) {
-    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteratecf, N=n, submatrix.size=submatrix.size, element.order=element.order,
-                                    tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
+    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteratecf,
+                                    N=n, submatrix.size=submatrix.size, element.order=element.order,
+                                    tol=tol, niter=niter, Lcf=N,
+                                    cutNoise=cutNoise, finalHankelisation=finalHankelisation),
                               perm=c(2,3,1))
     cf$cf.tsboot$t <- apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
   else {
-    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteratecf, N=n, submatrix.size=submatrix.size, element.order=element.order,
-                              tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation))
+    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteratecf,
+                              N=n, submatrix.size=submatrix.size, element.order=element.order,
+                              tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise,
+                              finalHankelisation=finalHankelisation))
   }
   if(errortype == "outlier-removal") {
     remove_outliers <- function(x, probs=c(0.25,0.75)) {
