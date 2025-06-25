@@ -1,3 +1,21 @@
+## creates a square Block-Hankel matrix of size nxn
+#' @title hankelises a general NxN matrix with sub-block size sN
+#'
+#' @description
+#'   Takes a NxN matrix 'X' and transforms it into a Block-Hankel matrix
+#'   with sub-block size sN
+#'
+#' @param X numeric matrix. NxN matrix
+#' @param N Integer. Dimension of the NxN square matrix. Must be a multiple
+#'   of 'sN'.
+#' @param sN Integer. subblock size
+#' @param verbose bool. If set to 'TRUE' the routine becomes more verbose
+#'
+#' @family hankel
+#' @keywords internal
+#' @return
+#' nxn Hankel matrix
+#' 
 hankelise <- function(X, N = dim(X)[1], sN = 1, verbose=FALSE) {
   stopifnot(sN > 0 & N %% sN == 0)
   n <- N/sN
@@ -8,11 +26,6 @@ hankelise <- function(X, N = dim(X)[1], sN = 1, verbose=FALSE) {
     }
   }
   else {
-##    for(i in c(2:(2*N-1))) {
-##      for(k in c(0:(2*sN-1))) {
-##        Y[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )] = mean(X[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )])
-##      }
-    ##    }
     ii <- seq(1, N, sN)-1
     for(i in c(1:sN)) {
       for(j in c(1:sN)) {
@@ -109,26 +122,140 @@ cf2Hankel <- function(cf, N, sN, t0p1=1, Lcf, element.order, symmetrise=TRUE) {
   return(H)
 }
 
-isBlockHankel <- function(H, sN=1) {
-  blockHankel <- TRUE
-  N <- dim(H)[1]
-  neff <- N/sN
-  for(i in c(1:sN)) {
-    for(j in c(i+1, N)) {
-      if(j > N) break
-      blockHankel <- abs(H)
+#' @title Dykstra iterate a Hankel Matrix
+#'
+#' @description
+#'   t.b.w.
+#' 
+#' @param H NxN matrix
+#' @param N Integer. Dimension of H
+#' @param pmax Integer. Maximum of trafos applied per iteration. Default is '3'
+#'   which means one iteration consists of 'projectDensity', 'hankelise' and 'projectPSD'. 
+#' @param tol Numeric. tolerance threshold for denoising.
+#' @param niter Integer. maximal number of Dykstra denoising iterations.
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices.
+#' @param verbose Bool or integer. triggers verbose output in iteration on original data. 'TRUE' or '1'
+#'    is the lowest level, 'verbose=2' triggers more verbose output.
+#' @param cutNoise Bool. if set to 'TRUE' also the smallest positive eigenvalues
+#'   will be removed from the spectrum. In detail, all eigenvalues with magnitude
+#'   smaller than 'abs(min(eigenvalues))' will be removed. If 'FALSE', only negative
+#'   eigenvalues will be removed.
+#' @param finalHankelisation Bool. Apply one more 'hankelisation' as the final step
+#'   before conversion back to cf. Per default the last step would be the projection to a
+#'   positive semidefinite matrix.
+#' 
+#' @references "Denoising of imaginary time response functions with Hankel projections"
+#'       Yang Yu, Alexander F. Kemper, Chao Yang, Emanuel Gull,
+#'       https://doi.org/10.1103/PhysRevResearch.6.L032042
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' 
+#' @details
+#'   t.b.w.
+#' 
+#' @return
+#' Returns an NxN (Hankel) matrix
+#' 
+#' @family hankel
+#' @export
+dykstraIterateH <- function(H, N=dim(H)[1], submatrix.size=1, verbose=FALSE, tol=1.e-15, niter=10,
+                            pmax=3, cutNoise=TRUE, finalHankelisation=FALSE) {
+  ## build the zero timeslice matrix to fix
+  sN <- submatrix.size
+  D <- H[c(1:sN), c(1:sN)]
+  
+  X <- H
+  Xtmp <- X
+  Y <- array(0, dim=c(4, N, N))
+  normsqr <- 10000
+  m <- 0
+  while(normsqr > tol & m < niter) {
+    normsqrold <- normsqr
+    normsqr <- 0
+    for(p in c(1:pmax)) {
+      Xtmp <- X
+      if(p == 1) {
+        X <- projectDensity(X=Xtmp-Y[p,,], D=D, sN=sN, verbose=(verbose > 1))
+      }
+      if(p == 2) {
+        X <- hankelise(X=Xtmp-Y[p,,], verbose=(verbose > 1), sN=sN)
+      }
+      if(p == 3) {
+        X <- projectPSD(X=Xtmp-Y[p,,], verbose=(verbose > 1), cutNoise=cutNoise)
+      }
+      if(p == 4) {
+        X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=(verbose > 1))
+      }
+      Ytmp <- Y[p,,]
+      Y[p,,] <- X - (Xtmp - Ytmp)
+      normsqr <- normsqr + sum((Ytmp-Y[p,,])^2)
+      if(verbose > 1) cat(p, " ", normsqr, "\n")
+    }
+    m <- m+1
+    if(verbose) cat(m, "tol", normsqr, "correction", sum((Xtmp-X)^2), "\n")
+    if(m > niter & normsqr > 5*normsqrold) {
+      X <- Xtmp
+      break
     }
   }
-  return(blockHankel)
+  if(finalHankelisation) {
+    X <- hankelise(X=X, verbose=(verbose > 1), sN=sN)
+  }
+  return(X)
 }
 
-dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
+#' @title Dykstra Iterate a correlation function
+#'
+#' @description
+#'   t.b.w.
+#' 
+#' @param cf numeric vector containing the correlation function.
+#' @param N Integer. Dimension of H
+#' @param pmax Integer. Maximum of trafos applied per iteration. Default is '3'
+#'   which means one iteration consists of 'projectDensity', 'hankelise' and 'projectPSD'. 
+#' @param tol Numeric. tolerance threshold for denoising.
+#' @param niter Integer. maximal number of Dykstra denoising iterations.
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices.
+#' @param verbose Bool or integer. triggers verbose output in iteration on original data. 'TRUE' or '1'
+#'    is the lowest level, 'verbose=2' triggers more verbose output.
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
+#'    for example.
+#' @param Lcf Integer. Length of cf for a single correlation function. For cf a
+#'   correlator matrix it must be set to the length of each individual correlator.
+#' @param cutNoise Bool. if set to 'TRUE' also the smallest positive eigenvalues
+#'   will be removed from the spectrum. In detail, all eigenvalues with magnitude
+#'   smaller than 'abs(min(eigenvalues))' will be removed. If 'FALSE', only negative
+#'   eigenvalues will be removed.
+#' @param finalHankelisation Bool. Apply one more 'hankelisation' as the final step
+#'   before conversion back to cf. Per default the last step would be the projection to a
+#'   positive semidefinite matrix.
+#' @param t0 Integer. Initial timeslice to work on.
+#' 
+#' @references "Denoising of imaginary time response functions with Hankel projections"
+#'       Yang Yu, Alexander F. Kemper, Chao Yang, Emanuel Gull,
+#'       https://doi.org/10.1103/PhysRevResearch.6.L032042
+#' @author Carsten Urbach, \email{curbach@@gmx.de}
+#' 
+#' @details
+#'   t.b.w.
+#' 
+#' @return
+#' Returns an NxN (Hankel) matrix
+#' 
+#' @family hankel
+#' @export
+dykstraIteratecf <- function(cf, N, submatrix.size=1, verbose=FALSE, tol=1.e-15, niter=10,
                              element.order=c(1,2,3,4), Lcf=length(cf), pmax=3,
                              cutNoise=TRUE, finalHankelisation=FALSE,
                              t0=0) {
-
+  sN <- submatrix.size
   if(sN > 1 & is.null(Lcf)) {
-    stop("In dykstraIteration: for sN>1, Lcf needs to be an integer\n")
+    stop("In dykstraIteration: for submatrix.size>1, Lcf needs to be an integer\n")
   }
   stopifnot(length(element.order) >= sN^2)
   stopifnot(Lcf-t0*sN^2 >= 2*N/sN-1)
@@ -191,9 +318,8 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
 #' @param cf object of type \link{cf}, which needs to be bootstrapped before
 #' @param n Integer. dimension of Hankel matrix to be build from
 #'   2n-1 elements of cf. cf must have more than 2n-2 elements.
-#' @param N Integer. Maximal time index in correlation function to be used in
-#'                   Hankel matrix
-#' 
+#' @param N Integer. Length of cf for a single correlation function. For cf a
+#'   correlator matrix it must be set to the length of each individual correlator.
 #' @param tol numeric. tolerance threshold for denoising
 #' @param niter integer. maximal number of Dykstra denoising iterations
 #' @param submatrix.size Integer. Submatrix size to be used in build
@@ -253,15 +379,18 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   Neff <- 2*n-1
   stopifnot(Nmax>Neff)
 
-  cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
+  cf$cf0 <- dykstraIteratecf(cf$cf0, N=n, submatrix.size=submatrix.size, element.order=element.order,
+                             tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
   
   if(errortype=="dbboot" ) {
-    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
+    cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteratecf, N=n, submatrix.size=submatrix.size, element.order=element.order,
+                                    tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
                               perm=c(2,3,1))
     cf$cf.tsboot$t <- apply(cf$doubleboot$cf, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
   else {
-    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation))
+    cf$cf.tsboot$t <- t(apply(X=cf$cf.tsboot$t, MARGIN=1L, FUN=dykstraIteratecf, N=n, submatrix.size=submatrix.size, element.order=element.order,
+                              tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation))
   }
   if(errortype == "outlier-removal") {
     remove_outliers <- function(x, probs=c(0.25,0.75)) {

@@ -9,6 +9,7 @@
 #' @param z vector of length at least 2n-1
 #'
 #' @family hankel
+#' @keywords internal
 #' @return
 #' nxn Hankel matrix
 #' 
