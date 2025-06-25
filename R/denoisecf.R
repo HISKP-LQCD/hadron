@@ -254,7 +254,6 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   stopifnot(Nmax>Neff)
 
   cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
-  return(invisible(cf))
   
   if(errortype=="dbboot" ) {
     cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
