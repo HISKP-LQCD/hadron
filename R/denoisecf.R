@@ -8,9 +8,23 @@ hankelise <- function(X, N = dim(X)[1], sN = 1, verbose=FALSE) {
     }
   }
   else {
-    for(i in c(2:(2*N-1))) {
-      for(k in c(0:(2*sN-1))) {
-        Y[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )] = mean(X[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )])
+##    for(i in c(2:(2*N-1))) {
+##      for(k in c(0:(2*sN-1))) {
+##        Y[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )] = mean(X[(row(X) == i-col(X)) & ((((row(X)-1) %% sN) + ((col(X) -1) %% sN)) == k )])
+##      }
+    ##    }
+    ii <- seq(1, N, sN)-1
+    for(i in c(1:sN)) {
+      for(j in c(1:sN)) {
+        Y[ii+i, ii+j] <- hankelise(X=Y[ii+i, ii+j], sN=1)
+      }
+    }
+    for(i in c(1:sN)) {
+      j <- i+1
+      while(j <= sN) {
+        Y[ii+i, ii+j] <- 0.5*(Y[ii+i, ii+j] + Y[ii+j, ii+i])
+        Y[ii+j, ii+i] <- Y[ii+i, ii+j]
+        j <- j+1
       }
     }
   }
@@ -26,7 +40,6 @@ projectPSD <- function(X, N = dim(X)[1], verbose=FALSE, cutNoise=TRUE) {
   X.eigen <- eigen(X, symmetric=TRUE)
   ii <- which(X.eigen$values < 0)
   if(cutNoise) ii <- which(X.eigen$values < abs(min(X.eigen$values)))
-  tmp <- 
   nevsum <- sum(abs(X.eigen$values[ii]))
   if(verbose) {
     cat("PSD no removed evs:", length(ii), " min ", min(X.eigen$values), "max", max(X.eigen$values[ii]), "\n")
@@ -96,6 +109,19 @@ cf2Hankel <- function(cf, N, sN, t0p1=1, Lcf, element.order, symmetrise=TRUE) {
   return(H)
 }
 
+isBlockHankel <- function(H, sN=1) {
+  blockHankel <- TRUE
+  N <- dim(H)[1]
+  neff <- N/sN
+  for(i in c(1:sN)) {
+    for(j in c(i+1, N)) {
+      if(j > N) break
+      blockHankel <- abs(H)
+    }
+  }
+  return(blockHankel)
+}
+
 dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
                              element.order=c(1,2,3,4), Lcf=length(cf), pmax=3,
                              cutNoise=TRUE, finalHankelisation=FALSE,
@@ -108,7 +134,11 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
   stopifnot(Lcf-t0*sN^2 >= 2*N/sN-1)
   t0p1 <- t0+1
   H <- cf2Hankel(cf=cf, N=N, sN=sN, t0p1=t0p1, Lcf=Lcf, element.order=element.order)
-
+  if(verbose > 1) {
+    cat("Testing Hankel2cf and cf2Hankel being inverse operations\n")
+    tmp <- Hankel2cf(H=H, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)
+    cat(" -> sum of |cf - Hankel2cf(cf2Hankel(cf))| =", sum(abs(tmp-cf)), "\n")
+  }
   ## build the zero timeslice matrix to fix
   D <- H[c(1:sN), c(1:sN)]
 
@@ -123,21 +153,21 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
     for(p in c(1:pmax)) {
       Xtmp <- X
       if(p == 1) {
-        X <- projectDensity(X=Xtmp-Y[p,,], D=D, sN=sN, verbose=verbose)
+        X <- projectDensity(X=Xtmp-Y[p,,], D=D, sN=sN, verbose=(verbose > 1))
       }
       if(p == 2) {
-        X <- hankelise(X=Xtmp-Y[p,,], verbose=verbose, sN=sN)
+        X <- hankelise(X=Xtmp-Y[p,,], verbose=(verbose > 1), sN=sN)
       }
       if(p == 3) {
-        X <- projectPSD(X=Xtmp-Y[p,,], verbose=verbose, cutNoise=cutNoise)
+        X <- projectPSD(X=Xtmp-Y[p,,], verbose=(verbose > 1), cutNoise=cutNoise)
       }
       if(p == 4) {
-        X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=verbose)
+        X <- projectTopPSD(X=Xtmp-Y[p,,], sN=sN, verbose=(verbose > 1))
       }
       Ytmp <- Y[p,,]
       Y[p,,] <- X - (Xtmp - Ytmp)
       normsqr <- normsqr + sum((Ytmp-Y[p,,])^2)
-      if(verbose) cat(p, " ", normsqr, "\n")
+      if(verbose > 1) cat(p, " ", normsqr, "\n")
     }
     m <- m+1
     if(verbose) cat(m, "tol", normsqr, "correction", sum((Xtmp-X)^2), "\n")
@@ -147,9 +177,9 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
     }
   }
   if(finalHankelisation) {
-    X <- hankelise(X=X, verbose=verbose, sN=sN)
+    X <- hankelise(X=X, verbose=(verbose > 1), sN=sN)
   }
-  return(invisible(Hankel2cf(X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
+  return(invisible(Hankel2cf(H=X, Lcf=Lcf, sN=sN, t0p1=t0p1, element.order=element.order, cf.orig=cf)))
 }
 
 
@@ -185,7 +215,8 @@ dykstraIteration <- function(cf, N, sN=1, verbose=FALSE, tol=1.e-15, niter=10,
 #'    \code{matrix(cf[element.order], nrow=2)}.
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
-#' @param verbose bool. triggers verbose output in iteration on original data
+#' @param verbose bool or integer. triggers verbose output in iteration on original data. 'TRUE' or '1'
+#'    is the lowest level, 'verbose=2' triggers more verbose output.
 #' @param cutNoise bool. if set to 'TRUE' also the smallest positive eigenvalues
 #'   will be removed from the spectrum. In detail, all eigenvalues with magnitude
 #'   smaller than 'abs(min(eigenvalues))' will be removed. If 'FALSE', only negative
@@ -223,7 +254,8 @@ denoise.cf <- function(cf, n, N = (cf$Time/2+1), tol=1.e-15, niter=10, errortype
   stopifnot(Nmax>Neff)
 
   cf$cf0 <- dykstraIteration(cf$cf0, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, verbose=verbose, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation)
-
+  return(invisible(cf))
+  
   if(errortype=="dbboot" ) {
     cf$doubleboot$cf <- aperm(apply(X=cf$doubleboot$cf, MARGIN=c(1L, 2L), FUN=dykstraIteration, N=n, sN=submatrix.size, element.order=element.order, tol=tol, niter=niter, Lcf=N, cutNoise=cutNoise, finalHankelisation=finalHankelisation),
                               perm=c(2,3,1))
