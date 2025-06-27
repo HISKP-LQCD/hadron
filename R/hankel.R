@@ -198,7 +198,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   ii <- seq(from=1, to=n.full, by=submatrix.size)
   
   hankel.dim <- n.full/submatrix.size
-  cfii <- seq(from=t0p1, to=N-deltat, by=Delta)
+  cfii <- seq(from=t0p1, to=N, by=Delta)
 
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
@@ -210,6 +210,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     ## symmetrise
     cM0 <- 0.5*(cM0 + t(cM0))
   }
+  ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
 
   positive <- FALSE
   M <- matrix()
@@ -218,7 +219,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   if(truncation.dim >= n){
     cM1 <- cM0[ii0, ii0]
     cM2 <- cM0[ii.shift, ii0]
-    ev.cM <- eigen(cM0, symmetric=TRUE, only.values = TRUE)
     ev.cM1 <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
     positive <- all(ev.cM1$values > 0)
     if(positive) {
@@ -231,7 +231,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
       M <- try(qr.coef(qr.cM1, cM2), TRUE)
     }
   } else {
-    ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
     ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
     M.bar <- ev.cM$vectors[ii0,ii1] + ev.cM$vectors[ii.shift,ii1]
     M.00 <- t(M.bar) %*% ev.cM$vectors[ii0,ii1]
@@ -239,41 +238,21 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     M <- solve(M.00) %*% M.0t
   }
 
-  retl <- n+n*submatrix.size
-  if(only.values) {
-    retl <- n
-  }
-  if(inherits(M, "try-error")) {
+  if(!inherits(M, "try-error")) {
+    M.eigen <- try(eigen(M, symmetric=positive, only.values=TRUE), TRUE)
+    if(!inherits(M.eigen, "try-error")) {
+      if(only.values) return(invisible(M.eigen$values))
+      return(invisible(c(M.eigen$values, rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
+    } else {
+      warning("eigen failed in gevp.hankel\n")
+    }
+  } else {
     warning("QR decomposition failed in gevp.hankel\n")
-    return(invisible(rep(NA, times=retl)))
   }
 
-  M.eigen <- try(eigen(M, symmetric=positive, only.values=only.values), TRUE)
-  if(inherits(M.eigen, "try-error")) {
-    warning("eigen failed in gevp.hankel\n")
-    return(invisible(rep(NA, times=retl)))
-  }
-  if(only.values) return(invisible(M.eigen$values))
-  return(invisible(c(M.eigen$values, rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
-  ## if eigenvectors are being returned, we have to prepare appropriately
-  ## if Cholesky was used, first multiply with invL
-  if(positive) {
-    M.eigen$vectors <- invL %*% M.eigen$vectors
-  }
-  ## now multiply with H(t) stored in cM2
-  ## and divide by the normlisation factor
-  ## thereafter we should have elements of the chi-vectors, see arXiv:2004.10472
-  tmp <- cM2 %*% M.eigen$vectors
-  ## compute only the diagonal elements
-  ## i.e. it would be: a_k <- diag(t(M.eigen$vectors) %*% tmp)
-  ## but like this we compute only the diagonal elements
-  a_k <- colSums(M.eigen$vectors * tmp)
-  ## avoid any negative values in a_k
-  a_k[abs(Im(a_k)) > 1.e-16] <- NA
-  a_k <- Re(a_k)
-  a_k[a_k < 0] <- NA
-  return(invisible(c(M.eigen$values, as.vector(t(t(tmp[c(1:submatrix.size),])/sqrt(a_k))))))
-  ##return(invisible(c(M.eigen$values, as.vector(t(t(tmp)/sqrt(a_k))))))
+  retl <- min(n, truncation.dim)
+  if(only.values) return(invisible(rep(NA, retl)))
+  return(invisible(c(rep(NA, retl), rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
 }
 
 #' @title GEVP method based on Hankel matrices. 
