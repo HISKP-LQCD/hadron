@@ -618,7 +618,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
 
   tmpdbboot <- array()
   for(n in c(1:n.max)) {
-    n.end <- n*pgevm$submatrix.size
+    n.end <- min(n*pgevm$submatrix.size, pgevm$truncation.dim)
     if(id > n.end) next
     ## this fitering with ii is needed, because also eigenvectors are stored in evs
     ii <- c(1:n.end)
