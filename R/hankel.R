@@ -186,7 +186,7 @@ summary.hankel_summed <- function(object, ...) {
 gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
                         submatrix.size=1, element.order=c(1,2,3,4),
                         Delta=1, only.values=FALSE,
-                        custom.indices=NA, effTime=N) {
+                        custom.indices=NA, effTime=N, error.weights=FALSE) {
   stopifnot((t0 >= 0) && (n > 0) && (N > 0) && (Delta > 0) && (submatrix.size > 0))
   stopifnot((t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat) <= N)
   stopifnot(length(element.order) >= submatrix.size^2)
@@ -196,6 +196,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   n.full <- n + deltat*submatrix.size
   cM0 <- array(NA, dim=c(n.full, n.full))
   ii <- seq(from=1, to=n.full, by=submatrix.size)
+
+  stopifnot(length(error.weights) == 1 || length(error.weights) == n.full || length(error.weights) == length(cf))
   
   hankel.dim <- n.full/submatrix.size
   cfii <- seq(from=t0p1, to=N, by=Delta)
@@ -210,7 +212,17 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     ## symmetrise
     cM0 <- 0.5*(cM0 + t(cM0))
   }
+  if(any(error.weights)){
+    if(length(error.weights) == length(cf)){
+      error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)]]
+      error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
+    }
+    cM0 <- t(error.weights * t(error.weights * cM0))
+  }
   ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
+  if(any(error.weights)){
+    ev.cM$vectors <- 1/error.weights * ev.cM$vectors
+  }
 
   positive <- FALSE
   M <- matrix()
@@ -232,9 +244,15 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     }
   } else {
     ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
+    if(any(error.weights)){
+      chi <- error.weights[ii0] + error.weights[ii.shift]
+    } else {
+      chi <- 1
+    }
     M.bar <- ev.cM$vectors[ii0,ii1] + ev.cM$vectors[ii.shift,ii1]
-    M.00 <- t(M.bar) %*% ev.cM$vectors[ii0,ii1]
-    M.0t <- t(M.bar) %*% ev.cM$vectors[ii.shift,ii1]
+    M.bar <- chi * M.bar
+    M.00 <- t(M.bar) %*% (chi * ev.cM$vectors[ii0,ii1])
+    M.0t <- t(M.bar) %*% (chi * ev.cM$vectors[ii.shift,ii1])
     M <- solve(M.00) %*% M.0t
   }
 
@@ -422,12 +440,16 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
                             n.max = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
                             submatrix.size=1, element.order=1,
-                            truncation.dim = n.max*submatrix.size,
+                            truncation.dim = n.max*submatrix.size, error.weights=FALSE,
                             ndep.Delta=FALSE, block.Delta=FALSE, custom.indices=NA) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   stopifnot(!ndep.Delta || !block.Delta)
   dbboot <- inherits(cf, 'cf_dbboot')
+
+  if(length(error.weights) == 1 & all(error.weights)) {
+    error.weights <- 1/cf$tsboot.se
+  }
 
   ## we need the inter-correlator spacing in 'cf'
   ## for gevp.hankel, because 'N' can be different now
@@ -484,23 +506,23 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
     ii <- c(1:(eff.dim+(n+deltat)*submatrix.size))
     evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
                               n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                              submatrix.size=submatrix.size, element.order=element.order,
+                              submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
                               Delta=Deltan, custom.indices=custom.indicesn)
     evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=gevp.hankel, t0=t0,
                                    n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                   submatrix.size=submatrix.size, element.order=element.order,
+                                   submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
                                    Delta=Deltan, custom.indices=custom.indicesn))
     if(dbboot) {
       if(n==1) {
         evs.dbboot[,,n,c(1:(eff.dim))] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                         n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                        submatrix.size=submatrix.size, element.order=element.order,
+                                        submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
                                         Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE)
       }
       else {
         evs.dbboot[,,n,c(1:(eff.dim))] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
                                               n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                              submatrix.size=submatrix.size, element.order=element.order,
+                                              submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
                                               Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE),
                                         perm=c(2,3,1))
       }
@@ -519,6 +541,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
               truncation.dim=truncation.dim,
               submatrix.size=submatrix.size,
               element.order=element.order,
+              error.weights=error.weights,
               Delta=Delta,
               Deltaofn=Deltaofn,
               ndep.Delta=ndep.Delta,
