@@ -214,7 +214,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   }
   if(any(error.weights)){
     if(length(error.weights) == length(cf)){
-      error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)]]
+      error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
       error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
     }
     cM0 <- t(error.weights * t(error.weights * cM0))
