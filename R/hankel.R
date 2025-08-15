@@ -198,6 +198,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
   ii <- seq(from=1, to=n.full, by=submatrix.size)
 
   stopifnot(length(error.weights) == 1 || length(error.weights) == n.full || length(error.weights) == length(cf))
+  if(length(error.weights) == length(cf)) full.errors = TRUE
+  else full.errors = FALSE
   
   hankel.dim <- n.full/submatrix.size
   cfii <- seq(from=t0p1, to=N, by=Delta)
@@ -212,17 +214,19 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     ## symmetrise
     cM0 <- 0.5*(cM0 + t(cM0))
   }
+  inner.weights <- 1
   if(any(error.weights)){
-    if(length(error.weights) == length(cf)){
+    inner.weights <- error.weights
+    if(full.errors){
       error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
       error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
+      inner.weights <- sqrt(error.weights) / c(sapply(1:hankel.dim, function(k){ rep((hankel.dim - abs(hankel.dim+1-2*k))^(1/4), submatrix.size) }))
     }
-    cM0 <- t(error.weights * t(error.weights * cM0))
+    cM0 <- t(inner.weights * t(inner.weights * cM0))
   }
   ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
-  if(any(error.weights)){
-    ev.cM$vectors <- 1/error.weights * ev.cM$vectors
-  }
+  cM0 <- t(1/inner.weights * t(1/inner.weights * cM0))
+  ev.cM$vectors <- 1/inner.weights * ev.cM$vectors
 
   positive <- FALSE
   M <- matrix()
@@ -244,11 +248,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     }
   } else {
     ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
-    if(any(error.weights)){
-      chi <- error.weights[ii0] + error.weights[ii.shift]
-    } else {
-      chi <- 1
-    }
+    chi <- sqrt(inner.weights[ii0]^2 + inner.weights[ii.shift]^2)
     M.bar <- ev.cM$vectors[ii0,ii1] + ev.cM$vectors[ii.shift,ii1]
     M.bar <- chi * M.bar
     M.00 <- t(M.bar) %*% (chi * ev.cM$vectors[ii0,ii1])
