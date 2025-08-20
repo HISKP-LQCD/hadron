@@ -143,6 +143,102 @@ summary.hankel_summed <- function(object, ...) {
 }
 
 #' @title GEVP method based on Hankel matrices.
+#'
+#' @description
+#' Alternative method to determine energy levels from correlation
+#'   matrices. A so-called Hankel matrix is generated from an input
+#'   \link{cf} object and a generalised eigenvalue problem is solved
+#'   then. This is the function to call. It will perform a bootstrap
+#'   analysis.
+#'
+#' @param cf object of type \link{cf}
+#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
+#'    \code{Time/2-n}. Default is 1. Used when \code{t0fixed=TRUE}.
+#' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1. Used
+#'   \code{t0fixed=FALSE}
+#' @param submatrix.size Integer. Submatrix size to be used in build
+#'   of Hankel matrices. Submatrix.size > 1 is experimental.
+#' @param n Integer. Size of the Hankel matrices to generate
+#' @param N Integer. Maximal time index in correlation function to be used in
+#'                   Hankel matrix
+#' @param t0fixed Integer. If set to \code{TRUE}, keep t0 fixed and vary deltat, otherwise
+#'    keep deltat fixed and vary t0.
+#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
+#'    correlators into the correlator
+#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
+#'    \code{matrix(cf[element.order], nrow=2)}.
+#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
+#'    for example.
+#' @param Delta integer. Delta is the time shift used in the Hankel matrix.
+#' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
+#'    'Delta' and 't0'
+#'
+#' @details
+#' See `vignette(name="hankel", package="hadron")`
+#'
+#' @return
+#' List object of class "hankel". The eigenvalues are stored in a
+#' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
+#' time \code{t0} is stored as \code{reference_time} in the returned list.
+#'
+#' @family hankel
+#' @export
+#' @examples
+#'
+#' data(correlatormatrix)
+#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
+#' t0 <- 4
+#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
+#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
+#' pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
+#' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
+#' plot(hpc1, log="y")
+#' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
+bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
+                             t0fixed=TRUE, deltat=1, Delta=1, custom.indices=NA,
+                             submatrix.size=1, element.order=1) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  stopifnot(inherits(cf, 'cf_boot'))
+  stopifnot((n %% submatrix.size) == 0)
+}
+
+solve.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
+                                 truncation.dim, error.weights, symmetric) {
+  n.full <- n + deltat*submatrix.size
+  ii0 <- 1:n
+  ii.shift <- ii0 + deltat*submatrix.size
+  ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
+
+  M.0 <- ev.cM$vectors[ii0,ii1]
+  M.t <- ev.cM$vectors[ii.shift,ii1]
+  if(symmetric){
+    chi <- sqrt(error.weights[ii0]^2 + error.weights[ii.shift]^2)
+    M.bar <- M.0 + M.t
+  } else {
+    chi <- error.weights[ii.shift]
+    M.bar <- M.t
+  }
+  M.bar <- chi * M.bar
+  M.0 <- t(M.bar) %*% (chi * M.0)
+  M.t <- t(M.bar) %*% (chi * M.t)
+  M.inv <- try(solve(M.0), TRUE)
+
+  if(!inherits(M.inv, "try-error")) {
+    M <- M.inv %*% M.t
+    M.eigen <- try(eigen(M, symmetric=FALSE, only.values=TRUE), TRUE)
+    if(!inherits(M.eigen, "try-error")) {
+      return(invisible(M.eigen$values))
+    } else {
+      warning("eigen failed in gevp.hankel\n")
+    }
+  } else {
+    warning("inversion failed in gevp.hankel\n")
+  }
+
+  return(invisible(rep(NA, truncation.dim)))
+}
+
+#' @title GEVP method based on Hankel matrices.
 #' 
 #' @description
 #' Alternative method to determine energy levels from correlation
@@ -183,25 +279,25 @@ summary.hankel_summed <- function(object, ...) {
 #' A vector of NAs of \code{n + n^2} or \code{n} is returned in case the QR decomposition fails.
 #' 
 #' @family hankel
-gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
+gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                         submatrix.size=1, element.order=c(1,2,3,4),
-                        Delta=1, only.values=FALSE,
-                        custom.indices=NA, effTime=N, error.weights=FALSE) {
-  stopifnot((t0 >= 0) && (n > 0) && (N > 0) && (Delta > 0) && (submatrix.size > 0))
+                        Delta=1, get.coeffs=FALSE,
+                        effTime=N, error.weights=FALSE, symmetric=TRUE) {
+  stopifnot((t0 >= 0) && (n > 0) && (N > 0) && (Delta > 0) && (submatrix.size > 0) && (max.truncation <= n))
   stopifnot((t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat) <= N)
   stopifnot(length(element.order) >= submatrix.size^2)
-  t0p1 <- t0+1
-  cM1 <- array(NA, dim=c(n, n))
-  cM2 <- cM1
+
   n.full <- n + deltat*submatrix.size
-  cM0 <- array(NA, dim=c(n.full, n.full))
-  ii <- seq(from=1, to=n.full, by=submatrix.size)
 
   stopifnot(length(error.weights) == 1 || length(error.weights) == n.full || length(error.weights) == length(cf))
-  if(length(error.weights) == length(cf)) full.errors = TRUE
+  if(length(error.weights) == length(cf) & all(error.weights > 0)) full.errors = TRUE
   else full.errors = FALSE
-  
+
   hankel.dim <- n.full/submatrix.size
+  cM0 <- array(NA, dim=c(n.full, n.full))
+  ii <- seq(from=1, to=n.full, by=submatrix.size)
+  
+  t0p1 <- t0+1
   cfii <- seq(from=t0p1, to=N, by=Delta)
 
   for(i in c(1:submatrix.size)) {
@@ -214,181 +310,48 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, truncation.dim=n,
     ## symmetrise
     cM0 <- 0.5*(cM0 + t(cM0))
   }
-  inner.weights <- 1
-  if(any(error.weights)){
-    inner.weights <- error.weights
-    if(full.errors){
-      error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
-      error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
-      inner.weights <- sqrt(error.weights) / c(sapply(1:hankel.dim, function(k){ rep((hankel.dim - abs(hankel.dim+1-2*k))^(1/4), submatrix.size) }))
-    }
-    cM0 <- t(inner.weights * t(inner.weights * cM0))
+
+  if(!any(error.weights)){
+    error.weights <- rep(1, n.full)
   }
+  inner.weights <- error.weights
+  if(full.errors){
+    error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
+    error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
+    inner.weights <- error.weights / c(sapply(1:hankel.dim, function(k){ rep((hankel.dim - abs(hankel.dim+1-2*k))^(1/4), submatrix.size) }))
+  }
+
+  cM0 <- t(inner.weights * t(inner.weights * cM0))
   ev.cM <- eigen(cM0, symmetric=TRUE, only.values = FALSE)
-  cM0 <- t(1/inner.weights * t(1/inner.weights * cM0))
   ev.cM$vectors <- 1/inner.weights * ev.cM$vectors
 
-  positive <- FALSE
-  M <- matrix()
-  ii0 <- 1:n
-  ii.shift <- ii0 + deltat*submatrix.size
-  if(truncation.dim >= n){
-    cM1 <- cM0[ii0, ii0]
-    cM2 <- cM0[ii.shift, ii0]
-    ev.cM1 <- eigen(cM1, symmetric=TRUE, only.values = TRUE)
-    positive <- all(ev.cM1$values > 0)
-    if(positive) {
-      ## compute Cholesky factorisation
-      invL <- solve(chol(cM1))
-      M <- t(invL) %*% cM2 %*% invL
-    } else{
-      ## QR decomposition
-      qr.cM1 <- qr(cM1)
-      M <- try(qr.coef(qr.cM1, cM2), TRUE)
-    }
-  } else {
-    ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
-    chi <- sqrt(inner.weights[ii0]^2 + inner.weights[ii.shift]^2)
-    M.bar <- ev.cM$vectors[ii0,ii1] + ev.cM$vectors[ii.shift,ii1]
-    M.bar <- chi * M.bar
-    M.00 <- t(M.bar) %*% (chi * ev.cM$vectors[ii0,ii1])
-    M.0t <- t(M.bar) %*% (chi * ev.cM$vectors[ii.shift,ii1])
-    M <- solve(M.00) %*% M.0t
+  spectrum <- array(NA, dim=c(max.truncation, max.truncation))
+  for(truncation.dim in 1:max.truncation){
+    spectrum[truncation.dim, 1:truncation.dim] <-
+      solve.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
+                           submatrix.size=submatrix.size,
+                           truncation.dim=truncation.dim,
+                           error.weights=error.weights,
+                           symmetric=symmetric)
   }
 
-  if(!inherits(M, "try-error")) {
-    M.eigen <- try(eigen(M, symmetric=positive, only.values=TRUE), TRUE)
-    if(!inherits(M.eigen, "try-error")) {
-      if(only.values) return(invisible(M.eigen$values))
-      return(invisible(c(M.eigen$values, rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
-    } else {
-      warning("eigen failed in gevp.hankel\n")
-    }
-  } else {
-    warning("QR decomposition failed in gevp.hankel\n")
-  }
+  res <- list(spectrum=spectrum, singular.values=rev(sort_by(ev.cM$values, abs(ev.cM$values))))
 
-  retl <- min(n, truncation.dim)
-  if(only.values) return(invisible(rep(NA, retl)))
-  return(invisible(c(rep(NA, retl), rev(sort_by(ev.cM$values, abs(ev.cM$values))))))
-}
+  #if(get.coeffs) {
+  #  coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
+  #  for(truncation.dim in 1:max.truncation){
+  #    #TODO
+  #    coefficients[truncation.dim, 1:truncation.dim, ] <-
+  #      coeffs.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
+  #                           submatrix.size=submatrix.size,
+  #                           truncation.dim=truncation.dim,
+  #                           error.weights=error.weights,
+  #                           symmetric=symmetric)
+  #  }
+  #  res$coefficients <- coefficients
+  #}
 
-#' @title GEVP method based on Hankel matrices. 
-#' 
-#' @description
-#' Alternative method to determine energy levels from correlation
-#'   matrices. A so-called Hankel matrix is generated from an input
-#'   \link{cf} object and a generalised eigenvalue problem is solved
-#'   then. This is the function to call. It will perform a bootstrap
-#'   analysis. 
-#'
-#' @param cf object of type \link{cf}
-#' @param t0 Integer. Initial time value of the GEVP, must be in between 0 and
-#'    \code{Time/2-n}. Default is 1. Used when \code{t0fixed=TRUE}.
-#' @param deltat Integer. value of deltat used in the hankel GEVP. Default is 1. Used
-#'   \code{t0fixed=FALSE}
-#' @param submatrix.size Integer. Submatrix size to be used in build
-#'   of Hankel matrices. Submatrix.size > 1 is experimental.
-#' @param n Integer. Size of the Hankel matrices to generate
-#' @param N Integer. Maximal time index in correlation function to be used in
-#'                   Hankel matrix
-#' @param t0fixed Integer. If set to \code{TRUE}, keep t0 fixed and vary deltat, otherwise
-#'    keep deltat fixed and vary t0.
-#' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
-#'    correlators into the correlator
-#'    matrix for submatrix.size > 1. \code{element.order=c(1,2,3,4)} leads to a matrix
-#'    \code{matrix(cf[element.order], nrow=2)}.
-#'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
-#'    for example.
-#' @param Delta integer. Delta is the time shift used in the Hankel matrix.
-#' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
-#'    'Delta' and 't0'
-#' 
-#' @details
-#' See `vignette(name="hankel", package="hadron")`
-#'
-#' @return
-#' List object of class "hankel". The eigenvalues are stored in a
-#' numeric vector \code{t0}, the corresonding samples in \code{t}. The reference input
-#' time \code{t0} is stored as \code{reference_time} in the returned list.
-#'
-#' @family hankel
-#' @export
-#' @examples
-#'
-#' data(correlatormatrix)
-#' correlatormatrix <- bootstrap.cf(correlatormatrix, boot.R=99, boot.l=1, seed=132435)
-#' t0 <- 4
-#' correlatormatrix.gevp <- bootstrap.gevp(cf=correlatormatrix, t0=t0, element.order=c(1,2,3,4))
-#' pc1 <- gevp2cf(gevp=correlatormatrix.gevp, id=1)
-#' pc1.hankel <- bootstrap.hankel(cf=pc1, t0=1, n=2)
-#' hpc1 <- hankel2cf(hankel=pc1.hankel, id=1)
-#' plot(hpc1, log="y")
-#' heffectivemass1 <- hankel2effectivemass(hankel=pc1.hankel, id=1)
-bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
-                             t0fixed=TRUE, deltat=1, Delta=1, custom.indices=NA,
-                             submatrix.size=1, element.order=1) {
-  stopifnot(inherits(cf, 'cf_meta'))
-  stopifnot(inherits(cf, 'cf_boot'))
-  stopifnot((n %% submatrix.size) == 0)
-  if(!t0fixed) {
-    stopifnot(deltat > 0)
-  }
-  else {
-    stopifnot(t0 > 0)
-  }
-  ## R/Fortran index convention
-  t0p1 <- t0 + 1
-  boot.R <- cf$boot.R
-  evs <- array(NA, dim=c(N, n + n^2/submatrix.size))
-  evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2/submatrix.size))
-
-  if(t0fixed) {
-    for(deltat in c(1:(N-1-t0-2*(n/submatrix.size-1)*Delta))) {
-      evs[deltat+t0p1, ] <- gevp.hankel(cf$cf0, t0=t0,
-                                        n=n, N=N, deltat=deltat,
-                                        submatrix.size=submatrix.size, element.order=element.order,
-                                        Delta=Delta)
-      
-      evs.tsboot[, deltat+t0p1, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t0,
-                                             n=n, N=N, deltat=deltat,
-                                             submatrix.size=submatrix.size, element.order=element.order,
-                                             Delta=Delta))
-    }
-  }
-  else {
-    for(t02 in c(1:(N-1-deltat-2*(n/submatrix.size-1)*Delta))) {
-      evs[t02, ] <- gevp.hankel(cf$cf0, t0=t02,
-                                n=n, N=N, deltat=deltat,
-                                submatrix.size=submatrix.size, element.order=element.order,
-                                Delta=Delta)
-      
-      evs.tsboot[, t02, ] <- t(apply(cf$cf.tsboot$t, 1, gevp.hankel, t0=t02,
-                                     n=n, N=N, deltat=deltat,
-                                     submatrix.size=submatrix.size, element.order=element.order,
-                                     Delta=Delta))
-    }
-  }
-  ret <- list(cf=cf,
-              t0=evs[ ,c(1:n), drop=FALSE],
-              t=evs.tsboot[ ,, c(1:n), drop=FALSE],
-              vectors=evs[ ,c((n+1):(n+n^2/submatrix.size)), drop=FALSE],
-              vectors.tsboot=evs.tsboot[ ,, c((n+1):(n+n^2/submatrix.size)), drop=FALSE],
-              boot.R=boot.R,
-              boot.l=cf$boot.l,
-              seed=cf$seed,
-              reference_time=t0,
-              t0fixed=t0fixed,
-              submatrix.size=submatrix.size,
-              element.order=element.order,
-              Delta=Delta,
-              n=n,
-              N=N)
-  if(!t0fixed) {
-    ret$reference_time=deltat
-  }
-  class(ret) <- c("hankel", class(ret))
-  return(invisible(ret))
+  return(res)
 }
 
 #' @title PGEVM 
@@ -407,7 +370,7 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #'   \code{t0fixed=FALSE}
 #' @param submatrix.size Integer. Submatrix size to be used in build
 #'   of Hankel matrices. Submatrix.size > 1 is experimental.
-#' @param n.max Integer. Maximal Size of the Hankel matrices to generate
+#' @param n Integer. Maximal Size of the Hankel matrices to generate
 #' @param N Integer. Maximal time index in correlation function to be used in
 #'                   Hankel matrix
 #' @param element.order Integer vector. specifies how to fit the \code{n} linearly ordered single
@@ -417,12 +380,6 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #'    Matrix elements can occur multiple times, such as \code{c(1,2,2,3)} for the symmetric case,
 #'    for example.
 #' @param Delta integer. Delta is the time shift used in the Hankel matrix.
-#' @param ndep.Delta boolean. If set to 'TRUE', Delta will be chosen 'n' dependent to cover the largest
-#'   possible range in the correlator.
-#' @param block.Delta boolean. If set to 'TRUE', the Hankel matrices will be built as connected blocks.
-#'   Should only be used for symmetric correlators, incompatible with \code{ndep.Delta}.
-#' @param custom.indices integer. Vector of indices to be using in cf instead of computing them from
-#'    'Delta' and 't0'
 #' 
 #' @references Ostmeyer, Sen, Urbach, Eur.Phys.J.A 61 (2025) 2, 26,
 #'   arXiv:2411.14981, https://doi.org/10.1140/epja/s10050-025-01495-8
@@ -437,18 +394,18 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
 #'
 #' @family hankel
 #' @export
-bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
-                            n.max = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
+bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
+                            n = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
                             submatrix.size=1, element.order=1,
-                            truncation.dim = n.max*submatrix.size, error.weights=FALSE,
-                            ndep.Delta=FALSE, block.Delta=FALSE, custom.indices=NA) {
+                            max.truncation = n*submatrix.size, error.weights=FALSE, symmetric=cf$symmetrised,
+                            eps=1e-15) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
-  stopifnot(!ndep.Delta || !block.Delta)
   dbboot <- inherits(cf, 'cf_dbboot')
+  max.truncation <- min(max.truncation, n*submatrix.size)
 
   if(length(error.weights) == 1 & all(error.weights)) {
-    error.weights <- 1/cf$tsboot.se
+    error.weights <- 1/sqrt(cf$tsboot.se)
   }
 
   ## we need the inter-correlator spacing in 'cf'
@@ -464,93 +421,54 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 0,
   ## the last correlator element entering H(t+delta t) is
   ## C(t0+delta t + (2n-1)Delta)
   ## the last available element is N-1
-  ## thus see n.max in argument list
-  if(n.max < 1) n.max <- 1
+  ## thus see n in argument list
+  if(n < 1) n <- 1
 
-  evs <- array(NA, dim=c(n.max, n.max*submatrix.size + n.max*submatrix.size^2))
-  evs.tsboot <- array(NA, dim=c(boot.R, n.max, n.max*submatrix.size + n.max*submatrix.size^2))
   evs.dbboot <- array()
-  Deltaofn <- c()
-  Deltan <- 1
-  custom.indicesn <- custom.indices
   dbboot.R <- c()
   if(dbboot) {
     dbboot.R <- cf$doubleboot$dbboot.R
-    evs.dbboot <- array(NA, dim=c(boot.R, dbboot.R, n.max, n.max*submatrix.size))
   }
-  for(n in c(1:n.max)) {
-    if(ndep.Delta) {
-      if(n > 1) {
-        Deltan <- floor((N-1-t0-deltat)/(2*n-2))
-      } else {
-        Deltan <- N-1-t0-deltat
-      }
-      if(Deltan == 1) {
-        n <- n.max
-      }
-      Deltaofn[n] <- Deltan
-    }
-    else {
-      Deltan <- Delta
-    }
-    if(block.Delta) {
-      if(2*n > n.max) break
-      n.end <- floor(((N - 1 - t0 - deltat)/Delta)/2 + 1)
-      custom.indicesn <- c(1:n, (n.end-n+1):(n.end))
-      n <- 2*n
-    }
-    if(all(!is.na(custom.indices))) {
-      custom.indicesn <- sort(custom.indices[1:n])
-    }
-    eff.dim <- min(n*submatrix.size, truncation.dim)
-    ii <- c(1:(eff.dim+(n+deltat)*submatrix.size))
-    evs[n, ii] <- gevp.hankel(cf$cf0, t0=t0,
-                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                              submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
-                              Delta=Deltan, custom.indices=custom.indicesn)
-    evs.tsboot[, n, ii] <- t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=gevp.hankel, t0=t0,
-                                   n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                   submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
-                                   Delta=Deltan, custom.indices=custom.indicesn))
-    if(dbboot) {
-      if(n==1) {
-        evs.dbboot[,,n,c(1:(eff.dim))] <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
-                                        n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                        submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
-                                        Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE)
-      }
-      else {
-        evs.dbboot[,,n,c(1:(eff.dim))] <- aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=gevp.hankel, t0=t0,
-                                              n=n*submatrix.size, N=N, deltat=deltat, effTime=effTime, truncation.dim=truncation.dim,
-                                              submatrix.size=submatrix.size, element.order=element.order, error.weights=error.weights,
-                                              Delta=Deltan, custom.indices=custom.indicesn, only.values=TRUE),
-                                        perm=c(2,3,1))
-      }
-    }
-    if(ndep.Delta & n == n.max) break
+
+  evs <- gevp.hankel(cf$cf0, t0=t0, deltat=deltat, Delta=Delta, get.coeffs=TRUE,
+                     n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                     submatrix.size=submatrix.size, element.order=element.order,
+                     effTime=effTime, error.weights=error.weights, symmetric=symmetric)
+  evs.tsboot <- array(t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=function(cf0, ...) gevp.hankel(cf0, ...)$spectrum,
+                              t0=t0, deltat=deltat, Delta=Delta, get.coeffs=FALSE,
+                              n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                              submatrix.size=submatrix.size, element.order=element.order,
+                              effTime=effTime, error.weights=error.weights, symmetric=symmetric)),
+                      dim=c(boot.R, max.truncation, max.truncation))
+  if(dbboot) {
+    evs.dbboot <- array(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=function(cf0, ...) gevp.hankel(cf0, ...)$spectrum,
+                                    t0=t0, deltat=deltat, Delta=Delta, get.coeffs=FALSE,
+                                    n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                                    submatrix.size=submatrix.size, element.order=element.order,
+                                    effTime=effTime, error.weights=error.weights, symmetric=symmetric),
+                              perm=c(2,3,1)), dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
   }
-  if(ndep.Delta) Delta <- NA
+
   ret <- list(cf=cf,
-              evs=evs,
+              evs=evs$spectrum,
               evs.tsboot=evs.tsboot,
               evs.dbboot=evs.dbboot,
+              singular.values=evs$singular.values,
+              coefficients=evs$coefficients,
+              opt.idx=min(which(evs$singular.values < eps) - 1, max.truncation),
+              eps=eps,
               boot.R=boot.R,
               boot.l=cf$boot.l,
               seed=cf$seed,
               t0=t0,
-              truncation.dim=truncation.dim,
+              max.truncation=max.truncation,
               submatrix.size=submatrix.size,
               element.order=element.order,
               error.weights=error.weights,
               Delta=Delta,
-              Deltaofn=Deltaofn,
-              ndep.Delta=ndep.Delta,
-              block.Delta=block.Delta,
-              custom.indices=custom.indices,
               deltat=deltat,
-              n=c(1:n.max),
+              n=c(1:max.truncation),
               N=N)
-  if(block.Delta) ret$n <- 2*c(1:(floor(n.max/2)))
   class(ret) <- c("PGEVM", class(ret))
   return(invisible(ret))
 }
@@ -599,8 +517,9 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   stopifnot(length(range) == 2)
   if(missing(n.max)) n.max <- max(pgevm$n)
   n.max <- min(n.max, max(pgevm$n))
-  deltat <- pgevm$deltat
   if(is.null(pgevm$ndep.Delta)) pgevm$ndep.Delta <- FALSE
+  if(is.null(pgevm$block.Delta)) pgevm$block.Delta <- FALSE
+  deltat <- pgevm$deltat
   dbboot <- inherits(pgevm$cf, 'cf_dbboot')
   if(errortype == "dbboot") {
     if(!dbboot) cat("errortype dbboot needs a doubly bootstrapped cf\n")
@@ -641,9 +560,10 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
 
   tmpdbboot <- array()
   for(n in c(1:n.max)) {
-    n.end <- min(n*pgevm$submatrix.size, pgevm$truncation.dim)
+    if(is.null(pgevm$max.truncation)) n.end <- n*pgevm$submatrix.size
+    else n.end <- min(n, pgevm$max.truncation)
     if(id > n.end) next
-    ## this fitering with ii is needed, because also eigenvectors are stored in evs
+    ## this filtering with ii is needed, because also eigenvectors are stored in evs
     ii <- c(1:n.end)
     tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps)
     if(all(is.na(tmp))) next
