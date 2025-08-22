@@ -238,6 +238,44 @@ solve.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
   return(invisible(rep(NA, truncation.dim)))
 }
 
+coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.size,
+                                 truncation.dim, error.weights) {
+  times <- (t0 + (0:(nrow(cf.mat)-1))*Delta)/deltat
+  t.min <- min(times)
+  t.max <- max(times)
+  vandermonde <- outer(times, lambda, function(t, a) ifelse(abs(a) < 1, a^(t-t.min), a^(t-t.max)))
+  scale <- ifelse(abs(lambda) < 1, as.complex(lambda)^(-t.min/2), as.complex(lambda)^(-t.max/2))
+
+  mat.coeffs <- sapply(1:submatrix.size^2, function(i) {
+                         w <- error.weights[, i]^2
+                         M.i <- Conj(t(vandermonde)) %*% (w * cf.mat[, i])
+                         M.v <- Conj(t(vandermonde)) %*% (w * vandermonde)
+                         M.inv <- try(solve(M.v), TRUE)
+                         if(!inherits(M.inv, "try-error")) {
+                           return(M.inv %*% M.i)
+                         } else {
+                           warning("inversion failed in coeffs.truncated.gevp\n")
+                         }
+                         return(invisible(rep(NA, length(lambda))))
+                       })
+  if(truncation.dim == 1) mat.coeffs <- t(mat.coeffs)
+
+  vec.coefs <- apply(as.matrix(mat.coeffs), 1, function(M) {
+                       M.mat <- matrix(M, nrow=submatrix.size)
+                       M.mat <- 0.5 * (M.mat + Conj(t(M.mat)))
+                       M.eigen <- try(eigen(M.mat, symmetric=TRUE), TRUE)
+                         if(!inherits(M.eigen, "try-error")) {
+                           return(M.eigen$vectors[,1] * sqrt(as.complex(M.eigen$values[1])))
+                         } else {
+                           warning("eigen failed in coeffs.truncated.gevp\n")
+                         }
+                         return(invisible(rep(NA, submatrix.size)))
+                       })
+  vec.coefs <- t(vec.coefs) * scale
+
+  return(invisible(vec.coefs))
+}
+
 #' @title GEVP method based on Hankel matrices.
 #' 
 #' @description
@@ -286,14 +324,11 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
   stopifnot((t0 >= 0) && (n > 0) && (N > 0) && (Delta > 0) && (submatrix.size > 0) && (max.truncation <= n))
   stopifnot((t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat) <= N)
   stopifnot(length(element.order) >= submatrix.size^2)
+  stopifnot(length(error.weights) == 1 || length(error.weights) == length(cf))
 
   n.full <- n + deltat*submatrix.size
-
-  stopifnot(length(error.weights) == 1 || length(error.weights) == n.full || length(error.weights) == length(cf))
-  if(length(error.weights) == length(cf) & all(error.weights > 0)) full.errors = TRUE
-  else full.errors = FALSE
-
   hankel.dim <- n.full/submatrix.size
+
   cM0 <- array(NA, dim=c(n.full, n.full))
   ii <- seq(from=1, to=n.full, by=submatrix.size)
   
@@ -311,14 +346,16 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
     cM0 <- 0.5*(cM0 + t(cM0))
   }
 
-  if(!any(error.weights)){
-    error.weights <- rep(1, n.full)
-  }
-  inner.weights <- error.weights
-  if(full.errors){
-    error.mat <- matrix(error.weights, nrow=effTime)[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
-    error.weights <- c(t(error.mat[cfii[(1:hankel.dim)*2 - 1],]))
-    inner.weights <- error.weights / c(sapply(1:hankel.dim, function(k){ rep((hankel.dim - abs(hankel.dim+1-2*k))^(1/4), submatrix.size) }))
+  if(length(error.weights) == 1){
+    error.weights <- matrix(1, nrow=length(cfii), ncol=submatrix.size^2)
+    outer.weights <- rep(1, n.full)
+    inner.weights <- outer.weights
+  } else{
+    error.mat <- matrix(error.weights, nrow=effTime)
+    error.weights <- error.mat[cfii, element.order, drop=FALSE]
+    error.mat.diag <- error.mat[, element.order[seq(1, submatrix.size^2, by=submatrix.size+1)], drop=FALSE]
+    outer.weights <- c(t(error.mat.diag[cfii[(1:hankel.dim)*2 - 1],]))
+    inner.weights <- outer.weights / c(sapply(1:hankel.dim, function(k){ rep((hankel.dim - abs(hankel.dim+1-2*k))^(1/4), submatrix.size) }))
   }
 
   cM0 <- t(inner.weights * t(inner.weights * cM0))
@@ -331,25 +368,26 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
       solve.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
                            submatrix.size=submatrix.size,
                            truncation.dim=truncation.dim,
-                           error.weights=error.weights,
+                           error.weights=outer.weights,
                            symmetric=symmetric)
   }
 
   res <- list(spectrum=spectrum, singular.values=rev(sort_by(ev.cM$values, abs(ev.cM$values))))
 
-  #if(get.coeffs) {
-  #  coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
-  #  for(truncation.dim in 1:max.truncation){
-  #    #TODO
-  #    coefficients[truncation.dim, 1:truncation.dim, ] <-
-  #      coeffs.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
-  #                           submatrix.size=submatrix.size,
-  #                           truncation.dim=truncation.dim,
-  #                           error.weights=error.weights,
-  #                           symmetric=symmetric)
-  #  }
-  #  res$coefficients <- coefficients
-  #}
+  if(get.coeffs) {
+    coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
+    chi2 <- c()
+    cf.mat <- matrix(cf, nrow=effTime)[cfii, element.order, drop=FALSE]
+    for(truncation.dim in 1:max.truncation){
+      coefficients[truncation.dim, 1:truncation.dim, ] <-
+        coeffs.truncated.gevp(cf.mat, t0=t0, deltat=deltat, Delta=Delta,
+                              lambda=spectrum[truncation.dim, 1:truncation.dim],
+                              submatrix.size=submatrix.size,
+                              truncation.dim=truncation.dim,
+                              error.weights=error.weights)
+    }
+    res$coefficients <- coefficients
+  }
 
   return(res)
 }
@@ -405,7 +443,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
   max.truncation <- min(max.truncation, n*submatrix.size)
 
   if(length(error.weights) == 1 & all(error.weights)) {
-    error.weights <- 1/sqrt(cf$tsboot.se)
+    error.weights <- 1/cf$tsboot.se
   }
 
   ## we need the inter-correlator spacing in 'cf'
@@ -449,13 +487,20 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
                               perm=c(2,3,1)), dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
   }
 
+  opt.idx <- min(which(evs$singular.values < eps) - 1, max.truncation)
+  truncation.error <- ifelse(opt.idx < max.truncation, abs(evs$singular.values[opt.idx+1] / evs$singular.values[opt.idx]), 0)
+  dof <- (2*(n+deltat)-1)*submatrix.size*(submatrix.size+1)/2 - (submatrix.size+1)*(1:max.truncation)
+
   ret <- list(cf=cf,
               evs=evs$spectrum,
               evs.tsboot=evs.tsboot,
               evs.dbboot=evs.dbboot,
               singular.values=evs$singular.values,
               coefficients=evs$coefficients,
-              opt.idx=min(which(evs$singular.values < eps) - 1, max.truncation),
+              chi2=evs$chi2,
+              opt.idx=opt.idx,
+              truncation.error=truncation.error,
+              dof=dof,
               eps=eps,
               boot.R=boot.R,
               boot.l=cf$boot.l,
