@@ -202,6 +202,15 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   stopifnot((n %% submatrix.size) == 0)
 }
 
+reconstruct.correlators <- function(par, x, coeffs, ...){
+  if(length(par) == 1) coeffs <- t(coeffs)
+  mat.coeffs <- t(apply(as.matrix(coeffs), 1, function(c) outer(c, Conj(c))))
+  if(nrow(mat.coeffs) == 1 & length(par) > 1) mat.coeffs <- t(mat.coeffs)
+  vandermonde <- outer(x, par, function(t, a) a^t)
+  cor <- vandermonde %*% mat.coeffs
+  return(invisible(cor))
+}
+
 solve.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
                                  truncation.dim, error.weights, symmetric) {
   n.full <- n + deltat*submatrix.size
@@ -333,7 +342,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
   ii <- seq(from=1, to=n.full, by=submatrix.size)
   
   t0p1 <- t0+1
-  cfii <- seq(from=t0p1, to=N, by=Delta)
+  cfii <- t0p1 + (0:(2*hankel.dim - 2))*Delta
 
   for(i in c(1:submatrix.size)) {
     for(j in c(1:submatrix.size)) {
@@ -385,8 +394,14 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                               submatrix.size=submatrix.size,
                               truncation.dim=truncation.dim,
                               error.weights=error.weights)
+      cor.reconstructed <- reconstruct.correlators(par=spectrum[truncation.dim, 1:truncation.dim],
+                                                  x=(cfii-1)/deltat,
+                                                  coeffs=coefficients[truncation.dim, 1:truncation.dim,])
+      chi <- (cf.mat - cor.reconstructed)*error.weights
+      chi2[truncation.dim] <- sum(ifelse(is.na(chi), 1, abs(chi)^2))
     }
     res$coefficients <- coefficients
+    res$chi2 <- chi2
   }
 
   return(res)
@@ -489,7 +504,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
 
   opt.idx <- min(which(evs$singular.values < eps) - 1, max.truncation)
   truncation.error <- ifelse(opt.idx < max.truncation, abs(evs$singular.values[opt.idx+1] / evs$singular.values[opt.idx]), 0)
-  dof <- (2*(n+deltat)-1)*submatrix.size*(submatrix.size+1)/2 - (submatrix.size+1)*(1:max.truncation)
+  dof <- (2*(n+deltat)-1)*submatrix.size^2 - (submatrix.size+1)*(1:max.truncation)
 
   ret <- list(cf=cf,
               evs=evs$spectrum,
