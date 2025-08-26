@@ -202,11 +202,12 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   stopifnot((n %% submatrix.size) == 0)
 }
 
-reconstruct.correlators <- function(lambda, times, coeffs){
+reconstruct.correlators <- function(lambda, times, coeffs, lambda0=lambda){
+  stopifnot(length(lambda) == length(lambda0))
   t.min <- min(times)
   t.max <- max(times)
   vandermonde <- outer(times, lambda, function(t, a) ifelse(abs(a) < 1, a^(t-t.min), a^(t-t.max)))
-  scale <- ifelse(abs(lambda) < 1, as.complex(lambda)^(t.min/2), as.complex(lambda)^(t.max/2))
+  scale <- ifelse(abs(lambda0) < 1, as.complex(lambda0)^(t.min/2), as.complex(lambda0)^(t.max/2))
 
   coeffs <- coeffs * scale
   if(length(lambda) == 1) coeffs <- t(coeffs)
@@ -405,7 +406,7 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                                                   times=(cfii-1)/deltat,
                                                   coeffs=coefficients[truncation.dim, 1:truncation.dim,])
       chi <- (cf.mat - cor.reconstructed)*error.weights
-      chi2[truncation.dim] <- sum(ifelse(is.na(chi), 1, abs(chi)^2))
+      chi2[truncation.dim] <- sum(abs(chi)^2)
     }
     res$coefficients <- coefficients
     res$chi2 <- chi2
@@ -510,7 +511,7 @@ bootstrap.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
   }
 
   opt.idx <- min(which(evs$singular.values < eps) - 1, max.truncation)
-  truncation.error <- ifelse(opt.idx < max.truncation, abs(evs$singular.values[opt.idx+1] / evs$singular.values[opt.idx]), 0)
+  truncation.error <- abs(evs$singular.values[-1] / evs$singular.values[-max.truncation])
   dof <- (2*(n+deltat)-1)*submatrix.size^2 - (submatrix.size+1)*(1:max.truncation)
 
   ret <- list(cf=cf,
@@ -557,27 +558,30 @@ pgevm2bootstrapfit <- function(pgevm, truncation.dim=pgevm$opt.idx, errortype="o
   stopifnot(inherits(pgevm, "PGEVM"))
 
   if(errortype == "outlier-removal"){
-    error.function <- function(x, probs=c(0.25,0.75), ...) {
-      Q <- quantile(x, probs=probs, ...)
+    error.function <- function(x, probs=c(0.25,0.75), na.rm=TRUE) {
+      Q <- quantile(x, probs=probs, na.rm=na.rm)
       iqr <- Q[2]-Q[1]
       x[x<(Q[1]-1.5*iqr) | x > (Q[2] + 1.5*iqr)] <- NA
-      return(invisible(sd(x, ...)))
+      return(invisible(sd(x, na.rm=na.rm)))
     }
   }else{
     error.function <- sd
   }
 
+  range <- 1:truncation.dim
+  lambda <- pgevm$evs[truncation.dim, range]
   basic.res <- list(x=(0:(pgevm$N-1))/pgevm$deltat, boot.R=pgevm$boot.R, errormodel="yerrors",
-                    par.guess=1:truncation.dim,
-                    t0=pgevm$evs[truncation.dim, 1:truncation.dim],
-                    t=as.matrix(pgevm$evs.tsboot[, truncation.dim, 1:truncation.dim]),
+                    par.guess=range, t0=lambda,
+                    t=as.matrix(pgevm$evs.tsboot[, truncation.dim, range]),
                     useCov=FALSE, chisqr=pgevm$chi2[truncation.dim], dof=pgevm$dof[truncation.dim],
-                    error.function=error.function, mask=pgevm$cfii, tofn=list(coeffs=pgevm$coefficients[truncation.dim, 1:truncation.dim,]))
+                    error.function=error.function, mask=pgevm$cfii,
+                    tofn=list(coeffs=pgevm$coefficients[truncation.dim, range,], lambda0=lambda))
   attr(basic.res, "class") <- c("bootstrapfit", "PGEVM", class(basic.res))
 
   res <- lapply(seq(pgevm$element.order), function(i) {
                   res <- basic.res
                   res$y <- pgevm$cf$cf0[1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
+                  res$bsamples <- pgevm$cf$cf.tsboot$t[,1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
                   res$dy <- pgevm$cf$tsboot.se[1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
                   res$fn <- function(par, x, boot.r, ...) Re(reconstruct.correlators(lambda=c(par), times=x, ...)[,i])
                   return(invisible(res))
@@ -678,7 +682,10 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     ## this filtering with ii is needed, because also eigenvectors are stored in evs
     ii <- c(1:n.end)
     tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps)
-    if(all(is.na(tmp))) next
+    if(all(is.na(tmp))){
+      effMass[n] <- NA
+      next
+    }
     tmpboot <- apply(X=pgevm$evs.tsboot[, n, ii, drop = FALSE],
                      MARGIN=1, FUN=.fn,
                      range=range, eps=eps)
