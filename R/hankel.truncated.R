@@ -1,7 +1,7 @@
 ## Get the eigensystem of the full Hankel matrix and
 ## return the GEVP solution given a truncation dimension
-solve.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
-                                 truncation.dim, error.weights, symmetric) {
+spectrum.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
+                                    truncation.dim, error.weights, symmetric) {
   n.full <- n + deltat*submatrix.size
   ii0 <- 1:n
   ii.shift <- ii0 + deltat*submatrix.size
@@ -39,7 +39,7 @@ solve.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
 ## Calculate the coefficients for reconstructing the correlators
 ## given the decay eigenvalues lambda = exp(-E deltat)
 coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.size,
-                                 truncation.dim, error.weights) {
+                                  truncation.dim, error.weights) {
   times <- (t0 + (0:(nrow(cf.mat)-1))*Delta)/deltat
   t.min <- min(times)
   t.max <- max(times)
@@ -57,20 +57,20 @@ coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.s
                            warning("inversion failed in coeffs.truncated.gevp\n")
                          }
                          return(invisible(rep(NA, length(lambda))))
-                       })
+                                  })
   if(truncation.dim == 1) mat.coeffs <- t(mat.coeffs)
 
   vec.coefs <- apply(as.matrix(mat.coeffs), 1, function(M) {
                        M.mat <- matrix(M, nrow=submatrix.size)
                        M.mat <- 0.5 * (M.mat + Conj(t(M.mat)))
                        M.eigen <- try(eigen(M.mat, symmetric=TRUE), TRUE)
-                         if(!inherits(M.eigen, "try-error")) {
-                           return(M.eigen$vectors[,1] * sqrt(as.complex(M.eigen$values[1])))
-                         } else {
-                           warning("eigen failed in coeffs.truncated.gevp\n")
-                         }
-                         return(invisible(rep(NA, submatrix.size)))
-                       })
+                       if(!inherits(M.eigen, "try-error")) {
+                         return(M.eigen$vectors[,1] * sqrt(as.complex(M.eigen$values[1])))
+                       } else {
+                         warning("eigen failed in coeffs.truncated.gevp\n")
+                       }
+                       return(invisible(rep(NA, submatrix.size)))
+                                  })
   vec.coefs <- t(vec.coefs) * scale
 
   return(invisible(vec.coefs))
@@ -146,9 +146,9 @@ reconstruct.correlators <- function(lambda, times, coeffs, lambda0=lambda){
 #' 
 #' @family hankel
 gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
-                        submatrix.size=1, element.order=c(1,2,3,4),
-                        Delta=1, get.coeffs=FALSE,
-                        effTime=N, error.weights=FALSE, symmetric=TRUE) {
+                                  submatrix.size=1, element.order=c(1,2,3,4),
+                                  Delta=1, get.coeffs=FALSE,
+                                  effTime=N, error.weights=FALSE, symmetric=TRUE) {
   stopifnot((t0 >= 0) && (n > 0) && (N > 0) && (Delta > 0) && (submatrix.size > 0) && (max.truncation <= n))
   stopifnot((t0 + 1 + 2*(n/submatrix.size-1)*Delta + deltat) <= N)
   stopifnot(length(element.order) >= submatrix.size^2)
@@ -159,7 +159,7 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
 
   cM0 <- array(NA, dim=c(n.full, n.full))
   ii <- seq(from=1, to=n.full, by=submatrix.size)
-  
+
   t0p1 <- t0+1
   cfii <- t0p1 + (0:(2*hankel.dim - 2))*Delta
 
@@ -193,11 +193,11 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
   spectrum <- array(NA, dim=c(max.truncation, max.truncation))
   for(truncation.dim in 1:max.truncation){
     spectrum[truncation.dim, 1:truncation.dim] <-
-      solve.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
-                           submatrix.size=submatrix.size,
-                           truncation.dim=truncation.dim,
-                           error.weights=outer.weights,
-                           symmetric=symmetric)
+      spectrum.truncated.gevp(ev.cM=ev.cM, n=n, deltat=deltat,
+                              submatrix.size=submatrix.size,
+                              truncation.dim=truncation.dim,
+                              error.weights=outer.weights,
+                              symmetric=symmetric)
   }
 
   res <- list(spectrum=spectrum, singular.values=rev(sort_by(ev.cM$values, abs(ev.cM$values))), cfii=cfii)
@@ -214,8 +214,8 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                               truncation.dim=truncation.dim,
                               error.weights=error.weights)
       cor.reconstructed <- reconstruct.correlators(lambda=spectrum[truncation.dim, 1:truncation.dim],
-                                                  times=(cfii-1)/deltat,
-                                                  coeffs=coefficients[truncation.dim, 1:truncation.dim,])
+                                                   times=(cfii-1)/deltat,
+                                                   coeffs=coefficients[truncation.dim, 1:truncation.dim,])
       chi <- (cf.mat - cor.reconstructed)*error.weights
       chi2[truncation.dim] <- sum(abs(chi)^2)
     }
@@ -273,10 +273,10 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
 #' @family hankel
 #' @export
 bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), t0 = 1,
-                            n = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
-                            submatrix.size=1, element.order=1,
-                            max.truncation = n*submatrix.size, error.weights=FALSE, symmetric=cf$symmetrised,
-                            eps=1e-15) {
+                                      n = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
+                                      submatrix.size=1, element.order=1,
+                                      max.truncation = n*submatrix.size, error.weights=FALSE, symmetric=cf$symmetrised,
+                                      eps=1e-15) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   dbboot <- inherits(cf, 'cf_dbboot')
@@ -292,7 +292,7 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
   if(!cf$symmetrised) {
     effTime <- cf$Time
   }
-  
+
   t0p1 <- t0 + 1
   boot.R <- cf$boot.R
 
@@ -309,9 +309,9 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
   }
 
   evs <- gevp.truncated.hankel(cf$cf0, t0=t0, deltat=deltat, Delta=Delta, get.coeffs=TRUE,
-                     n=n*submatrix.size, N=N, max.truncation=max.truncation,
-                     submatrix.size=submatrix.size, element.order=element.order,
-                     effTime=effTime, error.weights=error.weights, symmetric=symmetric)
+                               n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                               submatrix.size=submatrix.size, element.order=element.order,
+                               effTime=effTime, error.weights=error.weights, symmetric=symmetric)
   evs.tsboot <- array(t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...)$spectrum,
                               t0=t0, deltat=deltat, Delta=Delta, get.coeffs=FALSE,
                               n=n*submatrix.size, N=N, max.truncation=max.truncation,
