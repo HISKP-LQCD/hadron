@@ -14,15 +14,14 @@ spectrum.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
     M.bar <- M.0 + M.t
   } else {
     chi <- error.weights[ii.shift]
-    M.bar <- M.t
+    M.bar <- M.0
   }
   M.bar <- chi * M.bar
   M.0 <- t(M.bar) %*% (chi * M.0)
   M.t <- t(M.bar) %*% (chi * M.t)
-  M.inv <- try(solve(M.0), TRUE)
+  M <- try(solve(M.0, M.t), TRUE)
 
-  if(!inherits(M.inv, "try-error")) {
-    M <- M.inv %*% M.t
+  if(!inherits(M, "try-error")) {
     M.eigen <- try(eigen(M, symmetric=FALSE, only.values=TRUE), TRUE)
     if(!inherits(M.eigen, "try-error")) {
       return(invisible(M.eigen$values))
@@ -50,9 +49,9 @@ coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.s
                          w <- error.weights[, i]^2
                          M.i <- Conj(t(vandermonde)) %*% (w * cf.mat[, i])
                          M.v <- Conj(t(vandermonde)) %*% (w * vandermonde)
-                         M.inv <- try(solve(M.v), TRUE)
-                         if(!inherits(M.inv, "try-error")) {
-                           return(M.inv %*% M.i)
+                         M <- try(solve(M.v, M.i), TRUE)
+                         if(!inherits(M, "try-error")) {
+                           return(M)
                          } else {
                            warning("inversion failed in coeffs.truncated.gevp\n")
                          }
@@ -145,6 +144,7 @@ reconstruct.correlators <- function(lambda, times, coeffs, lambda0=lambda){
 #'   for truncation dimensions 1 to \code{max.truncation}.}
 #' 
 #' @family hankel
+#' @export
 gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                                   submatrix.size=1, element.order=c(1,2,3,4),
                                   Delta=1, get.coeffs=FALSE,

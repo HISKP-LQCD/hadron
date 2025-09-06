@@ -232,9 +232,8 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
     M <- t(invL) %*% cM2 %*% invL
   }
   if(!positive) {
-    ## QR decomposition
-    qr.cM1 <- qr(cM1)
-    M <- try(qr.coef(qr.cM1, cM2), TRUE)
+    ## regular inversion
+    M <- try(solve(cM1, cM2), TRUE)
   }
   retl <- n+n*submatrix.size
   if(only.values) {
