@@ -3,10 +3,14 @@
 set -e
 set -u
 
-while getopts "qh" opt; do
+while getopts "qch" opt; do
 	case $opt in
 		q)
 			Rscript --vanilla -e "devtools::install(quick=TRUE)"
+			exit
+			;;
+		c)
+			Rscript --vanilla -e "devtools::check(cran=TRUE)"
 			exit
 			;;
 		h)
@@ -14,6 +18,7 @@ while getopts "qh" opt; do
 			Install hadron package\n
 			Usage: $0 [-q] [-h]\n
 			-q: quick install
+			-c: check CRAN
 			-h: help\n"
 			exit
 			;;
