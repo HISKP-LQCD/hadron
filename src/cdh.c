@@ -81,11 +81,11 @@ static R_INLINE void fscdh(double rev,
   gg[3] = 3 * pi / 16. - 0.5;
   N = 16 * pi * pi;
   amrho_phys = a_fm * 770.0 / 197.3;
-  lb1 = (double *)calloc(n, sizeof(double));
-  lb2 = (double *)calloc(n, sizeof(double));
-  lb3 = (double *)calloc(n, sizeof(double));
-  lb4 = (double *)calloc(n, sizeof(double));
-  lpi = (double *)calloc(n, sizeof(double));
+  lb1 = (double *)R_Calloc(n, double);
+  lb2 = (double *)R_Calloc(n, double);
+  lb3 = (double *)R_Calloc(n, double);
+  lb4 = (double *)R_Calloc(n, double);
+  lpi = (double *)R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     tmp = 1. / ampiV[i] / ampiV[i];
     lb1[i] = log(aLamb1 * aLamb1 * tmp);
@@ -95,16 +95,16 @@ static R_INLINE void fscdh(double rev,
     lpi[i] = log(ampiV[i] / amrho_phys * ampiV[i] / amrho_phys);
   }
 
-  mmB0 = (double *)calloc(n, sizeof(double));
-  mmB2 = (double *)calloc(n, sizeof(double));
-  xi_P = (double *)calloc(n, sizeof(double));
-  S4mpi = (double *)calloc(n, sizeof(double));
-  S4fpi = (double *)calloc(n, sizeof(double));
-  I2mpi = (double *)calloc(n, sizeof(double));
-  I4mpi = (double *)calloc(n, sizeof(double));
-  I2fpi = (double *)calloc(n, sizeof(double));
-  I4fpi = (double *)calloc(n, sizeof(double));
-  I6mpi = (double *)calloc(n, sizeof(double));
+  mmB0 = (double *)R_Calloc(n, double);
+  mmB2 = (double *)R_Calloc(n, double);
+  xi_P = (double *)R_Calloc(n, double);
+  S4mpi = (double *)R_Calloc(n, double);
+  S4fpi = (double *)R_Calloc(n, double);
+  I2mpi = (double *)R_Calloc(n, double);
+  I4mpi = (double *)R_Calloc(n, double);
+  I2fpi = (double *)R_Calloc(n, double);
+  I4fpi = (double *)R_Calloc(n, double);
+  I6mpi = (double *)R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     xi_P[i] = 2. * (ampiV[i] * ampiV[i] / (4 * pi * aF0[i]) / (4 * pi * aF0[i]));
   }
@@ -179,21 +179,21 @@ static R_INLINE void fscdh(double rev,
     Rprintf("\n");
   }
 
-  free(lb1);
-  free(lb2);
-  free(lb3);
-  free(lb4);
-  free(lpi);
-  free(xi_P);
-  free(mmB0);
-  free(mmB2);
-  free(S4mpi);
-  free(S4fpi);
-  free(I4mpi);
-  free(I2mpi);
-  free(I2fpi);
-  free(I4fpi);
-  free(I6mpi);
+  R_Free(lb1);
+  R_Free(lb2);
+  R_Free(lb3);
+  R_Free(lb4);
+  R_Free(lpi);
+  R_Free(xi_P);
+  R_Free(mmB0);
+  R_Free(mmB2);
+  R_Free(S4mpi);
+  R_Free(S4fpi);
+  R_Free(I4mpi);
+  R_Free(I2mpi);
+  R_Free(I2fpi);
+  R_Free(I4fpi);
+  R_Free(I6mpi);
   return;
 }
 
@@ -225,11 +225,10 @@ static R_INLINE void fscdhnew(double rev,
   gg[2] = 0.5 - pi / 8.;
   gg[3] = 3 * pi / 16. - 0.5;
   N = 16 * pi * pi;
-  lb1 = (double *)calloc(n, sizeof(double));
-  lb2 = (double *)calloc(n, sizeof(double));
-  lb3 = (double *)calloc(n, sizeof(double));
-  lb4 = (double *)calloc(n, sizeof(double));
-
+  lb1 = (double *)R_Calloc(n, double);
+  lb2 = (double *)R_Calloc(n, double);
+  lb3 = (double *)R_Calloc(n, double);
+  lb4 = (double *)R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     tmp = 1. / a2B0mu[i];
     lb1[i] = log(aLamb1 * aLamb1 * tmp);
@@ -238,18 +237,18 @@ static R_INLINE void fscdhnew(double rev,
     lb4[i] = log(aLamb4 * aLamb4 * tmp);
   }
 
-  DeltaM = (double *)calloc(n, sizeof(double));
-  DeltaF = (double *)calloc(n, sizeof(double));
-  mmB0 = (double *)calloc(n, sizeof(double));
-  mmB1 = (double *)calloc(n, sizeof(double));
-  mmB2 = (double *)calloc(n, sizeof(double));
-  xi_P = (double *)calloc(n, sizeof(double));
-  S4mpi = (double *)calloc(n, sizeof(double));
-  S4fpi = (double *)calloc(n, sizeof(double));
-  I2mpi = (double *)calloc(n, sizeof(double));
-  I4mpi = (double *)calloc(n, sizeof(double));
-  I2fpi = (double *)calloc(n, sizeof(double));
-  I4fpi = (double *)calloc(n, sizeof(double));
+  DeltaM = (double *)R_Calloc(n, double);
+  DeltaF = (double *)R_Calloc(n, double);
+  mmB0 = (double *)R_Calloc(n, double);
+  mmB1 = (double *)R_Calloc(n, double);
+  mmB2 = (double *)R_Calloc(n, double);
+  xi_P = (double *)R_Calloc(n, double);
+  S4mpi = (double *)R_Calloc(n, double);
+  S4fpi = (double *)R_Calloc(n, double);
+  I2mpi = (double *)R_Calloc(n, double);
+  I4mpi = (double *)R_Calloc(n, double);
+  I2fpi = (double *)R_Calloc(n, double);
+  I4fpi = (double *)R_Calloc(n, double);
   for (i = 0; i < n; i++) {
     xi_P[i] = 2. * a2B0mu[i] / (4 * pi * aF0) / (4 * pi * aF0);
   }
@@ -300,23 +299,23 @@ static R_INLINE void fscdhnew(double rev,
     }
     Rprintf("\n");
   }
-
-  free(lb1);
-  free(lb2);
-  free(lb3);
-  free(lb4);
-  free(DeltaM);
-  free(DeltaF);
-  free(xi_P);
-  free(mmB0);
-  free(mmB1);
-  free(S4mpi);
-  free(S4fpi);
-  free(I4mpi);
-  free(I2mpi);
-  free(I2fpi);
-  free(I4fpi);
-  free(mmB2);
+  
+  R_Free(lb1);
+  R_Free(lb2);
+  R_Free(lb3);
+  R_Free(lb4);
+  R_Free(DeltaM);
+  R_Free(DeltaF);
+  R_Free(xi_P);
+  R_Free(mmB0);
+  R_Free(mmB1);
+  R_Free(S4mpi);
+  R_Free(S4fpi);
+  R_Free(I4mpi);
+  R_Free(I2mpi);
+  R_Free(I2fpi);
+  R_Free(I4fpi);
+  R_Free(mmB2);
   return;
 }
 
