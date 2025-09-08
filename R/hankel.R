@@ -268,7 +268,6 @@ gevp.hankel <- function(cf, t0=1, deltat=1, n, N,
   a_k <- Re(a_k)
   a_k[a_k < 0] <- NA
   return(invisible(c(M.eigen$values, as.vector(t(t(tmp[c(1:submatrix.size),])/sqrt(a_k))))))
-  ##return(invisible(c(M.eigen$values, as.vector(t(t(tmp)/sqrt(a_k))))))
 }
 
 #' @title GEVP method based on Hankel matrices. 
@@ -338,8 +337,8 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   ## R/Fortran index convention
   t0p1 <- t0 + 1
   boot.R <- cf$boot.R
-  evs <- array(NA, dim=c(N, n + n^2/submatrix.size))
-  evs.tsboot <- array(NA, dim=c(boot.R, N, n + n^2/submatrix.size))
+  evs <- array(NA, dim=c(N, n + n*submatrix.size))
+  evs.tsboot <- array(NA, dim=c(boot.R, N, n + n*submatrix.size))
 
   if(t0fixed) {
     for(deltat in c(1:(N-1-t0-2*(n/submatrix.size-1)*Delta))) {
@@ -370,8 +369,8 @@ bootstrap.hankel <- function(cf, t0=1, n=2, N = (cf$Time/2+1),
   ret <- list(cf=cf,
               t0=evs[ ,c(1:n), drop=FALSE],
               t=evs.tsboot[ ,, c(1:n), drop=FALSE],
-              vectors=evs[ ,c((n+1):(n+n^2/submatrix.size)), drop=FALSE],
-              vectors.tsboot=evs.tsboot[ ,, c((n+1):(n+n^2/submatrix.size)), drop=FALSE],
+              vectors=evs[ ,c((n+1):(n+n*submatrix.size)), drop=FALSE],
+              vectors.tsboot=evs.tsboot[ ,, c((n+1):(n+n*submatrix.size)), drop=FALSE],
               boot.R=boot.R,
               boot.l=cf$boot.l,
               seed=cf$seed,

@@ -309,8 +309,8 @@ Now introduce the dual vectors $u_k$ with
 This means
 \begin{equation}
 H(t)\, u_l\ =\ \sum_{k=0}^{n-1} e^{-E_k t}\chi_k \chi_k^* u_l\ =\
-e^{-E_l t} \chi_l = e^{-E_l(t-t_0)}\ e^{-E_l t_0} \chi_l\ =\
-e^{-E_l(t-t_0)} H(t_0)\, u_l
+e^{-E_l t} \chi_l = e^{-E_l(t-t_0)}\ e^{-E_l t_0} \chi_l\ =
+\ e^{-E_l(t-t_0)} H(t_0)\, u_l
 \end{equation}
 Thus,
 \begin{equation}
