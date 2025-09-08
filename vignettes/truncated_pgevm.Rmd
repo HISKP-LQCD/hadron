@@ -1,0 +1,208 @@
+---
+title: "Truncated PGEVM in hadron"
+subtitle: "Companion document to arXiv:2509.xxxxx"
+author: 
+- Johann Ostmeyer
+- Carsten Urbach
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  rmarkdown::html_vignette
+  
+#  pdf_document:
+#    #citation_package: biblatex
+
+#bibliography: hankel.bib
+#link_citation: yes
+vignette: >
+  %\VignetteIndexEntry{PGEVM and Lanczos with double bootstrap in hadron}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+This is a companion document for the manuscripts
+[arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981) and .... It
+explains the truncated PGEVM implementation available in the
+`hadron` `R` package. The `hadron` package version required is
+[version 3.4.1](https://github.com/HISKP-LQCD/hadron/tree/3.4.1) or newer.
+It is available on `github` for download. 
+
+You first need to install the `hadron` package, and load it then as follows
+
+```{r}
+library(hadron)
+```
+
+The code snippets given below can be copied one-to-one to the `R`
+command line and executed. Alternatively, you may install the
+`rmarkdown` package and render the corresponding `Rmd` file, which was
+used to generate this PDF file as follows
+
+```{r, eval=FALSE}
+render("truncated_pgevm.Rmd", output_format="pdf_document")
+```
+
+`hadron` ships with a pion correlation function, which was also used
+as the pion example in the aforementioned manuscript.
+
+# The Standard Effective Mass analysis
+
+After loading `hadron` as a library, one first needs to load the pion
+correlator data
+
+```{r}
+data(pscor.sample)
+```
+
+and store it in an object of class `cf` (the hadron correlation
+function class) for further treatment:
+
+```{r}
+pioncf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(48, 316))))
+pioncf <- cf_meta(pioncf, nrObs=1, Time=48, symmetrised=FALSE)
+```
+
+Next, we (block) bootstrap and double bootstrap this correlation
+function. Note that depending on the choice of `boot.R` and
+`dbboot.R` the execution of the following lines might take long.
+
+```{r}
+boot.R <- 29
+dbboot.R <- 19
+pioncf.boot <- bootstrap.cf(pioncf, boot.R=boot.R, boot.l=2)
+pioncf.boot <- double_bootstrap.cf(pioncf.boot, dbboot.R=dbboot.R)
+plot(pioncf.boot, ylab="C(t)", xlab="t/a", xlim=c(0,48), log="y")
+```
+
+Here, we have also plotted the bootstrapped correlation function using
+the inbuilt `plot` function for objects of class `cf`. The correlator
+is symmetric around $T/2=24$ as expected.
+
+`hadron` provides functionality to compute the standard effective mass
+for a $\\cosh$-like correlation function (specified by the `type`
+argument to the function `bootstrap.effectivemass`)
+
+```{r}
+pion.efm <- bootstrap.effectivemass(pioncf.boot, type="solve")
+pion.efm <- fit.effectivemass(pion.efm, t1=8, t2=17, useCov=TRUE)
+```
+
+Note that you may get documentation on the different functions e.g. by
+
+```{r, eval=FALSE}
+?bootstrap.effectivemass
+```
+
+The such computed effective masses and the corresponding fit can be
+visualised as follows
+
+```{r}
+plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,24), ylim=c(0.1,0.2))
+```
+
+A call to 
+
+```{r, eval=TRUE}
+summary(pion.efm)
+```
+
+would also summarize the fit results.
+
+# Basic PGEVM
+
+Based on the (double) bootstrapped correlation function data, the PGEVM
+is applied as follows:
+
+```{r, warn=FALSE}
+pion.pgevm <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time)
+pion.pgevm.efm <- pgevm2effectivemass(pion.pgevm, errortype="dbboot",
+                                      bias_correction=TRUE)
+```
+
+Note that you might get one or more warning from the above commands,
+which are due to the fact that for some combination of data the Hankel
+matrix cannot be inverted or the eigenvalue compuation fails. But this
+is taken into account in the analysis by missing values.
+
+The second line translates the PGEVM result into an effective mass
+object. Thus, plotting it works in an identical manner as for the true
+effective mass
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
+```
+
+Also otherwise, `pion.pgevm.efm` can be treated like a class of type
+`effectivemass`. For instance, one can also perform a plateau fit:
+
+```{r}
+pion.pgevm.efm.fit <- fit.effectivemass(pion.pgevm.efm, t1=10, t2=21, useCov=TRUE)
+```
+
+where now `t1` and `t2` are interpreted as $n_1$ and $n_2$. The
+corresponding plot looks as follows
+
+```{r}
+plot(pion.pgevm.efm.fit, ylab="Meff", xlab="n", xlim=c(0,22), ylim=c(0.1,0.2), col="blue")
+```
+
+The fit result reads $E =`r pion.pgevm.efm.fit$effmassfit$t0[1]` \pm `r pion.pgevm.efm.fit$effmassfit$se[1]`$.
+
+# PGEVM for symmetric correlators
+
+For symmetric correlators it makes sense to include not only early but also late time slices starting from low dimensions. This can be done by setting `ndep.Delta=TRUE` in the `bootstrap.pgevm` function and thus distributing the correlator time slices entering the Hankel matrix equidistantly. The following code snippet demonstrates this:
+
+```{r, warn=FALSE}
+pion.pgevm2 <- bootstrap.pgevm(pioncf.boot, N=pioncf.boot$Time, ndep.Delta=TRUE)
+pion.pgevm.efm2 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
+                                       bias_correction=TRUE)
+pion.pgevm.efm3 <- pgevm2effectivemass(pion.pgevm2, errortype="dbboot",
+                                       bias_correction=TRUE, average.negE=TRUE)
+```
+
+In the last step the `average.negE=TRUE` option is used to average over the ''effective masses'' that are now symmetric around zero.
+
+We can now plot the different effective masses.
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+                     col="blue", pch=21, xshift=0)
+plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.15)
+plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
+```
+
+# Truncated PGEVM
+
+```{r, warn=FALSE}
+t0 <- 1
+pion.truncated.pgevm <- bootstrap.truncated.pgevm(pioncf.boot, N=pioncf.boot$Time,
+                                      t0=t0, n=24-t0, error.weights=TRUE, symmetric=TRUE)
+pion.truncated.pgevm.efm <- pgevm2effectivemass(pion.truncated.pgevm,
+                                      errortype="outlier-removal", bias_correction=TRUE)
+```
+
+```{r}
+plot(abs(pion.truncated.pgevm$singular.values), log="y", ylab="Eigenvalues")
+points(-Re(pion.truncated.pgevm$singular.values), col="red")
+trunc <- 4
+```
+
+The (close-to) optimal fit result with $k = `r trunc`$ states reads $E =`r pion.truncated.pgevm.efm$t0[trunc]` \pm `r pion.truncated.pgevm.efm$se[trunc]`$.
+
+Once again, we can now plot the different effective masses.
+
+```{r}
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+                     col="blue", pch=21, xshift=0)
+plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.15)
+plot(pion.truncated.pgevm.efm, rep=TRUE, col="red", pch=22, xshift=0.3)
+```
+
+```{r}
+pion.pgevm.nlsfit <- pgevm2bootstrapfit(pion.truncated.pgevm, truncation.dim=trunc)
+plot(pion.pgevm.nlsfit[[1]], log="y", xlab="t", ylab="C(t)", col.line="red", col.band="red")
+residual_plot(pion.pgevm.nlsfit[[1]], ylim=c(.9,1.1), xlab="t", ylab="C(t)/fit")
+```
