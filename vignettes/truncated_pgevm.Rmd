@@ -14,7 +14,7 @@ output:
 #bibliography: hankel.bib
 #link_citation: yes
 vignette: >
-  %\VignetteIndexEntry{PGEVM and Lanczos with double bootstrap in hadron}
+  %\VignetteIndexEntry{Truncated PGEVM in hadron}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -24,7 +24,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 This is a companion document for the manuscripts
-[arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981) and .... It
+[arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981) and work forthcoming. It
 explains the truncated PGEVM implementation available in the
 `hadron` `R` package. The `hadron` package version required is
 [version 3.4.1](https://github.com/HISKP-LQCD/hadron/tree/3.4.1) or newer.
@@ -61,8 +61,9 @@ and store it in an object of class `cf` (the hadron correlation
 function class) for further treatment:
 
 ```{r}
-pioncf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(48, 316))))
-pioncf <- cf_meta(pioncf, nrObs=1, Time=48, symmetrised=FALSE)
+T <- 48
+pioncf <- cf_orig(cf=t(array(pscor.sample[,2], dim=c(T, 316))))
+pioncf <- cf_meta(pioncf, nrObs=1, Time=T, symmetrised=FALSE)
 ```
 
 Next, we (block) bootstrap and double bootstrap this correlation
@@ -74,7 +75,7 @@ boot.R <- 29
 dbboot.R <- 19
 pioncf.boot <- bootstrap.cf(pioncf, boot.R=boot.R, boot.l=2)
 pioncf.boot <- double_bootstrap.cf(pioncf.boot, dbboot.R=dbboot.R)
-plot(pioncf.boot, ylab="C(t)", xlab="t/a", xlim=c(0,48), log="y")
+plot(pioncf.boot, ylab="C(t)", xlab="t/a", xlim=c(0,T), log="y")
 ```
 
 Here, we have also plotted the bootstrapped correlation function using
@@ -100,12 +101,12 @@ The such computed effective masses and the corresponding fit can be
 visualised as follows
 
 ```{r}
-plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,24), ylim=c(0.1,0.2))
+plot(pion.efm, ylab="Meff", xlab="t/a", xlim=c(0,T/2), ylim=c(0.1,0.2))
 ```
 
 A call to 
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 summary(pion.efm)
 ```
 
@@ -168,7 +169,7 @@ In the last step the `average.negE=TRUE` option is used to average over the ''ef
 We can now plot the different effective masses.
 
 ```{r}
-plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,T/2), ylim=c(.12,.155),
                      col="blue", pch=21, xshift=0)
 plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.15)
 plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
@@ -176,30 +177,67 @@ plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
 
 # Truncated PGEVM
 
+Instead of going time slice by time slice, we can also include all the
+correlator values at once and truncate the diagonalised Hankel matrix. This is
+done as follows:
+
 ```{r, warn=FALSE}
 t0 <- 1
 pion.truncated.pgevm <- bootstrap.truncated.pgevm(pioncf.boot, N=pioncf.boot$Time,
-                                      t0=t0, n=24-t0, error.weights=TRUE, symmetric=TRUE)
+                                      t0=t0, n=T/2-t0, error.weights=TRUE, symmetric=TRUE)
 pion.truncated.pgevm.efm <- pgevm2effectivemass(pion.truncated.pgevm,
                                       errortype="outlier-removal", bias_correction=TRUE)
 ```
 
+Here, we set the initial time $t_0 = `r t0`$ as early as possible and the full
+Hankel dimension $n = T/2 - t_0 = `r T/2-t0`$ maximal to include all time
+slices from $t=t_0$ to $t=t_0+2n=`r T-t0`$, symmetric about $T/2=`r T/2`$. The
+`error.weights=TRUE` option ensures that the Hankel matrix eigenspectrum is
+computed using the inverse of the variance as weights. The `symmetric=TRUE`
+option takes into account that the correlator is symmetric around $T/2$.
+
+Note that the results are stable enough that simple outlier removal is
+sufficient to obtain a reliable error estimate. Double bootstrap would also
+work, but is more expensive.
+
+It is insightful to plot the absolute values of the eigenvalues of the Hankel
+matrix:
+
 ```{r}
 plot(abs(pion.truncated.pgevm$singular.values), log="y", ylab="Eigenvalues")
 points(-Re(pion.truncated.pgevm$singular.values), col="red")
-trunc <- 4
+legend("topright", legend=c("positive", "negative"), col=c("black", "red"), pch=1)
+trunc <- pion.truncated.pgevm$opt.idx[1]
 ```
 
-The (close-to) optimal fit result with $k = `r trunc`$ states reads $E =`r pion.truncated.pgevm.efm$t0[trunc]` \pm `r pion.truncated.pgevm.efm$se[trunc]`$.
+Clearly, there are $`r trunc`$ dominant eigenvalues, which we will keep in the
+following. The remaining part of the spectrum stems from noise.
+The variable `opt.idx` contains the maximal logarithmic gap in the spectrum
+(used here) and the position before the first negative eigenvalue (because the
+noiseless Hankel matrix would be positive semi-definite).
 
-Once again, we can now plot the different effective masses.
+The (close-to) optimal fit result after truncation at $k = `r trunc`$ states
+reads
+$E =`r pion.truncated.pgevm.efm$t0[trunc]` \pm `r pion.truncated.pgevm.efm$se[trunc]`$.
+
+Once again, we can now plot the different "effective masses". It is crucial to
+keep in mind that the results from the truncated PGEVM are not independent for
+different $n$ as the same Hankel matrix is used everywhere. Thus, a better way
+to interpret the results is to identify every truncation $k$ with a multi-state
+fit using $k$ states. Any individual point already contains the full
+statistical information. The resulting "plateau" allows to verify that there is
+no significant systematic bias from the truncation.
 
 ```{r}
-plot(pion.pgevm.efm, ylab="Meff", xlab="n", xlim=c(0,24), ylim=c(.12,.155),
+plot(pion.pgevm.efm, ylab="Meff", xlab="n or k", xlim=c(0,T/2), ylim=c(.12,.155),
                      col="blue", pch=21, xshift=0)
 plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.15)
 plot(pion.truncated.pgevm.efm, rep=TRUE, col="red", pch=22, xshift=0.3)
 ```
+
+The truncated PGEVM also allows us to reconstruct the coefficients of the
+exponential fit ansatz and to compare the result with the original data. This
+can be done as follows:
 
 ```{r}
 pion.pgevm.nlsfit <- pgevm2bootstrapfit(pion.truncated.pgevm, truncation.dim=trunc)
