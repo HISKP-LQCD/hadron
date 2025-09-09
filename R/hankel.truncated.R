@@ -327,8 +327,9 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
                               perm=c(2,3,1)), dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
   }
 
-  opt.idx <- min(which(evs$singular.values < eps) - 1, max.truncation)
   truncation.error <- abs(evs$singular.values[-1] / evs$singular.values[-max.truncation])
+  opt.idx <- which.min(truncation.error)
+  opt.idx[2] <- min(which(evs$singular.values < eps) - 1, max.truncation)
   dof <- (2*(n+deltat)-1)*submatrix.size^2 - (submatrix.size+1)*(1:max.truncation)
 
   ret <- list(cf=cf,
