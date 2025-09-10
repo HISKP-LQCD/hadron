@@ -357,7 +357,7 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
               effTime=effTime,
               n=c(1:max.truncation),
               N=N)
-  class(ret) <- c("PGEVM", class(ret))
+  class(ret) <- c("PGEVM", "truncated.pgevm", class(ret))
   return(invisible(ret))
 }
 
@@ -415,4 +415,31 @@ pgevm2bootstrapfit <- function(pgevm, truncation.dim=pgevm$opt.idx, errortype="o
                   return(invisible(res))
                     })
   return(invisible(res))
+}
+
+#' plot.truncated.pgevm
+#'
+#' @param x Object of type `truncated.pgevm`.
+#' @param ... Graphical parameters to be passed on.
+#'
+#' @return
+#' No return value.
+#' 
+#' @export
+plot.truncated.pgevm <- function(x, ...) {
+  par.old <- par(mfrow = c(1,2))
+  plot(abs(x$singular.values), log="y", ylab="|s|")
+  points(-Re(x$singular.values), col="red")
+  legend("topright", legend=c("positive",  "negative", "opt. index 1", "opt. index 2"), col=c("black", "red", "black", "black"), pch=c(1, 1, NA, NA), lty=c(NA, NA, 2,3), bty="n")
+  abline(v=x$opt.idx[1], lty=2)
+  abline(v=x$opt.idx[2], lty=3)
+  rcvalues <- cumsum(rev(abs(x$singular.values)))
+  N <- length(rcvalues)
+  totalsum <- rcvalues[N]
+  rcvalues <- rcvalues/totalsum
+  plot(rcvalues, log="y", ylab=c("cumsum(rev(|s|))/sum(|s|)"), xlab=c("rev(Index)"))
+  abline(h=rcvalues[N-x$opt.idx[1]], lty=2)
+  abline(h=rcvalues[N-x$opt.idx[2]], lty=3)
+  legend("topleft", legend=c("opt. cut 1", "opt. cut 2"), lty=c(2,3), bty="n")
+  par(par.old)
 }
