@@ -1,17 +1,17 @@
 #' sum_i (a_i cosh(m_i*t))
 #' a_i are the amplitudes, m_i the masses and t is a vector of times
 #' @keywords internal
-sum.cosh <- function(masses, amplitudes, t){
+sum_cosh <- function(masses, amplitudes, t){
   colSums(amplitudes*cosh(masses%o%t))
 }
 
 #' extract the effective mass from the sum of coshs
 #' @keywords internal
-cosh.to.effmass <- function(masses, amplitudes, t, Thalf, type){
+cosh_to_effmass <- function(masses, amplitudes, t, Thalf, type){
   if(type == "solve"){
-    sapply(t, FUN=function(x) {invcosh(sum.cosh(masses, amplitudes, x-Thalf)/sum.cosh(masses, amplitudes, x+1-Thalf), timeextent=2*Thalf, t=x+1)})
+    sapply(t, FUN=function(x) {invcosh(sum_cosh(masses, amplitudes, x-Thalf)/sum_cosh(masses, amplitudes, x+1-Thalf), timeextent=2*Thalf, t=x+1)})
   }else if(type == "acosh"){
-    acosh((sum.cosh(masses, amplitudes, t-Thalf-1)+sum.cosh(masses, amplitudes, t-Thalf+1))/(2*sum.cosh(masses, amplitudes, t-Thalf)))
+    acosh((sum_cosh(masses, amplitudes, t-Thalf-1)+sum_cosh(masses, amplitudes, t-Thalf+1))/(2*sum_cosh(masses, amplitudes, t-Thalf)))
   }
   ## the other types might be included as well...
 }
@@ -166,11 +166,11 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   tt = ii-1-Thalf
 
   ## function to fit
-  sum.cosh.fit <- function(par, x, ...) {
-    sum.cosh(par[1:n.cosh], abs(par[(n.cosh+1):(2*n.cosh)]), x)
+  sum_cosh.fit <- function(par, x, ...) {
+    sum_cosh(par[1:n.cosh], abs(par[(n.cosh+1):(2*n.cosh)]), x)
   }
   ## corresponding Jacobian
-  sum.cosh.jac <- function(par, x, ...) {
+  sum_cosh.jac <- function(par, x, ...) {
     df.dm <- x * t(abs(par[(n.cosh+1):(2*n.cosh)])* sinh(par[1:n.cosh]%o%x)) 
     df.da <- t(sign(par[(n.cosh+1):(2*n.cosh)]) * cosh(par[1:n.cosh]%o%x))
     return(cbind(df.dm, df.da))
@@ -179,21 +179,21 @@ fit.cosh <- function(effMass, cf, t1, t2, useCov=FALSE, m.init, par, n.cosh=2, a
   dy <- cf$tsboot.se[ii]
   boot.R <-cf$boot.R
   if (useCov) {
-    fit.res <- bootstrap.nlsfit(fn = sum.cosh.fit,
+    fit.res <- bootstrap.nlsfit(fn = sum_cosh.fit,
                                 par.guess = c(masses, amplitudes),
                                 y = cf0.save[ii],
                                 x = tt,
                                 bsamples = cf.save[,ii],
-                                gr = sum.cosh.jac,
+                                gr = sum_cosh.jac,
                                 CovMatrix = cov(cf.save[,ii]),
                                 ...)
   } else {
-    fit.res <- bootstrap.nlsfit(fn = sum.cosh.fit,
+    fit.res <- bootstrap.nlsfit(fn = sum_cosh.fit,
                                 par.guess = c(masses, amplitudes),
                                 y = cf0.save[ii],
                                 x = tt,
                                 bsamples = cf.save[,ii],
-                                gr = sum.cosh.jac,
+                                gr = sum_cosh.jac,
                                 ...)
   }
 
@@ -271,8 +271,8 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
     suppressWarnings(plotwitherror(x=t.all-1, y=effMass$effMass[t.all], dy=effMass$deffMass[t.all], ...))
 
     if(!is.null(effMass$coshfit)){
-      Y <- cosh.to.effmass(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)
-      Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {cosh.to.effmass(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)}, MARGIN=1)
+      Y <- cosh_to_effmass(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)
+      Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {cosh_to_effmass(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t, Thalf, type=effMass$type)}, MARGIN=1)
       se <- apply(Y.boot, MARGIN=1, FUN=sd, na.rm=TRUE)
 
       ## plot it
@@ -288,8 +288,8 @@ plot.coshfit <- function(x, col.fitline = "black", plot.mass = TRUE, plot.corr =
     plot(effMass$cf, ...)
 
     if(!is.null(effMass$coshfit)){
-      Y <- sum.cosh(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t-Thalf)
-      Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {sum.cosh(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t-Thalf)}, MARGIN=1)
+      Y <- sum_cosh(effMass$coshfit$t0[1:n.cosh], effMass$coshfit$t0[(n.cosh+1):(2*n.cosh)], t-Thalf)
+      Y.boot <- apply(effMass$coshfit$t, FUN=function(x) {sum_cosh(x[1:n.cosh], x[(n.cosh+1):(2*n.cosh)], t-Thalf)}, MARGIN=1)
       se <- apply(Y.boot, MARGIN=1, FUN=sd, na.rm=TRUE)
 
       ## plot it

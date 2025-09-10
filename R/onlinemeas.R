@@ -47,7 +47,7 @@
 #' @param boot.R number of bootstrap samples for bootstrap analysis
 #' @param boot.l average block size for blocking analysis with tsboot
 #' @param tsboot.sim The type of simulation required to generate the replicate
-#' time series. See \code{\link{tsboot}} for details.
+#' time series. See \code{\link[boot]{tsboot}} for details.
 #' @param method the type of error analysis to be used. Can be either
 #' \dQuote{uwerr}, \dQuote{boot}, \dQuote{all} or \dQuote{no}. For \dQuote{no}
 #' (or any other string) no error analysis is performed. This might be helpful
@@ -80,9 +80,9 @@
 #' analysis for the PCAC mass carried out by \code{\link{uwerr}}, see details }
 #' \item{effmass}{ effective masses in the pion channel } \item{matrix.size}{
 #' size of the data matrix, copied from input } \item{boot}{ object returned by
-#' the call to \code{\link{boot}} if \code{method} was set correspodingly.
+#' the call to \code{\link[boot]{boot}} if \code{method} was set correspodingly.
 #' Otherwise \code{NULL}.  } \item{tsboot}{ object returned by the call to
-#' \code{\link{tsboot}} if \code{method} was set correspodingly. Otherwise
+#' \code{\link[boot]{tsboot}} if \code{method} was set correspodingly. Otherwise
 #' \code{NULL}.  } \item{method}{ error analysis method as copied from input }
 #' \item{fit.routine}{ \code{fit.routine} as copied from input } \item{nrep}{
 #' \code{nrep} as copied from input } \item{dpaopp}{ \code{\link{data.frame}}
