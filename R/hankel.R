@@ -669,7 +669,8 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
     effMass.tsboot <- apply(effMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
   }
   effMass <- -log(effMass)/deltat
-  bias <- effMass - apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=median, na.rm=TRUE)
+  effMass.tsboot <- -log(effMass.tsboot)/deltat
+  bias <- effMass - apply(effMass.tsboot, MARGIN=2L, FUN=median, na.rm=TRUE)
   if(bias_correction) {
     effMass <- effMass - bias
   }
@@ -711,7 +712,8 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       neffMass.tsboot <- apply(neffMass.dbboot, MARGIN=c(1L,3L), FUN=median, na.rm=TRUE)
     }
     neffMass <- log(neffMass)/deltat
-    nbias <- neffMass - apply(log(neffMass.tsboot)/deltat, MARGIN=2L, FUN=median, na.rm=TRUE)
+    neffMass.tsboot <- log(neffMass.tsboot)/deltat
+    nbias <- neffMass - apply(neffMass.tsboot, MARGIN=2L, FUN=median, na.rm=TRUE)
     if(bias_correction) {
       neffMass <- neffMass - nbias
     }
@@ -727,21 +729,21 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
       return(invisible(x))
     }
     effMass.tsboot <- apply(effMass.tsboot, 2, remove_outliers)
-    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=pgevm$cf$error_fn, na.rm=TRUE)
+    deffMass <- apply(effMass.tsboot, MARGIN=2L, FUN=pgevm$cf$error_fn, na.rm=TRUE)
   }
   else if(errortype == "quantiles") {
     error_fn <- function(x, probs=c(0.16, 0.84)) {
       Q <- quantile(x, probs=probs, na.rm=TRUE)
       return(Q[2]-Q[1])
     }
-    deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=error_fn, probs=probs)
+    deffMass <- apply(effMass.tsboot, MARGIN=2L, FUN=error_fn, probs=probs)
   }
   else {
     if(average.negE) {
-      deffMass <- apply((-log(effMass.tsboot)+log(neffMass.tsboot))/2/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
+      deffMass <- apply((effMass.tsboot+neffMass.tsboot)/2, MARGIN=2L, FUN=sd, na.rm=TRUE)
     }
     else {
-      deffMass <- apply(-log(effMass.tsboot)/deltat, MARGIN=2L, FUN=sd, na.rm=TRUE)
+      deffMass <- apply(effMass.tsboot, MARGIN=2L, FUN=sd, na.rm=TRUE)
     }
   }
   if(average.negE) {
@@ -761,7 +763,7 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
               cf=pgevm$cf,
               effMass=effMass,
               effMass.tsboot=effMass.tsboot,
-              effMass.dbboot=effMass.dbboot,
+              effMass.dbboot=-log(effMass.dbboot)/deltat,
               deffMass=deffMass,
               neffMass=neffMass,
               t=effMass.tsboot,
