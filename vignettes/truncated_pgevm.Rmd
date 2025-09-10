@@ -204,17 +204,25 @@ It is insightful to plot the absolute values of the eigenvalues of the Hankel
 matrix:
 
 ```{r}
-plot(abs(pion.truncated.pgevm$singular.values), log="y", ylab="Eigenvalues")
-points(-Re(pion.truncated.pgevm$singular.values), col="red")
-legend("topright", legend=c("positive", "negative"), col=c("black", "red"), pch=1)
+plot(pion.truncated.pgevm)
 trunc <- pion.truncated.pgevm$opt.idx[1]
 ```
 
-Clearly, there are $`r trunc`$ dominant eigenvalues, which we will keep in the
-following. The remaining part of the spectrum stems from noise.
-The variable `opt.idx` contains the maximal logarithmic gap in the spectrum
+From the left panel one sees clearly that there are $`r trunc`$
+dominant eigenvalues, which we will keep in the following. The
+remaining part of the spectrum stems from noise. 
+The variable `opt.idx[1]` contains the maximal logarithmic gap in the spectrum
 (used here) and the position before the first negative eigenvalue (because the
 noiseless Hankel matrix would be positive semi-definite).
+The variable `opt.idx[1]` on the other hand contains the index of the
+singular value next to the first negative one, which would represent
+another choice to cut. Both these choices are indicated in the left
+panel as the vertical lines.
+
+In the right panel the cumulative sum of the absolute values of the
+singular values normalised to one is plotted, sorted in ascending
+order of absolute values. The horizontal lines indicate the cuts
+corresponding to the aforementioned two choices.
 
 The (close-to) optimal fit result after truncation at $k = `r trunc`$ states
 reads
