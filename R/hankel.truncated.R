@@ -260,6 +260,8 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
 #'   contains the weights to be used.
 #' @param symmetric boolean. If 'TRUE', the energy spectrum is guaranteed to be symmetric about 0.
 #'   Default is \code{cf$symmetrised}.
+#' @param bootstrap.coeffs boolean. If 'TRUE', the correlator coefficients are also
+#'   calculated for each bootstrap sample, not only the original data.
 #' @param eps numeric. Threshold for the singular value in the SVD to be considered for the
 #'   proposed truncation dimension returned as \code{opt.idx}. Default is 1e-15.
 #' 
@@ -267,7 +269,7 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
 #' tbw
 #'
 #' @return
-#' List object of class "PGEVM". The eigenvalues are stored in a
+#' List object of classes "PGEVM" and "truncated.pgevm". The eigenvalues are stored in a
 #' numeric vector \code{evs}, the corresponding samples in \code{evs.tsboot}.
 #'
 #' @family hankel
@@ -276,7 +278,7 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
                                       n = floor(((N - 1 - t0 - deltat)/Delta)/2 + 1),
                                       submatrix.size=1, element.order=1,
                                       max.truncation = n*submatrix.size, error.weights=FALSE, symmetric=cf$symmetrised,
-                                      eps=1e-15) {
+                                      bootstrap.coeffs=FALSE, eps=1e-15) {
   stopifnot(inherits(cf, 'cf_meta'))
   stopifnot(inherits(cf, 'cf_boot'))
   dbboot <- inherits(cf, 'cf_dbboot')
@@ -303,6 +305,8 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
   if(n < 1) n <- 1
 
   evs.dbboot <- array()
+  coefficients.tsboot <- array()
+  coefficients.dbboot <- array()
   dbboot.R <- c()
   if(dbboot) {
     dbboot.R <- cf$doubleboot$dbboot.R
@@ -312,19 +316,29 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
                                n=n*submatrix.size, N=N, max.truncation=max.truncation,
                                submatrix.size=submatrix.size, element.order=element.order,
                                effTime=effTime, error.weights=error.weights, symmetric=symmetric)
-  evs.tsboot <- array(t(apply(cf$cf.tsboot$t, MARGIN=1L, FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...)$spectrum,
-                              t0=t0, deltat=deltat, Delta=Delta, get.coeffs=FALSE,
-                              n=n*submatrix.size, N=N, max.truncation=max.truncation,
-                              submatrix.size=submatrix.size, element.order=element.order,
-                              effTime=effTime, error.weights=error.weights, symmetric=symmetric)),
+  res.tsboot <- apply(cf$cf.tsboot$t, MARGIN=1L, FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...),
+                      t0=t0, deltat=deltat, Delta=Delta, get.coeffs=bootstrap.coeffs,
+                      n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                      submatrix.size=submatrix.size, element.order=element.order,
+                      effTime=effTime, error.weights=error.weights, symmetric=symmetric)
+  evs.tsboot <- array(t(sapply(res.tsboot, FUN=function(x) x$spectrum)),
                       dim=c(boot.R, max.truncation, max.truncation))
+  if(bootstrap.coeffs){
+    coefficients.tsboot <- array(t(sapply(res.tsboot, FUN=function(x) x$coefficients)),
+                                 dim=c(boot.R, max.truncation, max.truncation, submatrix.size))
+  }
   if(dbboot) {
-    evs.dbboot <- array(aperm(apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...)$spectrum,
-                                    t0=t0, deltat=deltat, Delta=Delta, get.coeffs=FALSE,
-                                    n=n*submatrix.size, N=N, max.truncation=max.truncation,
-                                    submatrix.size=submatrix.size, element.order=element.order,
-                                    effTime=effTime, error.weights=error.weights, symmetric=symmetric),
-                              perm=c(2,3,1)), dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
+    res.dbboot <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...),
+                        t0=t0, deltat=deltat, Delta=Delta, get.coeffs=bootstrap.coeffs,
+                        n=n*submatrix.size, N=N, max.truncation=max.truncation,
+                        submatrix.size=submatrix.size, element.order=element.order,
+                        effTime=effTime, error.weights=error.weights, symmetric=symmetric)
+    evs.dbboot <- array(t(sapply(res.dbboot, FUN=function(x) x$spectrum)),
+                        dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
+    if(bootstrap.coeffs){
+      coefficients.dbboot <- array(t(sapply(res.dbboot, FUN=function(x) x$coefficients)),
+                                   dim=c(boot.R, dbboot.R, max.truncation, max.truncation, submatrix.size))
+    }
   }
 
   truncation.error <- abs(evs$singular.values[-1] / evs$singular.values[-max.truncation])
@@ -338,6 +352,8 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
               evs.dbboot=evs.dbboot,
               singular.values=evs$singular.values,
               coefficients=evs$coefficients,
+              coefficients.tsboot=coefficients.tsboot,
+              coefficients.dbboot=coefficients.dbboot,
               chi2=evs$chi2,
               cfii=evs$cfii,
               opt.idx=opt.idx,
@@ -382,7 +398,7 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
 #' Returns an object of S3 class `bootstrapfit`.
 #' 
 #' @export
-pgevm2bootstrapfit <- function(pgevm, truncation.dim=pgevm$opt.idx, errortype="outlier-removal") {
+pgevm2bootstrapfit <- function(pgevm, truncation.dim=pgevm$opt.idx[1], errortype="outlier-removal") {
   stopifnot(inherits(pgevm, "PGEVM"))
 
   if(errortype == "outlier-removal"){
@@ -403,15 +419,29 @@ pgevm2bootstrapfit <- function(pgevm, truncation.dim=pgevm$opt.idx, errortype="o
                     t=as.matrix(pgevm$evs.tsboot[, truncation.dim, range]),
                     useCov=FALSE, chisqr=pgevm$chi2[truncation.dim], dof=pgevm$dof[truncation.dim],
                     error.function=error.function, mask=pgevm$cfii,
-                    tofn=list(coeffs=pgevm$coefficients[truncation.dim, range,], lambda0=lambda))
+                    tofn=list(coeffs=pgevm$coefficients[truncation.dim, range, ]))
   attr(basic.res, "class") <- c("bootstrapfit", "PGEVM", class(basic.res))
+
+  bootstrap.coeffs <- any(!is.na(pgevm$coefficients.tsboot))
+  if(bootstrap.coeffs){
+    basic.res$tofn$coeffs.tsboot <- pgevm$coefficients.tsboot[, truncation.dim, range, , drop=FALSE]
+  }else{
+    basic.res$tofn$lambda0 <- lambda
+  }
 
   res <- lapply(seq(pgevm$element.order), function(i) {
                   res <- basic.res
                   res$y <- pgevm$cf$cf0[1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
                   res$bsamples <- pgevm$cf$cf.tsboot$t[,1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
                   res$dy <- pgevm$cf$tsboot.se[1:pgevm$N + (pgevm$element.order[i]-1)*pgevm$effTime]
-                  res$fn <- function(par, x, boot.r, ...) Re(reconstruct.correlators(lambda=c(par), times=x, ...)[,i])
+                  if(bootstrap.coeffs){
+                    res$fn <- function(par, x, boot.r, coeffs, coeffs.tsboot, ...){
+                      if(boot.r > 0) coeffs <- coeffs.tsboot[boot.r,,,]
+                      return(Re(reconstruct.correlators(lambda=c(par), times=x, coeffs=coeffs)[,i]))
+                    }
+                  }else{
+                    res$fn <- function(par, x, boot.r, ...) Re(reconstruct.correlators(lambda=c(par), times=x, ...)[,i])
+                  }
                   return(invisible(res))
                     })
   return(invisible(res))
