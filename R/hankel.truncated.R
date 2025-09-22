@@ -5,7 +5,7 @@ spectrum.truncated.gevp <- function(ev.cM, n, deltat, submatrix.size,
   n.full <- n + deltat*submatrix.size
   ii0 <- 1:n
   ii.shift <- ii0 + deltat*submatrix.size
-  ii1 <- rev(sort_by(1:n.full, abs(ev.cM$values)))[1:truncation.dim]
+  ii1 <- rev((1:n.full)[order(abs(ev.cM$values))])[1:truncation.dim]
 
   M.0 <- ev.cM$vectors[ii0,ii1]
   M.t <- ev.cM$vectors[ii.shift,ii1]
@@ -200,7 +200,7 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                               symmetric=symmetric)
   }
 
-  res <- list(spectrum=spectrum, singular.values=rev(sort_by(ev.cM$values, abs(ev.cM$values))), cfii=cfii)
+  res <- list(spectrum=spectrum, singular.values=rev(ev.cM$values[order(abs(ev.cM$values))]), cfii=cfii)
 
   if(get.coeffs) {
     coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
