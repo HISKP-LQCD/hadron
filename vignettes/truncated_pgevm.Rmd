@@ -1,5 +1,5 @@
 ---
-title: "Truncated PGEVM in hadron"
+title: "The truncated Hankel correlator (THC) method in hadron"
 subtitle: "Companion document to arXiv:2509.xxxxx"
 author: 
 - Johann Ostmeyer
@@ -25,7 +25,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 This is a companion document for the manuscripts
 [arxiv.org/abs/2411.14981](https://arxiv.org/abs/2411.14981) and work forthcoming. It
-explains the truncated PGEVM implementation available in the
+explains the truncated Hankel correlator (THC) implementation available in the
 `hadron` `R` package. The `hadron` package version required is
 [version 3.4.1](https://github.com/HISKP-LQCD/hadron/tree/3.4.1) or newer.
 It is available on `github` for download. 
@@ -175,7 +175,7 @@ plot(pion.pgevm.efm2, rep=TRUE, col="red", pch=22, xshift=0.15)
 plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.3)
 ```
 
-# Truncated PGEVM
+# THC
 
 Instead of going time slice by time slice, we can also include all the
 correlator values at once and truncate the diagonalised Hankel matrix. This is
@@ -229,7 +229,7 @@ reads
 $E =`r pion.truncated.pgevm.efm$t0[trunc]` \pm `r pion.truncated.pgevm.efm$se[trunc]`$.
 
 Once again, we can now plot the different "effective masses". It is crucial to
-keep in mind that the results from the truncated PGEVM are not independent for
+keep in mind that the results from the THC are not independent for
 different $n$ as the same Hankel matrix is used everywhere. Thus, a better way
 to interpret the results is to identify every truncation $k$ with a multi-state
 fit using $k$ states. Any individual point already contains the full
@@ -240,10 +240,10 @@ no significant systematic bias from the truncation.
 plot(pion.pgevm.efm, ylab="Meff", xlab="n or k", xlim=c(0,T/2), ylim=c(.12,.155),
                      col="blue", pch=21, xshift=0)
 plot(pion.pgevm.efm3, rep=TRUE, col="darkorange", pch=23, xshift=0.15)
-plot(pion.truncated.pgevm.efm, rep=TRUE, col="red", pch=22, xshift=0.3)
+plot(pion.truncated.pgevm.efm, rep=TRUE, col="darkgreen", pch=22, xshift=0.3)
 ```
 
-The truncated PGEVM also allows us to reconstruct the coefficients of the
+The THC also allows us to reconstruct the coefficients of the
 exponential fit ansatz and to compare the result with the original data. This
 can be done as follows:
 
