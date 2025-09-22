@@ -679,7 +679,8 @@ pgevm2effectivemass  <- function(pgevm, id=c(1), type="log",
   if(average.negE) {
     range <- rev(1/range)
     for(n in c(2:n.max)) {
-      n.end <- n*pgevm$submatrix.size
+      if(is.null(pgevm$max.truncation)) n.end <- n*pgevm$submatrix.size
+      else n.end <- min(n, pgevm$max.truncation)
       if(id > n.end) next
       ii <- c(1:n.end)
       tmp <- .fn(pgevm$evs[n, ii], range=range, eps=eps, revert=TRUE)
