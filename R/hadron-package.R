@@ -88,8 +88,8 @@ NULL
 #'                spline uniroot var weighted.mean median density
 #' @importFrom utils combn count.fields head read.table
 #'                setTxtProgressBar txtProgressBar tail
-#' @keywords package
-NULL
+#' @keywords internal
+"_PACKAGE"
 
 #' jackknife-after-bootstrap analysis
 #' 

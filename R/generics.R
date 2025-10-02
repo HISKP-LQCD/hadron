@@ -85,9 +85,6 @@ resampling_is_concatenable <- function(x,y){
 #' Note that since R's double dispatch doesn't really work with S3
 #' classes, the class of \code{x} decides which method is called.
 #'
-#' @description
-#' 
-#' 
 #' @export
 mul <- function(x, y, ...){
   UseMethod('mul', x)
@@ -95,19 +92,20 @@ mul <- function(x, y, ...){
 
 #' generic function to add two objects to each other
 #'
-#' This function provides 
-#'
 #' @export
 add <- function(x, y, ...){
   UseMethod('add', x)
 }
 
+#' generic function to subtract two objects to from other
+#'
 #' @export
 subtract <- function(x, y, ...){
   UseMethod('subtract', x)
 }
 
 #' generic function to divide objects by each other
+#'
 #' @export
 div <- function(x, y, ...){
   UseMethod('div', x)
