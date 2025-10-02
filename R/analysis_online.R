@@ -76,6 +76,8 @@ append_pdf_filename <- function(basename, pdf_filenames){
 #'                                   such that they are expressed in terms of unit length trajectories.
 #' @param boot.R integer. number of bootstrap samples to use in bootstrap-based parts of analysis.
 #' @param boot.l integer. bootstrap block size
+#' @param dH_threshold numeric. in the calculation of dH and exp(-dH), trajectories with |dH| exceeding
+#'                              this value are skipped
 #' @param outname_suffix string. suffix for output files
 #' @param verbose boolean. If `TRUE`, function produces verbose output.
 #' #'
@@ -108,6 +110,7 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
                             evals.stepsize=1,
                             trajectory_length=1.0,
                             boot.R=1500, boot.l=2,
+                            dH_threshold = 1000,
                             outname_suffix="", verbose=FALSE)
 {
   staplr_avail <- requireNamespace("staplr")
@@ -468,9 +471,13 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     pdf_filenames <- append_pdf_filename(basename = dH_filename,
                                          pdf_filenames = pdf_filenames)
 
-    result$obs$dH <- plot_timeseries(dat=data.frame(y=outdat$dH[tidx],
-                                                    t=outdat$traj[tidx]),
-                                     stat_range=c( 1+stat_skip, length(tidx) ),
+    dH_idx <- which(abs(outdat$dH[tidx]) < dH_threshold)
+    dH_tidx <- tidx[dH_idx]
+    dH_outdat <- data.frame(y=outdat$dH[dH_tidx], t=outdat$traj[dH_tidx])
+    expdH_outdat <- data.frame(y=outdat$expdH[dH_tidx], t=outdat$traj[dH_tidx])
+
+    result$obs$dH <- plot_timeseries(dat=dH_outdat,
+                                     stat_range=c( 1+stat_skip, length(dH_tidx) ),
                                      time_factor=trajectory_length,
                                      pdf.filename=dH_filename,
                                      ylab="$ \\delta H $",
@@ -489,9 +496,8 @@ analysis_online <- function(L, Time, t1, t2, beta, kappa, mul,
     pdf_filenames <- append_pdf_filename(basename = expdH_filename,
                                          pdf_filenames = pdf_filenames)
 
-    result$obs$expdH <- plot_timeseries(dat=data.frame(y=outdat$expdH[tidx],
-                                                       t=outdat$traj[tidx]),
-                                        stat_range=c( 1+stat_skip, length(tidx) ),
+    result$obs$expdH <- plot_timeseries(dat=expdH_outdat,
+                                        stat_range=c( 1+stat_skip, length(dH_tidx) ),
                                         time_factor=trajectory_length,
                                         pdf.filename=expdH_filename,
                                         ylab="$ \\exp(-\\delta H) $",

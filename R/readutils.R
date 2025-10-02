@@ -212,6 +212,8 @@ getorderedconfignumbers <- function(path="./", basename="onlinemeas", last.digit
 readcmifiles <- function(files, excludelist=c(""), skip, verbose=FALSE,
                          colClasses, obs=NULL, obs.index, avg=1, stride=1) {
 
+  stopifnot(stride != 0)
+
   # use lapply as our default and switch to pbmclapply if available below
   my_lapply <- lapply
 

@@ -2,7 +2,7 @@
 #' @details Apply FSE correction of a meson mass and decay constant
 #' based on eqs. 8 and 9 of Colangeo, Duerr, Haefeli [Nucl.Phys.B 721 (2005)]
 #' going back to Gasser and Leutwyler. Note that we employ the normalisation
-#' in which f_pi = 130.4.
+#' in which f_pi = 130.4 and that we take N_f = 2.
 #' @param xi Numeric vector, the ratio \eqn{M_{ps}^2 / (4 \pi f_\pi)^2}. 
 #' @param lambda Numeric, the dimensionless product \eqn{M_{ps} \cdot L}. 
 #' @return Data frame with two columns containing the correction factors \code{K_mps}
@@ -13,6 +13,9 @@
 gl_fse_corr <- function(xi, lambda){
   stopifnot( length(xi) == length(lambda) )
   g1_tilde <- g1(lambda)
-  return(data.frame(K_Mps = (1+0.5*xi*g1_tilde), K_fps = (1-2*xi*g1_tilde)))
+  # K_Mps = 1 + (1/2N_f)*...
+  # K_fps = 1 - (N_f/2)*...
+  # additional factor of two compensates for f_pi convention
+  return(data.frame(K_Mps = (1+0.25*2*xi*g1_tilde), K_fps = (1-1*2*xi*g1_tilde)))
 }
 
