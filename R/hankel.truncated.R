@@ -43,7 +43,7 @@ coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.s
   t.min <- min(times)
   t.max <- max(times)
   vandermonde <- outer(times, lambda, function(t, a) ifelse(abs(a) < 1, a^(t-t.min), a^(t-t.max)))
-  scale <- ifelse(abs(lambda) < 1, as.complex(lambda)^(-t.min/2), as.complex(lambda)^(-t.max/2))
+  scale <- ifelse(abs(lambda) < 1, lambda^(-t.min), lambda^(-t.max))
 
   mat.coeffs <- sapply(1:submatrix.size^2, function(i) {
                          w <- error.weights[, i]^2
@@ -59,20 +59,22 @@ coeffs.truncated.gevp <- function(cf.mat, t0, deltat, Delta, lambda, submatrix.s
                                   })
   if(truncation.dim == 1) mat.coeffs <- t(mat.coeffs)
 
-  vec.coefs <- apply(as.matrix(mat.coeffs), 1, function(M) {
+  return(invisible(mat.coeffs * scale))
+}
+
+## Approximate the coefficient matrix by a rank-1 matrix and return the vector
+vec.coeffs.truncated.gevp <- function(mat.coeffs, truncation.dim, submatrix.size){
+  if(truncation.dim == 1) mat.coeffs <- t(mat.coeffs)
+  vec.coeffs <- apply(as.matrix(mat.coeffs), 1, function(M) {
                        M.mat <- matrix(M, nrow=submatrix.size)
                        M.mat <- 0.5 * (M.mat + Conj(t(M.mat)))
-                       M.eigen <- try(eigen(M.mat, symmetric=TRUE), TRUE)
-                       if(!inherits(M.eigen, "try-error")) {
-                         return(M.eigen$vectors[,1] * sqrt(as.complex(M.eigen$values[1])))
-                       } else {
-                         warning("eigen failed in coeffs.truncated.gevp\n")
-                       }
-                       return(invisible(rep(NA, submatrix.size)))
+                       vec <- sqrt(diag(M.mat))
+                       vec <- vec * M.mat[,1] / abs(M.mat[,1])
+                       return(vec)
                                   })
-  vec.coefs <- t(vec.coefs) * scale
+  vec.coeffs <- t(vec.coeffs)
 
-  return(invisible(vec.coefs))
+  return(invisible(vec.coeffs))
 }
 
 ## Given the decay eigenvalues lambda = exp(-E deltat) and the coefficients
@@ -82,13 +84,9 @@ reconstruct.correlators <- function(lambda, times, coeffs, lambda0=lambda){
   t.min <- min(times)
   t.max <- max(times)
   vandermonde <- outer(times, lambda, function(t, a) ifelse(abs(a) < 1, a^(t-t.min), a^(t-t.max)))
-  scale <- ifelse(abs(lambda0) < 1, as.complex(lambda0)^(t.min/2), as.complex(lambda0)^(t.max/2))
+  scale <- ifelse(abs(lambda0) < 1, lambda0^(t.min), lambda0^(t.max))
 
-  coeffs <- coeffs * scale
-  if(length(lambda) == 1) coeffs <- t(coeffs)
-  mat.coeffs <- t(apply(as.matrix(coeffs), 1, function(c) outer(c, Conj(c))))
-  if(nrow(mat.coeffs) == 1 & length(lambda) > 1) mat.coeffs <- t(mat.coeffs)
-  #vandermonde <- outer(times, lambda, function(t, a) a^t)
+  mat.coeffs <- coeffs * scale
   cor <- vandermonde %*% mat.coeffs
 
   return(invisible(cor))
@@ -203,7 +201,8 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
   res <- list(spectrum=spectrum, singular.values=rev(ev.cM$values[order(abs(ev.cM$values))]), cfii=cfii)
 
   if(get.coeffs) {
-    coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
+    coefficients <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size^2))
+    vec.coeffs <- array(NA, dim=c(max.truncation, max.truncation, submatrix.size))
     chi2 <- c()
     cf.mat <- matrix(cf, nrow=effTime)[cfii, element.order, drop=FALSE]
     for(truncation.dim in 1:max.truncation){
@@ -213,6 +212,9 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
                               submatrix.size=submatrix.size,
                               truncation.dim=truncation.dim,
                               error.weights=error.weights)
+      vec.coeffs[truncation.dim, 1:truncation.dim, ] <-
+        vec.coeffs.truncated.gevp(coefficients[truncation.dim, 1:truncation.dim, ],
+                                  truncation.dim=truncation.dim, submatrix.size=submatrix.size)
       cor.reconstructed <- reconstruct.correlators(lambda=spectrum[truncation.dim, 1:truncation.dim],
                                                    times=(cfii-1)/deltat,
                                                    coeffs=coefficients[truncation.dim, 1:truncation.dim,])
@@ -220,6 +222,7 @@ gevp.truncated.hankel <- function(cf, t0=1, deltat=1, n, N, max.truncation=n,
       chi2[truncation.dim] <- sum(abs(chi)^2)
     }
     res$coefficients <- coefficients
+    res$vec.coeffs <- vec.coeffs
     res$chi2 <- chi2
   }
 
@@ -307,6 +310,8 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
   evs.dbboot <- array()
   coefficients.tsboot <- array()
   coefficients.dbboot <- array()
+  vec.coeffs.tsboot <- array()
+  vec.coeffs.dbboot <- array()
   dbboot.R <- c()
   if(dbboot) {
     dbboot.R <- cf$doubleboot$dbboot.R
@@ -324,8 +329,10 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
   evs.tsboot <- array(t(sapply(res.tsboot, FUN=function(x) x$spectrum)),
                       dim=c(boot.R, max.truncation, max.truncation))
   if(bootstrap.coeffs){
-    coefficients.tsboot <- array(t(sapply(res.tsboot, FUN=function(x) x$coefficients)),
-                                 dim=c(boot.R, max.truncation, max.truncation, submatrix.size))
+    coefficients.tsboot <- array(t(sapply(res.tsboot, FUN=function(x) c(x$coefficients, x$vec.coeffs))),
+                                 dim=c(boot.R, max.truncation, max.truncation, submatrix.size^2+submatrix.size))
+    vec.coeffs.tsboot <- coefficients.tsboot[,,,(submatrix.size^2+1):(submatrix.size^2+submatrix.size), drop=FALSE]
+    coefficients.tsboot <- coefficients.tsboot[,,,1:(submatrix.size^2), drop=FALSE]
   }
   if(dbboot) {
     res.dbboot <- apply(cf$doubleboot$cf, MARGIN=c(1L,2L), FUN=function(cf0, ...) gevp.truncated.hankel(cf0, ...),
@@ -336,8 +343,10 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
     evs.dbboot <- array(t(sapply(res.dbboot, FUN=function(x) x$spectrum)),
                         dim=c(boot.R, dbboot.R, max.truncation, max.truncation))
     if(bootstrap.coeffs){
-      coefficients.dbboot <- array(t(sapply(res.dbboot, FUN=function(x) x$coefficients)),
-                                   dim=c(boot.R, dbboot.R, max.truncation, max.truncation, submatrix.size))
+      coefficients.dbboot <- array(t(sapply(res.dbboot, FUN=function(x) c(x$coefficients, x$vec.coeffs))),
+                                   dim=c(boot.R, dbboot.R, max.truncation, max.truncation, submatrix.size^2+submatrix.size))
+      vec.coeffs.dbboot <- coefficients.dbboot[,,,,(submatrix.size^2+1):(submatrix.size^2+submatrix.size), drop=FALSE]
+      coefficients.dbboot <- coefficients.dbboot[,,,,1:(submatrix.size^2), drop=FALSE]
     }
   }
 
@@ -352,8 +361,11 @@ bootstrap.truncated.pgevm <- function(cf, deltat=1, Delta=1, N = (cf$Time/2+1), 
               evs.dbboot=evs.dbboot,
               singular.values=evs$singular.values,
               coefficients=evs$coefficients,
+              vec.coeffs=evs$vec.coeffs,
               coefficients.tsboot=coefficients.tsboot,
               coefficients.dbboot=coefficients.dbboot,
+              vec.coeffs.tsboot=vec.coeffs.tsboot,
+              vec.coeffs.dbboot=vec.coeffs.dbboot,
               chi2=evs$chi2,
               cfii=evs$cfii,
               opt.idx=opt.idx,
