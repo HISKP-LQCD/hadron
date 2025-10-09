@@ -1,6 +1,6 @@
 ---
 title: "The truncated Hankel correlator (THC) method in hadron"
-subtitle: "Companion document to arXiv:2509.xxxxx"
+subtitle: "Companion document to arXiv:2510.xxxxx"
 author: 
 - Johann Ostmeyer
 - Carsten Urbach
