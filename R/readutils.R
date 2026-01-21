@@ -672,6 +672,8 @@ readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.
 #'                              '0001/mes_contr_2pts', not the lack of the smearing suffix.
 #' @param smear_combs_to_read Character vector containing the smearing cominations that are to be read.
 #'                            These will be attached to the `file_basenames_to_read` in the reading routine.
+#'                            For corrtype = 2pt, the names are added with an underscore, 
+#'                            for corrtype = general, the names are added with a slash.
 #' @param Time Integer, time extent of the lattice.
 #' @param combs_to_read Data frame containing the indices of the masses and r-paramter combinations to
 #'                      be read as well as the name of the spin combination.
@@ -682,6 +684,12 @@ readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.
 #'                        m1_idx \tab m2_idx \tab r1_idx \tab r2_idx \tab spin_comb \cr
 #'                        1      \tab 2      \tab 0      \tab 0      \tab "P5P5"
 #'                      }
+#'                      In the case of generalized orperator names, the data frame contains the
+#'                      names of the opreator and the name of the spin combination, like this:
+#'                      \tabular{rrrrr}{
+#'                        op1_idx \tab op2_idx \tab spin_comb \cr
+#'                        C_H     \tab H_H_S_H \tab "P5P5"
+#'                      }
 #' @param sym.vec Integer or numeric vector. Specifies whether the correlator at
 #'                the given position is symmetric (+1.0) or anti-symmetric (-1.0 )
 #'                under time reflection. This is passed to \code{symmetrise.cf}. This
@@ -691,6 +699,10 @@ readtextcf <- function(file, Time=48, sym=TRUE, path="", skip=1, check.t=0, ind.
 #' @param symmetrise Boolean, specifies whether averaging over backward and forward
 #'                   correlators should be done after the correlator has been read in.
 #' @param nts Integer, number of time slices to be read from the correlator files.
+#' @param corrtype Character. Determines the structure of the correlator names that are read.
+#'                 2pt reads correlators of the form S0_th0_m0_r0_ll ^ \dag S0_th0_m0_r0_ll,
+#'                 general reads any operator name containing underscores, for example 
+#'                 C_H ^ \dag and Dth0_A0_C_P_H_H_S_H
 #'
 #' @return
 #' Returns an object of class `cf`.
@@ -702,12 +714,17 @@ readnissatextcf <- function(file_basenames_to_read,
                             combs_to_read,
                             nts = Time, 
                             sym.vec = c(1),
-                            symmetrise = FALSE)
+                            symmetrise = FALSE, 
+                            corrtype="2pt")
 {
+  if (corrtype == "2pt") { corrtypenum=1}
+  else if (corrtype == "general") { corrtypenum=2}
+  else { stop("invalid correlation type given! must be either 2pt or general") }
   tmp <- read_nissa_textcf_kernel(file_basenames_to_read,
                                   smear_combs_to_read,
                                   nts,
-                                  combs_to_read)
+                                  combs_to_read, 
+                                  corrtypenum)
 
   total_nts <- nts*length(smear_combs_to_read)*nrow(combs_to_read)
 
