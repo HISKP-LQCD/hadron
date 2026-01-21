@@ -1099,6 +1099,117 @@ mul.cf <- function(cf, a=1.) {
   return (cf)
 }
 
+#' Exponentiate cf objects
+#'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent, such that the real part of cf is
+#' raised to the power of n and similarly for the imaginary part.
+#'
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
+#' 
+#' @param cf `cf_orig` object.
+#' @param n Numeric.
+#'
+#' @return
+#' The value is
+#' \deqn{cf^n \,.}
+#' @export
+pow.cf <- function(cf, n=1.) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  if(inherits(cf, 'cf_orig')) {
+    cf$cf <- (cf$cf)^n
+    cf$icf <- (cf$icf)^n
+  }
+  
+  if(inherits(cf, 'cf_boot')) {
+    cf$cf.tsboot$t  <- (cf$cf.tsboot$t)^n
+    cf$cf.tsboot$t0 <- (cf$cf.tsboot$t0)^n
+    cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = cf$error_fn)
+    cf$cf0 <- cf$cf.tsboot$t0
+  }
+  else cf <- invalidate.samples.cf(cf)
+  return (cf)
+}
+
+#' Assign a numeric value n to the real and imaginary part of cf objects
+#' 
+#' To do this, the real part cf$cf is divided by itself and multiplied by n.
+#' This is done analogously for the imaginary part cf$icf.
+#'
+#' Note that no complex arithmetic is used, real and imaginary parts are 
+#' treated as seperate and indepenent.
+#' 
+#' Note that this is generally only allowed on bootstrap samples and mean values,
+#' although it makes sense in some exeptional circumstances. Don't use this
+#' function unless you're certain that you should!
+#' 
+#' @param cf `cf_orig` object.
+#' @param n Numeric.
+#'
+#' @return
+#' The value is
+#' \deqn{n*cf/cf \,.}
+#' @export
+num.cf <- function(cf, n=1.) {
+  stopifnot(inherits(cf, 'cf_meta'))
+  if(inherits(cf, 'cf_orig')) {
+    cf$cf <- n*(cf$cf/cf$cf)
+    
+    if( has_icf(cf) ){
+      stopifnot(has_icf(cf))
+      cf$icf <- n*(cf$icf/cf$icf)
+    }
+  }
+  
+  if(inherits(cf, 'cf_boot')) {
+    cf$cf.tsboot$t  <- n*(cf$cf.tsboot$t/cf$cf.tsboot$t)
+    cf$cf.tsboot$t0 <- n*(cf$cf.tsboot$t0/cf$cf.tsboot$t0)
+    cf$tsboot.se <- apply(cf$cf.tsboot$t, MARGIN = 2L, FUN = cf$error_fn)
+    cf$cf0 <- cf$cf.tsboot$t0
+  }
+  else cf <- invalidate.samples.cf(cf)
+  return (cf)
+}
+
+#' Feynman-Hellmann theorem ratio
+#'
+#' @description
+#' Computes the Feynman-Hellmann theorem (FHT) ratio for given
+#' 2-point and 3-point cf objects.
+#' 
+#' The FHT ratio R has its origin in the symmetrized effective mass and
+#' is given by
+#' 
+#'   R(t, tau) = ( 1/tau )( z/sqrt(z^2-1) )( (C3pt(t+tau) + C3pt(t-tau)) /
+#'               (C2pt(t+tau) + C2pt(t-tau)) - C3pt(t) / C2pt(t) ),
+#'   
+#'   where
+#'               
+#'   z = ( C2pt(t+tau) + C2pt(t-tau) ) / ( 2 C2pt(t) ).
+#'   
+#' For example, in the large t limit, R can be used to estimate nucleon-nucleon
+#' matrix elements <N|O4q|N> where O4q is a four-quark interpolating operator.
+#'
+#' @param cf2pt `cf_orig` object, 2-point correlation function C2pt.
+#' @param cf3pt `cf_orig` object, 3-point correlation function C3pt.
+#' @param tau Numeric, offset parameter for the displacement of t.
+#'
+#' @return
+#' returns the FHT ratio in form of a cf object.
+#' 
+#' @export
+fht_ratio.cf <- function(cf2pt, cf3pt, tau) {
+  z <- ( shift.cf(cf2pt, tau) + shift.cf(cf2pt, -tau) ) / ( mul.cf(cf2pt, 2) )
+  pre <- z / pow.cf(z*z - num.cf(z), n=0.5)
+  
+  r <- ( (shift.cf(cf3pt, tau) + shift.cf(cf3pt, -tau)) / (shift.cf(cf2pt, tau) + shift.cf(cf2pt, -tau)) - cf3pt/cf2pt )
+  res <- mul.cf( pre, (1/tau) ) * r
+  
+  return(res)
+}
+
 
 
 #' extract one single correlator object as \code{cf} object from a large
