@@ -1,48 +1,40 @@
 # Folder summary: `hooks/`
 
-> Annotation: This file is a scaffold. Codex should replace placeholder rows with a repository-derived inventory for `hooks/`.
+## Folder purpose
 
-## Purpose
-
-Repository hooks and development automation.
+Repository hook scripts for development automation.
 
 ## Porting relevance
 
-Decide whether any hooks should be translated to Python development tooling.
+Decide whether existing R-package hooks matter for Python development tooling.
 
-## Inventory summary
+## Inventory table
 
 | Category | Count | Notes |
-|---|---:|---|
-| Files inspected | TBD | Fill by repository inspection |
-| Port-relevant files | TBD | Fill by repository inspection |
-| Symbols/items found | TBD | Fill where applicable |
-| Ambiguous files | TBD | List below |
+|---|---|---|
+| Files excluding summary | 1 | Repository hooks |
+| pre-commit hooks | 1 | R-package documentation hook |
 
 ## Mapping table
 
-| Status | Source path | Source item | Proposed Python target | Porting action | Owner | Notes |
-|---|---|---|---|---|---|---|
-| `[ ]` | `hooks/TBD` | `TBD` | `TBD` | port/classify/defer | unassigned | Replace after inspection |
+| Status | Source path | Current role | Proposed Python handling | Owner | Notes |
+|---|---|---|---|---|---|
+| `[?]` | hooks/pre-commit | developer hook | Python pre-commit tooling decision | unassigned | inspect before adopting for Python workflow |
 
 ## Checklist
 
-- [ ] Inventory every file in `hooks/`.
-- [ ] Classify each file as port, reference only, documentation input, generated artifact, obsolete, or unknown.
-- [ ] Add source-to-target mappings where applicable.
-- [ ] Add owner fields.
-- [ ] Add test requirements where applicable.
-- [ ] Update `PORTING_INDEX.md` with matching rows.
-- [ ] Mark ambiguous files with `[?]` and explain why.
+- [ ] Inspect hook behavior before enabling in Python workflow.
+- [ ] Prefer standard Python pre-commit config in a later tooling PR if needed.
+- [ ] Do not make hooks mandatory until package skeleton and test workflow exist.
 
 ## Testing requirements
 
-| Source item | Required Python test or validation | Reference data needed | Notes |
-|---|---|---|---|
-| `TBD` | `TBD` | yes/no/TBD | Replace after inspection |
+| Source item | Required Python test or validation | Reference data needed | Owner/status | Notes |
+|---|---|---|---|---|
+| hooks/pre-commit | manual hook smoke test only if retained | no | `[?]` / unassigned | developer tooling, not algorithmic |
 
 ## Known issues and ambiguities
 
-| Source path | Issue | Proposed resolution | Owner |
+| Source path | Issue | Proposed resolution | Owner/status |
 |---|---|---|---|
-| `TBD` | `TBD` | `TBD` | unassigned |
+| hooks/pre-commit | Hook policy for Python port is undecided | Defer to tooling PR | `[?]` / unassigned |
